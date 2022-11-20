@@ -1,0 +1,62 @@
+{
+  "name": "expo-asset-utils",
+  "version": "3.0.0",
+  "description": "Utilities for converting files into Expo Assets",
+  "author": "Evan Bacon <bacon@expo.io> (https://expo.io/)",
+  "main": "build/index.js",
+  "types": "build/index.d.ts",
+  "homepage": "https://github.com/expo/expo-asset-utils#readme",
+  "readmeFilename": "README.md",
+  "license": "MIT",
+  "keywords": [
+    "expo",
+    "asset",
+    "utils",
+    "react-native",
+    "react"
+  ],
+  "scripts": {
+    "build": "expo-module build",
+    "clean": "expo-module clean",
+    "test": "expo-module test",
+    "lint": "expo-module lint",
+    "prepare": "expo-module prepare",
+    "prepublishOnly": "expo-module prepublishOnly",
+    "expo-module": "expo-module"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/expo/expo-asset-utils.git"
+  },
+  "bugs": {
+    "url": "https://github.com/expo/expo-asset-utils/issues"
+  },
+  "directories": {
+    "example": "example",
+    "lib": "src"
+  },
+  "peerDependencies": {
+    "expo-asset": "*",
+    "expo-file-system": "*",
+    "expo-font": "*",
+    "expo-modules-core": "*",
+    "react-native": "*"
+  },
+  "devDependencies": {
+    "expo": "^43.0.0-beta.2",
+    "expo-asset": "^8.4.0",
+    "expo-constants": "^12.0.0",
+    "expo-file-system": "^13.0.0",
+    "expo-font": "^10.0.0",
+    "expo-module-scripts": "^2.0.0",
+    "expo-modules-core": "0.4.1",
+    "jest": "^25.1.0",
+    "jest-expo": "^43.0.0-beta.1",
+    "react": "^16.9.0",
+    "react-dom": "^16.9.0",
+    "react-native": "~0.62.0",
+    "react-native-web": "^0.11.0",
+    "eslint": "^6.8.0",
+    "prettier": "^1.19.1"
+  }
+}

@@ -1,0 +1,44 @@
+{
+  "name": "my-new-project",
+  "main": "node_modules/expo/AppEntry.js",
+  "private": true,
+  "scripts": {
+    "start": "expo start",
+    "android": "expo start --android",
+    "ios": "expo start --ios",
+    "eject": "expo eject",
+    "test": "node ./node_modules/jest/bin/jest.js --watchAll"
+  },
+  "jest": {
+    "preset": "jest-expo"
+  },
+  "dependencies": {
+    "@expo/samples": "2.1.1",
+    "@expo/vector-icons": "^13.0.0",
+    "@react-navigation/native": "^6.0.13",
+    "@react-navigation/native-stack": "^6.9.1",
+    "expo": "^45.0.0",
+    "expo-three": "^7.0.0",
+    "firebase": "9.6.11",
+    "impagination": "^1.0.0-alpha.3",
+    "moment": "^2.24.0",
+    "native-base": "^2.11.0",
+    "react": "17.0.2",
+    "react-native": "0.68.2",
+    "react-native-dropdownalert": "^3.10.0",
+    "react-native-elements": "^1.1.0",
+    "react-native-flash-message": "^0.1.12",
+    "react-native-keyboard-aware-scroll-view": "^0.8.0",
+    "react-native-material-dropdown-v2": "^0.11.1",
+    "react-native-modal": "^9.0.0",
+    "react-native-pagination": "^1.5.5",
+    "react-native-paper": "^4.12.5",
+    "react-native-safe-area-context": "4.2.4",
+    "react-native-safe-area-view": "^1.1.1",
+    "react-native-screens": "~3.11.1",
+    "react-navigation": "^4.4.4",
+    "tcomb-form-native": "^0.6.20",
+    "three": "^0.146.0"
+  },
+  "devDependencies": {}
+}

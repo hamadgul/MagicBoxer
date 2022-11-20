@@ -1,0 +1,25 @@
+{
+  "name": "test-suite",
+  "version": "1.0.0",
+  "description": "Test suite for expo-2d-context",
+  "main": "index.js",
+  "author": "",
+  "license": "BSD-2-Clause",
+  "powertools": {
+    "group": "client"
+  },
+  "dependencies": {
+    "expo": "~42.0.1",
+    "domexception": "1.0.1",
+    "expo-2d-context": "file:../../../",
+    "expo-asset": "~8.3.3",
+    "expo-gl": "~10.4.2",
+    "expo-constants": "~11.0.1",
+    "immutable": "^3.8.1",
+    "jasmine-core": "^2.4.1",
+    "react": "16.13.1",
+    "react-dom": "16.13.1",
+    "react-native": "~0.63.4",
+    "react-native-web": "~0.13.12"
+  }
+}
