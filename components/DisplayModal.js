@@ -3,7 +3,7 @@ import {Modal, View, Image, Text, StyleSheet } from 'react-native';
 
 const DisplayModal = (props) => (
   <Modal  visible = { props.display } animationType = "slide"
-          onRequestClose = { () => console.log('closed') }>>
+          onRequestClose = { () => console.log('closed') }>{'>'}
 
       <View>
         <Image

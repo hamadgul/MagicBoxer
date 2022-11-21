@@ -125,9 +125,32 @@ export default class Details extends Component {
     }
 
     componentDidMount = () => {
-        var LBKey = this.props.navigation.state.params.LogicBrokerKey;
-        const URL = 'https://stage.commerceapi.io/api/v1/Orders/'
-                    + LBKey + '?subscription-key=';
+      this.setState({
+          isLoading: false,
+          isShown: true,
+          buttonDisabled: false,
+          itemNumber: 12345,
+          items: 1,
+          length: "1",
+          height: "7",
+          width: "8",
+          modalDisplay: true,
+          unit: "inches",
+          dataSource: "344565759",
+          orderInfo: "none",
+          items: this.items,
+          itemSKU: "121232",
+          ItemIdentifier: "1212",
+          SupplierSKU: "656456465",
+          allItems: {},
+          }, () => {this.fetchDims();
+      });
+    }
+    
+        
+       /*  //var LBKey = this.props.navigation.state.params.LogicBrokerKey;
+        //const URL = 'https://stage.commerceapi.io/api/v1/Orders/'
+        //            + LBKey + '?subscription-key=';
 
         return fetch(URL + API_KEY, {
             method: 'GET',
@@ -163,7 +186,7 @@ export default class Details extends Component {
                 console.error(error);
             });
           }
-
+ */
 
     render(){
       if(this.state.isLoading){

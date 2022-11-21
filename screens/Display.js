@@ -1,6 +1,6 @@
 import Expo from "expo";
 import React, { Component } from "react";
-import { Vibration, ScrollView, FlatList, TouchableOpacity, Button, Dimensions, Alert, StyleSheet, Text, View, Animated, PanResponder, Slider } from "react-native";
+import { Vibration, ScrollView, FlatList, TouchableOpacity, Button, Dimensions, Alert, StyleSheet, Text, View, Animated, PanResponder, Slider, LogBox } from "react-native";
 import { Container, Header, Content, Card, CardItem, Body, Input, Item } from 'native-base';
 import AppNavigator from '../navigation/AppNavigator';
 
@@ -15,7 +15,8 @@ import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scroll-view
 import DropdownAlert from 'react-native-dropdownalert';
 
 
-console.disableYellowBox = true;
+//console.disableYellowBox = true;
+LogBox.ignoreAllLogs('VirtualizedLists should never be nested');
 const API_KEY = "2F7A2B46-105D-4C37-8AF6-93CC96B8832D";
 
 const deviceHeight = Dimensions.get('window').height;
