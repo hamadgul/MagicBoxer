@@ -5,12 +5,12 @@ import { getFirestore } from "firebase/firestore";
 import { getStorage } from "firebase/storage";
 
 const firebaseConfig = {
-  apiKey: "AIzaSyAQHGHNXlSHmLOjgUt1Ce6yRh2JFY61hU4",
-  authDomain: "magicpackingapp.firebaseapp.com",
-  databaseURL: "https://magicpackingapp.firebaseio.com",
-  projectId: "magicpackingapp",
-  storageBucket: "magicpackingapp.appspot.com",
-  messagingSenderId: "470203040425"
+  apiKey: "null",
+  authDomain: "null",
+  databaseURL: "null",
+  projectId: "null",
+  storageBucket: "null",
+  messagingSenderId: "null"
 };
 
 const app = initializeApp(firebaseConfig);
