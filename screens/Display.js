@@ -24,9 +24,6 @@ const scaleFontSize = (fontSize) => {
   return newSize;
 }
 
-//the following is all for the create shipment form. this will later be added to a different file for organization.
-
-
 var Carrier = t.enums({
   USPS: 'USPS',
   UPS: 'UPS',
