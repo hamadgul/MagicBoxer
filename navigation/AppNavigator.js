@@ -1,5 +1,4 @@
 import React from 'react';
-import OrdersScreen from '../screens/OrdersScreen';
 import LoginScreen from '../screens/LoginScreen';
 import Details from "../screens/Details";
 import Display from "../screens/Display";
@@ -15,7 +14,6 @@ function AppNavigator() {
     <NavigationContainer>
       <Stack.Navigator initialRouteName="LoginScreen">
         <Stack.Screen name="LoginScreen" component={LoginScreen} />
-        <Stack.Screen name="OrdersScreen" component={OrdersScreen} />
         <Stack.Screen name="Details" component={Details} />
         <Stack.Screen name="Display" component={Display} />
       </Stack.Navigator>

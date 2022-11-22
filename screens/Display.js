@@ -6,7 +6,7 @@ import AppNavigator from '../navigation/AppNavigator';
 
 import {THREE} from "expo-three";
 import { createDisplay, pack } from '../packing_algo/packing';
-import {createShipment} from '../packing_algo/shipping';
+
 
 import Modal from "react-native-modal";
 import moment from "moment";
@@ -14,10 +14,6 @@ import t from 'tcomb-form-native';
 import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scroll-view';
 import DropdownAlert from 'react-native-dropdownalert';
 
-
-//console.disableYellowBox = true;
-LogBox.ignoreAllLogs('VirtualizedLists should never be nested');
-const API_KEY = "2F7A2B46-105D-4C37-8AF6-93CC96B8832D";
 
 const deviceHeight = Dimensions.get('window').height;
 const deviceWidth = Dimensions.get('window').width;
@@ -29,10 +25,7 @@ const scaleFontSize = (fontSize) => {
 }
 
 //the following is all for the create shipment form. this will later be added to a different file for organization.
-const Form = t.form.Form;
 
-const us_state = t.subtype(t.String, st => /^[a-zA-Z]+$/.test(st) && st.length === 2);
-const expectedDelivery = t.subtype(t.Date, d => moment().diff(d) < 0 || moment().isSame(d, 'day'));
 
 var Carrier = t.enums({
   USPS: 'USPS',
@@ -40,157 +33,6 @@ var Carrier = t.enums({
   FedEX: "FedEx",
 });
 
-//the following can be used as a test, in order to fill in default values for the form
-const Default = {
-  name: "Warehouse 123",
-  address: "123 Warehouse ST",
-  city: "Shelton",
-  state: "CT",
-  zip: 55555,
-  country: "US",
-  phone: 55555,
-  trackingNumber: "5555555555555555"
-}
-
-const User = t.struct({
-  name: t.String,
-  address: t.String,
-  city: t.String,
-  state: us_state,
-  zip: t.Number,
-  country: t.String,
-  phone: t.Number,
-  expectedDelivery: expectedDelivery,
-  carrier: Carrier,
-  trackingNumber: t.String,
-  bol: t.maybe(t.String),
-  pro: t.maybe(t.String),
-  seal: t.maybe(t.String),
-  trail: t.maybe(t.String),
-});
-
-const formStyles = {
-  ...Form.stylesheet,
-  formGroup: {
-    normal: {
-      marginBottom: 10
-    },
-  },
-    // the style applied when a validation error occours
-    error: {
-      color: 'red',
-      fontSize: 18,
-      marginBottom: 7,
-      fontWeight: '600'
-    }
-}
-
-const options = {
-    fields: {
-      name: {
-        label: 'Company Name'
-      },
-      trackingNumber: {
-        label: 'Tracking Number'
-      },
-      state: {
-        help: 'e.g. "CT"'
-      },
-      expectedDelivery: {
-        mode: 'date',
-        label: 'Expected Delivery',
-        error: 'Please enter a valid date',
-        config: {
-          format: (date)=> moment(date).format("L")
-        }
-      },
-      zip: {
-        label: "Zip Code"
-      },
-      bol: {
-        label: 'Bill of Landing'
-      },
-      pro: {
-        label: 'PRO Number'
-      },
-      seal: {
-        label: 'Seal Number'
-      },
-      trail: {
-        label: 'Trailer Number'
-      },
-  },
-  i18n: {
-    optional: '',
-    required: '*'
-  },
-  stylesheet: formStyles,
-  autoCorrect: false,
-  template: template,
-};
-
-
-  function template(locals) {
-    // in locals.inputs you find all the rendered fields
-    return (
-      <View>
-        <View style = {{height: 40}}>
-          <Text style ={{fontSize: 20, fontWeight: 'bold'}}>Ship From Address</Text>
-        </View>
-
-        {locals.inputs.name}
-        {locals.inputs.address}
-        <View style={{flexDirection: 'row', justifyContent: 'space-between'}}>
-          <View style = {{flex:1}}>
-            {locals.inputs.city}
-          </View>
-          <View style={{paddingLeft: 10, paddingRight: 10}}>
-            {locals.inputs.state}
-          </View>
-          <View style = {{flex:1}}>
-            {locals.inputs.zip}
-          </View>
-        </View>
-        <View style= {{flexDirection: 'row', justifyContent: 'space-between', flex: 1}}>
-          <View style = {{paddingRight: 5, flex:1}}>
-            {locals.inputs.country}
-          </View>
-          <View style = {{paddingLeft: 5, flex:1}}>
-            {locals.inputs.phone}
-          </View>
-        </View>
-        <View style ={{paddingBottom: 10, alignItems: 'center'}}>
-          <Text> ----------------- </Text>
-        </View>
-        {locals.inputs.trackingNumber}
-        <View style= {{flexDirection: 'row'}}>
-          <View style = {{flex:1}}>
-            {locals.inputs.expectedDelivery}
-          </View>
-          <View style = {{width: 90}}>
-            {locals.inputs.carrier}
-          </View>
-        </View>
-        <View style= {{flexDirection: 'row', justifyContent: 'space-between', flex: 1}}>
-          <View style = {{paddingRight: 5, flex:1}}>
-            {locals.inputs.bol}
-          </View>
-          <View style = {{paddingLeft: 5, flex:1}}>
-            {locals.inputs.pro}
-          </View>
-        </View>
-        <View style= {{flexDirection: 'row', justifyContent: 'space-between', flex: 1}}>
-          <View style = {{paddingRight: 5, flex:1}}>
-            {locals.inputs.seal}
-          </View>
-          <View style = {{paddingLeft: 5, flex:1}}>
-            {locals.inputs.trail}
-          </View>
-        </View>
-      </View>
-    );
-  }
-//end of form Info
 
 
 export default class Display extends Component {
@@ -214,12 +56,6 @@ export default class Display extends Component {
     headerTintColor : 'white'
   }
 
-//this will use the output from the shipment form to fill in the body of the json and send it to logicbroker's API
-  // createShipment = () => {
-  //
-  //
-  // }
-
 
   openItemModal = () => this.setState({itemKey: true});
   closeItemModal = () => this.setState({itemKey: false});
@@ -227,7 +63,7 @@ export default class Display extends Component {
   openShipmentModal = () => this.setState({shipmentModal: true});
   closeShipmentModal = () => {
     this.setState({shipmentModal: false});
-    this.props.navigation.navigate("OrdersScreen");
+    this.props.navigation.navigate("DetailsScreen");
   };
 
   handleOnScroll = event => {
@@ -239,33 +75,6 @@ export default class Display extends Component {
   handleScrollTo = p => {
     if (this.scrollViewRef) {
       this.scrollViewRef.scrollTo(p);
-    }
-  }
-
-//submit the shipment info. if it's fully filled out, pass it to createshipment. else, vibrate (and the form will turn red)
-  handleSubmit = () => {
-    var value = this._form.getValue();
-    if (!value) {
-      Vibration.vibrate(1);
-    }
-    else {
-      console.log('value: ', value);
-      console.log(this.params.orderDetails)
-      var body = createShipment(this.params.orderDetails, value, [this.params.box.y, this.params.box.z, this.params.box.x]);
-      var bodyJSON = JSON.stringify(body);
-      fetch("https://stage.commerceapi.io/api/v1/Shipments?subscription-key=" + API_KEY, {
-        method: 'POST',
-        timeout: 0,
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        body: bodyJSON
-      }).then(res => res.json())
-      .then(response => console.log("Success:", JSON.stringify(response)))
-      .catch(error => console.error('Error:', error));
-
-      // this.setState({shipmentModal: false});
-      Alert.alert("Success", 'Shipment Created', [{text: 'Return to Orders', onPress: () => this.closeShipmentModal()},], {cancelable: false});
     }
   }
 

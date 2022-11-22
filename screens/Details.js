@@ -4,10 +4,7 @@ import { Modal, Picker, FlatList, ActivityIndicator, View, Dimensions, Touchable
 import AppNavigator from '../navigation/AppNavigator';
 import { pack, createDisplay } from '../packing_algo/packing';
 import { db } from './../firebase';
-import { writeItemData } from '../database/AppStorage';
 
-const API_KEY = "EA974070-98C6-4DC1-B449-CAE6BB93A9F6";
-// const URL = 'https://stage.commerceapi.io/api/v1/Orders/' + LogicKey  + '?subscription-key=';
 
 const deviceHeight = Dimensions.get('window').height;
 
@@ -29,6 +26,8 @@ export default class Details extends Component {
           modalDisplay: false,
           unit: "inches",
         }
+        this.updateState = this.updateState.bind(this);
+
     }
 
     static navigationOptions = ({ navigation }) => {
@@ -124,7 +123,7 @@ export default class Details extends Component {
       return false
     }
 
-    componentDidMount = () => {
+    updateState(){ 
       this.setState({
           isLoading: false,
           isShown: true,
@@ -144,59 +143,20 @@ export default class Details extends Component {
           SupplierSKU: "656456465",
           allItems: {},
           }, () => {this.fetchDims();
+        ()=> {this.checkButton()}
       });
     }
-    
-        
-       /*  //var LBKey = this.props.navigation.state.params.LogicBrokerKey;
-        //const URL = 'https://stage.commerceapi.io/api/v1/Orders/'
-        //            + LBKey + '?subscription-key=';
-
-        return fetch(URL + API_KEY, {
-            method: 'GET',
-            headers: new Headers({
-                'Content-Type': 'application/json'
-            }),
-        })
-            .then((response) => response.json())
-            .then((responseJson) => {
-
-                this.setState({
-                    isLoading: false,
-                    dataSource: responseJson.Body.SalesOrder.OrderLines,
-                    orderInfo: responseJson.Body.SalesOrder,
-                }, function () {
-                  this.props.navigation.setParams({otherParam: "Order " + responseJson.Body.SalesOrder.OrderNumber, LogicBrokerKey: LBKey})
-                });
-
-
-            })
-            .then (() => {
-              this.setState({
-                items: this.state.dataSource.length,
-                allItems: {},
-              }, () => {
-                this.fetchDims();
-              });
-            })
-            .then (() => {
-              this.checkButton();
-            })
-            .catch((error) => {
-                console.error(error);
-            });
-          }
- */
 
     render(){
-      if(this.state.isLoading){
-        return(
-          <View style={{flex: 1, padding: 20}}>
-            <ActivityIndicator/>
-          </View>
-        )
-      }
-      else {
+     // if(this.state.isLoading){
+    //    return(
+     //     <View style={{flex: 1, padding: 20}}>
+      //      <ActivityIndicator/>
+      //    </View>
+    //    )
+    //  }
+   //   else {
+      (this.state.updateState);
        return (
          <View style={{flex: 1}}>
            <Container style={styles.container}>
@@ -339,7 +299,7 @@ export default class Details extends Component {
         );
       }
     }
-}
+//}
 
 const styles = StyleSheet.create({
    container: {
