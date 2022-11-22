@@ -19,7 +19,7 @@ export default class LoginScreen extends React.Component {
           <View style = {styles.space}></View>
            <TextInput style = {styles.input}
               placeholder = "Username"
-              value="test.123@logicbroker.com"
+              value="test.123"
             />
           <TextInput style = {styles.input}
               placeholder = "Password"
@@ -52,7 +52,7 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: '#fff'
+    backgroundColor: '#ffffff'
   },
   input: {
     height: 50,
@@ -62,7 +62,7 @@ const styles = StyleSheet.create({
     padding: 10,
     fontSize: 18,
     borderWidth: 2,
-    shadowColor: '#000000',
+    shadowColor: '#ffffff',
     shadowOffset: {
       width: 0,
       height: 3
@@ -71,7 +71,7 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.25
   },
   buttonStyle: {
-    backgroundColor: '#ee3224',
+    backgroundColor: '#102e44',
     borderRadius: 10,
     width: 250,
     padding: 10,
