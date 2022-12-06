@@ -5,6 +5,7 @@ import Display from "../screens/Display";
 
 import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
+import FormPage from '../screens/FormPage';
 
 
 const Stack = createNativeStackNavigator();
@@ -14,6 +15,7 @@ function AppNavigator() {
     <NavigationContainer>
       <Stack.Navigator initialRouteName="LoginScreen">
         <Stack.Screen name="LoginScreen" component={LoginScreen} />
+        <Stack.Screen name="FormPage" component={FormPage} />
         <Stack.Screen name="Details" component={Details} />
         <Stack.Screen name="Display" component={Display} />
       </Stack.Navigator>
