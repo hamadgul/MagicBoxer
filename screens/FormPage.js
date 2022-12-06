@@ -1,33 +1,72 @@
 import React, { useState } from 'react';
-import { Button, StyleSheet, Text, TextInput} from "react-native";
+import { Alert, Button, StyleSheet, Text, TextInput, View} from "react-native";
 import { Form} from 'native-base';
 
 export default class FormPage extends React.Component {
+    
+    static ItemDetails = (props) => {
+        return (
+            <View>
+                <Text>Item Name: {props.itemName}</Text>
+                <Text>Item Width: {props.itemWidth}</Text>
+                <Text>Item Height: {props.itemHeight}</Text>
+                <Text>Item Length: {props.itemLength}</Text>
+            </View>
+        );
+    };
+    
     constructor(props) {
         super(props);
         this.state = {
             itemName: '',
             itemWidth: 0,
             itemHeight: 0,
-            itemLength: 0
+            itemLength: 0,
+            items: [],
+            showDetails: false
         };
         this.handleChange = this.handleChange.bind(this);
         this.handleSubmit = this.handleSubmit.bind(this);
-    }    
-    
+        this.resetForm = this.resetForm.bind(this);
+        }    
+        resetForm = () => {
+            this.setState({
+              itemName: '',
+              itemWidth: 0,
+              itemHeight: 0,
+              itemLength: 0
+            });
+          }
+
         handleChange = itemName => {
         this.setState({itemName});
         }
     
     
         handleSubmit = e => {
+            if (isNaN(this.state.itemLength) || isNaN(this.state.itemWidth) || isNaN(this.state.itemHeight)) {
+                // Display an error message
+                Alert.alert('Error', 'Item length, width, and height must be numeric values.');
+                // prevent the form from being submitted
+                return;
+            }
         alert('An item was submitted: ' + this.state.itemName);
-        }
-
+        this.setState(prevState => ({
+            items: [...prevState.items, {
+                itemName: this.state.itemName,
+                itemWidth: this.state.itemWidth,
+                itemHeight: this.state.itemHeight,
+                itemLength: this.state.itemLength
+            }]
+        }));
+        this.resetForm();
+    }   
         render(){
+    
+
             return (
                 <Form onSubmit={this.handleSubmit}>
-                  <Text style={styles.label}>Name:</Text>
+                  <Text style={styles.label}>Item Name:</Text>
                   <TextInput
                     style={styles.input}
                     value={this.state.itemName}
@@ -53,14 +92,28 @@ export default class FormPage extends React.Component {
                   />
                   <Button 
                     block style={styles.submitButton} 
-                    onPress={this.handleSubmit}
+                    onPress={() => {
+                    this.handleSubmit();
+                    this.resetForm();
+                }}
                     title = "Submit">
                     <Text>Submit</Text>
                   </Button>
-                </Form>
+                <View>
+                {this.state.items.map(item => (
+                        <FormPage.ItemDetails
+                            itemName={item.itemName}
+                            itemWidth={item.itemWidth}
+                            itemHeight={item.itemHeight}
+                            itemLength={item.itemLength}
+                        />
+                    ))}
+                </View>
+            </Form>
               );
             }
     }
+  
     const styles = StyleSheet.create({
         label: {
             fontSize: 18,
