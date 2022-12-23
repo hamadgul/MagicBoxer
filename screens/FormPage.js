@@ -1,6 +1,9 @@
 import React, { useState } from 'react';
 import { Alert, Button, StyleSheet, Text, TextInput, View} from "react-native";
 import { Form} from 'native-base';
+import { Keyboard } from 'react-native';
+
+
 
 export default class FormPage extends React.Component {
     
@@ -60,11 +63,13 @@ export default class FormPage extends React.Component {
             }]
         }));
         this.resetForm();
+        Keyboard.dismiss();
     }   
         render(){
     
 
             return (
+                <View style={styles.container}>
                 <Form onSubmit={this.handleSubmit}>
                   <Text style={styles.label}>Item Name:</Text>
                   <TextInput
@@ -77,18 +82,21 @@ export default class FormPage extends React.Component {
                     style={styles.input}
                     value={this.state.itemWidth}
                     onChangeText={text => this.setState({ itemWidth: text })}
+                    keyboardType="numeric"
                   />
                   <Text style={styles.label}>Height:</Text>
                   <TextInput
                     style={styles.input}
                     value={this.state.itemHeight}
                     onChangeText={text => this.setState({ itemHeight: text })}
+                    keyboardType="numeric"
                   />
                   <Text style={styles.label}>Length:</Text>
                   <TextInput
                     style={styles.input}
                     value={this.state.itemLength}
                     onChangeText={text => this.setState({ itemLength: text })}
+                    keyboardType="numeric"
                   />
                   <Button 
                     block style={styles.submitButton} 
@@ -99,7 +107,7 @@ export default class FormPage extends React.Component {
                     title = "Submit">
                     <Text>Submit</Text>
                   </Button>
-                <View>
+                <View style={styles.itemBorder}>
                 {this.state.items.map(item => (
                         <FormPage.ItemDetails
                             itemName={item.itemName}
@@ -110,23 +118,39 @@ export default class FormPage extends React.Component {
                     ))}
                 </View>
             </Form>
+            </View>
               );
             }
     }
   
     const styles = StyleSheet.create({
+        container: {
+          flex: 1,
+          padding: 20,
+        },
         label: {
-            fontSize: 18,
-            marginBottom: 10
+          fontSize: 16,
+          marginTop: 20,
         },
         input: {
-            height: 40,
-            borderColor: 'gray',
-            borderWidth: 1,
-            marginBottom: 20,
-            paddingHorizontal: 10
+          height: 40,
+          borderColor: '#ddd',
+          borderWidth: 1,
+          marginTop: 10,
+          padding: 10,
+          fontSize: 14,
+          borderRadius: 4,
+
         },
         submitButton: {
-            marginTop: 10
+          backgroundColor: '#3498db',
+          padding: 15,
+          marginTop: 20,
+          borderRadius: 4,
+        },
+        itemBorder: {
+        borderWidth: "2px",
+        borderStyle: "solid",
+        borderColor: "#1C6EA4",
         }
-    });
+      });
