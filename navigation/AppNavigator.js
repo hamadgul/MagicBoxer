@@ -16,8 +16,8 @@ function AppNavigator() {
   return (
     <NavigationContainer>
       <Stack.Navigator initialRouteName="LoginScreen">
-        <Stack.Screen name="LoginScreen" component={LoginScreen} />
-        <Stack.Screen name="FormPage" component={FormPage} />
+        <Stack.Screen name="Login Screen" component={LoginScreen} />
+        <Stack.Screen name="Form Page" component={FormPage} />
         <Stack.Screen name="Details" component={Details} />
         <Stack.Screen name="Display" component={Display} />
       </Stack.Navigator>

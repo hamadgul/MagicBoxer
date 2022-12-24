@@ -29,7 +29,7 @@ export default class LoginScreen extends React.Component {
           <View style = {styles.space}></View>
           <View style = {styles.buttonStyle}>
             <Button
-              onPress={() => navigate("FormPage")}
+              onPress={() => navigate("Form Page")}
               title= 'Log In'
               color = '#FFFFFF'
               accessibilityLabel ="Log in using OAuth"

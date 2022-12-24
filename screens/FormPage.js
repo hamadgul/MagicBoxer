@@ -7,16 +7,13 @@ import { Keyboard } from 'react-native';
 
 export default class FormPage extends React.Component {
     
-    static ItemDetails = (props) => {
-        return (
-            <View>
-                <Text>Item Name: {props.itemName}</Text>
-                <Text>Item Width: {props.itemWidth}</Text>
-                <Text>Item Height: {props.itemHeight}</Text>
-                <Text>Item Length: {props.itemLength}</Text>
-            </View>
-        );
-    };
+  static ItemDetails = (props) => {
+    return (
+      <View style={{ borderWidth: 1, borderColor: '#000', borderRadius: 5 }}>
+        <Text>Item: {props.itemDescription}</Text> 
+      </View>
+    );
+  };
     
     constructor(props) {
         super(props);
@@ -35,9 +32,9 @@ export default class FormPage extends React.Component {
         resetForm = () => {
             this.setState({
               itemName: '',
-              itemWidth: 0,
-              itemHeight: 0,
-              itemLength: 0
+              itemWidth: '',
+              itemHeight: '',
+              itemLength: ''
             });
           }
 
@@ -45,8 +42,15 @@ export default class FormPage extends React.Component {
         this.setState({itemName});
         }
     
-    
+        handleVisualize = e => {
+
+        }
         handleSubmit = e => {
+          alert(`Number of items submitted so far: ${this.state.items.length}`);
+          if (this.state.itemLength === '' || this.state.itemWidth === '' || this.state.itemHeight === '' || this.state.itemName === '') {
+            Alert.alert('Error', 'Item name, length ,width, and height cannot be empty.');
+            return;
+          }
             if (isNaN(this.state.itemLength) || isNaN(this.state.itemWidth) || isNaN(this.state.itemHeight)) {
                 // Display an error message
                 Alert.alert('Error', 'Item length, width, and height must be numeric values.');
@@ -61,6 +65,7 @@ export default class FormPage extends React.Component {
                 itemHeight: this.state.itemHeight,
                 itemLength: this.state.itemLength
             }]
+         
         }));
         this.resetForm();
         Keyboard.dismiss();
@@ -98,6 +103,7 @@ export default class FormPage extends React.Component {
                     onChangeText={text => this.setState({ itemLength: text })}
                     keyboardType="numeric"
                   />
+                  <View style={styles.buttonContainer}>
                   <Button 
                     block style={styles.submitButton} 
                     onPress={() => {
@@ -107,13 +113,24 @@ export default class FormPage extends React.Component {
                     title = "Submit">
                     <Text>Submit</Text>
                   </Button>
+                  <Button
+                  block style = {styles.visualizeButton}
+                  onPress={() => { 
+                  this.handleVisualize();
+                  }}
+                  title = "Visualize"
+                  >
+                  <Text>Visualize</Text>
+                  </Button>
+                  </View>
                 <View style={styles.itemBorder}>
                 {this.state.items.map(item => (
                         <FormPage.ItemDetails
-                            itemName={item.itemName}
-                            itemWidth={item.itemWidth}
-                            itemHeight={item.itemHeight}
-                            itemLength={item.itemLength}
+                            //itemName={item.itemName}
+                            //itemWidth={item.itemWidth}
+                            //itemHeight={item.itemHeight}
+                            //itemLength={item.itemLength}
+                            itemDescription={`${item.itemName} (${item.itemWidth}cm x ${item.itemHeight}cm x ${item.itemLength}cm)`}
                         />
                     ))}
                 </View>
@@ -142,11 +159,17 @@ export default class FormPage extends React.Component {
           borderRadius: 4,
 
         },
+        buttonContainer: {
+          flexDirection: 'row',
+          justifyContent: 'space-between'
+        },
         submitButton: {
-          backgroundColor: '#3498db',
-          padding: 15,
-          marginTop: 20,
-          borderRadius: 4,
+          flex:1,
+          marginRight: 5
+        },
+        visualizeButton: {
+          flex: 1,
+          marginLeft: 5
         },
         itemBorder: {
         borderWidth: "2px",
