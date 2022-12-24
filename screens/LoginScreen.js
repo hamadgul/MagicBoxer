@@ -1,96 +1,96 @@
-import React, { Component } from 'react';
-import { Button, Alert } from 'react-native';
-import { AppRegistry, Text, View, StyleSheet, Image, TextInput } from 'react-native';
-import AppNavigator from '../navigation/AppNavigator';
-import { WebBrowser } from 'expo';
+import React, { useState } from 'react'
+import { TouchableOpacity, StyleSheet, View } from 'react-native'
+import { Text } from 'react-native-paper'
+import Background from '../components/Background'
+import Logo from '../components/Logo'
+import Header from '../components/Header'
+import Button from '../components/Button'
+import TextInput from '../components/TextInput'
+import BackButton from '../components/BackButton'
+import { theme } from '../core/theme'
+import { emailValidator } from '../helpers/emailValidator'
+import { passwordValidator } from '../helpers/passwordValidator'
 
-export default class LoginScreen extends React.Component {
-  render() {
-    const { navigate } = this.props.navigation;
+export default function LoginScreen({ navigation }) {
+  const [email, setEmail] = useState({ value: '', error: '' })
+  const [password, setPassword] = useState({ value: '', error: '' })
 
-    return (
-      <View style = {styles.main}>
-        <View style = {styles.container}>
-          <View>
-            <Image source = {require('../assets/images/big_logo.png')}
-                   style = {styles.image}
-                   resizeMode = 'cover' />
-          </View>
-          <View style = {styles.space}></View>
-           <TextInput style = {styles.input}
-              placeholder = "Username"
-              value="test.123"
-            />
-          <TextInput style = {styles.input}
-              placeholder = "Password"
-              secureTextEntry = {true}
-              value="test123"
-          />
-          <View style = {styles.space}></View>
-          <View style = {styles.buttonStyle}>
-            <Button
-              onPress={() => navigate("Form Page")}
-              title= 'Log In'
-              color = '#FFFFFF'
-              accessibilityLabel ="Log in using OAuth"
-            />
-          </View>
-        </View>
-      </View>
-    )
+  const onLoginPressed = () => {
+    // const emailError = emailValidator(email.value)
+    // const passwordError = passwordValidator(password.value)
+    // if (emailError || passwordError) {
+    //   setEmail({ ...email, error: emailError })
+    //   setPassword({ ...password, error: passwordError })
+    //   return
+    // }
+    navigation.reset({
+      index: 0,
+      routes: [{ name: 'Form Page' }],
+    })
   }
-};
+
+  return (
+    <Background>
+      <BackButton goBack={navigation.goBack} />
+      <Logo />
+      <Header>MagicBoxer</Header>
+      <TextInput
+        label="Email"
+        returnKeyType="next"
+        value={email.value}
+        onChangeText={(text) => setEmail({ value: text, error: '' })}
+        error={!!email.error}
+        errorText={email.error}
+        autoCapitalize="none"
+        autoCompleteType="email"
+        textContentType="emailAddress"
+        keyboardType="email-address"
+      />
+      <TextInput
+        label="Password"
+        returnKeyType="done"
+        value={password.value}
+        onChangeText={(text) => setPassword({ value: text, error: '' })}
+        error={!!password.error}
+        errorText={password.error}
+        secureTextEntry
+      />
+      <View style={styles.forgotPassword}>
+        <TouchableOpacity
+          onPress={() => navigation.navigate('ResetPasswordScreen')}
+        >
+          <Text style={styles.forgot}>Forgot your password?</Text>
+        </TouchableOpacity>
+      </View>
+      <Button mode="contained" onPress={onLoginPressed}>
+        Login
+      </Button>
+      <View style={styles.row}>
+        <Text>Don’t have an account? </Text>
+        <TouchableOpacity onPress={() => navigation.replace('RegisterScreen')}>
+          <Text style={styles.link}>Sign up</Text>
+        </TouchableOpacity>
+      </View>
+    </Background>
+  )
+}
 
 const styles = StyleSheet.create({
-  image: {
-    alignSelf: 'center',
-    shadowColor: '#000000',
-    shadowOffset: {
-      width: 0,
-      height: 3,
-    },
-  shadowRadius: 10,
-  shadowOpacity: 0.25,
-    },
-  main: {
-    flex: 1,
+  forgotPassword: {
+    width: '100%',
+    alignItems: 'flex-end',
+    marginBottom: 24,
   },
-  container: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    backgroundColor: '#ffffff'
+  row: {
+    flexDirection: 'row',
+    marginTop: 4,
   },
-  input: {
-    height: 50,
-    width: 250,
-    marginTop: 30,
-    borderRadius: 20,
-    padding: 10,
-    fontSize: 18,
-    borderWidth: 2,
-    shadowColor: '#ffffff',
-    shadowOffset: {
-      width: 0,
-      height: 3
-    },
-    shadowRadius: 10,
-    shadowOpacity: 0.25
+  forgot: {
+    fontSize: 13,
+    color: theme.colors.secondary,
   },
-  buttonStyle: {
-    backgroundColor: '#102e44',
-    borderRadius: 10,
-    width: 250,
-    padding: 10,
-    shadowColor: '#000000',
-    shadowOffset: {
-      width: 0,
-      height: 3
-    },
-    shadowRadius: 10,
-    shadowOpacity: 0.25
+  link: {
+    fontWeight: 'bold',
+    color: theme.colors.primary,
   },
-  space: {
-    padding: 15
-  }
-});
+})
