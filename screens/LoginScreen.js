@@ -43,8 +43,15 @@ export default class LoginScreen extends React.Component {
 
 const styles = StyleSheet.create({
   image: {
-    alignSelf: 'center'
-  },
+    alignSelf: 'center',
+    shadowColor: '#000000',
+    shadowOffset: {
+      width: 0,
+      height: 3,
+    },
+  shadowRadius: 10,
+  shadowOpacity: 0.25,
+    },
   main: {
     flex: 1,
   },

@@ -43,10 +43,10 @@ export default class FormPage extends React.Component {
         }
     
         handleVisualize = e => {
-
+          console.table(this.state.items);
         }
         handleSubmit = e => {
-          alert(`Number of items submitted so far: ${this.state.items.length}`);
+          
           if (this.state.itemLength === '' || this.state.itemWidth === '' || this.state.itemHeight === '' || this.state.itemName === '') {
             Alert.alert('Error', 'Item name, length ,width, and height cannot be empty.');
             return;
@@ -58,6 +58,7 @@ export default class FormPage extends React.Component {
                 return;
             }
         alert('An item was submitted: ' + this.state.itemName);
+      
         this.setState(prevState => ({
             items: [...prevState.items, {
                 itemName: this.state.itemName,
@@ -67,6 +68,7 @@ export default class FormPage extends React.Component {
             }]
          
         }));
+        alert(`Number of items submitted so far: ${this.state.items.length+1}`);
         this.resetForm();
         Keyboard.dismiss();
     }   
@@ -124,13 +126,13 @@ export default class FormPage extends React.Component {
                   </Button>
                   </View>
                 <View style={styles.itemBorder}>
-                {this.state.items.map(item => (
-                        <FormPage.ItemDetails
+                {this.state.items.map((item, index) => (
+                        <FormPage.ItemDetails key={index} itemDescription={`${item.itemName} (${item.itemWidth}in x ${item.itemHeight}in x ${item.itemLength}in)`}
                             //itemName={item.itemName}
                             //itemWidth={item.itemWidth}
                             //itemHeight={item.itemHeight}
                             //itemLength={item.itemLength}
-                            itemDescription={`${item.itemName} (${item.itemWidth}cm x ${item.itemHeight}cm x ${item.itemLength}cm)`}
+                            //itemDescription={`${item.itemName} (${item.itemWidth}cm x ${item.itemHeight}cm x ${item.itemLength}cm)`}
                         />
                     ))}
                 </View>
