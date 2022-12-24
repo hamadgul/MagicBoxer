@@ -62,7 +62,7 @@ export default function LoginScreen({ navigation }) {
           <Text style={styles.forgot}>Forgot your password?</Text>
         </TouchableOpacity>
       </View>
-      <Button mode="contained" onPress={onLoginPressed}>
+      <Button style={styles.button} mode="contained" onPress={onLoginPressed}>
         Login
       </Button>
       <View style={styles.row}>
