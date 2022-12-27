@@ -4,9 +4,10 @@ import { Form} from 'native-base';
 import { Keyboard } from 'react-native';
 import BackButton from '../components/BackButton'
 import Background from '../components/Background'
-import AppNavigator from '../navigation/AppNavigator';
-import LoginScreen from './LoginScreen';
 import { theme } from '../core/theme'
+import AsyncStorage from '@react-native-async-storage/async-storage';
+
+
 
 export default class FormPage extends React.Component {
 
@@ -76,7 +77,19 @@ export default class FormPage extends React.Component {
         alert(`Number of items submitted so far: ${this.state.items.length+1}`);
         this.resetForm();
         Keyboard.dismiss();
+        this._storeData();
+
+        //const items = JSON.parse(await AsyncStorage.getItem('itemList'));
+
     }
+
+    _storeData = async () => {
+      try {
+        await AsyncStorage.setItem('itemList', JSON.stringify(this.state.items));
+      
+      } catch (error){
+    }
+  };
         render(){
 
 
