@@ -18,7 +18,7 @@ export default class FormPage extends React.Component {
   static ItemDetailsModal = (props) => {
     return (
       <View style={styles.centeredView}>
-        <Modal visible={props.visible} animationType="slide">
+        <Modal visible={props.visible} animationType="slide" transparent={true}>
           <View style={styles.centeredView}>
             <View style={styles.modalContent}>
               <Text>Item Name: {props.item.itemName}</Text>
@@ -35,7 +35,8 @@ export default class FormPage extends React.Component {
 
   static ItemDetailsName = (props) => {
     return (
-      <View style={styles.itemBorder}>
+      // <View style={styles.itemBorder}>
+      <View>
         <Text>Item: {props.item.itemName}</Text>
       </View>
     );
@@ -203,10 +204,13 @@ export default class FormPage extends React.Component {
               <Text>Visualize</Text>
             </Button>
           </View>
-          <ThemeProvider>
-            <View style={styles.itemBorder}>
+          <View>
+            <View style={styles.textStyle}>
               {this.state.items.map((item, index) => (
-                <View style={styles.itemBorder} key={item.itemName}>
+                <View
+                  style={[styles.button, styles.buttonOpen]}
+                  key={item.itemName}
+                >
                   <Button
                     key={index}
                     onPress={() =>
@@ -224,7 +228,7 @@ export default class FormPage extends React.Component {
                 />
               )}
             </View>
-          </ThemeProvider>
+          </View>
         </Form>
       </View>
     );
@@ -276,7 +280,7 @@ const styles = StyleSheet.create({
   },
   modalContent: {
     margin: 20,
-    backgroundColor: "white",
+    backgroundColor: "#32a8a4",
     borderRadius: 20,
     padding: 35,
     alignItems: "center",
@@ -289,5 +293,21 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.25,
     shadowRadius: 4,
     elevation: 5,
+  },
+  button: {
+    borderRadius: 20,
+    padding: 10,
+    elevation: 2,
+  },
+  buttonOpen: {
+    backgroundColor: "#fc92a1",
+  },
+  buttonClose: {
+    backgroundColor: "#2196F3",
+  },
+  textStyle: {
+    color: "white",
+    fontWeight: "bold",
+    textAlign: "center",
   },
 });
