@@ -7,13 +7,9 @@ import {
   TextInput,
   View,
   Modal,
-  Image,
 } from "react-native";
 import { Form, Row } from "native-base";
 import { Keyboard } from "react-native";
-import BackButton from "../components/BackButton";
-import Background from "../components/Background";
-import { theme } from "../core/theme";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useEffect } from "react";
 import { ThemeProvider } from "react-native-paper";
@@ -21,27 +17,25 @@ import { ThemeProvider } from "react-native-paper";
 export default class FormPage extends React.Component {
   static ItemDetailsModal = (props) => {
     return (
-      <ThemeProvider>
+      <View style={styles.centeredView}>
         <Modal visible={props.visible} animationType="slide">
-          <View style={styles.modalContent}>
-            <Text>Item: {props.item.itemName}</Text>
-            <Text>Width: {props.item.itemWidth}</Text>
-            <Text>Height: {props.item.itemHeight}</Text>
-            <Text>Length: {props.item.itemLength}</Text>
-            <Button
-              style={styles.backButton}
-              onPress={props.closeModal}
-              title="Close Modal"
-            />
+          <View style={styles.centeredView}>
+            <View style={styles.modalContent}>
+              <Text>Item Name: {props.item.itemName}</Text>
+              <Text>Width: {props.item.itemWidth}</Text>
+              <Text>Height: {props.item.itemHeight}</Text>
+              <Text>Length: {props.item.itemLength}</Text>
+              <Button onPress={props.closeModal} title="Close" />
+            </View>
           </View>
         </Modal>
-      </ThemeProvider>
+      </View>
     );
   };
 
   static ItemDetailsName = (props) => {
     return (
-      <View>
+      <View style={styles.itemBorder}>
         <Text>Item: {props.item.itemName}</Text>
       </View>
     );
@@ -215,13 +209,15 @@ export default class FormPage extends React.Component {
           <ThemeProvider>
             <View style={styles.itemBorder}>
               {this.state.items.map((item, index) => (
-                <Button
-                  key={index}
-                  onPress={() =>
-                    this.setState({ showDetails: true, selectedItem: item })
-                  }
-                  title={item.itemName}
-                />
+                <View style={styles.itemBorder} key={item.itemName}>
+                  <Button
+                    key={index}
+                    onPress={() =>
+                      this.setState({ showDetails: true, selectedItem: item })
+                    }
+                    title={item.itemName}
+                  />
+                </View>
               ))}
               {this.state.showDetails && (
                 <FormPage.ItemDetailsModal
@@ -275,19 +271,26 @@ const styles = StyleSheet.create({
     borderStyle: "solid",
     borderColor: "#1C6EA4",
   },
-  modalContent: {
-    backgroundColor: "red",
-    fontSize: 20,
-    alignItems: "center",
-    justifyContent: "flex-start",
-    flexDirection: "row",
+  centeredView: {
     flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+    marginTop: 22,
   },
-  backButton: {
-    position: "absolute",
-    top: 20,
-    left: 20,
-    padding: 10,
-    zIndex: 10,
+  modalContent: {
+    margin: 20,
+    backgroundColor: "white",
+    borderRadius: 20,
+    padding: 35,
+    alignItems: "center",
+    justifyContent: "center",
+    shadowColor: "#000",
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.25,
+    shadowRadius: 4,
+    elevation: 5,
   },
 });
