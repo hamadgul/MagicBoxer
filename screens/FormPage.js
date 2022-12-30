@@ -1,22 +1,51 @@
 import React, { useState, Component } from "react";
-import { Alert, Button, StyleSheet, Text, TextInput, View } from "react-native";
-import { Form } from "native-base";
+import {
+  Alert,
+  Button,
+  StyleSheet,
+  Text,
+  TextInput,
+  View,
+  Modal,
+  Image,
+} from "react-native";
+import { Form, Row } from "native-base";
 import { Keyboard } from "react-native";
 import BackButton from "../components/BackButton";
 import Background from "../components/Background";
 import { theme } from "../core/theme";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useEffect } from "react";
+import { ThemeProvider } from "react-native-paper";
 
 export default class FormPage extends React.Component {
-  static ItemDetails = (props) => {
+  static ItemDetailsModal = (props) => {
     return (
-      <View style={{ borderWidth: 1, borderColor: "#000", borderRadius: 5 }}>
-        <Text>Item: {props.itemDescription}</Text>
-      </View>
+      <ThemeProvider>
+        <Modal visible={props.visible} animationType="slide">
+          <View style={styles.modalContent}>
+            <Text>Item: {props.item.itemName}</Text>
+            <Text>Width: {props.item.itemWidth}</Text>
+            <Text>Height: {props.item.itemHeight}</Text>
+            <Text>Length: {props.item.itemLength}</Text>
+            <Button
+              style={styles.backButton}
+              onPress={props.closeModal}
+              title="Close Modal"
+            />
+          </View>
+        </Modal>
+      </ThemeProvider>
     );
   };
 
+  static ItemDetailsName = (props) => {
+    return (
+      <View>
+        <Text>Item: {props.item.itemName}</Text>
+      </View>
+    );
+  };
   constructor(props) {
     super(props);
     this.state = {
@@ -32,6 +61,7 @@ export default class FormPage extends React.Component {
     this.handleSubmit = this.handleSubmit.bind(this);
     this.resetForm = this.resetForm.bind(this);
     this.handleVisualize = this.handleVisualize.bind(this);
+    this.closeModal = this.closeModal.bind(this);
   }
   resetForm = () => {
     this.setState({
@@ -118,6 +148,13 @@ export default class FormPage extends React.Component {
     this.resetForm();
     Keyboard.dismiss();
   };
+  selectItem = (item) => {
+    this.setState({ selectedItem: item });
+  };
+
+  closeModal = () => {
+    this.setState({ showDetails: false });
+  };
 
   render() {
     return (
@@ -175,14 +212,26 @@ export default class FormPage extends React.Component {
               <Text>Visualize</Text>
             </Button>
           </View>
-          <View style={styles.itemBorder}>
-            {this.state.items.map((item, index) => (
-              <FormPage.ItemDetails
-                key={index}
-                itemDescription={`${item.itemName} (${item.itemWidth}in x ${item.itemHeight}in x ${item.itemLength}in)`}
-              />
-            ))}
-          </View>
+          <ThemeProvider>
+            <View style={styles.itemBorder}>
+              {this.state.items.map((item, index) => (
+                <Button
+                  key={index}
+                  onPress={() =>
+                    this.setState({ showDetails: true, selectedItem: item })
+                  }
+                  title={item.itemName}
+                />
+              ))}
+              {this.state.showDetails && (
+                <FormPage.ItemDetailsModal
+                  visible={this.state.showDetails}
+                  item={this.state.selectedItem}
+                  closeModal={this.closeModal}
+                />
+              )}
+            </View>
+          </ThemeProvider>
         </Form>
       </View>
     );
@@ -225,5 +274,20 @@ const styles = StyleSheet.create({
     borderWidth: "2px",
     borderStyle: "solid",
     borderColor: "#1C6EA4",
+  },
+  modalContent: {
+    backgroundColor: "red",
+    fontSize: 20,
+    alignItems: "center",
+    justifyContent: "flex-start",
+    flexDirection: "row",
+    flex: 1,
+  },
+  backButton: {
+    position: "absolute",
+    top: 20,
+    left: 20,
+    padding: 10,
+    zIndex: 10,
   },
 });
