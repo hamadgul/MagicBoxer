@@ -7,8 +7,7 @@ export default class SettingsScreen extends React.Component {
   };
 
   render() {
-    /* Go ahead and delete ExpoConfigView and replace it with your
-     * content */
+
     return <ExpoConfigView />;
   }
 }

@@ -1,21 +1,45 @@
 import React, { useState, Component } from "react";
-import { Alert, Button, StyleSheet, Text, TextInput, View } from "react-native";
-import { Form } from "native-base";
+import {
+  Alert,
+  Button,
+  StyleSheet,
+  Text,
+  TextInput,
+  View,
+  Modal,
+} from "react-native";
+import { Form, Row } from "native-base";
 import { Keyboard } from "react-native";
-import BackButton from "../components/BackButton";
-import Background from "../components/Background";
-import { theme } from "../core/theme";
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import { useEffect } from "react";
+import { ThemeProvider } from "react-native-paper";
 
 export default class FormPage extends React.Component {
-  static ItemDetails = (props) => {
+  static ItemDetailsModal = (props) => {
     return (
-      <View style={{ borderWidth: 1, borderColor: "#000", borderRadius: 5 }}>
-        <Text>Item: {props.itemDescription}</Text>
+      <View style={styles.centeredView}>
+        <Modal visible={props.visible} animationType="slide">
+          <View style={styles.centeredView}>
+            <View style={styles.modalContent}>
+              <Text>Item Name: {props.item.itemName}</Text>
+              <Text>Width: {props.item.itemWidth}</Text>
+              <Text>Height: {props.item.itemHeight}</Text>
+              <Text>Length: {props.item.itemLength}</Text>
+              <Button onPress={props.closeModal} title="Close" />
+            </View>
+          </View>
+        </Modal>
       </View>
     );
   };
 
+  static ItemDetailsName = (props) => {
+    return (
+      <View style={styles.itemBorder}>
+        <Text>Item: {props.item.itemName}</Text>
+      </View>
+    );
+  };
   constructor(props) {
     super(props);
     this.state = {
@@ -26,9 +50,12 @@ export default class FormPage extends React.Component {
       items: [],
       showDetails: false,
     };
+
     this.handleChange = this.handleChange.bind(this);
     this.handleSubmit = this.handleSubmit.bind(this);
     this.resetForm = this.resetForm.bind(this);
+    this.handleVisualize = this.handleVisualize.bind(this);
+    this.closeModal = this.closeModal.bind(this);
   }
   resetForm = () => {
     this.setState({
@@ -42,11 +69,36 @@ export default class FormPage extends React.Component {
   handleChange = (itemName) => {
     this.setState({ itemName });
   };
-
-  handleVisualize = (e) => {
-    console.table(this.state.items);
+  _storeData = async () => {
+    try {
+      await AsyncStorage.setItem("itemList", JSON.stringify(this.state.items));
+    } catch (error) {
+      console.error(error);
+      Alert.alert("Error", "An error occurred while storing the item list");
+    }
   };
+
+  handleVisualize = async (e) => {
+    // Retrieve the item list from AsyncStorage
+    AsyncStorage.getItem("itemList")
+      .then((itemListString) => {
+        let itemList;
+        if (itemListString) {
+          itemList = JSON.parse(itemListString);
+        } else {
+          itemList = [];
+        }
+
+        alert(JSON.stringify(itemList));
+      })
+      .catch((error) => {
+        // handle error
+        console.error(error);
+      });
+  };
+
   handleSubmit = (e) => {
+    alert("An item was submitted: " + this.state.itemName);
     if (
       this.state.itemLength === "" ||
       this.state.itemWidth === "" ||
@@ -72,8 +124,8 @@ export default class FormPage extends React.Component {
       // prevent the form from being submitted
       return;
     }
-    alert("An item was submitted: " + this.state.itemName);
 
+    this._storeData(); // Store  the updated items array in AsyncStorageß
     this.setState((prevState) => ({
       items: [
         ...prevState.items,
@@ -85,25 +137,22 @@ export default class FormPage extends React.Component {
         },
       ],
     }));
+
     alert(`Number of items submitted so far: ${this.state.items.length + 1}`);
     this.resetForm();
     Keyboard.dismiss();
-    this._storeData();
-
-    //const items = JSON.parse(await AsyncStorage.getItem('itemList'));
+  };
+  selectItem = (item) => {
+    this.setState({ selectedItem: item });
   };
 
-  _storeData = async () => {
-    try {
-      await AsyncStorage.setItem("itemList", JSON.stringify(this.state.items));
-    } catch (error) {}
+  closeModal = () => {
+    this.setState({ showDetails: false });
   };
+
   render() {
     return (
-      // <Background>
-
       <View style={styles.container}>
-        {/* <BackButton goBack={() => {navigation.navigate('Login Screen')}}/> */}
         <Form onSubmit={this.handleSubmit}>
           <Text style={styles.label}>Item Name:</Text>
           <TextInput
@@ -138,7 +187,6 @@ export default class FormPage extends React.Component {
               style={styles.submitButton}
               onPress={() => {
                 this.handleSubmit();
-                this.resetForm();
               }}
               title="Submit"
             >
@@ -155,14 +203,28 @@ export default class FormPage extends React.Component {
               <Text>Visualize</Text>
             </Button>
           </View>
-          <View style={styles.itemBorder}>
-            {this.state.items.map((item, index) => (
-              <FormPage.ItemDetails
-                key={index}
-                itemDescription={`${item.itemName} (${item.itemWidth}in x ${item.itemHeight}in x ${item.itemLength}in)`}
-              />
-            ))}
-          </View>
+          <ThemeProvider>
+            <View style={styles.itemBorder}>
+              {this.state.items.map((item, index) => (
+                <View style={styles.itemBorder} key={item.itemName}>
+                  <Button
+                    key={index}
+                    onPress={() =>
+                      this.setState({ showDetails: true, selectedItem: item })
+                    }
+                    title={item.itemName}
+                  />
+                </View>
+              ))}
+              {this.state.showDetails && (
+                <FormPage.ItemDetailsModal
+                  visible={this.state.showDetails}
+                  item={this.state.selectedItem}
+                  closeModal={this.closeModal}
+                />
+              )}
+            </View>
+          </ThemeProvider>
         </Form>
       </View>
     );
@@ -205,5 +267,27 @@ const styles = StyleSheet.create({
     borderWidth: "2px",
     borderStyle: "solid",
     borderColor: "#1C6EA4",
+  },
+  centeredView: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+    marginTop: 22,
+  },
+  modalContent: {
+    margin: 20,
+    backgroundColor: "white",
+    borderRadius: 20,
+    padding: 35,
+    alignItems: "center",
+    justifyContent: "center",
+    shadowColor: "#000",
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.25,
+    shadowRadius: 4,
+    elevation: 5,
   },
 });
