@@ -6,6 +6,7 @@ import BackButton from "../components/BackButton";
 import Background from "../components/Background";
 import { theme } from "../core/theme";
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import { useEffect } from "react";
 
 export default class FormPage extends React.Component {
   static ItemDetails = (props) => {
@@ -26,9 +27,11 @@ export default class FormPage extends React.Component {
       items: [],
       showDetails: false,
     };
+
     this.handleChange = this.handleChange.bind(this);
     this.handleSubmit = this.handleSubmit.bind(this);
     this.resetForm = this.resetForm.bind(this);
+    this.handleVisualize = this.handleVisualize.bind(this);
   }
   resetForm = () => {
     this.setState({
@@ -42,11 +45,36 @@ export default class FormPage extends React.Component {
   handleChange = (itemName) => {
     this.setState({ itemName });
   };
-
-  handleVisualize = (e) => {
-    console.table(this.state.items);
+  _storeData = async () => {
+    try {
+      await AsyncStorage.setItem("itemList", JSON.stringify(this.state.items));
+    } catch (error) {
+      console.error(error);
+      Alert.alert("Error", "An error occurred while storing the item list");
+    }
   };
+
+  handleVisualize = async (e) => {
+    // Retrieve the item list from AsyncStorage
+    AsyncStorage.getItem("itemList")
+      .then((itemListString) => {
+        let itemList;
+        if (itemListString) {
+          itemList = JSON.parse(itemListString);
+        } else {
+          itemList = [];
+        }
+
+        alert(JSON.stringify(itemList));
+      })
+      .catch((error) => {
+        // handle error
+        console.error(error);
+      });
+  };
+
   handleSubmit = (e) => {
+    alert("An item was submitted: " + this.state.itemName);
     if (
       this.state.itemLength === "" ||
       this.state.itemWidth === "" ||
@@ -72,8 +100,8 @@ export default class FormPage extends React.Component {
       // prevent the form from being submitted
       return;
     }
-    alert("An item was submitted: " + this.state.itemName);
 
+    this._storeData(); // Store  the updated items array in AsyncStorageß
     this.setState((prevState) => ({
       items: [
         ...prevState.items,
@@ -85,19 +113,12 @@ export default class FormPage extends React.Component {
         },
       ],
     }));
+
     alert(`Number of items submitted so far: ${this.state.items.length + 1}`);
     this.resetForm();
     Keyboard.dismiss();
-    this._storeData();
-
-    //const items = JSON.parse(await AsyncStorage.getItem('itemList'));
   };
 
-  _storeData = async () => {
-    try {
-      await AsyncStorage.setItem("itemList", JSON.stringify(this.state.items));
-    } catch (error) {}
-  };
   render() {
     return (
       // <Background>
@@ -138,7 +159,6 @@ export default class FormPage extends React.Component {
               style={styles.submitButton}
               onPress={() => {
                 this.handleSubmit();
-                this.resetForm();
               }}
               title="Submit"
             >
