@@ -152,10 +152,7 @@ export default class FormPage extends React.Component {
 
   render() {
     return (
-      // <Background>
-
       <View style={styles.container}>
-        {/* <BackButton goBack={() => {navigation.navigate('Login Screen')}}/> */}
         <Form onSubmit={this.handleSubmit}>
           <Text style={styles.label}>Item Name:</Text>
           <TextInput
