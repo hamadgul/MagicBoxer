@@ -14,6 +14,8 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useEffect } from "react";
 import { ThemeProvider } from "react-native-paper";
 
+var Buffer = require("@craftzdog/react-native-buffer").Buffer;
+
 export default class FormPage extends React.Component {
   static ItemDetailsModal = (props) => {
     return (
@@ -72,7 +74,10 @@ export default class FormPage extends React.Component {
   };
   _storeData = async () => {
     try {
-      await AsyncStorage.setItem("itemList", JSON.stringify(this.state.items));
+      const serializedItems = Buffer.from(
+        JSON.stringify(this.state.items)
+      ).toString("base64");
+      await AsyncStorage.setItem("itemList", serializedItems);
     } catch (error) {
       console.error(error);
       Alert.alert("Error", "An error occurred while storing the item list");
@@ -85,11 +90,13 @@ export default class FormPage extends React.Component {
       .then((itemListString) => {
         let itemList;
         if (itemListString) {
-          itemList = JSON.parse(itemListString);
+          const deserializedItems = JSON.parse(
+            Buffer.from(itemListString, "base64").toString("utf8")
+          );
+          itemList = deserializedItems;
         } else {
           itemList = [];
         }
-
         alert(JSON.stringify(itemList));
       })
       .catch((error) => {
@@ -99,7 +106,6 @@ export default class FormPage extends React.Component {
   };
 
   handleSubmit = (e) => {
-    alert("An item was submitted: " + this.state.itemName);
     if (
       this.state.itemLength === "" ||
       this.state.itemWidth === "" ||
@@ -108,7 +114,7 @@ export default class FormPage extends React.Component {
     ) {
       Alert.alert(
         "Error",
-        "Item name, length ,width, and height cannot be empty."
+        "Item name, length , width, and height can not be empty."
       );
       return;
     }
@@ -125,24 +131,22 @@ export default class FormPage extends React.Component {
       // prevent the form from being submitted
       return;
     }
+    const newItem = {
+      itemName: this.state.itemName,
+      itemWidth: this.state.itemWidth,
+      itemHeight: this.state.itemHeight,
+      itemLength: this.state.itemLength,
+    };
+    this.setState({ items: [...this.state.items, newItem] }, () => {
+      this._storeData();
+    });
 
-    this._storeData(); // Store  the updated items array in AsyncStorageß
-    this.setState((prevState) => ({
-      items: [
-        ...prevState.items,
-        {
-          itemName: this.state.itemName,
-          itemWidth: this.state.itemWidth,
-          itemHeight: this.state.itemHeight,
-          itemLength: this.state.itemLength,
-        },
-      ],
-    }));
-
+    alert("An item was submitted: " + this.state.itemName);
     alert(`Number of items submitted so far: ${this.state.items.length + 1}`);
     this.resetForm();
     Keyboard.dismiss();
   };
+
   selectItem = (item) => {
     this.setState({ selectedItem: item });
   };
@@ -189,9 +193,9 @@ export default class FormPage extends React.Component {
               onPress={() => {
                 this.handleSubmit();
               }}
-              title="Submit"
+              title="Add Item"
             >
-              <Text>Submit</Text>
+              <Text>Add Item</Text>
             </Button>
             <Button
               block
@@ -205,7 +209,7 @@ export default class FormPage extends React.Component {
             </Button>
           </View>
           <View>
-            <View style={styles.textStyle}>
+            <View style={styles.modalButtonContainer}>
               {this.state.items.map((item, index) => (
                 <View
                   style={[styles.button, styles.buttonOpen]}
@@ -300,7 +304,7 @@ const styles = StyleSheet.create({
     elevation: 2,
   },
   buttonOpen: {
-    backgroundColor: "#fc92a1",
+    backgroundColor: "#27ab1b",
   },
   buttonClose: {
     backgroundColor: "#2196F3",
@@ -308,6 +312,11 @@ const styles = StyleSheet.create({
   textStyle: {
     color: "white",
     fontWeight: "bold",
-    textAlign: "center",
+  },
+  modalButtonContainer: {
+    justifyContent: "space-evenly",
+    flexDirection: "row",
+    alignContent: "flex-start",
+    flexWrap: "wrap",
   },
 });
