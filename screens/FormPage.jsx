@@ -97,12 +97,15 @@ export default class FormPage extends React.Component {
         } else {
           itemList = [];
         }
-        alert(JSON.stringify(itemList));
+        // alert(JSON.stringify(itemList));
       })
       .catch((error) => {
         // handle error
         console.error(error);
       });
+    this.props.navigation.navigate("Display3D", {
+      items: this.state.items,
+    });
   };
 
   handleSubmit = (e) => {
