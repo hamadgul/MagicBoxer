@@ -49,7 +49,6 @@ export default class Display3D extends Component {
       renderer.render(scene, camera);
       gl.endFrameEXP();
     };
-
     animate();
   };
 
