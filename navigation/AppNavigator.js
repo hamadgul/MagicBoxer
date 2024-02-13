@@ -3,6 +3,7 @@ import LoginScreen from "../screens/LoginScreen";
 import Details from "../screens/Details";
 import Display from "../screens/Display";
 import FormPage from "../screens/FormPage";
+import Display3D from "../screens/Display3D";
 import { NavigationContainer } from "@react-navigation/native";
 import { createNativeStackNavigator } from "@react-navigation/native-stack";
 
@@ -16,6 +17,7 @@ function AppNavigator() {
         <Stack.Screen name="Form Page" component={FormPage} />
         <Stack.Screen name="Details" component={Details} />
         <Stack.Screen name="Display" component={Display} />
+        <Stack.Screen name="Display3D" component={Display3D} />
       </Stack.Navigator>
     </NavigationContainer>
   );
