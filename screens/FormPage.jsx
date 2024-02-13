@@ -88,7 +88,6 @@ export default class FormPage extends React.Component {
       (_, itemIndex) => index !== itemIndex
     );
     this.setState({ items: updatedItems });
-
     try {
       const serializedItems = Buffer.from(
         JSON.stringify(updatedItems)
