@@ -27,6 +27,10 @@ export default class FormPage extends React.Component {
               <Text>Width: {props.item.itemWidth}</Text>
               <Text>Height: {props.item.itemHeight}</Text>
               <Text>Length: {props.item.itemLength}</Text>
+              <Button
+                onPress={() => props.handleDeleteAndClose(props.item)}
+                title="Delete"
+              />
               <Button onPress={props.closeModal} title="Close" />
             </View>
           </View>
@@ -67,6 +71,32 @@ export default class FormPage extends React.Component {
       itemHeight: "",
       itemLength: "",
     });
+  };
+
+  handleDeleteAndClose = (itemToDelete) => {
+    // Find the index of the item to delete
+    const index = this.state.items.findIndex(
+      (item) => item.itemName === itemToDelete.itemName
+    );
+    if (index > -1) {
+      this.deleteItem(index);
+    }
+    this.closeModal();
+  };
+  deleteItem = async (index) => {
+    const updatedItems = this.state.items.filter(
+      (_, itemIndex) => index !== itemIndex
+    );
+    this.setState({ items: updatedItems });
+    try {
+      const serializedItems = Buffer.from(
+        JSON.stringify(updatedItems)
+      ).toString("base64");
+      await AsyncStorage.setItem("itemList", serializedItems);
+      Alert.alert("Item Deleted");
+    } catch (error) {
+      Alert.alert("Error deleting item");
+    }
   };
 
   handleChange = (itemName) => {
@@ -232,6 +262,7 @@ export default class FormPage extends React.Component {
                   visible={this.state.showDetails}
                   item={this.state.selectedItem}
                   closeModal={this.closeModal}
+                  handleDeleteAndClose={this.handleDeleteAndClose}
                 />
               )}
             </View>

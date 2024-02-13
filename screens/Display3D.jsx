@@ -25,17 +25,22 @@ export default class Display3D extends Component {
 
     const renderer = new Renderer({ gl });
     renderer.setSize(gl.drawingBufferWidth, gl.drawingBufferHeight);
-    var scale = 10;
-    items.forEach((item) => {
+    var scale = 15;
+    console.log("Processing items:", items);
+    items.forEach((item, index) => {
       const geometry = new THREE.BoxGeometry(
-        parseFloat(item.itemWidth) / 10, // Using a fixed scale for simplicity
-        parseFloat(item.itemHeight) / 10,
-        parseFloat(item.itemLength) / 10
+        parseFloat(item.itemWidth) / scale,
+        parseFloat(item.itemHeight) / scale,
+        parseFloat(item.itemLength) / scale
       );
       const material = new THREE.MeshBasicMaterial({ color: 0x00ff00 });
       const cube = new THREE.Mesh(geometry, material);
+
+      // Adjust the position of each cube to prevent overlap
+      cube.position.x = index * 1.5; // Adjust spacing as necessary
+
       scene.add(cube);
-      this.cubes.push(cube); // Correctly using 'this.cubes' to reference the component-level array
+      this.cubes.push(cube);
     });
 
     // console.log(this.params.items);
