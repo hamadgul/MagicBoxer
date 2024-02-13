@@ -25,9 +25,14 @@ export default class Display3D extends Component {
 
     const renderer = new Renderer({ gl });
     renderer.setSize(gl.drawingBufferWidth, gl.drawingBufferHeight);
-    var scale = 15;
+    // var scale = 15;
+
     console.log("Processing items:", items);
     items.forEach((item, index) => {
+      var scale =
+        Math.max(item.itemWidth, item.itemHeight, item.itemLength) > 15
+          ? 20
+          : 10;
       const geometry = new THREE.BoxGeometry(
         parseFloat(item.itemWidth) / scale,
         parseFloat(item.itemHeight) / scale,
