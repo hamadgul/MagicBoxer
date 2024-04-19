@@ -11,9 +11,16 @@ export default class Display3D extends Component {
   constructor(props) {
     super(props);
     this.cubes = [];
-    this.state = { value: 0 }; // Declaring cubes at the component level
+    this.state = { value: 0 };
   }
-  _onGLContextCreate = (gl, items) => {
+
+  _onGLContextCreate = (gl) => {
+    const { route } = this.props;
+    const { box, itemsTotal } = route.params ?? { box: null, itemsTotal: [] }; // Provide default values
+
+    console.log("Received itemsTotal in Display3D:", itemsTotal);
+    console.log("Received BOX in Display3D:", box);
+
     const scene = new THREE.Scene();
     const camera = new THREE.PerspectiveCamera(
       75,
@@ -26,9 +33,8 @@ export default class Display3D extends Component {
     const renderer = new Renderer({ gl });
     renderer.setSize(gl.drawingBufferWidth, gl.drawingBufferHeight);
     // var scale = 15;
-
-    console.log("Processing items:", items);
-    items.forEach((item, index) => {
+    // console.log("Items", itemsTotal);
+    itemsTotal.forEach((item, index) => {
       var scale =
         Math.max(item.itemWidth, item.itemHeight, item.itemLength) > 15
           ? 20

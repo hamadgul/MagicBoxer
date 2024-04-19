@@ -13,6 +13,8 @@ import { Keyboard } from "react-native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useEffect } from "react";
 import { ThemeProvider } from "react-native-paper";
+import { generateUUID } from "three/src/math/MathUtils";
+import { pack, createDisplay } from "../packing_algo/packing";
 
 var Buffer = require("@craftzdog/react-native-buffer").Buffer;
 
@@ -56,6 +58,7 @@ export default class FormPage extends React.Component {
       itemLength: 0,
       items: [],
       showDetails: false,
+      unit: "inches",
     };
 
     this.handleChange = this.handleChange.bind(this);
@@ -74,15 +77,25 @@ export default class FormPage extends React.Component {
   };
 
   handleDeleteAndClose = (itemToDelete) => {
-    // Find the index of the item to delete
-    const index = this.state.items.findIndex(
-      (item) => item.itemName === itemToDelete.itemName
+    // Use a unique identifier for deletion logic if possible.
+    const updatedItems = this.state.items.filter(
+      (item) => item.id !== itemToDelete.id
     );
-    if (index > -1) {
-      this.deleteItem(index);
-    }
-    this.closeModal();
+    this.setState({ items: updatedItems }, async () => {
+      try {
+        // Update AsyncStorage after modifying the items array.
+        const serializedItems = Buffer.from(
+          JSON.stringify(this.state.items)
+        ).toString("base64");
+        await AsyncStorage.setItem("itemList", serializedItems);
+        Alert.alert("Item Deleted");
+        this.closeModal();
+      } catch (error) {
+        Alert.alert("Error deleting item", error.message);
+      }
+    });
   };
+
   deleteItem = async (index) => {
     const updatedItems = this.state.items.filter(
       (_, itemIndex) => index !== itemIndex
@@ -114,28 +127,57 @@ export default class FormPage extends React.Component {
     }
   };
 
-  handleVisualize = async (e) => {
-    // Retrieve the item list from AsyncStorage
-    AsyncStorage.getItem("itemList")
-      .then((itemListString) => {
-        let itemList;
-        if (itemListString) {
-          const deserializedItems = JSON.parse(
-            Buffer.from(itemListString, "base64").toString("utf8")
+  handleVisualize = async () => {
+    try {
+      const itemListString = await AsyncStorage.getItem("itemList");
+      let itemList = [];
+      if (itemListString) {
+        const deserializedItems = JSON.parse(
+          Buffer.from(itemListString, "base64").toString("utf8")
+        );
+        itemList = deserializedItems;
+      }
+
+      this.setState({ items: itemList }, () => {
+        var itemsTotal = [];
+        this.state.items.forEach((item) => {
+          itemsTotal.push([
+            item.itemHeight,
+            item.itemLength,
+            item.itemWidth,
+            item.id,
+          ]);
+        });
+        var packedResult = [];
+        console.log("Test Dims:", itemsTotal);
+
+        packedResult.push(pack(itemsTotal, "USPS", 0));
+        console.log("Packed Result:", packedResult);
+        if (packedResult === 0) {
+          Alert.alert(
+            "Items are too big for a single standard box. Multiple boxed orders have not been implemented yet."
           );
-          itemList = deserializedItems;
         } else {
-          itemList = [];
+          var scale = 10;
+          if (
+            Math.max(packedResult[0].x, packedResult[0].y, packedResult[0].z) >
+            15
+          ) {
+            scale = 20;
+          }
+          packedResult.push(createDisplay(packedResult[0], scale));
+          //console.log("ITEMS:", packedResult[1]);
+          //console.log("BOX:", packedResult[0]);
+          this.props.navigation.navigate("Display3D", {
+            box: packedResult[0],
+            itemsTotal: packedResult[1],
+          });
         }
-        // alert(JSON.stringify(itemList));
-      })
-      .catch((error) => {
-        // handle error
-        console.error(error);
       });
-    this.props.navigation.navigate("Display3D", {
-      items: this.state.items,
-    });
+    } catch (error) {
+      console.error(error);
+      Alert.alert("Error", "An error occurred while retrieving the item list");
+    }
   };
 
   handleSubmit = (e) => {
@@ -164,7 +206,15 @@ export default class FormPage extends React.Component {
       // prevent the form from being submitted
       return;
     }
+    const exists = this.state.items.some(
+      (item) => item.itemName === this.state.itemName
+    );
+    if (exists) {
+      Alert.alert("Error", "An item with the same name already exists.");
+      return;
+    }
     const newItem = {
+      id: generateUUID(),
       itemName: this.state.itemName,
       itemWidth: this.state.itemWidth,
       itemHeight: this.state.itemHeight,
@@ -318,7 +368,7 @@ const styles = StyleSheet.create({
   },
   modalContent: {
     margin: 20,
-    backgroundColor: "#32a8a4",
+    backgroundColor: "#eeeeee",
     borderRadius: 20,
     padding: 35,
     alignItems: "center",
@@ -338,7 +388,7 @@ const styles = StyleSheet.create({
     elevation: 2,
   },
   buttonOpen: {
-    backgroundColor: "#27ab1b",
+    backgroundColor: "#d0e0e3",
   },
   buttonClose: {
     backgroundColor: "#2196F3",
