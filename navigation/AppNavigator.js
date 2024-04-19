@@ -1,7 +1,5 @@
 import React from "react";
 import LoginScreen from "../screens/LoginScreen";
-import Details from "../screens/Details";
-import Display from "../screens/Display";
 import FormPage from "../screens/FormPage";
 import Display3D from "../screens/Display3D";
 import { NavigationContainer } from "@react-navigation/native";
@@ -15,14 +13,10 @@ function AppNavigator() {
       <Stack.Navigator initialRouteName="LoginScreen">
         <Stack.Screen name="Login Screen" component={LoginScreen} />
         <Stack.Screen name="Form Page" component={FormPage} />
-        <Stack.Screen name="Details" component={Details} />
-        <Stack.Screen name="Display" component={Display} />
         <Stack.Screen name="Display3D" component={Display3D} />
       </Stack.Navigator>
     </NavigationContainer>
   );
 }
-
-//<Stack.Screen name="LoginScreen" component={LoginScreen} />
 
 export default AppNavigator;

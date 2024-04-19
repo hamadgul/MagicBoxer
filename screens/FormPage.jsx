@@ -26,9 +26,10 @@ export default class FormPage extends React.Component {
           <View style={styles.centeredView}>
             <View style={styles.modalContent}>
               <Text>Item Name: {props.item.itemName}</Text>
+              <Text>Length: {props.item.itemLength}</Text>
               <Text>Width: {props.item.itemWidth}</Text>
               <Text>Height: {props.item.itemHeight}</Text>
-              <Text>Length: {props.item.itemLength}</Text>
+
               <Button
                 onPress={() => props.handleDeleteAndClose(props.item)}
                 title="Delete"
@@ -142,9 +143,9 @@ export default class FormPage extends React.Component {
         var itemsTotal = [];
         this.state.items.forEach((item) => {
           itemsTotal.push([
-            item.itemHeight,
             item.itemLength,
             item.itemWidth,
+            item.itemHeight,
             item.id,
           ]);
         });
@@ -168,6 +169,12 @@ export default class FormPage extends React.Component {
           packedResult.push(createDisplay(packedResult[0], scale));
           //console.log("ITEMS:", packedResult[1]);
           //console.log("BOX:", packedResult[0]);
+          console.log("Length:", packedResult[0].x); // These are the LxWxH of whatever carrier box is chosen
+          console.log("Width:", packedResult[0].y);
+          console.log("Height", packedResult[0].z);
+          //console.log("box", packedResult[0]);
+          //console.log("box", packedResult[0].Box);
+
           this.props.navigation.navigate("Display3D", {
             box: packedResult[0],
             itemsTotal: packedResult[1],
@@ -216,9 +223,9 @@ export default class FormPage extends React.Component {
     const newItem = {
       id: generateUUID(),
       itemName: this.state.itemName,
+      itemLength: this.state.itemLength,
       itemWidth: this.state.itemWidth,
       itemHeight: this.state.itemHeight,
-      itemLength: this.state.itemLength,
     };
     this.setState({ items: [...this.state.items, newItem] }, () => {
       this._storeData();
@@ -248,6 +255,13 @@ export default class FormPage extends React.Component {
             value={this.state.itemName}
             onChangeText={this.handleChange}
           />
+          <Text style={styles.label}>Length:</Text>
+          <TextInput
+            style={styles.input}
+            value={this.state.itemLength}
+            onChangeText={(text) => this.setState({ itemLength: text })}
+            keyboardType="numeric"
+          />
           <Text style={styles.label}>Width:</Text>
           <TextInput
             style={styles.input}
@@ -260,13 +274,6 @@ export default class FormPage extends React.Component {
             style={styles.input}
             value={this.state.itemHeight}
             onChangeText={(text) => this.setState({ itemHeight: text })}
-            keyboardType="numeric"
-          />
-          <Text style={styles.label}>Length:</Text>
-          <TextInput
-            style={styles.input}
-            value={this.state.itemLength}
-            onChangeText={(text) => this.setState({ itemLength: text })}
             keyboardType="numeric"
           />
           <View style={styles.buttonContainer}>
