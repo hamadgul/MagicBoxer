@@ -27,34 +27,40 @@ export default class Display3D extends Component {
     const renderer = new Renderer({ gl });
     renderer.setSize(gl.drawingBufferWidth, gl.drawingBufferHeight);
 
-    itemsTotal.forEach((item, index) => {
-      var scale = Math.max(box.x, box.y, box.z) > 15 ? 20 : 10;
-      const geometry = new THREE.BoxGeometry(
-        box.x / scale,
-        box.y / scale,
-        box.z / scale
-      );
-      const material = new THREE.MeshBasicMaterial({
-        transparent: true,
-        opacity: 0.25,
-        color: 0x808080,
-      });
-      const cube = new THREE.Mesh(geometry, material);
-      this.cubes.push(cube); // Store the cube
-      scene.add(cube);
+    var scale = Math.max(box.x, box.y, box.z) > 15 ? 20 : 10;
 
-      item.dis && cube.add(item.dis); // Check if `dis` exists before adding
+    const geometry = new THREE.BoxGeometry(
+      box.x / scale,
+      box.y / scale,
+      box.z / scale
+    );
+
+    const material = new THREE.MeshBasicMaterial({
+      transparent: true,
+      opacity: 0.25,
+      color: 0x808080,
     });
+
+    const cube = new THREE.Mesh(geometry, material);
+    this.cubes.push(cube); // Store the cube
+    scene.add(cube);
+    for (var i = 0; i < itemsTotal.length; i++) {
+      // edges.add(itemss[i].dis);
+      cube.add(itemsTotal[i].dis);
+    }
+    //item.dis && cube.add(item.dis); // Check if `dis` exists before adding
 
     camera.position.set(-1.2, 0.5, 2);
     camera.lookAt(0, 0, 0);
 
     const animate = () => {
       requestAnimationFrame(animate);
-      this.cubes.forEach((cube) => {
-        cube.rotation.y = this.state.rotationY; // Rotate each cube
-      });
-
+      cube.rotation.y = this.state.rotationY;
+      // Rotate each cube
+      for (var i = 1; i <= itemsTotal.length; i++) {
+        itemsTotal[i - 1].dis.position.y =
+          0.5 * this.state.rotationY + itemsTotal[i - 1].pos[1];
+      }
       renderer.render(scene, camera);
       gl.endFrameEXP();
     };
