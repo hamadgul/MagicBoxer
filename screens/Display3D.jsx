@@ -10,7 +10,6 @@ export default class Display3D extends Component {
   }
   constructor(props) {
     super(props);
-    this.cubes = [];
     this.state = { value: 0 };
   }
 
@@ -29,39 +28,39 @@ export default class Display3D extends Component {
       1000
     );
     camera.position.z = 5;
-
     const renderer = new Renderer({ gl });
     renderer.setSize(gl.drawingBufferWidth, gl.drawingBufferHeight);
-    // var scale = 15;
-    // console.log("Items", itemsTotal);
     itemsTotal.forEach((item, index) => {
-      var scale =
-        Math.max(item.itemWidth, item.itemHeight, item.itemLength) > 15
-          ? 20
-          : 10;
+      var scale = Math.max(box.x, box.y, box.z) > 15 ? 20 : 10;
       const geometry = new THREE.BoxGeometry(
-        parseFloat(item.itemWidth) / scale,
-        parseFloat(item.itemHeight) / scale,
-        parseFloat(item.itemLength) / scale
+        box.x / scale,
+        box.y / scale,
+        box.z / scale
       );
-      const material = new THREE.MeshBasicMaterial({ color: 0x00ff00 });
+      const material = new THREE.MeshBasicMaterial({
+        transparent: true,
+        opacity: 0.25,
+        color: 0x00ff00,
+      });
       const cube = new THREE.Mesh(geometry, material);
-
-      // Adjust the position of each cube to prevent overlap
-      cube.position.x = index * 1.5; // Adjust spacing as necessary
-
       scene.add(cube);
-      this.cubes.push(cube);
-    });
+      console.log(itemsTotal);
+      for (var i = 0; i < itemsTotal.length; i++) {
+        // edges.add(itemss[i].dis);
+        cube.add(itemsTotal[i].dis);
+        console.log("item", itemsTotal[i].SKU, "added");
+      }
 
-    // console.log(this.params.items);
+      camera.position.set(-1.2, 0.5, 2);
+      camera.lookAt(0, 0, 0);
+    });
 
     const animate = () => {
       requestAnimationFrame(animate);
-      this.cubes.forEach((cube) => {
-        cube.rotation.x += 0.01;
-        cube.rotation.y += 0.01;
-      });
+      //cube.rotation.y = this.state.value;
+      for (var i = 1; i <= itemsTotal.length; i++) {
+        itemsTotal[i - 1].dis.position.y = itemsTotal[i - 1].pos[1];
+      }
       renderer.render(scene, camera);
       gl.endFrameEXP();
     };
@@ -74,7 +73,7 @@ export default class Display3D extends Component {
         style={styles.container}
         onContextCreate={(gl) => {
           const { route } = this.props;
-          const items = route.params?.items ?? [];
+          const items = route.params?.itemsTotal ?? [];
           this._onGLContextCreate(gl, items);
         }}
       />
