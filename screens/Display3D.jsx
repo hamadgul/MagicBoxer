@@ -1,24 +1,20 @@
 import React, { Component } from "react";
-import { StyleSheet } from "react-native";
+import { View, StyleSheet } from "react-native";
+import Slider from "@react-native-community/slider";
 import { GLView } from "expo-gl";
-import * as THREE from "three"; // Assuming expo-three provides THREE
+import * as THREE from "three";
 import { Renderer } from "expo-three";
 
 export default class Display3D extends Component {
-  componentDidMount() {
-    // This method is kept for potential future use.
-  }
   constructor(props) {
     super(props);
-    this.state = { value: 0 };
+    this.state = { rotationY: 0 };
+    this.cubes = []; // To store references to all cubes
   }
 
   _onGLContextCreate = (gl) => {
     const { route } = this.props;
-    const { box, itemsTotal } = route.params ?? { box: null, itemsTotal: [] }; // Provide default values
-
-    console.log("Received itemsTotal in Display3D:", itemsTotal);
-    console.log("Received BOX in Display3D:", box);
+    const { box, itemsTotal } = route.params ?? { box: null, itemsTotal: [] };
 
     const scene = new THREE.Scene();
     const camera = new THREE.PerspectiveCamera(
@@ -30,36 +26,40 @@ export default class Display3D extends Component {
     camera.position.z = 5;
     const renderer = new Renderer({ gl });
     renderer.setSize(gl.drawingBufferWidth, gl.drawingBufferHeight);
-    itemsTotal.forEach((item, index) => {
-      var scale = Math.max(box.x, box.y, box.z) > 15 ? 20 : 10;
-      const geometry = new THREE.BoxGeometry(
-        box.x / scale,
-        box.y / scale,
-        box.z / scale
-      );
-      const material = new THREE.MeshBasicMaterial({
-        transparent: true,
-        opacity: 0.25,
-        color: 0x00ff00,
-      });
-      const cube = new THREE.Mesh(geometry, material);
-      scene.add(cube);
-      console.log(itemsTotal);
-      for (var i = 0; i < itemsTotal.length; i++) {
-        // edges.add(itemss[i].dis);
-        cube.add(itemsTotal[i].dis);
-        console.log("item", itemsTotal[i].SKU, "added");
-      }
 
-      camera.position.set(-1.2, 0.5, 2);
-      camera.lookAt(0, 0, 0);
+    var scale = Math.max(box.x, box.y, box.z) > 15 ? 20 : 10;
+
+    const geometry = new THREE.BoxGeometry(
+      box.x / scale,
+      box.y / scale,
+      box.z / scale
+    );
+
+    const material = new THREE.MeshBasicMaterial({
+      transparent: true,
+      opacity: 0.25,
+      color: 0x808080,
     });
+
+    const cube = new THREE.Mesh(geometry, material);
+    this.cubes.push(cube); // Store the cube
+    scene.add(cube);
+    for (var i = 0; i < itemsTotal.length; i++) {
+      // edges.add(itemss[i].dis);
+      cube.add(itemsTotal[i].dis);
+    }
+    //item.dis && cube.add(item.dis); // Check if `dis` exists before adding
+
+    camera.position.set(-1.2, 0.5, 2);
+    camera.lookAt(0, 0, 0);
 
     const animate = () => {
       requestAnimationFrame(animate);
-      //cube.rotation.y = this.state.value;
+      cube.rotation.y = this.state.rotationY;
+      // Rotate each cube
       for (var i = 1; i <= itemsTotal.length; i++) {
-        itemsTotal[i - 1].dis.position.y = itemsTotal[i - 1].pos[1];
+        itemsTotal[i - 1].dis.position.y =
+          0.5 * this.state.rotationY + itemsTotal[i - 1].pos[1];
       }
       renderer.render(scene, camera);
       gl.endFrameEXP();
@@ -67,16 +67,28 @@ export default class Display3D extends Component {
     animate();
   };
 
+  handleRotationChange = (value) => {
+    this.setState({ rotationY: value });
+  };
+
   render() {
     return (
-      <GLView
-        style={styles.container}
-        onContextCreate={(gl) => {
-          const { route } = this.props;
-          const items = route.params?.itemsTotal ?? [];
-          this._onGLContextCreate(gl, items);
-        }}
-      />
+      <View style={styles.container}>
+        <View style={styles.sliderContainer}>
+          <Slider
+            style={{ width: "100%", height: 40 }}
+            minimumValue={0}
+            maximumValue={Math.PI * 2}
+            step={0.01}
+            value={this.state.rotationY}
+            onValueChange={this.handleRotationChange}
+          />
+        </View>
+        <GLView
+          style={styles.glView}
+          onContextCreate={this._onGLContextCreate}
+        />
+      </View>
     );
   }
 }
@@ -84,5 +96,13 @@ export default class Display3D extends Component {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+  },
+  sliderContainer: {
+    height: 40, // Set the height for the slider container
+    paddingHorizontal: 10, // Optional padding for better spacing
+    backgroundColor: "#fff", // Optional background color for visibility
+  },
+  glView: {
+    flex: 1, // Ensure GLView takes up the rest of the space
   },
 });
