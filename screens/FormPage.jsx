@@ -41,7 +41,6 @@ export default class FormPage extends React.Component {
 
   static ItemDetailsName = (props) => {
     return (
-      // <View style={styles.itemBorder}>
       <View>
         <Text>Item: {props.item.itemName}</Text>
       </View>

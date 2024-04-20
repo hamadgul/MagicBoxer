@@ -78,7 +78,7 @@ export default class Display3D extends Component {
           <Slider
             style={{ width: "100%", height: 40 }}
             minimumValue={0}
-            maximumValue={Math.PI * 2}
+            maximumValue={(Math.PI * 2) / 3}
             step={0.01}
             value={this.state.rotationY}
             onValueChange={this.handleRotationChange}
