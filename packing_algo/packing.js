@@ -38,31 +38,41 @@ function swap(arr, i, j) {
 //classes for boxes and items
 function Box(dims) {
   this.x = dims[0];
-  this.y = dims[1];
+  this.y = dims[1] || 0; // Ensure y is never undefined
   this.z = dims[2];
   this.cx = this.x / 2;
-  this.cy = -this.y / 2;
+  this.cy = -this.y / 2; // Check for NaN after computation
   this.cz = this.z / 2;
-  this.vol = dims[0] * dims[1] * dims[2];
+  this.vol = this.x * this.y * this.z;
   this.items = [];
   this.parts = null;
   this.sec = [];
   this.remainvol = this.vol;
+
+  if (isNaN(this.cy)) {
+    console.error("Invalid y dimension", { y: this.y });
+    this.cy = 0; // Set a default or corrective value
+  }
 }
 
 function Item(dims) {
   this.x = dims[0];
-  this.y = dims[1];
+  this.y = dims[1] || 0; // Ensure y is never undefined
   this.z = dims[2];
-  this.xx = null;
-  this.yy = null;
-  this.zz = null;
-  this.vol = dims[0] * dims[1] * dims[2];
+  this.xx = null; // Will be set during box fitting
+  this.yy = null; // Will be set during box fitting
+  this.zz = null; // Will be set during box fitting
+  this.vol = this.x * this.y * this.z;
   this.dis = null;
   this.pos = null;
   this.sec = [];
   this.SKU = dims[3];
   this.color = "";
+
+  if (isNaN(this.y)) {
+    console.error("Invalid y dimension in item", { y: this.y });
+    this.y = 0; // Set a default or corrective value
+  }
 }
 
 //find the total volume of the list of items
@@ -382,7 +392,6 @@ export function test(box) {
 export function createDisplay(box, scale) {
   var boxes = flatten2(box);
   var items = [];
-  //var difcolors = ['#add8e6', '#b9ddea', '#8ec9dc', '#b1dae7', '#6EBAD3', '#6bb8d1', '#3a9cbb', '#a1d3e2'];
   var difcolors = [
     "#FF5733",
     "#2DAE42",
@@ -395,8 +404,30 @@ export function createDisplay(box, scale) {
     "#63d7a7",
     "#B655E7",
   ];
+
   for (var i = 0; i < boxes.length; i++) {
-    item = boxes[i].items[0];
+    var item = boxes[i].items[0];
+    // Check for NaN values and log if found
+    if (
+      isNaN(boxes[i].cx) ||
+      isNaN(boxes[i].cy) ||
+      isNaN(boxes[i].cz) ||
+      isNaN(item.xx) ||
+      isNaN(item.yy) ||
+      isNaN(item.zz)
+    ) {
+      console.error("NaN found in item position calculations", {
+        index: i + 1,
+        cx: boxes[i].cx,
+        cy: boxes[i].cy,
+        cz: boxes[i].cz,
+        xx: item.xx,
+        yy: item.yy,
+        zz: item.zz,
+      });
+      continue; // Skip setting position for this item to avoid rendering issues
+    }
+
     const geo = new THREE.BoxGeometry(
       item.xx / scale - 0.001,
       item.yy / scale - 0.001,
@@ -421,14 +452,13 @@ export function createDisplay(box, scale) {
       (boxes[i].cz - item.zz / 2) / scale,
     ];
     items.push(item);
-    //  console.log(item);
     console.log(
       "item ",
       i + 1,
       " added at position: ",
-      (boxes[i].cx - item.xx / 2) / scale,
-      (boxes[i].cy + item.yy / 2) / scale,
-      (boxes[i].cz - item.zz / 2) / scale
+      item.pos[0],
+      item.pos[1],
+      item.pos[2]
     );
   }
 
