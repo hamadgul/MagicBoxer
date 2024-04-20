@@ -250,6 +250,8 @@ export default class FormPage extends React.Component {
             style={styles.input}
             value={this.state.itemName}
             onChangeText={this.handleChange}
+            maxLength={10}
+            returnKeyType={"next"}
           />
           <Text style={styles.label}>Length:</Text>
           <TextInput
@@ -257,6 +259,9 @@ export default class FormPage extends React.Component {
             value={this.state.itemLength}
             onChangeText={(text) => this.setState({ itemLength: text })}
             keyboardType="numeric"
+            placeholder="-- inches"
+            placeholderTextColor={"#d3d3d3"}
+            maxLength={2}
           />
           <Text style={styles.label}>Width:</Text>
           <TextInput
@@ -264,6 +269,9 @@ export default class FormPage extends React.Component {
             value={this.state.itemWidth}
             onChangeText={(text) => this.setState({ itemWidth: text })}
             keyboardType="numeric"
+            placeholder="-- inches"
+            placeholderTextColor={"#d3d3d3"}
+            maxLength={2}
           />
           <Text style={styles.label}>Height:</Text>
           <TextInput
@@ -271,6 +279,9 @@ export default class FormPage extends React.Component {
             value={this.state.itemHeight}
             onChangeText={(text) => this.setState({ itemHeight: text })}
             keyboardType="numeric"
+            placeholder="-- inches"
+            placeholderTextColor={"#d3d3d3"}
+            maxLength={2}
           />
           <View style={styles.buttonContainer}>
             <Button
