@@ -392,6 +392,7 @@ export function test(box) {
 export function createDisplay(box, scale) {
   var boxes = flatten2(box);
   var items = [];
+  //var difcolors = ['#add8e6', '#b9ddea', '#8ec9dc', '#b1dae7', '#6EBAD3', '#6bb8d1', '#3a9cbb', '#a1d3e2'];
   var difcolors = [
     "#FF5733",
     "#2DAE42",
@@ -404,30 +405,8 @@ export function createDisplay(box, scale) {
     "#63d7a7",
     "#B655E7",
   ];
-
   for (var i = 0; i < boxes.length; i++) {
-    var item = boxes[i].items[0];
-    // Check for NaN values and log if found
-    if (
-      isNaN(boxes[i].cx) ||
-      isNaN(boxes[i].cy) ||
-      isNaN(boxes[i].cz) ||
-      isNaN(item.xx) ||
-      isNaN(item.yy) ||
-      isNaN(item.zz)
-    ) {
-      console.error("NaN found in item position calculations", {
-        index: i + 1,
-        cx: boxes[i].cx,
-        cy: boxes[i].cy,
-        cz: boxes[i].cz,
-        xx: item.xx,
-        yy: item.yy,
-        zz: item.zz,
-      });
-      continue; // Skip setting position for this item to avoid rendering issues
-    }
-
+    item = boxes[i].items[0];
     const geo = new THREE.BoxGeometry(
       item.xx / scale - 0.001,
       item.yy / scale - 0.001,
@@ -452,13 +431,14 @@ export function createDisplay(box, scale) {
       (boxes[i].cz - item.zz / 2) / scale,
     ];
     items.push(item);
+    //  console.log(item);
     console.log(
       "item ",
       i + 1,
       " added at position: ",
-      item.pos[0],
-      item.pos[1],
-      item.pos[2]
+      (boxes[i].cx - item.xx / 2) / scale,
+      (boxes[i].cy + item.yy / 2) / scale,
+      (boxes[i].cz - item.zz / 2) / scale
     );
   }
 
