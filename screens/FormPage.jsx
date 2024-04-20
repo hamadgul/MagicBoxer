@@ -8,11 +8,9 @@ import {
   View,
   Modal,
 } from "react-native";
-import { Form, Row } from "native-base";
+import { Form } from "native-base";
 import { Keyboard } from "react-native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import { useEffect } from "react";
-import { ThemeProvider } from "react-native-paper";
 import { generateUUID } from "three/src/math/MathUtils";
 import { pack, createDisplay } from "../packing_algo/packing";
 
@@ -29,7 +27,6 @@ export default class FormPage extends React.Component {
               <Text>Length: {props.item.itemLength}</Text>
               <Text>Width: {props.item.itemWidth}</Text>
               <Text>Height: {props.item.itemHeight}</Text>
-
               <Button
                 onPress={() => props.handleDeleteAndClose(props.item)}
                 title="Delete"
