@@ -12,6 +12,33 @@ export default class Display3D extends Component {
     this.cubes = []; // To store references to all cubes
   }
 
+  createTextSprite( // Not yet supported on React Native gl. Most likely support will come in an update.
+    text,
+    color = "rgba(0, 0, 0, 1)",
+    backgroundColor = "rgba(255, 255, 255, 0.8)"
+  ) {
+    const canvas = document.createElement("canvas");
+    const context = canvas.getContext("2d");
+    context.font = "24px Arial";
+    context.fillStyle = backgroundColor;
+    const metrics = context.measureText(text);
+    const textWidth = metrics.width;
+    canvas.width = textWidth + 20;
+    canvas.height = 40; // Fixed height for simplicity
+    context.fillStyle = backgroundColor;
+    context.fillRect(0, 0, canvas.width, canvas.height);
+    context.fillStyle = color;
+    context.fillText(text, 10, 30);
+
+    const texture = new THREE.Texture(canvas);
+    texture.needsUpdate = true;
+
+    const material = new THREE.SpriteMaterial({ map: texture });
+    const sprite = new THREE.Sprite(material);
+    sprite.scale.set(0.5, 0.25, 1); // You might need to adjust this based on your scene scale
+    return sprite;
+  }
+
   _onGLContextCreate = (gl) => {
     const { route } = this.props;
     const { box, itemsTotal } = route.params ?? { box: null, itemsTotal: [] };
@@ -44,6 +71,20 @@ export default class Display3D extends Component {
     const cube = new THREE.Mesh(geometry, material);
     this.cubes.push(cube); // Store the cube
     scene.add(cube);
+
+    const xLabel = this.createTextSprite(`Width: ${box.x}`);
+    const yLabel = this.createTextSprite(`Height: ${box.y}`);
+    const zLabel = this.createTextSprite(`Depth: ${box.z}`);
+
+    // Adjust positions relative to the cube dimensions and scale
+    xLabel.position.set(box.x / (2 * scale) + 0.1, 0, 0);
+    yLabel.position.set(0, box.y / (2 * scale) + 0.1, 0);
+    zLabel.position.set(0, 0, box.z / (2 * scale) + 0.1);
+
+    cube.add(xLabel);
+    cube.add(yLabel);
+    cube.add(zLabel);
+
     for (var i = 0; i < itemsTotal.length; i++) {
       // edges.add(itemss[i].dis);
       cube.add(itemsTotal[i].dis);
