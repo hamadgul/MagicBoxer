@@ -14,15 +14,10 @@ export default class Display3D extends Component {
 
   _onGLContextCreate = (gl) => {
     const { route } = this.props;
-    const { box, itemsTotal, selectedBox } = route.params ?? {
+    const { box, itemsTotal } = route.params ?? {
       box: null,
       itemsTotal: [],
-      selectedBox: [],
     };
-    const boxDimensions =
-      selectedBox.length === 3
-        ? `${selectedBox[0]} x ${selectedBox[1]} x ${selectedBox[2]}`
-        : "No box selected";
 
     const scene = new THREE.Scene();
     const camera = new THREE.PerspectiveCamera(
@@ -84,7 +79,7 @@ export default class Display3D extends Component {
     const { selectedBox } = this.props.route.params ?? { selectedBox: [] };
     const boxDimensions =
       selectedBox.length === 3
-        ? `Use the following box size to pack your items!\n${selectedBox[0]}L x ${selectedBox[1]}W x ${selectedBox[2]}H`
+        ? `Optimal-Sized Box for this Package:\n${selectedBox[0]}L x ${selectedBox[1]}W x ${selectedBox[2]}H from UPS`
         : "No box selected";
     return (
       <View style={styles.container}>
