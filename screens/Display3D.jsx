@@ -1,5 +1,5 @@
 import React, { Component } from "react";
-import { View, StyleSheet } from "react-native";
+import { View, StyleSheet, Text } from "react-native";
 import Slider from "@react-native-community/slider";
 import { GLView } from "expo-gl";
 import * as THREE from "three";
@@ -19,6 +19,10 @@ export default class Display3D extends Component {
       itemsTotal: [],
       selectedBox: [],
     };
+    const boxDimensions =
+      selectedBox.length === 3
+        ? `${selectedBox[0]} x ${selectedBox[1]} x ${selectedBox[2]}`
+        : "No box selected";
 
     const scene = new THREE.Scene();
     const camera = new THREE.PerspectiveCamera(
@@ -77,6 +81,11 @@ export default class Display3D extends Component {
   };
 
   render() {
+    const { selectedBox } = this.props.route.params ?? { selectedBox: [] };
+    const boxDimensions =
+      selectedBox.length === 3
+        ? `Use the following box size to pack your items! ${selectedBox[0]}L x ${selectedBox[1]}W x ${selectedBox[2]}H`
+        : "No box selected";
     return (
       <View style={styles.container}>
         <View style={styles.sliderContainer}>
@@ -89,6 +98,7 @@ export default class Display3D extends Component {
             onValueChange={this.handleRotationChange}
           />
         </View>
+        <Text style={styles.dimensionsText}>{boxDimensions}</Text>
         <GLView
           style={styles.glView}
           onContextCreate={this._onGLContextCreate}
