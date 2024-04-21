@@ -196,11 +196,12 @@ export default class FormPage extends React.Component {
       );
       return;
     }
-    if (
-      isNaN(this.state.itemLength) ||
-      isNaN(this.state.itemWidth) ||
-      isNaN(this.state.itemHeight)
-    ) {
+    // Convert dimensions to numbers
+    const length = parseFloat(this.state.itemLength);
+    const width = parseFloat(this.state.itemWidth);
+    const height = parseFloat(this.state.itemHeight);
+
+    if (isNaN(length) || isNaN(width) || isNaN(height)) {
       // Display an error message
       Alert.alert(
         "Error",
@@ -209,6 +210,16 @@ export default class FormPage extends React.Component {
       // prevent the form from being submitted
       return;
     }
+    // Check if dimensions are valid numbers
+    if (
+      !Number.isFinite(length) ||
+      !Number.isFinite(width) ||
+      !Number.isFinite(height)
+    ) {
+      Alert.alert("Error", "Invalid item dimensions.");
+      return;
+    }
+
     const exists = this.state.items.some(
       (item) => item.itemName === this.state.itemName
     );
@@ -219,9 +230,9 @@ export default class FormPage extends React.Component {
     const newItem = {
       id: generateUUID(),
       itemName: this.state.itemName,
-      itemLength: this.state.itemLength,
-      itemWidth: this.state.itemWidth,
-      itemHeight: this.state.itemHeight,
+      itemLength: length,
+      itemWidth: width,
+      itemHeight: height,
     };
     this.setState({ items: [...this.state.items, newItem] }, () => {
       this._storeData();
