@@ -270,6 +270,8 @@ export default class FormPage extends React.Component {
             onChangeText={this.handleChange}
             maxLength={10}
             returnKeyType={"next"}
+            placeholder="MacBook, Xbox etc"
+            placeholderTextColor={"#d3d3d3"}
           />
           <Text style={styles.label}>Length:</Text>
           <TextInput

@@ -84,7 +84,7 @@ export default class Display3D extends Component {
     const { selectedBox } = this.props.route.params ?? { selectedBox: [] };
     const boxDimensions =
       selectedBox.length === 3
-        ? `Use the following box size to pack your items! ${selectedBox[0]}L x ${selectedBox[1]}W x ${selectedBox[2]}H`
+        ? `Use the following box size to pack your items!\n${selectedBox[0]}L x ${selectedBox[1]}W x ${selectedBox[2]}H`
         : "No box selected";
     return (
       <View style={styles.container}>
