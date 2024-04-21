@@ -12,8 +12,16 @@ function AppNavigator() {
     <NavigationContainer>
       <Stack.Navigator initialRouteName="LoginScreen">
         <Stack.Screen name="Login Screen" component={LoginScreen} />
-        <Stack.Screen name="Form Page" component={FormPage} />
-        <Stack.Screen name="Display3D" component={Display3D} />
+        <Stack.Screen
+          name="Form Page"
+          component={FormPage}
+          options={{ title: "Items to Pack!" }}
+        />
+        <Stack.Screen
+          name="Display3D"
+          component={Display3D}
+          options={{ title: "Display my Items!" }}
+        />
       </Stack.Navigator>
     </NavigationContainer>
   );

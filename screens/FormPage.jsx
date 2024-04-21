@@ -246,7 +246,7 @@ export default class FormPage extends React.Component {
     });
 
     alert("An item was submitted: " + this.state.itemName);
-    alert(`Number of items submitted so far: ${this.state.items.length + 1}`);
+    //alert(`Number of items submitted so far: ${this.state.items.length + 1}`);
     this.resetForm();
     Keyboard.dismiss();
   };
@@ -270,6 +270,8 @@ export default class FormPage extends React.Component {
             onChangeText={this.handleChange}
             maxLength={10}
             returnKeyType={"next"}
+            placeholder="MacBook, Xbox etc"
+            placeholderTextColor={"#d3d3d3"}
           />
           <Text style={styles.label}>Length:</Text>
           <TextInput
@@ -318,7 +320,7 @@ export default class FormPage extends React.Component {
               onPress={() => {
                 this.handleVisualize();
               }}
-              title="Pack!"
+              title="Box!"
             >
               <Text>Pack!</Text>
             </Button>
