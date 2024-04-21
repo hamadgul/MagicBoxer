@@ -170,10 +170,17 @@ export default class FormPage extends React.Component {
           console.log("Height", packedResult[0].z);
           //console.log("box", packedResult[0]);
           //console.log("box", packedResult[0].Box);
+          var selectedBox = [
+            packedResult[0].x,
+            packedResult[0].y,
+            packedResult[0].z,
+          ];
+          console.log("selected box:", selectedBox);
 
           this.props.navigation.navigate("Display3D", {
             box: packedResult[0],
             itemsTotal: packedResult[1],
+            selectedBox: selectedBox,
           });
         }
       });
@@ -311,9 +318,9 @@ export default class FormPage extends React.Component {
               onPress={() => {
                 this.handleVisualize();
               }}
-              title="Visualize"
+              title="Pack!"
             >
-              <Text>Visualize</Text>
+              <Text>Pack!</Text>
             </Button>
           </View>
           <View>
