@@ -20,7 +20,7 @@ function AppNavigator() {
         <Stack.Screen
           name="Display3D"
           component={Display3D}
-          options={{ title: "Display my Items!" }}
+          options={{ title: "Pack my Items!" }}
         />
       </Stack.Navigator>
     </NavigationContainer>
