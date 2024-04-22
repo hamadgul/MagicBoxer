@@ -30,7 +30,10 @@ export default class Display3D extends Component {
     const renderer = new Renderer({ gl });
     renderer.setSize(gl.drawingBufferWidth, gl.drawingBufferHeight);
 
-    var scale = Math.max(box.x, box.y, box.z) > 15 ? 20 : 10;
+    var scale = 10;
+    if (Math.max(box.x, box.y, box.z) > 15) {
+      scale = 20;
+    }
 
     const geometry = new THREE.BoxGeometry(
       box.x / scale,
@@ -85,7 +88,6 @@ export default class Display3D extends Component {
       <View style={styles.container}>
         <View style={styles.sliderContainer}>
           <Slider
-            style={{ width: "100%", height: 40 }}
             minimumValue={0}
             maximumValue={(Math.PI * 2) / 3}
             step={0.01}
@@ -113,6 +115,12 @@ const styles = StyleSheet.create({
     backgroundColor: "#fff", // Optional background color for visibility
   },
   glView: {
-    flex: 1, // Ensure GLView takes up the rest of the space
+    flex: 1, // Ensure GLView takes up the rest of the space,
+    //justifyContent: "center",
+  },
+  dimensionsText: {
+    fontSize: 14,
+    fontWeight: "bold",
+    color: "#1C6EA4",
   },
 });
