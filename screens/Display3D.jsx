@@ -30,10 +30,7 @@ export default class Display3D extends Component {
     const renderer = new Renderer({ gl });
     renderer.setSize(gl.drawingBufferWidth, gl.drawingBufferHeight);
 
-    var scale = 10;
-    if (Math.max(box.x, box.y, box.z) > 15) {
-      scale = 20;
-    }
+    var scale = Math.max(box.x, box.y, box.z) > 15 ? 20 : 10;
 
     const geometry = new THREE.BoxGeometry(
       box.x / scale,
@@ -82,12 +79,13 @@ export default class Display3D extends Component {
     const { selectedBox } = this.props.route.params ?? { selectedBox: [] };
     const boxDimensions =
       selectedBox.length === 3
-        ? `The optimal-sized box for your items is:\n${selectedBox[0]}L x ${selectedBox[1]}W x ${selectedBox[2]}H from UPS`
+        ? `Optimal-Sized Box for this Package:\n${selectedBox[0]}L x ${selectedBox[1]}W x ${selectedBox[2]}H from UPS`
         : "No box selected";
     return (
       <View style={styles.container}>
         <View style={styles.sliderContainer}>
           <Slider
+            style={{ width: "100%", height: 40 }}
             minimumValue={0}
             maximumValue={(Math.PI * 2) / 3}
             step={0.01}
@@ -115,12 +113,6 @@ const styles = StyleSheet.create({
     backgroundColor: "#fff", // Optional background color for visibility
   },
   glView: {
-    flex: 1, // Ensure GLView takes up the rest of the space,
-    //justifyContent: "center",
-  },
-  dimensionsText: {
-    fontSize: 14,
-    fontWeight: "bold",
-    color: "#1C6EA4",
+    flex: 1, // Ensure GLView takes up the rest of the space
   },
 });

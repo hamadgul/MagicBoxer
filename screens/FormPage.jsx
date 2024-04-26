@@ -23,10 +23,10 @@ export default class FormPage extends React.Component {
         <Modal visible={props.visible} animationType="slide" transparent={true}>
           <View style={styles.centeredView}>
             <View style={styles.modalContent}>
-              <Text>{props.item.itemName}</Text>
-              <Text>Length: {props.item.itemLength}"</Text>
-              <Text>Width: {props.item.itemWidth}"</Text>
-              <Text>Height: {props.item.itemHeight}"</Text>
+              <Text>Item Name: {props.item.itemName}</Text>
+              <Text>Length: {props.item.itemLength}</Text>
+              <Text>Width: {props.item.itemWidth}</Text>
+              <Text>Height: {props.item.itemHeight}</Text>
               <Button
                 onPress={() => props.handleDeleteAndClose(props.item)}
                 title="Delete"
@@ -293,7 +293,7 @@ export default class FormPage extends React.Component {
             placeholderTextColor={"#d3d3d3"}
             maxLength={2}
           />
-          <Text style={styles.label}>Height(or depth):</Text>
+          <Text style={styles.label}>Height:</Text>
           <TextInput
             style={styles.input}
             value={this.state.itemHeight}
