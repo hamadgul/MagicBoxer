@@ -1,9 +1,17 @@
-import { StyleSheet } from "react-native";
+import { Button, StyleSheet, Text, TextInput, View, Modal } from "react-native";
+import { Form } from "native-base";
+import { Keyboard } from "react-native";
 
-export default StyleSheet.create({
+const styles = StyleSheet.create({
   container: {
     flex: 1,
     padding: 20,
+  },
+  label: {
+    fontSize: 16,
+    marginTop: 20,
+    fontWeight: "bold",
+    color: "#1C6EA4",
   },
   input: {
     height: 40,
@@ -17,7 +25,19 @@ export default StyleSheet.create({
   buttonContainer: {
     flexDirection: "row",
     justifyContent: "space-between",
-    marginTop: 20,
+  },
+  submitButton: {
+    flex: 1,
+    marginRight: 5,
+  },
+  visualizeButton: {
+    flex: 1,
+    marginLeft: 5,
+  },
+  itemBorder: {
+    borderWidth: "2px",
+    borderStyle: "solid",
+    borderColor: "#1C6EA4",
   },
   centeredView: {
     flex: 1,
@@ -31,6 +51,7 @@ export default StyleSheet.create({
     borderRadius: 20,
     padding: 35,
     alignItems: "center",
+    justifyContent: "center",
     shadowColor: "#000",
     shadowOffset: {
       width: 0,
@@ -40,23 +61,13 @@ export default StyleSheet.create({
     shadowRadius: 4,
     elevation: 5,
   },
-  label: {
-    fontSize: 16,
-    fontWeight: "bold",
-    color: "#1C6EA4",
-  },
-  modalButtonContainer: {
-    justifyContent: "space-evenly",
-    flexDirection: "row",
-    alignContent: "flex-start",
-    flexWrap: "wrap",
-    marginTop: 20,
-  },
   button: {
     borderRadius: 20,
     padding: 10,
     elevation: 2,
-    backgroundColor: "#d0e0e3", // Button color when modal is open
+  },
+  buttonOpen: {
+    backgroundColor: "#d0e0e3",
   },
   buttonClose: {
     backgroundColor: "#2196F3",
@@ -65,4 +76,11 @@ export default StyleSheet.create({
     color: "white",
     fontWeight: "bold",
   },
+  modalButtonContainer: {
+    justifyContent: "space-evenly",
+    flexDirection: "row",
+    alignContent: "flex-start",
+    flexWrap: "wrap",
+  },
 });
+export default styles;
