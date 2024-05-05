@@ -8,7 +8,7 @@ import { pack, createDisplay } from "../packing_algo/packing";
 import styles from "../components/Styles";
 var Buffer = require("@craftzdog/react-native-buffer").Buffer;
 
-export default class FormPage extends React.Component {
+export default class FormPage extends Component {
   static ItemDetailsModal = (props) => {
     return (
       <View style={styles.centeredView}>
@@ -187,7 +187,8 @@ export default class FormPage extends React.Component {
       this.state.itemLength === "" ||
       this.state.itemWidth === "" ||
       this.state.itemHeight === "" ||
-      this.state.itemName === ""
+      this.state.itemName === "" ||
+      this.state.itemHeight === ""
     ) {
       Alert.alert(
         "Error",
@@ -195,6 +196,16 @@ export default class FormPage extends React.Component {
       );
       return;
     }
+    if (
+      this.state.itemLength === "0" ||
+      this.state.itemWidth === "0" ||
+      this.state.itemHeight === "0" ||
+      this.state.itemHeight === "0"
+    ) {
+      Alert.alert("Error", "Item dimensions can not be 0.");
+      return;
+    }
+
     // Convert dimensions to numbers
     const length = parseFloat(this.state.itemLength);
     const width = parseFloat(this.state.itemWidth);
