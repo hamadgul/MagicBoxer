@@ -2,11 +2,20 @@ import React, { Component } from "react";
 import { Alert, Button, Text, TextInput, View, Modal } from "react-native";
 import { Form } from "native-base";
 import { Keyboard } from "react-native";
+import { Dropdown } from "react-native-element-dropdown";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { generateUUID } from "three/src/math/MathUtils";
 import { pack, createDisplay } from "../packing_algo/packing";
 import styles from "../components/Styles";
+import AntDesign from "@expo/vector-icons/AntDesign";
+
 var Buffer = require("@craftzdog/react-native-buffer").Buffer;
+
+const carrierData = [
+  { label: "UPS", value: "UPS" },
+  { label: "USPS", value: "USPS" },
+  { label: "FedEx", value: "FedEx" },
+];
 
 export default class FormPage extends Component {
   static ItemDetailsModal = (props) => {
@@ -48,6 +57,7 @@ export default class FormPage extends Component {
       items: [],
       showDetails: false,
       unit: "inches",
+      selectedCarrier: "UPS",
     };
 
     this.handleChange = this.handleChange.bind(this);
@@ -135,12 +145,13 @@ export default class FormPage extends Component {
             item.itemWidth,
             item.itemHeight,
             item.id,
+            item.selectedCarrier,
           ]);
         });
         var packedResult = [];
         console.log("Test Dims:", itemsTotal);
-
-        packedResult.push(pack(itemsTotal, "USPS", 0));
+        console.log("Selected", this.state.selectedCarrier);
+        packedResult.push(pack(itemsTotal, this.state.selectedCarrier, 0));
         console.log("Packed Result:", packedResult);
         if (packedResult === 0) {
           Alert.alert(
@@ -173,6 +184,7 @@ export default class FormPage extends Component {
             box: packedResult[0],
             itemsTotal: packedResult[1],
             selectedBox: selectedBox,
+            selectedCarrier: this.state.selectedCarrier,
           });
         }
       });
@@ -188,7 +200,8 @@ export default class FormPage extends Component {
       this.state.itemWidth === "" ||
       this.state.itemHeight === "" ||
       this.state.itemName === "" ||
-      this.state.itemHeight === ""
+      this.state.itemHeight === "" ||
+      this.state.selectedCarrier === ""
     ) {
       Alert.alert(
         "Error",
@@ -243,6 +256,7 @@ export default class FormPage extends Component {
       itemLength: length,
       itemWidth: width,
       itemHeight: height,
+      selectedCarrier: this.state.selectedCarrier,
     };
     this.setState({ items: [...this.state.items, newItem] }, () => {
       this._storeData();
@@ -305,6 +319,24 @@ export default class FormPage extends Component {
             placeholder="-- inches"
             placeholderTextColor={"#d3d3d3"}
             maxLength={2}
+          />
+          <Text style={styles.label}>Select Carrier:</Text>
+          <Dropdown
+            style={styles.input}
+            data={carrierData}
+            labelField="label"
+            valueField="value"
+            placeholder="Select Carrier"
+            value={this.state.selectedCarrier}
+            onChange={(item) => this.setState({ selectedCarrier: item.value })}
+            renderLeftIcon={() => (
+              <AntDesign
+                style={styles.icon}
+                color="black"
+                name="Safety"
+                size={20}
+              />
+            )}
           />
           <View style={styles.buttonContainer}>
             <Button

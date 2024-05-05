@@ -76,10 +76,13 @@ export default class Display3D extends Component {
   };
 
   render() {
-    const { selectedBox } = this.props.route.params ?? { selectedBox: [] };
+    const { selectedBox, selectedCarrier } = this.props.route.params ?? {
+      selectedBox: [],
+      selectedCarrier: "",
+    };
     const boxDimensions =
       selectedBox.length === 3
-        ? `Optimal-Sized Box for this Package:\n${selectedBox[0]}L x ${selectedBox[1]}W x ${selectedBox[2]}H from UPS`
+        ? `Optimal-Sized Box for this Package:\n${selectedBox[0]}L x ${selectedBox[1]}W x ${selectedBox[2]}H from ${selectedCarrier}`
         : "No box selected";
     return (
       <View style={styles.container}>
