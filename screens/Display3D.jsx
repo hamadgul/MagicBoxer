@@ -54,16 +54,21 @@ export default class Display3D extends Component {
     }
     //item.dis && cube.add(item.dis); // Check if `dis` exists before adding
 
-    camera.position.set(-1.2, 0.5, 2);
+    camera.position.set(-1.2, 0.5, 5); // Zoom out to ensure visibility of the entire scene
     camera.lookAt(0, 0, 0);
 
     const animate = () => {
       requestAnimationFrame(animate);
       cube.rotation.y = this.state.rotationY;
-      // Rotate each cube
-      for (var i = 1; i <= itemsTotal.length; i++) {
+      // Maximum movement allowed along the y-axis (so items don't leave the box)
+      const maxMovement = (box.y / scale) * 1.5; // Let items move 1.5x the height of the box
+
+      // Update each item's position
+      for (let i = 1; i <= itemsTotal.length; i++) {
+        // Let items move above the box and return to their original `pos[1]` when slider rotates
         itemsTotal[i - 1].dis.position.y =
-          0.5 * this.state.rotationY + itemsTotal[i - 1].pos[1];
+          Math.sin(this.state.rotationY) * maxMovement +
+          itemsTotal[i - 1].pos[1];
       }
       renderer.render(scene, camera);
       gl.endFrameEXP();
@@ -90,7 +95,7 @@ export default class Display3D extends Component {
           <Slider
             style={{ width: "100%", height: 40 }}
             minimumValue={0}
-            maximumValue={(Math.PI * 2) / 3}
+            maximumValue={Math.PI} // Adjust the range to control how much the items rotate/move
             step={0.01}
             value={this.state.rotationY}
             onValueChange={this.handleRotationChange}
