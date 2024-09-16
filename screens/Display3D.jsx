@@ -95,10 +95,14 @@ export default class Display3D extends Component {
             {selectedBox.dimensions[2]}H
           </Text>
           <Text style={styles.text}>
-            Box Price: $
-            {selectedBox.price ? selectedBox.price.toFixed(2) : "N/A"}{" "}
-            {/* Add fallback for price */}
+            Box Price:{" "}
+            {selectedBox.price !== null && selectedBox.price !== undefined
+              ? selectedBox.price === 0
+                ? "Free"
+                : `$${selectedBox.price.toFixed(2)}`
+              : "N/A"}
           </Text>
+
           <Text style={styles.carrierText}>Carrier: {selectedCarrier}</Text>
         </View>
       ) : null; // Added missing `null` to avoid syntax error
