@@ -76,11 +76,13 @@ export default class FormPage extends Component {
   };
 
   handleDeleteAndClose = (itemToDelete) => {
+    // Use a unique identifier for deletion logic if possible.
     const updatedItems = this.state.items.filter(
       (item) => item.id !== itemToDelete.id
     );
     this.setState({ items: updatedItems }, async () => {
       try {
+        // Update AsyncStorage after modifying the items array.
         const serializedItems = Buffer.from(
           JSON.stringify(this.state.items)
         ).toString("base64");
@@ -139,44 +141,53 @@ export default class FormPage extends Component {
         var itemsTotal = [];
         this.state.items.forEach((item) => {
           itemsTotal.push([
-            parseFloat(item.itemLength),
-            parseFloat(item.itemWidth),
-            parseFloat(item.itemHeight),
+            item.itemLength,
+            item.itemWidth,
+            item.itemHeight,
             item.id,
+            item.selectedCarrier,
           ]);
         });
+        var packedResult = [];
+        console.log("Test Dims:", itemsTotal);
+        console.log("Selected", this.state.selectedCarrier);
+        packedResult.push(pack(itemsTotal, this.state.selectedCarrier, 0));
+        console.log("Packed Result:", packedResult);
 
-        console.log("Items to Pack:", itemsTotal);
-
-        const packedResult = pack(itemsTotal, this.state.selectedCarrier, 0);
-
-        if (!packedResult || packedResult === 0) {
+        if (packedResult === 0) {
           Alert.alert(
-            "No box selected. Items are too big for a single standard box."
+            "Items are too big for a single standard box. Multiple boxed orders have not been implemented yet."
           );
-          return;
+        } else {
+          var scale = 10;
+          if (
+            Math.max(packedResult[0].x, packedResult[0].y, packedResult[0].z) >
+            15
+          ) {
+            scale = 20;
+          }
+          packedResult.push(createDisplay(packedResult[0], scale));
+
+          // Extract dimensions and price for the selected box
+          var selectedBox = {
+            dimensions: [
+              packedResult[0].x,
+              packedResult[0].y,
+              packedResult[0].z,
+            ],
+            price: packedResult[0].price, // Add the price from the packed result
+          };
+
+          console.log("selected box:", selectedBox);
+
+          // Pass the selected box, items, and price to Display3D
+          this.props.navigation.navigate("Display3D", {
+            box: packedResult[0],
+            itemsTotal: packedResult[1],
+            selectedBox: selectedBox,
+            selectedCarrier: this.state.selectedCarrier,
+          });
         }
-
-        var scale = 10;
-        if (Math.max(packedResult.x, packedResult.y, packedResult.z) > 15) {
-          scale = 20;
-        }
-
-        const displayData = createDisplay(packedResult, scale);
-
-        const selectedBox = {
-          dimensions: [packedResult.x, packedResult.y, packedResult.z],
-          price: packedResult.price,
-        };
-
-        console.log("Selected Box:", selectedBox);
-
-        this.props.navigation.navigate("Display3D", {
-          box: packedResult,
-          itemsTotal: displayData,
-          selectedBox: selectedBox,
-          selectedCarrier: this.state.selectedCarrier,
-        });
       });
     } catch (error) {
       console.error(error);
@@ -190,6 +201,7 @@ export default class FormPage extends Component {
       this.state.itemWidth === "" ||
       this.state.itemHeight === "" ||
       this.state.itemName === "" ||
+      this.state.itemHeight === "" ||
       this.state.selectedCarrier === ""
     ) {
       Alert.alert(
@@ -201,23 +213,28 @@ export default class FormPage extends Component {
     if (
       this.state.itemLength === "0" ||
       this.state.itemWidth === "0" ||
+      this.state.itemHeight === "0" ||
       this.state.itemHeight === "0"
     ) {
       Alert.alert("Error", "Item dimensions can not be 0.");
       return;
     }
 
+    // Convert dimensions to numbers
     const length = parseFloat(this.state.itemLength);
     const width = parseFloat(this.state.itemWidth);
     const height = parseFloat(this.state.itemHeight);
 
     if (isNaN(length) || isNaN(width) || isNaN(height)) {
+      // Display an error message
       Alert.alert(
         "Error",
         "Item length, width, and height must be numeric values."
       );
+      // prevent the form from being submitted
       return;
     }
+    // Check if dimensions are valid numbers
     if (
       !Number.isFinite(length) ||
       !Number.isFinite(width) ||
@@ -247,6 +264,7 @@ export default class FormPage extends Component {
     });
 
     alert("An item was submitted: " + this.state.itemName);
+    //alert(`Number of items submitted so far: ${this.state.items.length + 1}`);
     this.resetForm();
     Keyboard.dismiss();
   };
@@ -258,6 +276,7 @@ export default class FormPage extends Component {
   closeModal = () => {
     this.setState({ showDetails: false });
   };
+
   render() {
     return (
       <TouchableWithoutFeedback onPress={Keyboard.dismiss} accessible={false}>
