@@ -110,26 +110,51 @@ function initialize(boxes, items) {
 
 //main packing function that will be called from the details screen
 export function pack(itemList, carrier, optionalBox) {
-  var boxSizes;
-  if (optionalBox != 0) {
-    boxSizes = optionalBox;
-  } else {
-    boxSizes = carrierBoxes(carrier);
+  const boxSizes = optionalBox != 0 ? optionalBox : carrierBoxes(carrier); // Use provided box sizes or generate for carrier
+  initialize(boxSizes, itemList); // Initialize boxes and items
+
+  const itemVol = vol(itemList); // Calculate total volume of items
+  const filteredBoxes = filterVol(boxSizes, itemVol); // Filter out boxes that can't fit all items by volume
+  if (filteredBoxes.length === 0) {
+    return 0; // No box found that can fit all items
   }
-  initialize(boxSizes, itemList);
-  var itemVol;
-  itemVol = vol(itemList);
-  boxSizes = filterVol(boxSizes, itemVol);
-  if (boxSizes.length === 0) {
-    return 0;
-  }
+
+  // Debugging: Log filtered boxes before sorting
+  console.log(
+    "Filtered Boxes Before Sorting:",
+    filteredBoxes.map((b) => [b.x, b.y, b.z])
+  );
+
+  // Sort boxes to prioritize ones that match the item's dimensions closely
+  filteredBoxes.sort((a, b) => {
+    // Prioritize exact dimension match
+    const aFitsExactly =
+      a.x === itemList[0].x && a.y === itemList[0].y && a.z === itemList[0].z;
+    const bFitsExactly =
+      b.x === itemList[0].x && b.y === itemList[0].y && b.z === itemList[0].z;
+
+    if (aFitsExactly && !bFitsExactly) return -1;
+    if (!aFitsExactly && bFitsExactly) return 1;
+
+    // If both or neither fit exactly, sort by volume to minimize unused space
+    return a.vol - b.vol;
+  });
+
+  // Debugging: Log filtered boxes after sorting
+  console.log(
+    "Filtered Boxes After Sorting:",
+    filteredBoxes.map((b) => [b.x, b.y, b.z])
+  );
+
+  // Sort items in descending order of volume to pack efficiently
   itemList = quickSort(itemList, 0, itemList.length - 1).reverse();
-  boxSizes = quickSort(boxSizes, 0, boxSizes.length - 1);
-  finalBox = findBox(itemList, boxSizes, 0);
-  return finalBox;
+
+  // Use the sorted, filtered boxes in the findBox function
+  return findBox(itemList, filteredBoxes, 0); // Find the first suitable box for the items
 }
 
 //generate the box sizes for the specific carrier
+// Generate the box sizes for the specific carrier
 function carrierBoxes(carrier) {
   switch (carrier) {
     case "USPS":
@@ -155,36 +180,30 @@ function carrierBoxes(carrier) {
         [12, 12, 5.5, 2.75, false],
         [23.69, 11.75, 3, 3.5, false],
       ];
-      break;
-    case "FEDEX":
+    case "FedEx": // Ensure "FedEx" is correctly matched
       return [
-        [10.875, 1.5, 12.375, false],
-        [8.75, 11.6875, 11.3125, false],
-        [11.5, 2.375, 13.25, false],
-        [8.75, 4.375, 11.3125, false],
+        // [10.875, 1.5, 12.375, false],
+        // [8.75, 11.6875, 11.3125, false],
+        // [11.5, 2.375, 13.25, false],
+        // [8.75, 4.375, 11.3125, false],
         [12, 3, 17.5, 2.25, false], // checked
-        // [8.75, 7.75, 11.3125, false],
-        // [11.875, 10.8125, 11.0625, false],
-        // [15.75, 14.1875, 6, false],
-        // [18, 12.5, 3, 2, true],
-        [17, 17, 7, 3.25, false], //checked
-        [12, 9, 6, 2, false], //checked
-        [20, 20, 12, 4.5, false], //checked
+        [17, 17, 7, 3.25, false], // checked
+        [12, 9, 6, 2, false], // checked
+        [20, 20, 12, 4.5, false], // checked
         [13, 9, 11, 2.75, false], // checked
-        [23, 17, 12, 4.75, false], //checked
-        [8, 8, 8, 1.75, false], //checked
-        [11, 11, 11, 2.5, false], //checked
-        [24, 24, 24, 12, false], //checked
-        [14, 14, 14, 3.75, false], //checked
-        [28, 28, 28, 15, false], //checked
-        [16, 16, 16, 4.29, false], //checked
-        [12, 12, 18, 3.75, false], //checked
-        [20, 20, 20, 6.29, false], //checked
-        [22, 22, 22, 7, false], //checked
-        [24, 24, 18, 10, false], //checked
-        [18, 13, 11.75, 7, false], //checked
+        [23, 17, 12, 4.75, false], // checked
+        [8, 8, 8, 1.75, false], // checked
+        [11, 11, 11, 2.5, false], // checked
+        [24, 24, 24, 12, false], // checked
+        [14, 14, 14, 3.75, false], // checked
+        [28, 28, 28, 15, false], // checked
+        [16, 16, 16, 4.29, false], // checked
+        [12, 12, 18, 3.75, false], // checked
+        [20, 20, 20, 6.29, false], // checked
+        [22, 22, 22, 7, false], // checked
+        [24, 24, 18, 10, false], // checked
+        [18, 13, 11.75, 7, false], // checked
       ];
-      break;
     case "UPS":
       return [
         [13, 11, 2, 2.25, false],
@@ -199,7 +218,6 @@ function carrierBoxes(carrier) {
         [19.375, 17.375, 14.375, 10.0, false],
         [16.5, 13.25, 10.75, 7.0, false],
       ];
-      break;
     default:
       return [
         [18, 12.5, 3, 2, true],
@@ -209,7 +227,7 @@ function carrierBoxes(carrier) {
         [13, 9, 11, 2, true],
         [23, 17, 12, 2, true],
         [12, 12, 18, 2, true],
-        [8, 8, 8, 2, true],
+        // [8, 8, 8, 2, true],
         [20, 20, 20, 2, true],
         [11, 11, 11, 2, true],
         [24, 24, 24, 2, true],
@@ -217,22 +235,39 @@ function carrierBoxes(carrier) {
         [28, 28, 28, 2, true],
         [16, 16, 16, 2, true],
       ];
-      break;
   }
 }
 
 //iterate through the list of items to add each one to the box. moves to next box if any items fail to be placed in a box. returns finalized box
+// iterate through the list of items to add each one to the box. moves to next box if any items fail to be placed in a box. returns finalized box
 function findBox(itemList, boxSizes, j) {
   if (j >= boxSizes.length) {
+    console.log("No boxes found that can fit the items.");
     return "No boxes found";
   }
-  currentBox = boxSizes[j];
+
+  const currentBox = boxSizes[j];
+  console.log(
+    `Trying to fit items in box: [${currentBox.x}, ${currentBox.y}, ${currentBox.z}]`
+  );
+
   for (var i = 0; i < itemList.length; i++) {
-    var b = fitItem(itemList[i], currentBox);
-    if (!b) {
+    const fitResult = fitItem(itemList[i], currentBox);
+    console.log(
+      `Item [${itemList[i].x}, ${itemList[i].y}, ${itemList[i].z}] fits in current box? ${fitResult}`
+    );
+
+    if (!fitResult) {
+      console.log(
+        `Item ${i} does not fit in box [${currentBox.x}, ${currentBox.y}, ${currentBox.z}]. Trying next box...`
+      );
       return findBox(itemList, boxSizes, j + 1);
     }
   }
+
+  console.log(
+    `All items fit in box [${currentBox.x}, ${currentBox.y}, ${currentBox.z}]. Finalizing box...`
+  );
   return finalize(currentBox);
 }
 
@@ -290,69 +325,101 @@ function splitBox(item, curbox) {
 //truly checks if the item fits in the box. If the item's volume is greater than the remaining volume, immediately return false
 //else, rotate the item as much as it can until it fits inside the box. once it fits, split the resulting box, and return true
 //if there was no rotation where the item will fit, we also return false
+// Updated checkDimensions function to improve fit logic
 function checkDimensions(item, box) {
-  var fits = false;
-  if (item.vol > box.remainvol) {
-    return fits;
-  } else {
-    for (var rotation = 1; rotation <= 6; rotation++) {
-      switch (rotation) {
-        case 1:
-          item.xx = item.x;
-          item.yy = item.y;
-          item.zz = item.z;
-          break;
-        case 2:
-          item.xx = item.x;
-          item.yy = item.z;
-          item.zz = item.y;
-          break;
-        case 3:
-          item.xx = item.y;
-          item.yy = item.x;
-          item.zz = item.z;
-          break;
-        case 4:
-          item.xx = item.y;
-          item.yy = item.z;
-          item.zz = item.x;
-          break;
-        case 5:
-          item.xx = item.z;
-          item.yy = item.x;
-          item.zz = item.y;
-          break;
-        case 6:
-          item.xx = item.z;
-          item.yy = item.y;
-          item.zz = item.x;
-      }
+  console.log(
+    `Checking if item [${item.x}, ${item.y}, ${item.z}] fits in box [${box.x}, ${box.y}, ${box.z}]`
+  );
 
-      if (item.xx <= box.x && item.yy <= box.y && item.zz <= box.z) {
-        fits = true;
-        box.parts = splitBox(item, box);
-        return fits;
-      }
-    }
+  var fits = false;
+
+  // Ensure item volume is not greater than the box's remaining volume
+  if (item.vol > box.remainvol) {
+    console.log(
+      `Item volume ${item.vol} is greater than remaining box volume ${box.remainvol}.`
+    );
     return fits;
   }
+
+  // Try all 6 possible rotations
+  for (var rotation = 1; rotation <= 6; rotation++) {
+    switch (rotation) {
+      case 1:
+        item.xx = item.x;
+        item.yy = item.y;
+        item.zz = item.z;
+        break;
+      case 2:
+        item.xx = item.x;
+        item.yy = item.z;
+        item.zz = item.y;
+        break;
+      case 3:
+        item.xx = item.y;
+        item.yy = item.x;
+        item.zz = item.z;
+        break;
+      case 4:
+        item.xx = item.y;
+        item.yy = item.z;
+        item.zz = item.x;
+        break;
+      case 5:
+        item.xx = item.z;
+        item.yy = item.x;
+        item.zz = item.y;
+        break;
+      case 6:
+        item.xx = item.z;
+        item.yy = item.y;
+        item.zz = item.x;
+        break;
+    }
+
+    // Check if item fits within box dimensions after rotation
+    if (item.xx <= box.x && item.yy <= box.y && item.zz <= box.z) {
+      console.log(
+        `Item fits in box with rotation ${rotation}. Item dimensions after rotation: [${item.xx}, ${item.yy}, ${item.zz}]`
+      );
+      fits = true;
+      box.parts = splitBox(item, box); // Split the box for packing
+      return fits;
+    } else {
+      console.log(
+        `Rotation ${rotation} does not fit. Item dimensions: [${item.xx}, ${item.yy}, ${item.zz}]`
+      );
+    }
+  }
+
+  console.log(
+    `Item [${item.x}, ${item.y}, ${item.z}] does not fit in box [${box.x}, ${box.y}, ${box.z}] after all rotations.`
+  );
+  return fits;
 }
+
 //checks to see if the item will fit inside the box. checks if the box is split up at all. if it isn't, run checkDimensions. If it is split, run this function recursively until it finds
 //the boxes that haven't been split and work back from there. we always return the result of checkDimensions, but if the item does fit, we want to stop seaching and immediately return.
 function fitItem(item, box) {
+  console.log(
+    `Checking fit for item [${item.x}, ${item.y}, ${item.z}] in box [${box.x}, ${box.y}, ${box.z}]`
+  );
+
   if (box.parts == null) {
-    return checkDimensions(item, box);
+    const dimensionsCheck = checkDimensions(item, box);
+    console.log(`Dimensions check for item in box: ${dimensionsCheck}`);
+    return dimensionsCheck;
   } else {
-    var r;
-    for (var i = 0; i < box.parts.length; i++) {
-      r = fitItem(item, box.parts[i]);
-      if (r) {
-        return r;
+    let result;
+    for (let i = 0; i < box.parts.length; i++) {
+      result = fitItem(item, box.parts[i]);
+      if (result) {
+        return result; // If item fits in any part of the box, return true
       }
     }
-    if (!r) {
-      return r;
-    }
+    console.log(
+      `Item [${item.x}, ${item.y}, ${item.z}] does not fit in any parts of box [${box.x}, ${box.y}, ${box.z}]`
+    );
+    return result; // If no part fits, return false
   }
 }
 
