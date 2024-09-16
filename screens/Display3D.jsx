@@ -17,6 +17,11 @@ export default class Display3D extends Component {
       itemsTotal: [],
     };
 
+    if (!box) {
+      console.error("No box data received.");
+      return;
+    }
+
     const scene = new THREE.Scene();
     const camera = new THREE.PerspectiveCamera(
       75,
@@ -72,23 +77,29 @@ export default class Display3D extends Component {
 
   render() {
     const { selectedBox, selectedCarrier } = this.props.route.params ?? {
-      selectedBox: [],
+      selectedBox: null,
       selectedCarrier: "",
     };
 
+    if (!selectedBox || !selectedBox.dimensions) {
+      return <Text style={styles.noBoxText}>No box selected</Text>;
+    }
+
     const boxDimensions =
-      selectedBox.length === 3 ? (
+      selectedBox.dimensions.length === 3 ? (
         <View style={styles.boxDimensionsContainer}>
           <Text style={styles.boxTitle}>Optimal Box Size</Text>
           <Text style={styles.boxSubtitle}>For This Package:</Text>
           <Text style={styles.boxDetails}>
-            {selectedBox[0]}L x {selectedBox[1]}W x {selectedBox[2]}H
+            {selectedBox.dimensions[0]}L x {selectedBox.dimensions[1]}W x{" "}
+            {selectedBox.dimensions[2]}H
+          </Text>
+          <Text style={styles.text}>
+            Box Price: ${selectedBox.price.toFixed(2)} {/* Display the price */}
           </Text>
           <Text style={styles.carrierText}>Carrier: {selectedCarrier}</Text>
         </View>
-      ) : (
-        <Text style={styles.noBoxText}>No box selected</Text>
-      );
+      ) : null; // Added missing `null` to avoid syntax error
 
     return (
       <View style={styles.container}>
