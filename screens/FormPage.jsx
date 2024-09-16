@@ -153,6 +153,7 @@ export default class FormPage extends Component {
         console.log("Selected", this.state.selectedCarrier);
         packedResult.push(pack(itemsTotal, this.state.selectedCarrier, 0));
         console.log("Packed Result:", packedResult);
+
         if (packedResult === 0) {
           Alert.alert(
             "Items are too big for a single standard box. Multiple boxed orders have not been implemented yet."
@@ -166,20 +167,20 @@ export default class FormPage extends Component {
             scale = 20;
           }
           packedResult.push(createDisplay(packedResult[0], scale));
-          //console.log("ITEMS:", packedResult[1]);
-          //console.log("BOX:", packedResult[0]);
-          console.log("Length:", packedResult[0].x); // These are the LxWxH of whatever carrier box is chosen
-          console.log("Width:", packedResult[0].y);
-          console.log("Height", packedResult[0].z);
-          //console.log("box", packedResult[0]);
-          //console.log("box", packedResult[0].Box);
-          var selectedBox = [
-            packedResult[0].x,
-            packedResult[0].y,
-            packedResult[0].z,
-          ];
+
+          // Extract dimensions and price for the selected box
+          var selectedBox = {
+            dimensions: [
+              packedResult[0].x,
+              packedResult[0].y,
+              packedResult[0].z,
+            ],
+            price: packedResult[0].price, // Add the price from the packed result
+          };
+
           console.log("selected box:", selectedBox);
 
+          // Pass the selected box, items, and price to Display3D
           this.props.navigation.navigate("Display3D", {
             box: packedResult[0],
             itemsTotal: packedResult[1],
