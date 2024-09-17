@@ -8,8 +8,8 @@ import {
   Modal,
   Keyboard,
   TouchableWithoutFeedback,
-  TouchableOpacity, // Correctly imported TouchableOpacity
-} from "react-native"; // Ensure all necessary components are imported
+  TouchableOpacity,
+} from "react-native";
 import { Form } from "native-base";
 import { Dropdown } from "react-native-element-dropdown";
 import AsyncStorage from "@react-native-async-storage/async-storage";
@@ -397,7 +397,7 @@ export default class FormPage extends Component {
               <TouchableOpacity
                 key={item.itemName}
                 style={[
-                  styles.itemButton, // Use itemButton style for consistent button styling
+                  styles.itemButton,
                   {
                     backgroundColor:
                       itemButtonColors[index % itemButtonColors.length], // Dynamic background color for each button
