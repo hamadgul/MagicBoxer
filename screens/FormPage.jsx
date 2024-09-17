@@ -148,6 +148,10 @@ export default class FormPage extends Component {
   };
 
   handleVisualize = async () => {
+    if (this.state.items.length === 0) {
+      Alert.alert("No Items", "Please add at least one item before packing.");
+      return; // Exit the function early if there are no items
+    }
     try {
       const itemListString = await AsyncStorage.getItem("itemList");
       let itemList = [];
@@ -215,6 +219,14 @@ export default class FormPage extends Component {
   };
 
   handleSubmit = (e) => {
+    // Check if a carrier has been selected
+    if (this.state.selectedCarrier === "Select Carrier") {
+      Alert.alert(
+        "Carrier Not Selected",
+        "Please select a carrier before adding an item."
+      );
+      return; // Exit the function early if no carrier is selected
+    }
     if (
       this.state.itemLength === "" ||
       this.state.itemWidth === "" ||

@@ -162,6 +162,12 @@ const styles = StyleSheet.create({
     shadowRadius: 5,
     elevation: 3, // Shadow for Android
   },
+  buttonClose: {
+    backgroundColor: "orange", // Orange color for "Close" button
+    borderRadius: 8,
+    padding: 10,
+    marginHorizontal: 5,
+  },
 });
 
 export default styles;
