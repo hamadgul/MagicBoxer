@@ -178,6 +178,8 @@ export default class FormPage extends Component {
         console.log("Selected", this.state.selectedCarrier);
         packedResult.push(pack(itemsTotal, this.state.selectedCarrier, 0));
         console.log("Packed Result:", packedResult);
+        console.log("Packed Result:", packedResult);
+        console.log("Box Type in Packed Result: ", packedResult[0].boxType); // Add this line
 
         if (packedResult === 0) {
           Alert.alert(
@@ -200,6 +202,7 @@ export default class FormPage extends Component {
               packedResult[0].z,
             ],
             price: packedResult[0].price,
+            finalBoxType: packedResult[0].type,
           };
 
           console.log("selected box:", selectedBox);
