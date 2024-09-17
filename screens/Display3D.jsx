@@ -86,7 +86,7 @@ export default class Display3D extends Component {
     }
 
     const boxDimensions =
-      selectedBox.dimensions.length === 3 ? (
+      selectedBox.dimensions && selectedBox.dimensions.length === 3 ? (
         <View style={styles.boxDimensionsContainer}>
           <Text style={styles.boxTitle}>Optimal Box Size</Text>
           <Text style={styles.boxSubtitle}>For This Package:</Text>
@@ -95,8 +95,14 @@ export default class Display3D extends Component {
             {selectedBox.dimensions[2]}H
           </Text>
           <Text style={styles.text}>
-            Box Price: ${selectedBox.price.toFixed(2)} {/* Display the price */}
+            Box Price:{" "}
+            {selectedBox.price !== null && selectedBox.price !== undefined
+              ? selectedBox.price === 0
+                ? "Free"
+                : `$${selectedBox.price.toFixed(2)}`
+              : "N/A"}
           </Text>
+
           <Text style={styles.carrierText}>Carrier: {selectedCarrier}</Text>
         </View>
       ) : null; // Added missing `null` to avoid syntax error

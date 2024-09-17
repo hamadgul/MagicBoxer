@@ -15,6 +15,7 @@ const carrierData = [
   { label: "UPS", value: "UPS" },
   { label: "USPS", value: "USPS" },
   { label: "FedEx", value: "FedEx" },
+  { label: "No Carrier", value: "Default" },
 ];
 
 export default class FormPage extends Component {
@@ -57,7 +58,7 @@ export default class FormPage extends Component {
       items: [],
       showDetails: false,
       unit: "inches",
-      selectedCarrier: "UPS",
+      selectedCarrier: "No Carrier",
     };
 
     this.handleChange = this.handleChange.bind(this);
