@@ -191,55 +191,55 @@ function carrierBoxes(carrier) {
       ];
     case "UPS":
       return [
-        [6, 6, 6, 0, false], // checked on FedEx site for standard sizes
-        [6, 6, 48, 0, false], // checked on FedEx site for standard sizes
-        [8, 8, 8, 0, false], // checked on FedEx site for standard sizes
-        [10, 10, 10, 0, false], // checked on FedEx site for standard sizes
-        [12, 12, 6, 0, false], // checked on FedEx site for standard sizes
-        [12, 12, 12, 0, false], // checked on FedEx site for standard sizes
-        [14, 14, 14, 0, false], // checked on FedEx site for standard sizes
-        [15, 12, 10, 0, false], // checked on FedEx site for standard sizes
-        [15, 15, 48, 0, false], // checked on FedEx site for standard sizes
-        [16, 16, 4, 0, false], // checked on FedEx site for standard sizes
-        [16, 16, 16, 0, false], // checked on FedEx site for standard sizes
-        [17, 11, 8, 0, false], // checked on FedEx site for standard sizes
-        [18, 18, 18, 0, false], // checked on FedEx site for standard sizes
-        [20, 12, 12, 0, false], // checked on FedEx site for standard sizes
-        [20, 20, 12, 0, false], // checked on FedEx site for standard sizes
-        [20, 20, 20, 0, false], // checked on FedEx site for standard sizes
-        [24, 18, 6, 0, false], // checked on FedEx site for standard sizes
-        [24, 18, 18, 0, false], // checked on FedEx site for standard sizes
-        [24, 24, 16, 0, false], // checked on FedEx site for standard sizes
-        [24, 24, 24, 0, false], // checked on FedEx site for standard sizes
-        [30, 24, 6, 0, false], // checked on FedEx site for standard sizes
+        [6, 6, 6, 0, false], // checked on
+        [6, 6, 48, 0, false], // checked on
+        [8, 8, 8, 0, false], // checked on
+        [10, 10, 10, 0, false], // checked on
+        [12, 12, 6, 0, false], // checked on
+        [12, 12, 12, 0, false], // checked on
+        [14, 14, 14, 0, false], // checked on
+        [15, 12, 10, 0, false], // checked on
+        [15, 15, 48, 0, false], // checked on
+        [16, 16, 4, 0, false], // checked
+        [16, 16, 16, 0, false], // checked
+        [17, 11, 8, 0, false], // checked
+        [18, 18, 18, 0, false], // checked
+        [20, 12, 12, 0, false], // checked
+        [20, 20, 12, 0, false], // checked
+        [20, 20, 20, 0, false], // checked
+        [24, 18, 6, 0, false], // checked
+        [24, 18, 18, 0, false], // checked
+        [24, 24, 16, 0, false], // checked
+        [24, 24, 24, 0, false], // checked
+        [30, 24, 6, 0, false], // https://www.theupsstore.com/pack-ship/moving-boxes-supplies
       ];
-    case "Default":
+    case "No Carrier":
       return [
-        [9, 6, 3, 0, false], // Small Mailing Box
-        [11, 8.5, 5.5, 0, false], // Medium Mailing Box
-        [12, 12, 8, 0, false], // Large Mailing Box
-        [14, 14, 14, 0, false], // Extra Large Mailing Box
-        [10, 7, 3, 0, false], // Letter Box
-        [15, 12, 10, 0, false], // Legal Box, File Box
-        [16, 12, 12, 0, false], // Small Moving Box, Small Box
-        [18, 18, 16, 0, false], // Medium Moving Box, Medium Box
-        [20, 20, 15, 0, false], // Large Moving Box
-        [23, 23, 16, 0, false], // Extra Large Moving Box
-        [14, 8, 5, 0, false], // Shoe Box
-        [24, 20, 46, 0, false], // Wardrobe Box
-        [8.625, 5.375, 1.625, 0, false], // Small Flat Rate Box (USPS)
-        [11.25, 8.75, 6, 0, false], // Medium Flat Rate Box (USPS)
-        [12.25, 12.25, 6, 0, false], // Large Flat Rate Box (USPS)
-        [40, 48, 36, 0, false], // Standard Pallet Box
-        [18, 14, 14, 0, false], // Medium Box
-        [24, 18, 18, 0, false], // Large Box
-        [24, 20, 20, 0, false], // Extra Large Box
-        [24, 24, 24, 0, false], // Extra Large Box
-        [18, 18, 28, 0, false], // Dish Pack Box
-        [24, 24, 40, 0, false], // Wardrobe Box
-        [37, 4, 27, 0, false], // Flat Box (for artwork and mirrors)
-        [16, 12, 10, 0, false], // Banker Box
-        [18, 18, 24, 0, false], // Heavy-Duty Box
+        [9, 6, 3, 0.75, false], // Small Mailing Box
+        [11, 8.5, 5.5, 1, false], // Medium Mailing Box
+        [12, 12, 8, 1.25, false], // Large Mailing Box
+        [14, 14, 14, 2, false], // Extra Large Mailing Box
+        [10, 7, 3, 0.75, false], // Letter Box
+        [15, 12, 10, 1.25, false], // Legal Box, File Box
+        [16, 12, 12, 1.75, false], // Small Moving Box, Small Box
+        [18, 18, 16, 2.5, false], // Medium Moving Box, Medium Box
+        [20, 20, 15, 3.25, false], // Large Moving Box
+        [23, 23, 16, 4, false], // Extra Large Moving Box
+        [14, 8, 5, 1, false], // Shoe Box
+        [24, 20, 46, 15, false], // Wardrobe Box
+        [8.625, 5.375, 1.625, 1, false], // Small Flat Rate Box (USPS)
+        [11.25, 8.75, 6, 1.25, false], // Medium Flat Rate Box (USPS)
+        [12.25, 12.25, 6, 1.5, false], // Large Flat Rate Box (USPS)
+        [40, 48, 36, 40, false], // Standard Pallet Box
+        [18, 14, 14, 2.5, false], // Medium Box
+        [24, 18, 18, 3.75, false], // Large Box
+        [24, 20, 20, 4.5, false], // Extra Large Box
+        [24, 24, 24, 5, false], // Extra Large Box
+        [18, 18, 28, 5.5, false], // Dish Pack Box
+        [24, 24, 40, 15, false], // Wardrobe Box
+        [37, 4, 27, 4.5, false], // Flat Box (for artwork and mirrors)
+        [16, 12, 10, 2.25, false], // Banker Box
+        [18, 18, 24, 5, false], // Heavy-Duty Box
       ];
   }
 }

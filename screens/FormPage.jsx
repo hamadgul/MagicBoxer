@@ -1,12 +1,21 @@
 import React, { Component } from "react";
-import { Alert, Button, Text, TextInput, View, Modal } from "react-native";
+import {
+  Alert,
+  Button,
+  Text,
+  TextInput,
+  View,
+  Modal,
+  Keyboard,
+  TouchableWithoutFeedback,
+  TouchableOpacity, // Correctly imported TouchableOpacity
+} from "react-native"; // Ensure all necessary components are imported
 import { Form } from "native-base";
-import { Keyboard, TouchableWithoutFeedback } from "react-native";
 import { Dropdown } from "react-native-element-dropdown";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { generateUUID } from "three/src/math/MathUtils";
 import { pack, createDisplay } from "../packing_algo/packing";
-import styles from "../components/Styles";
+import styles from "../components/Styles1";
 import AntDesign from "@expo/vector-icons/AntDesign";
 
 var Buffer = require("@craftzdog/react-native-buffer").Buffer;
@@ -15,7 +24,7 @@ const carrierData = [
   { label: "UPS", value: "UPS" },
   { label: "USPS", value: "USPS" },
   { label: "FedEx", value: "FedEx" },
-  { label: "No Carrier", value: "Default" },
+  { label: "No Carrier", value: "No Carrier" },
 ];
 
 export default class FormPage extends Component {
@@ -25,15 +34,24 @@ export default class FormPage extends Component {
         <Modal visible={props.visible} animationType="slide" transparent={true}>
           <View style={styles.centeredView}>
             <View style={styles.modalContent}>
-              <Text>Item Name: {props.item.itemName}</Text>
-              <Text>Length: {props.item.itemLength}</Text>
-              <Text>Width: {props.item.itemWidth}</Text>
-              <Text>Height: {props.item.itemHeight}</Text>
-              <Button
-                onPress={() => props.handleDeleteAndClose(props.item)}
-                title="Delete"
-              />
-              <Button onPress={props.closeModal} title="Close" />
+              <Text style={styles.label}>Item Name: {props.item.itemName}</Text>
+              <Text style={styles.label}>Length: {props.item.itemLength}</Text>
+              <Text style={styles.label}>Width: {props.item.itemWidth}</Text>
+              <Text style={styles.label}>Height: {props.item.itemHeight}</Text>
+              <View style={styles.modalButtonContainer}>
+                <TouchableOpacity
+                  onPress={() => props.handleDeleteAndClose(props.item)}
+                  style={styles.buttonOpen}
+                >
+                  <Text style={styles.buttonText}>Delete</Text>
+                </TouchableOpacity>
+                <TouchableOpacity
+                  onPress={props.closeModal}
+                  style={styles.buttonOpen}
+                >
+                  <Text style={styles.buttonText}>Close</Text>
+                </TouchableOpacity>
+              </View>
             </View>
           </View>
         </Modal>
@@ -41,13 +59,6 @@ export default class FormPage extends Component {
     );
   };
 
-  static ItemDetailsName = (props) => {
-    return (
-      <View>
-        <Text>Item: {props.item.itemName}</Text>
-      </View>
-    );
-  };
   constructor(props) {
     super(props);
     this.state = {
@@ -58,7 +69,7 @@ export default class FormPage extends Component {
       items: [],
       showDetails: false,
       unit: "inches",
-      selectedCarrier: "No Carrier",
+      selectedCarrier: "Select Carrier",
     };
 
     this.handleChange = this.handleChange.bind(this);
@@ -67,6 +78,7 @@ export default class FormPage extends Component {
     this.handleVisualize = this.handleVisualize.bind(this);
     this.closeModal = this.closeModal.bind(this);
   }
+
   resetForm = () => {
     this.setState({
       itemName: "",
@@ -77,13 +89,11 @@ export default class FormPage extends Component {
   };
 
   handleDeleteAndClose = (itemToDelete) => {
-    // Use a unique identifier for deletion logic if possible.
     const updatedItems = this.state.items.filter(
       (item) => item.id !== itemToDelete.id
     );
     this.setState({ items: updatedItems }, async () => {
       try {
-        // Update AsyncStorage after modifying the items array.
         const serializedItems = Buffer.from(
           JSON.stringify(this.state.items)
         ).toString("base64");
@@ -115,6 +125,7 @@ export default class FormPage extends Component {
   handleChange = (itemName) => {
     this.setState({ itemName });
   };
+
   _storeData = async () => {
     try {
       const serializedItems = Buffer.from(
@@ -169,19 +180,17 @@ export default class FormPage extends Component {
           }
           packedResult.push(createDisplay(packedResult[0], scale));
 
-          // Extract dimensions and price for the selected box
           var selectedBox = {
             dimensions: [
               packedResult[0].x,
               packedResult[0].y,
               packedResult[0].z,
             ],
-            price: packedResult[0].price, // Add the price from the packed result
+            price: packedResult[0].price,
           };
 
           console.log("selected box:", selectedBox);
 
-          // Pass the selected box, items, and price to Display3D
           this.props.navigation.navigate("Display3D", {
             box: packedResult[0],
             itemsTotal: packedResult[1],
@@ -207,7 +216,7 @@ export default class FormPage extends Component {
     ) {
       Alert.alert(
         "Error",
-        "Item name, length , width, and height can not be empty."
+        "Item name, length, width, and height cannot be empty."
       );
       return;
     }
@@ -217,25 +226,22 @@ export default class FormPage extends Component {
       this.state.itemHeight === "0" ||
       this.state.itemHeight === "0"
     ) {
-      Alert.alert("Error", "Item dimensions can not be 0.");
+      Alert.alert("Error", "Item dimensions cannot be 0.");
       return;
     }
 
-    // Convert dimensions to numbers
     const length = parseFloat(this.state.itemLength);
     const width = parseFloat(this.state.itemWidth);
     const height = parseFloat(this.state.itemHeight);
 
     if (isNaN(length) || isNaN(width) || isNaN(height)) {
-      // Display an error message
       Alert.alert(
         "Error",
         "Item length, width, and height must be numeric values."
       );
-      // prevent the form from being submitted
       return;
     }
-    // Check if dimensions are valid numbers
+
     if (
       !Number.isFinite(length) ||
       !Number.isFinite(width) ||
@@ -264,8 +270,7 @@ export default class FormPage extends Component {
       this._storeData();
     });
 
-    alert("An item was submitted: " + this.state.itemName);
-    //alert(`Number of items submitted so far: ${this.state.items.length + 1}`);
+    Alert.alert("Success", "An item was submitted: " + this.state.itemName); // Use Alert.alert for messages
     this.resetForm();
     Keyboard.dismiss();
   };
@@ -282,117 +287,110 @@ export default class FormPage extends Component {
     return (
       <TouchableWithoutFeedback onPress={Keyboard.dismiss} accessible={false}>
         <View style={styles.container}>
-          <Form onSubmit={this.handleSubmit}>
-            <Text style={styles.label}>Select Carrier:</Text>
-            <Dropdown
-              style={styles.input}
-              data={carrierData}
-              labelField="label"
-              valueField="value"
-              placeholder="Select Carrier"
-              value={this.state.selectedCarrier}
-              onChange={(item) =>
-                this.setState({ selectedCarrier: item.value })
-              }
-              renderLeftIcon={() => (
-                <AntDesign
-                  style={styles.icon}
-                  color="black"
-                  name="Safety"
-                  size={20}
-                />
-              )}
-            />
-            <Text style={styles.label}>Item Name:</Text>
-            <TextInput
-              style={styles.input}
-              value={this.state.itemName}
-              onChangeText={this.handleChange}
-              maxLength={10}
-              returnKeyType={"next"}
-              placeholder="MacBook, Xbox etc"
-              placeholderTextColor={"#d3d3d3"}
-            />
-            <Text style={styles.label}>Length:</Text>
-            <TextInput
-              style={styles.input}
-              value={this.state.itemLength}
-              onChangeText={(text) => this.setState({ itemLength: text })}
-              keyboardType="numeric"
-              placeholder="-- inches"
-              placeholderTextColor={"#d3d3d3"}
-              maxLength={2}
-            />
-            <Text style={styles.label}>Width:</Text>
-            <TextInput
-              style={styles.input}
-              value={this.state.itemWidth}
-              onChangeText={(text) => this.setState({ itemWidth: text })}
-              keyboardType="numeric"
-              placeholder="-- inches"
-              placeholderTextColor={"#d3d3d3"}
-              maxLength={2}
-            />
-            <Text style={styles.label}>Height:</Text>
-            <TextInput
-              style={styles.input}
-              value={this.state.itemHeight}
-              onChangeText={(text) => this.setState({ itemHeight: text })}
-              keyboardType="numeric"
-              placeholder="-- inches"
-              placeholderTextColor={"#d3d3d3"}
-              maxLength={2}
-            />
-
-            <View style={styles.buttonContainer}>
-              <Button
-                block
-                style={styles.submitButton}
-                onPress={() => {
-                  this.handleSubmit();
-                }}
-                title="Add Item"
-              >
-                <Text>Add Item</Text>
-              </Button>
-              <Button
-                block
-                style={styles.visualizeButton}
-                onPress={() => {
-                  this.handleVisualize();
-                }}
-                title="Box!"
-              >
-                <Text>Pack!</Text>
-              </Button>
-            </View>
-            <View>
-              <View style={styles.modalButtonContainer}>
-                {this.state.items.map((item, index) => (
-                  <View
-                    style={[styles.button, styles.buttonOpen]}
-                    key={item.itemName}
-                  >
-                    <Button
-                      key={index}
-                      onPress={() =>
-                        this.setState({ showDetails: true, selectedItem: item })
-                      }
-                      title={item.itemName}
-                    />
-                  </View>
-                ))}
-                {this.state.showDetails && (
-                  <FormPage.ItemDetailsModal
-                    visible={this.state.showDetails}
-                    item={this.state.selectedItem}
-                    closeModal={this.closeModal}
-                    handleDeleteAndClose={this.handleDeleteAndClose}
+          <View style={styles.formContainer}>
+            <Form onSubmit={this.handleSubmit}>
+              <Text style={styles.label}>Select Carrier:</Text>
+              <Dropdown
+                style={styles.input}
+                data={carrierData}
+                labelField="label"
+                valueField="value"
+                placeholder="Select Carrier"
+                value={this.state.selectedCarrier}
+                onChange={(item) =>
+                  this.setState({ selectedCarrier: item.value })
+                }
+                renderLeftIcon={() => (
+                  <AntDesign
+                    style={styles.icon}
+                    color="black"
+                    name="Safety"
+                    size={20}
                   />
                 )}
+              />
+              <Text style={styles.label}>Item Name:</Text>
+              <TextInput
+                style={styles.input}
+                value={this.state.itemName}
+                onChangeText={this.handleChange}
+                maxLength={10}
+                returnKeyType={"next"}
+                placeholder="MacBook, Xbox etc"
+                placeholderTextColor={"#d3d3d3"}
+              />
+              <Text style={styles.label}>Length:</Text>
+              <TextInput
+                style={styles.input}
+                value={this.state.itemLength}
+                onChangeText={(text) => this.setState({ itemLength: text })}
+                keyboardType="numeric"
+                placeholder="-- inches"
+                placeholderTextColor={"#d3d3d3"}
+                maxLength={2}
+              />
+              <Text style={styles.label}>Width:</Text>
+              <TextInput
+                style={styles.input}
+                value={this.state.itemWidth}
+                onChangeText={(text) => this.setState({ itemWidth: text })}
+                keyboardType="numeric"
+                placeholder="-- inches"
+                placeholderTextColor={"#d3d3d3"}
+                maxLength={2}
+              />
+              <Text style={styles.label}>Height:</Text>
+              <TextInput
+                style={styles.input}
+                value={this.state.itemHeight}
+                onChangeText={(text) => this.setState({ itemHeight: text })}
+                keyboardType="numeric"
+                placeholder="-- inches"
+                placeholderTextColor={"#d3d3d3"}
+                maxLength={2}
+              />
+            </Form>
+          </View>
+
+          <View style={styles.buttonContainer}>
+            <TouchableOpacity
+              style={styles.submitButton}
+              onPress={this.handleSubmit}
+            >
+              <Text style={styles.buttonText}>Add Item</Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={styles.visualizeButton}
+              onPress={this.handleVisualize}
+            >
+              <Text style={styles.buttonText}>Pack!</Text>
+            </TouchableOpacity>
+          </View>
+
+          <View style={styles.modalButtonContainer}>
+            {this.state.items.map((item, index) => (
+              <View
+                style={[styles.button, styles.buttonOpen]}
+                key={item.itemName}
+              >
+                <TouchableOpacity
+                  onPress={() =>
+                    this.setState({ showDetails: true, selectedItem: item })
+                  }
+                >
+                  <Text style={styles.buttonText}>{item.itemName}</Text>
+                </TouchableOpacity>
               </View>
-            </View>
-          </Form>
+            ))}
+            {this.state.showDetails && (
+              <FormPage.ItemDetailsModal
+                visible={this.state.showDetails}
+                item={this.state.selectedItem}
+                closeModal={this.closeModal}
+                handleDeleteAndClose={this.handleDeleteAndClose}
+              />
+            )}
+          </View>
         </View>
       </TouchableWithoutFeedback>
     );

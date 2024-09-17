@@ -95,10 +95,10 @@ export default class Display3D extends Component {
             {selectedBox.dimensions[2]}H
           </Text>
           <Text style={styles.text}>
-            Box Price:{" "}
+            Estimated Box Price:{" "}
             {selectedBox.price !== null && selectedBox.price !== undefined
               ? selectedBox.price === 0
-                ? "Free"
+                ? "Free with Service"
                 : `$${selectedBox.price.toFixed(2)}`
               : "N/A"}
           </Text>
