@@ -23,8 +23,8 @@
     "@react-navigation/native-stack": "^6.9.1",
     "deprecated-react-native-prop-types": "^5.0.0",
     "expo": "^51.0.32",
-    "expo-gl": "~13.6.0",
-    "expo-three": "^7.0.0",
+    "expo-gl": "^14.0.2",
+    "expo-three": "^8.0.0",
     "firebase": "9.6.11",
     "impagination": "^1.0.0-alpha.3",
     "moment": "^2.24.0",
@@ -47,7 +47,7 @@
     "react-native-screens": "~3.29.0",
     "react-navigation": "^4.4.4",
     "tcomb-form-native": "^0.6.20",
-    "three": "^0.146.0",
+    "three": "^0.168.0",
     "typescript": "^5.3.0"
   },
   "version": "1.0.0"

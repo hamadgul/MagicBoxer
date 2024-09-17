@@ -133,21 +133,21 @@ function carrierBoxes(carrier) {
   switch (carrier) {
     case "USPS":
       return [
-        [8.6875, 5.4375, 1.75, 0, false], // Checked on USPS site
-        [11.25, 8.75, 6, 0, false], // Checked on USPS site
-        [14.125, 12, 3.5, 0, false], // Checked on USPS site
-        [12.25, 12, 6, 0, false], // Checked on USPS site
-        [14.875, 5.25, 7.375, 0, false], // Checked on USPS site
-        [13.6875, 12, 2.875, 0, false], // Checked on USPS site
-        [8.75, 5.5625, 0.875, 0, false], // Checked on USPS site
-        [38.0625, 6.25, 4.25, 0, false], // Checked on USPS site
-        [9.4375, 6.4375, 2.1875, 0, false], // Checked on USPS site
-        [15, 12, 3.125, 0, false], // Checked on USPS site
-        [12.25, 12, 8.5, 0, false], // Checked on USPS site
-        [25.5625, 6, 5.25, 0, false], // Checked on USPS site
-        [7.25, 7.25, 6.5, 0, false], // Checked on USPS site
-        [11.75, 8.75, 5.75, 0, false], // Checked on USPS site
-        [13.4375, 11.625, 2.5, 0, false], // Checked on USPS site
+        [8.6875, 5.4375, 1.75, 0, false], // Priority Mail Flat Rate Small Box
+        [11.25, 8.75, 6, 0, false], // Priority Mail Express Side-Loading Medium Box Option 1 (disocntinued?)
+        [14.125, 12, 3.5, 0, false], // Priority Mail Flat Rate Side-Loading Medium Box
+        [12.25, 12, 6, 0, false], // Priority Mail Flat Rate Large Box
+        [14.875, 5.25, 7.375, 0, false], // Priority Mail Shoe Box
+        [13.6875, 12, 2.875, 0, false], // Priority Mail Medium Box 1
+        [8.75, 5.5625, 0.875, 0, false], // Priority Mail DVD Box
+        [38.0625, 6.25, 4.25, 0, false], // Priority Mail Medium Tube Box
+        [9.4375, 6.4375, 2.1875, 0, false], // Priority Mail Small Box
+        [15, 12, 3.125, 0, false], // Priority Mail Express Side-Loading Medium Box
+        [12.25, 12, 8.5, 0, false], // Priority Mail Large Box
+        [25.5625, 6, 5.25, 0, false], // Priority Mail Small Tube Box
+        [7.25, 7.25, 6.5, 0, false], // Priority Mail Medium Cube-Shapd Box
+        [11.75, 8.75, 5.75, 0, false], // Priority Mail Express Medium Box
+        [13.4375, 11.625, 2.5, 0, false], // Priority Mail Medium Box 2
       ];
     case "FedEx":
       return [
