@@ -105,5 +105,21 @@ const styles = StyleSheet.create({
     height: 40,
     fontSize: 16,
   },
+  container1: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+    padding: 15,
+  },
+  formContainer: {
+    backgroundColor: "white", // Set background color to white
+    padding: 100, // Add padding for spacing
+    borderRadius: 10, // Optional: Add border radius for rounded corners
+    shadowColor: "#000", // Optional: Add shadow for elevation effect
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.25,
+    shadowRadius: 3.84,
+    elevation: 5, // Android shadow equivalent
+  },
 });
 export default styles;
