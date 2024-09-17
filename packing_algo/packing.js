@@ -133,26 +133,41 @@ function carrierBoxes(carrier) {
   switch (carrier) {
     case "USPS":
       return [
-        [8.69, 5.44, 1.75, 1.75, false],
-        [11.25, 8.75, 6, 2.25, false],
-        [14, 12, 3.5, 2.25, false],
-        [12.25, 12.25, 6, 2.75, false],
-        [10.125, 7.125, 5, 1.85, false],
-        [16.25, 14.5, 12, 3.5, false],
-        [7.5, 5.13, 14.38, 1.95, false],
-        [13, 11, 1, 1.5, false],
-        [15, 9.5, 1, 1.75, false],
-        [12.5, 9.5, 1, 1.5, false],
-        [12.5, 9.5, 1, 1.5, false],
-        [15, 9.5, 1, 1.85, false],
-        [12.5, 9.5, 1, 1.5, false],
-        [10, 7, 1, 1.5, false],
-        [10, 6, 1, 1.5, false],
-        [10, 6, 1, 1.5, false],
-        [8.69, 5.44, 7.44, 2.25, false],
-        [9.25, 6.25, 2, 1.75, false],
-        [12, 12, 5.5, 2.75, false],
-        [23.69, 11.75, 3, 3.5, false],
+        // [8.69, 5.44, 1.75, 1.75, false],
+        // [11.25, 8.75, 6, 2.25, false],
+        // [14, 12, 3.5, 2.25, false],
+        // [12.25, 12.25, 6, 2.75, false],
+        // [10.125, 7.125, 5, 1.85, false],
+        // [16.25, 14.5, 12, 3.5, false],
+        // [7.5, 5.13, 14.38, 1.95, false],
+        // [13, 11, 1, 1.5, false],
+        // [15, 9.5, 1, 1.75, false],
+        // [12.5, 9.5, 1, 1.5, false],
+        // [12.5, 9.5, 1, 1.5, false],
+        // [15, 9.5, 1, 1.85, false],
+        // [12.5, 9.5, 1, 1.5, false],
+        // [10, 7, 1, 1.5, false],
+        // [10, 6, 1, 1.5, false],
+        // [10, 6, 1, 1.5, false],
+        // [8.69, 5.44, 7.44, 2.25, false],
+        // [9.25, 6.25, 2, 1.75, false],
+        // [12, 12, 5.5, 2.75, false],
+        // [23.69, 11.75, 3, 3.5, false],
+        [8.6875, 5.4375, 1.75, 0, false], //Checked on USPS site
+        [11.25, 8.75, 6, 0, false], //Checked on USPS site
+        [14.125, 12, 3.5, 0, false], //Checked on USPS site
+        [12.25, 12, 6, 0, false], //Checked on USPS site
+        [14.875, 5.25, 7.375, 0, false], //Checked on USPS site
+        [13.6875, 12, 2.875, 0, false], //Checked on USPS site
+        [8.75, 5.5625, 0.875, 0, false], //Checked on USPS site
+        [38.0625, 6.25, 4.25, 0, false], //Checked on USPS site
+        [9.4375, 6.4375, 2.1875, 0, false], //Checked on USPS site
+        [15, 12, 3.125, 0, false], //Checked on USPS site
+        [12.25, 12, 8.5, 0, false], //Checked on USPS site
+        [25.5625, 6, 5.25, 0, false], //Checked on USPS site
+        [7.25, 7.25, 6.5, 0, false], //Checked on USPS site
+        [11.75, 8.75, 5.75, 0, false], //Checked on USPS site
+        [13.4375, 11.625, 2.5, 0, false], //Checked on USPS site
       ];
     case "FedEx": // Ensure "FedEx" is correctly matched
       return [
@@ -184,20 +199,50 @@ function carrierBoxes(carrier) {
         [12, 15.5, 1, 0, false], // fedex Pak
         [11.75, 14.75, 1, 0, false], // Fedex Pak padded
         [6, 6, 38, 0, false], // FedEx Tube
+        [15, 15, 48, 14, false], // Golf bag box
+        [50, 9, 9, 7.5, false], //golf club tube
+        [54, 8, 28, 16, false], //bike box
+        [20, 8, 50, 14, false], //guitar box
+        [38, 8, 26, 15, false], //small TV box
+        [46, 8, 30, 20, false], //med tv
+        [56, 8, 36, 28, false], //large tv
+        [6.25, 3.125, 0.5, 8, false], //electronics
+        [10.4375, 7.5, 1, 10, false], //tablet box
       ];
     case "UPS":
       return [
-        [13, 11, 2, 2.25, false],
-        [16, 11, 3, 2.5, false],
-        [18, 13, 3, 3.0, false],
-        [16, 12, 1, 2.0, false],
-        [38, 6, 6, 5.5, false],
-        [16.5, 13.25, 10.75, 7.0, false],
-        [19.25, 17.5, 14, 9.5, false],
-        [12.5, 9.5, 1, 1.5, false],
-        [15, 9.5, 1, 1.75, false],
-        [19.375, 17.375, 14.375, 10.0, false],
-        [16.5, 13.25, 10.75, 7.0, false],
+        // [13, 11, 2, 2.25, false],
+        // [16, 11, 3, 2.5, false],
+        // [18, 13, 3, 3.0, false],
+        // [16, 12, 1, 2.0, false],
+        // [38, 6, 6, 5.5, false],
+        // [16.5, 13.25, 10.75, 7.0, false],
+        // [19.25, 17.5, 14, 9.5, false],
+        // [12.5, 9.5, 1, 1.5, false],
+        // [15, 9.5, 1, 1.75, false],
+        // [19.375, 17.375, 14.375, 10.0, false],
+        // [16.5, 13.25, 10.75, 7.0, false],
+        [6, 6, 6, 0, false], // checked on FedEx site for standard sizes
+        [6, 6, 48, 0, false], // checked on FedEx site for standard sizes
+        [8, 8, 8, 0, false], // checked on FedEx site for standard sizes
+        [10, 10, 10, 0, false], // checked on FedEx site for standard sizes
+        [12, 12, 6, 0, false], // checked on FedEx site for standard sizes
+        [12, 12, 12, 0, false], // checked on FedEx site for standard sizes
+        [14, 14, 14, 0, false], // checked on FedEx site for standard sizes
+        [15, 12, 10, 0, false], // checked on FedEx site for standard sizes
+        [15, 15, 48, 0, false], // checked on FedEx site for standard sizes
+        [16, 16, 4, 0, false], // checked on FedEx site for standard sizes
+        [16, 16, 16, 0, false], // checked on FedEx site for standard sizes
+        [17, 11, 8, 0, false], // checked on FedEx site for standard sizes
+        [18, 18, 18, 0, false], // checked on FedEx site for standard sizes
+        [20, 12, 12, 0, false], // checked on FedEx site for standard sizes
+        [20, 20, 12, 0, false], // checked on FedEx site for standard sizes
+        [20, 20, 20, 0, false], // checked on FedEx site for standard sizes
+        [24, 18, 6, 0, false], // checked on FedEx site for standard sizes
+        [24, 18, 18, 0, false], // checked on FedEx site for standard sizes
+        [24, 24, 16, 0, false], // checked on FedEx site for standard sizes
+        [24, 24, 24, 0, false], // checked on FedEx site for standard sizes
+        [30, 24, 6, 0, false], // checked on FedEx site for standard sizes
       ];
     default:
       // Error handling: No dimensions available for the specified carrier
