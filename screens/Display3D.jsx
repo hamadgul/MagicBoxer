@@ -152,7 +152,8 @@ export default class Display3D extends Component {
                 : `$${selectedBox.price.toFixed(2)}`
               : "N/A"}
           </Text>
-
+          {/* Correctly wrap 'Box Type' text in <Text> component */}
+          <Text>Box Type: {selectedBox.finalBoxType}</Text>
           <Text style={styles.carrierText}>Carrier: {selectedCarrier}</Text>
         </View>
       ) : null;

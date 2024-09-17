@@ -42,6 +42,7 @@ function Box(dims) {
   this.z = dims[2];
   this.price = dims[3] || 0; // Price is the fourth element, default to 0 if not provided
   this.isDefaultPrice = dims[4] || false; // Boolean flag indicating if the price is default
+  this.type = dims[5]; // Add type of the box
   this.cx = this.x / 2;
   this.cy = -this.y / 2; // Check for NaN after computation
   this.cz = this.z / 2;
@@ -129,117 +130,140 @@ export function pack(itemList, carrier, optionalBox) {
   return finalBox;
 }
 // Generate the box sizes for the specific carrier
+// Generate the box sizes for the specific carrier
 function carrierBoxes(carrier) {
   switch (carrier) {
     case "USPS":
       return [
-        [8.6875, 5.4375, 1.75, 0, false], // Priority Mail Flat Rate Small Box
-        [11.25, 8.75, 6, 0, false], // Priority Mail Express Side-Loading Medium Box Option 1 (disocntinued?)
-        [14.125, 12, 3.5, 0, false], // Priority Mail Flat Rate Side-Loading Medium Box
-        [12.25, 12, 6, 0, false], // Priority Mail Flat Rate Large Box
-        [14.875, 5.25, 7.375, 0, false], // Priority Mail Shoe Box
-        [13.6875, 12, 2.875, 0, false], // Priority Mail Medium Box 1
-        [8.75, 5.5625, 0.875, 0, false], // Priority Mail DVD Box
-        [38.0625, 6.25, 4.25, 0, false], // Priority Mail Medium Tube Box
-        [9.4375, 6.4375, 2.1875, 0, false], // Priority Mail Small Box
-        [15, 12, 3.125, 0, false], // Priority Mail Express Side-Loading Medium Box
-        [12.25, 12, 8.5, 0, false], // Priority Mail Large Box
-        [25.5625, 6, 5.25, 0, false], // Priority Mail Small Tube Box
-        [7.25, 7.25, 6.5, 0, false], // Priority Mail Medium Cube-Shapd Box
-        [11.75, 8.75, 5.75, 0, false], // Priority Mail Express Medium Box
-        [13.4375, 11.625, 2.5, 0, false], // Priority Mail Medium Box 2
+        [8.6875, 5.4375, 1.75, 0, false, "Priority Mail Flat Rate Small Box"],
+        [
+          11.25,
+          8.75,
+          6,
+          0,
+          false,
+          "Priority Mail Express Side-Loading Medium Box Option 1",
+        ],
+        [
+          14.125,
+          12,
+          3.5,
+          0,
+          false,
+          "Priority Mail Flat Rate Side-Loading Medium Box",
+        ],
+        [12.25, 12, 6, 0, false, "Priority Mail Flat Rate Large Box"],
+        [14.875, 5.25, 7.375, 0, false, "Priority Mail Shoe Box"],
+        [13.6875, 12, 2.875, 0, false, "Priority Mail Medium Box 1"],
+        [8.75, 5.5625, 0.875, 0, false, "Priority Mail DVD Box"],
+        [38.0625, 6.25, 4.25, 0, false, "Priority Mail Medium Tube Box"],
+        [9.4375, 6.4375, 2.1875, 0, false, "Priority Mail Small Box"],
+        [
+          15,
+          12,
+          3.125,
+          0,
+          false,
+          "Priority Mail Express Side-Loading Medium Box",
+        ],
+        [12.25, 12, 8.5, 0, false, "Priority Mail Large Box"],
+        [25.5625, 6, 5.25, 0, false, "Priority Mail Small Tube Box"],
+        [7.25, 7.25, 6.5, 0, false, "Priority Mail Medium Cube-Shaped Box"],
+        [11.75, 8.75, 5.75, 0, false, "Priority Mail Express Medium Box"],
+        [13.4375, 11.625, 2.5, 0, false, "Priority Mail Medium Box 2"],
       ];
     case "FedEx":
       return [
-        [10.875, 1.5, 12.375, 0, false], // checked FedEx Small Box
-        [8.75, 2.625, 11.25, 0, false], // checked FedEx Small Box
-        [11.5, 2.375, 13.25, 0, false], // checked Medium box
-        [8.75, 2.625, 11.25, 0, false], // checked Med box
-        [12, 3, 17.5, 2.25, false], // checked
-        [17, 17, 7, 3.25, false], // checked
-        [12, 9, 6, 2, false], // checked
-        [20, 20, 12, 4.5, false], // checked
-        [13, 9, 11, 2.75, false], // checked
-        [23, 17, 12, 4.75, false], // checked
-        [8, 8, 8, 1.75, false], // checked
-        [11, 11, 11, 2.5, false], // checked
-        [24, 24, 24, 12, false], // checked
-        [14, 14, 14, 3.75, false], // checked
-        [28, 28, 28, 15, false], // checked
-        [16, 16, 16, 4.29, false], // checked
-        [12, 12, 18, 3.75, false], // checked
-        [20, 20, 20, 6.29, false], // checked
-        [22, 22, 22, 7, false], // checked
-        [24, 24, 18, 10, false], // checked
-        [18, 13, 11.75, 7, false], // checked
-        [9.5, 12.5, 1, 0, false], // Reusable envelope
-        [9.5, 15.5, 1, 0, false], // reusable envelope
-        [9.75, 11.5, 1, 0, false], // reusable envelope
-        [10.25, 12.75, 1, 0, false], // FedEx Pak
-        [12, 15.5, 1, 0, false], // fedex Pak
-        [11.75, 14.75, 1, 0, false], // Fedex Pak padded
-        [6, 6, 38, 0, false], // FedEx Tube
-        [15, 15, 48, 14, false], // Golf bag box
-        [50, 9, 9, 7.5, false], //golf club tube
-        [54, 8, 28, 16, false], //bike box
-        [20, 8, 50, 14, false], //guitar box
-        [38, 8, 26, 15, false], //small TV box
-        [46, 8, 30, 20, false], //med tv
-        [56, 8, 36, 28, false], //large tv
-        [6.25, 3.125, 0.5, 8, false], //electronics
-        [10.4375, 7.5, 1, 10, false], //tablet box
+        [10.875, 1.5, 12.375, 0, false, "FedEx Small Box"],
+        [8.75, 2.625, 11.25, 0, false, "FedEx Small Box"],
+        [11.5, 2.375, 13.25, 0, false, "FedEx Medium Box"],
+        [8.75, 2.625, 11.25, 0, false, "FedEx Medium Box"],
+        [12, 3, 17.5, 2.25, false, "Standard"],
+        [17, 17, 7, 3.25, false, "Standard"],
+        [12, 9, 6, 2, false, "Standard"],
+        [20, 20, 12, 4.5, false, "Standard"],
+        [13, 9, 11, 2.75, false, "Standard"],
+        [23, 17, 12, 4.75, false, "Standard"],
+        [8, 8, 8, 1.75, false, "Standard"],
+        [11, 11, 11, 2.5, false, "Standard"],
+        [24, 24, 24, 12, false, "Heavy-duty Double-Walled Box"],
+        [14, 14, 14, 3.75, false, "Standard"],
+        [28, 28, 28, 15, false, "Heavy-duty Double-Walled Box"],
+        [16, 16, 16, 4.29, false, "Standard"],
+        [12, 12, 18, 3.75, false, "Standard"],
+        [20, 20, 20, 6.29, false, "Standard"],
+        [22, 22, 22, 7, false, "Standard"],
+        [24, 24, 18, 10, false, "Heavy-duty Double-Walled Box"],
+        [18, 13, 11.75, 7, false, "Heavy-duty Double-Walled Box"],
+        [9.5, 12.5, 1, 0, false, "Reusable Envelope"],
+        [9.5, 15.5, 1, 0, false, "Reusable Envelope"],
+        [9.75, 11.5, 1, 0, false, "Reusable Envelope"],
+        [10.25, 12.75, 1, 0, false, "FedEx Pak"],
+        [12, 15.5, 1, 0, false, "FedEx Pak"],
+        [11.75, 14.75, 1, 0, false, "FedEx Pak Padded"],
+        [6, 6, 38, 0, false, "FedEx Tube"],
+        [15, 15, 48, 14, false, "Golf Bag Box"],
+        [50, 9, 9, 7.5, false, "Golf Club Tube"],
+        [54, 8, 28, 16, false, "Bike Box"],
+        [20, 8, 50, 14, false, "Guitar Box"],
+        [38, 8, 26, 15, false, "Flat-Panel Small TV Box"],
+        [46, 8, 30, 20, false, "Flat-Panel Medium TV Box"],
+        [56, 8, 36, 28, false, "Flat Panel Large TV Box"],
+        [6.25, 3.125, 0.5, 8, false, "Small Electronics Box"],
+        [10.4375, 7.5, 1, 10, false, "Tablet Box"],
+        [21, 16, 5, 20, false, "Laptop Box with Kit"],
       ];
     case "UPS":
       return [
-        [6, 6, 6, 0, false], // checked on
-        [6, 6, 48, 0, false], // checked on
-        [8, 8, 8, 0, false], // checked on
-        [10, 10, 10, 0, false], // checked on
-        [12, 12, 6, 0, false], // checked on
-        [12, 12, 12, 0, false], // checked on
-        [14, 14, 14, 0, false], // checked on
-        [15, 12, 10, 0, false], // checked on
-        [15, 15, 48, 0, false], // checked on
-        [16, 16, 4, 0, false], // checked
-        [16, 16, 16, 0, false], // checked
-        [17, 11, 8, 0, false], // checked
-        [18, 18, 18, 0, false], // checked
-        [20, 12, 12, 0, false], // checked
-        [20, 20, 12, 0, false], // checked
-        [20, 20, 20, 0, false], // checked
-        [24, 18, 6, 0, false], // checked
-        [24, 18, 18, 0, false], // checked
-        [24, 24, 16, 0, false], // checked
-        [24, 24, 24, 0, false], // checked
-        [30, 24, 6, 0, false], // https://www.theupsstore.com/pack-ship/moving-boxes-supplies
+        [6, 6, 6, 0, false, "Standard"],
+        [6, 6, 48, 0, false, "Standard"],
+        [8, 8, 8, 0, false, "Standard"],
+        [10, 10, 10, 0, false, "Standard"],
+        [12, 12, 6, 0, false, "Standard"],
+        [12, 12, 12, 0, false, "Standard"],
+        [14, 14, 14, 0, false, "Standard"],
+        [15, 12, 10, 0, false, "Standard"],
+        [15, 15, 48, 0, false, "Standard"],
+        [16, 16, 4, 0, false, "Standard"],
+        [16, 16, 16, 0, false, "Standard"],
+        [17, 11, 8, 0, false, "Standard"],
+        [18, 18, 18, 0, false, "Standard"],
+        [20, 12, 12, 0, false, "Standard"],
+        [20, 20, 12, 0, false, "Standard"],
+        [20, 20, 20, 0, false, "Standard"],
+        [24, 18, 6, 0, false, "Standard"],
+        [24, 18, 18, 0, false, "Standard"],
+        [24, 24, 16, 0, false, "Standard"],
+        [24, 24, 24, 0, false, "Standard"],
+        [30, 24, 6, 0, false, "Standard"],
       ];
     case "No Carrier":
       return [
-        [9, 6, 3, 0.75, false], // Small Mailing Box
-        [11, 8.5, 5.5, 1, false], // Medium Mailing Box
-        [12, 12, 8, 1.25, false], // Large Mailing Box
-        [14, 14, 14, 2, false], // Extra Large Mailing Box
-        [10, 7, 3, 0.75, false], // Letter Box
-        [15, 12, 10, 1.25, false], // Legal Box, File Box
-        [16, 12, 12, 1.75, false], // Small Moving Box, Small Box
-        [18, 18, 16, 2.5, false], // Medium Moving Box, Medium Box
-        [20, 20, 15, 3.25, false], // Large Moving Box
-        [23, 23, 16, 4, false], // Extra Large Moving Box
-        [14, 8, 5, 1, false], // Shoe Box
-        [24, 20, 46, 15, false], // Wardrobe Box
-        [8.625, 5.375, 1.625, 1, false], // Small Flat Rate Box (USPS)
-        [11.25, 8.75, 6, 1.25, false], // Medium Flat Rate Box (USPS)
-        [12.25, 12.25, 6, 1.5, false], // Large Flat Rate Box (USPS)
-        [40, 48, 36, 40, false], // Standard Pallet Box
-        [18, 14, 14, 2.5, false], // Medium Box
-        [24, 18, 18, 3.75, false], // Large Box
-        [24, 20, 20, 4.5, false], // Extra Large Box
-        [24, 24, 24, 5, false], // Extra Large Box
-        [18, 18, 28, 5.5, false], // Dish Pack Box
-        [24, 24, 40, 15, false], // Wardrobe Box
-        [37, 4, 27, 4.5, false], // Flat Box (for artwork and mirrors)
-        [16, 12, 10, 2.25, false], // Banker Box
-        [18, 18, 24, 5, false], // Heavy-Duty Box
+        [9, 6, 3, 0.75, false, "Small Mailing Box"],
+        [11, 8.5, 5.5, 1, false, "Medium Mailing Box"],
+        [12, 12, 8, 1.25, false, "Large Mailing Box"],
+        [14, 14, 14, 2, false, "Extra Large Mailing Box"],
+        [10, 7, 3, 0.75, false, "Letter Box"],
+        [15, 12, 10, 1.25, false, "Legal Box, File Box"],
+        [16, 12, 12, 1.75, false, "Small Moving Box, Small Box"],
+        [18, 18, 16, 2.5, false, "Medium Moving Box, Medium Box"],
+        [20, 20, 15, 3.25, false, "Large Moving Box"],
+        [23, 23, 16, 4, false, "Extra Large Moving Box"],
+        [14, 8, 5, 1, false, "Shoe Box"],
+        [24, 20, 46, 15, false, "Wardrobe Box"],
+        [8.625, 5.375, 1.625, 1, false, "Small Flat Rate Box (USPS)"],
+        [11.25, 8.75, 6, 1.25, false, "Medium Flat Rate Box (USPS)"],
+        [12.25, 12.25, 6, 1.5, false, "Large Flat Rate Box (USPS)"],
+        [40, 48, 36, 40, false, "Standard Pallet Box"],
+        [18, 14, 14, 2.5, false, "Medium Box"],
+        [24, 18, 18, 3.75, false, "Large Box"],
+        [24, 20, 20, 4.5, false, "Extra Large Box"],
+        [24, 24, 24, 5, false, "Extra Large Box"],
+        [18, 18, 28, 5.5, false, "Dish Pack Box"],
+        [24, 24, 40, 15, false, "Wardrobe Box"],
+        [37, 4, 27, 4.5, false, "Flat Box (for artwork and mirrors)"],
+        [16, 12, 10, 2.25, false, "Banker Box"],
+        [18, 18, 24, 5, false, "Heavy-Duty Box"],
       ];
   }
 }
@@ -262,6 +286,7 @@ function findBox(itemList, boxSizes, j) {
 //doesn't work completely; this function will take the resulting box object and unnest the boxes inside. This will tell us the positions of each item in the main box.
 function finalize(aBox) {
   if (aBox.parts == null) {
+    console.log("Final Box Type: ", aBox.type); // Check the box type here
     return aBox;
   } else {
     for (var i = aBox.parts.length - 1; i >= 0; i--) {
@@ -270,6 +295,7 @@ function finalize(aBox) {
         aBox.remainvol -= vol(aBox.parts[i].items);
       }
     }
+    console.log("Final Box Type After Parts: ", aBox.type); // Check the box type again
     return aBox;
   }
 }
@@ -409,7 +435,6 @@ export function test(box) {
 export function createDisplay(box, scale) {
   var boxes = flatten2(box);
   var items = [];
-  //var difcolors = ['#add8e6', '#b9ddea', '#8ec9dc', '#b1dae7', '#6EBAD3', '#6bb8d1', '#3a9cbb', '#a1d3e2'];
   var difcolors = [
     "#FF5733",
     "#2DAE42",
@@ -447,8 +472,8 @@ export function createDisplay(box, scale) {
       (boxes[i].cy + item.yy / 2) / scale,
       (boxes[i].cz - item.zz / 2) / scale,
     ];
+    item.boxType = boxes[i].type; // Include box type
     items.push(item);
-    //  console.log(item);
     console.log(
       "item ",
       i + 1,
