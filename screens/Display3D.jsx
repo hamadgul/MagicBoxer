@@ -1,5 +1,5 @@
 import React, { Component } from "react";
-import { View, StyleSheet, Text } from "react-native";
+import { View, StyleSheet, Text, PanResponder } from "react-native";
 import Slider from "@react-native-community/slider";
 import { GLView } from "expo-gl";
 import * as THREE from "three";
@@ -8,7 +8,19 @@ import { Renderer } from "expo-three";
 export default class Display3D extends Component {
   constructor(props) {
     super(props);
-    this.state = { rotationY: 0 };
+    this.state = {
+      rotationY: 0, // Controls the rotation and lifting of items
+      theta: 0, // Horizontal angle for camera spherical coordinates
+      phi: Math.PI / 2, // Vertical angle for camera spherical coordinates
+      userInteracted: false, // Tracks if user has interacted with the scene
+    };
+
+    // Initialize PanResponder to handle gestures for 360 camera rotation
+    this.panResponder = PanResponder.create({
+      onStartShouldSetPanResponder: () => true,
+      onMoveShouldSetPanResponder: () => true,
+      onPanResponderMove: this.handlePanResponderMove,
+    });
   }
 
   _onGLContextCreate = (gl) => {
@@ -29,7 +41,6 @@ export default class Display3D extends Component {
       0.1,
       1000
     );
-    camera.position.set(-1.2, 0.5, 5); // Set initial camera position and zoom
 
     const renderer = new Renderer({ gl });
     renderer.setSize(gl.drawingBufferWidth, gl.drawingBufferHeight);
@@ -52,18 +63,41 @@ export default class Display3D extends Component {
       if (item.dis) cube.add(item.dis); // Add item display if it exists
     });
 
+    camera.position.set(-1.2, 0.5, 5); // Set initial camera position and zoom
     camera.lookAt(0, 0, 0); // Ensure camera is focused on the scene center
 
     const animate = () => {
       requestAnimationFrame(animate);
-      cube.rotation.y = this.state.rotationY;
 
-      const maxMovement = (box.y / scale) * 1.5; // Maximum movement allowed along the y-axis
+      if (!this.state.userInteracted) {
+        // Default behavior: rotate the cube and lift items using slider value
+        cube.rotation.y = this.state.rotationY;
 
-      itemsTotal.forEach((item) => {
-        item.dis.position.y =
-          Math.sin(this.state.rotationY) * maxMovement + item.pos[1];
-      });
+        const maxMovement = (box.y / scale) * 1.5; // Maximum movement allowed along the y-axis
+        itemsTotal.forEach((item) => {
+          if (item.dis) {
+            item.dis.position.y =
+              Math.sin(this.state.rotationY) * maxMovement + item.pos[1];
+          }
+        });
+
+        // Reset camera position to focus on the current rotation position
+        camera.position.set(-1.2, 0.5, 5);
+        camera.lookAt(0, 0, 0);
+      } else {
+        // If user has interacted, rotate around the current box's position
+        const boxRotationY = this.state.rotationY; // Current rotation of the box from slider
+        camera.position.x =
+          5 *
+          Math.sin(this.state.phi) *
+          Math.cos(this.state.theta + boxRotationY);
+        camera.position.y = 5 * Math.cos(this.state.phi);
+        camera.position.z =
+          5 *
+          Math.sin(this.state.phi) *
+          Math.sin(this.state.theta + boxRotationY);
+        camera.lookAt(0, 0, 0);
+      }
 
       renderer.render(scene, camera);
       gl.endFrameEXP();
@@ -72,7 +106,23 @@ export default class Display3D extends Component {
   };
 
   handleRotationChange = (value) => {
-    this.setState({ rotationY: value });
+    // Update rotation and item lifting based on slider
+    this.setState({ rotationY: value, userInteracted: false });
+  };
+
+  // Handle touch gestures for rotating the camera
+  handlePanResponderMove = (event, gestureState) => {
+    const { dx, dy } = gestureState; // Get the drag distances
+
+    // Further reduce sensitivity for smoother camera movement
+    this.setState((prevState) => ({
+      theta: prevState.theta - dx * 0.001, // Reduced sensitivity for horizontal rotation
+      phi: Math.max(
+        0.1,
+        Math.min(Math.PI - 0.1, prevState.phi - dy * 0.001) // Reduced sensitivity for vertical rotation
+      ),
+      userInteracted: true, // Set userInteracted to true when the user moves the camera
+    }));
   };
 
   render() {
@@ -105,7 +155,7 @@ export default class Display3D extends Component {
 
           <Text style={styles.carrierText}>Carrier: {selectedCarrier}</Text>
         </View>
-      ) : null; // Added missing `null` to avoid syntax error
+      ) : null;
 
     return (
       <View style={styles.container}>
@@ -121,6 +171,7 @@ export default class Display3D extends Component {
         </View>
         {boxDimensions}
         <GLView
+          {...this.panResponder.panHandlers} // Attach pan handlers to GLView for 360 view
           style={styles.glView}
           onContextCreate={this._onGLContextCreate}
         />

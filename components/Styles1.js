@@ -1,6 +1,4 @@
-import { Button, StyleSheet, Text, TextInput, View, Modal } from "react-native";
-import { Form } from "native-base";
-import { Keyboard } from "react-native";
+import { StyleSheet } from "react-native";
 
 const styles = StyleSheet.create({
   container: {
@@ -36,7 +34,7 @@ const styles = StyleSheet.create({
   submitButton: {
     flex: 1,
     backgroundColor: "#3498db", // Blue button color
-    padding: 10,
+    padding: 12,
     borderRadius: 8,
     alignItems: "center",
     marginHorizontal: 5,
@@ -44,13 +42,13 @@ const styles = StyleSheet.create({
   visualizeButton: {
     flex: 1,
     backgroundColor: "#2ecc71", // Green button color
-    padding: 10,
+    padding: 12,
     borderRadius: 8,
     alignItems: "center",
     marginHorizontal: 5,
   },
   itemBorder: {
-    borderWidth: "2px",
+    borderWidth: 2, // Updated to valid integer width
     borderStyle: "solid",
     borderColor: "#1C6EA4",
   },
@@ -72,9 +70,12 @@ const styles = StyleSheet.create({
     elevation: 5, // Shadow for Android
   },
   button: {
-    borderRadius: 20,
+    borderRadius: 8,
     padding: 10,
     elevation: 2,
+    marginVertical: 10,
+    alignItems: "center",
+    justifyContent: "center",
   },
   buttonOpen: {
     backgroundColor: "#e74c3c", // Red color for "Delete" button
@@ -83,16 +84,36 @@ const styles = StyleSheet.create({
     marginHorizontal: 5,
   },
   buttonClose: {
-    backgroundColor: "#2196F3",
+    backgroundColor: "orange", // Orange color for "Close" button
+    borderRadius: 8,
+    padding: 10,
+    marginHorizontal: 5,
+  },
+  buttonDelete: {
+    backgroundColor: "#e74c3c", // Red color for "Delete" button
+    borderRadius: 8,
+    padding: 10,
+    marginHorizontal: 5,
   },
   textStyle: {
     color: "white",
     fontWeight: "bold",
   },
   modalButtonContainer: {
-    flexDirection: "row",
-    justifyContent: "center",
+    flexDirection: "row", // Ensure buttons are in a row
+    flexWrap: "wrap", // Allow wrapping if there are many buttons
+    justifyContent: "flex-start", // Align buttons to the start of the container
+    alignItems: "center",
     marginTop: 20,
+  },
+  itemButton: {
+    marginHorizontal: 5,
+    marginVertical: 5,
+    padding: 10,
+    borderRadius: 8,
+    elevation: 2,
+    alignItems: "center",
+    justifyContent: "center",
   },
   dropdown: {
     borderWidth: 1,
@@ -141,5 +162,12 @@ const styles = StyleSheet.create({
     shadowRadius: 5,
     elevation: 3, // Shadow for Android
   },
+  buttonClose: {
+    backgroundColor: "orange", // Orange color for "Close" button
+    borderRadius: 8,
+    padding: 10,
+    marginHorizontal: 5,
+  },
 });
+
 export default styles;

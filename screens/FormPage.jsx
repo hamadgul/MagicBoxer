@@ -8,8 +8,8 @@ import {
   Modal,
   Keyboard,
   TouchableWithoutFeedback,
-  TouchableOpacity, // Correctly imported TouchableOpacity
-} from "react-native"; // Ensure all necessary components are imported
+  TouchableOpacity,
+} from "react-native";
 import { Form } from "native-base";
 import { Dropdown } from "react-native-element-dropdown";
 import AsyncStorage from "@react-native-async-storage/async-storage";
@@ -26,7 +26,16 @@ const carrierData = [
   { label: "FedEx", value: "FedEx" },
   { label: "No Carrier", value: "No Carrier" },
 ];
-
+// Define colors for buttons that open the ItemDetailsModal
+const itemButtonColors = [
+  "#3B5998", // Deep Blue
+  "#008080", // Teal
+  "#556B2F", // Dark Olive Green
+  "#8B0000", // Dark Red
+  "#FF8C00", // Dark Orange
+  "#6A0DAD", // Purple
+  "#008B8B", // Dark Cyan
+];
 export default class FormPage extends Component {
   static ItemDetailsModal = (props) => {
     return (
@@ -41,13 +50,13 @@ export default class FormPage extends Component {
               <View style={styles.modalButtonContainer}>
                 <TouchableOpacity
                   onPress={() => props.handleDeleteAndClose(props.item)}
-                  style={styles.buttonOpen}
+                  style={styles.buttonDelete} // Updated style for Delete button
                 >
                   <Text style={styles.buttonText}>Delete</Text>
                 </TouchableOpacity>
                 <TouchableOpacity
                   onPress={props.closeModal}
-                  style={styles.buttonOpen}
+                  style={styles.buttonClose} // Updated style for Close button
                 >
                   <Text style={styles.buttonText}>Close</Text>
                 </TouchableOpacity>
@@ -139,6 +148,10 @@ export default class FormPage extends Component {
   };
 
   handleVisualize = async () => {
+    if (this.state.items.length === 0) {
+      Alert.alert("No Items", "Please add at least one item before packing.");
+      return; // Exit the function early if there are no items
+    }
     try {
       const itemListString = await AsyncStorage.getItem("itemList");
       let itemList = [];
@@ -206,6 +219,14 @@ export default class FormPage extends Component {
   };
 
   handleSubmit = (e) => {
+    // Check if a carrier has been selected
+    if (this.state.selectedCarrier === "Select Carrier") {
+      Alert.alert(
+        "Carrier Not Selected",
+        "Please select a carrier before adding an item."
+      );
+      return; // Exit the function early if no carrier is selected
+    }
     if (
       this.state.itemLength === "" ||
       this.state.itemWidth === "" ||
@@ -279,8 +300,12 @@ export default class FormPage extends Component {
     this.setState({ selectedItem: item });
   };
 
+  openModal = (item) => {
+    this.setState({ showDetails: true, selectedItem: item });
+  };
+
   closeModal = () => {
-    this.setState({ showDetails: false });
+    this.setState({ showDetails: false, selectedItem: null });
   };
 
   render() {
@@ -369,25 +394,27 @@ export default class FormPage extends Component {
 
           <View style={styles.modalButtonContainer}>
             {this.state.items.map((item, index) => (
-              <View
-                style={[styles.button, styles.buttonOpen]}
+              <TouchableOpacity
                 key={item.itemName}
+                style={[
+                  styles.itemButton,
+                  {
+                    backgroundColor:
+                      itemButtonColors[index % itemButtonColors.length], // Dynamic background color for each button
+                  },
+                ]}
+                onPress={() => this.openModal(item)}
               >
-                <TouchableOpacity
-                  onPress={() =>
-                    this.setState({ showDetails: true, selectedItem: item })
-                  }
-                >
-                  <Text style={styles.buttonText}>{item.itemName}</Text>
-                </TouchableOpacity>
-              </View>
+                <Text style={styles.buttonText}>{item.itemName}</Text>
+              </TouchableOpacity>
             ))}
-            {this.state.showDetails && (
+            {this.state.showDetails && this.state.selectedItem && (
               <FormPage.ItemDetailsModal
                 visible={this.state.showDetails}
                 item={this.state.selectedItem}
                 closeModal={this.closeModal}
                 handleDeleteAndClose={this.handleDeleteAndClose}
+                index={this.state.items.indexOf(this.state.selectedItem)} // Pass index to select color
               />
             )}
           </View>
