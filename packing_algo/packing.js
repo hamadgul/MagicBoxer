@@ -1,5 +1,4 @@
 import * as THREE from "three";
-import ExpoTHREE from "expo-three";
 
 //quicksort needed for itemList/boxList
 function quickSort(arr, l, r) {
@@ -159,12 +158,12 @@ function carrierBoxes(carrier) {
         [38.0625, 6.25, 4.25, 0, false, "Priority Mail Medium Tube Box"],
         [9.4375, 6.4375, 2.1875, 0, false, "Priority Mail Small Box"],
         [
-          15,
+          14.125,
           12,
-          3.125,
+          3.5,
           0,
           false,
-          "Priority Mail Express Side-Loading Medium Box",
+          "Priority Mail Flat Rate Side-Loading Medium Box",
         ],
         [12.25, 12, 8.5, 0, false, "Priority Mail Large Box"],
         [25.5625, 6, 5.25, 0, false, "Priority Mail Small Tube Box"],
@@ -198,9 +197,9 @@ function carrierBoxes(carrier) {
         [9.5, 12.5, 1, 0, false, "Reusable Envelope"],
         [9.5, 15.5, 1, 0, false, "Reusable Envelope"],
         [9.75, 11.5, 1, 0, false, "Reusable Envelope"],
-        [10.25, 12.75, 1, 0, false, "FedEx Pak"],
-        [12, 15.5, 1, 0, false, "FedEx Pak"],
-        [11.75, 14.75, 1, 0, false, "FedEx Pak Padded"],
+        [10.25, 12.75, 2, 0, false, "FedEx Small Pak"],
+        [12, 15.5, 3, 0, false, "FedEx Large Pak"],
+        [11.75, 14.75, 3, 0, false, "FedEx Pak Padded"],
         [6, 6, 38, 0, false, "FedEx Tube"],
         [15, 15, 48, 14, false, "Golf Bag Box"],
         [50, 9, 9, 7.5, false, "Golf Club Tube"],
