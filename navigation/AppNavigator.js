@@ -1,9 +1,7 @@
-// Updated AppNavigator.js
-
 import React from "react";
 import { createDrawerNavigator } from "@react-navigation/drawer";
 import { NavigationContainer } from "@react-navigation/native";
-import { createNativeStackNavigator } from "@react-navigation/native-stack"; // Changed from createStackNavigator to createNativeStackNavigator
+import { createNativeStackNavigator } from "@react-navigation/native-stack";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 
 // Import screens, make sure paths are correct
@@ -12,59 +10,53 @@ import FormPage from "../screens/FormPage";
 import CarrierBoxListPage from "../screens/CarrierBoxListPage";
 import Display3D from "../screens/Display3D";
 
-const Stack = createNativeStackNavigator(); // Changed from createStackNavigator to createNativeStackNavigator
+const Stack = createNativeStackNavigator();
 const Drawer = createDrawerNavigator();
 
-// Stack navigator component to handle stack navigation
-function StackNavigator() {
+// Drawer navigator to handle side menu for specific pages
+function DrawerNavigator() {
   return (
-    <Stack.Navigator initialRouteName="GettingStarted">
-      <Stack.Screen
+    <Drawer.Navigator drawerPosition="right">
+      <Drawer.Screen
         name="GettingStarted"
         component={GettingStartedPage}
-        options={{ title: "Getting Started" }}
+        options={{ drawerLabel: "Getting Started" }}
       />
-      <Stack.Screen
+      <Drawer.Screen
         name="FormPage"
         component={FormPage}
-        options={{ title: "Items to Pack!" }}
+        options={{ drawerLabel: "Items to Pack", title: "Add Items!" }}
       />
-      <Stack.Screen
-        name="Display3D"
-        component={Display3D}
-        options={{ title: "Pack my Items!" }}
+      <Drawer.Screen
+        name="CarrierBoxList"
+        component={CarrierBoxListPage}
+        options={{ drawerLabel: "Carrier Box Sizes" }}
       />
-    </Stack.Navigator>
+    </Drawer.Navigator>
   );
 }
 
-// Drawer navigator for side menu navigation
+// Stack navigator to handle overall navigation, including Display3D
 function AppNavigator() {
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
       <NavigationContainer>
-        <Drawer.Navigator initialRouteName="GettingStarted">
-          <Drawer.Screen
-            name="GettingStarted"
-            component={GettingStartedPage}
-            options={{ drawerLabel: "Getting Started" }}
+        <Stack.Navigator initialRouteName="Drawer">
+          <Stack.Screen
+            name="Add Items"
+            component={DrawerNavigator}
+            options={{ headerShown: false, title: "Add Items" }} // Hide header for drawer pages
           />
-          <Drawer.Screen
-            name="FormPage"
-            component={FormPage}
-            options={{ drawerLabel: "Items to Pack" }}
-          />
-          <Drawer.Screen
-            name="CarrierBoxList"
-            component={CarrierBoxListPage}
-            options={{ drawerLabel: "Carrier Box Sizes" }}
-          />
-          <Drawer.Screen
+          <Stack.Screen
             name="Display3D"
             component={Display3D}
-            options={{ drawerLabel: "Pack my Items" }}
+            options={{
+              title: "Pack my Items!",
+              headerShown: true, // Show stack header with back button
+              gestureEnabled: true, // Enable gestures for back navigation
+            }}
           />
-        </Drawer.Navigator>
+        </Stack.Navigator>
       </NavigationContainer>
     </GestureHandlerRootView>
   );
