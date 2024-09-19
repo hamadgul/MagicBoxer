@@ -486,3 +486,5 @@ export function createDisplay(box, scale) {
 
   return items;
 }
+
+export { carrierBoxes };

@@ -9,6 +9,7 @@ import {
   Keyboard,
   TouchableWithoutFeedback,
   TouchableOpacity,
+  ScrollView,
 } from "react-native";
 import { Form } from "native-base";
 import { Dropdown } from "react-native-element-dropdown";
@@ -315,6 +316,7 @@ export default class FormPage extends Component {
     return (
       <TouchableWithoutFeedback onPress={Keyboard.dismiss} accessible={false}>
         <View style={styles.container}>
+          {/* Input form for adding items */}
           <View style={styles.formContainer}>
             <Form onSubmit={this.handleSubmit}>
               <Text style={styles.label}>Select Carrier:</Text>
@@ -380,6 +382,7 @@ export default class FormPage extends Component {
             </Form>
           </View>
 
+          {/* Action buttons */}
           <View style={styles.buttonContainer}>
             <TouchableOpacity
               style={styles.submitButton}
@@ -395,32 +398,36 @@ export default class FormPage extends Component {
             </TouchableOpacity>
           </View>
 
-          <View style={styles.modalButtonContainer}>
-            {this.state.items.map((item, index) => (
-              <TouchableOpacity
-                key={item.itemName}
-                style={[
-                  styles.itemButton,
-                  {
-                    backgroundColor:
-                      itemButtonColors[index % itemButtonColors.length], // Dynamic background color for each button
-                  },
-                ]}
-                onPress={() => this.openModal(item)}
-              >
-                <Text style={styles.buttonText}>{item.itemName}</Text>
-              </TouchableOpacity>
-            ))}
-            {this.state.showDetails && this.state.selectedItem && (
-              <FormPage.ItemDetailsModal
-                visible={this.state.showDetails}
-                item={this.state.selectedItem}
-                closeModal={this.closeModal}
-                handleDeleteAndClose={this.handleDeleteAndClose}
-                index={this.state.items.indexOf(this.state.selectedItem)} // Pass index to select color
-              />
-            )}
+          {/* Items List Container */}
+          <View style={styles.itemsContainer}>
+            <ScrollView contentContainerStyle={styles.itemsList}>
+              {this.state.items.map((item, index) => (
+                <TouchableOpacity
+                  key={item.id}
+                  style={[
+                    styles.itemButton,
+                    {
+                      backgroundColor:
+                        itemButtonColors[index % itemButtonColors.length], // Assign dynamic colors to buttons
+                    },
+                  ]}
+                  onPress={() => this.openModal(item)}
+                >
+                  <Text style={styles.buttonText}>{item.itemName}</Text>
+                </TouchableOpacity>
+              ))}
+            </ScrollView>
           </View>
+
+          {/* Modal for item details */}
+          {this.state.showDetails && this.state.selectedItem && (
+            <FormPage.ItemDetailsModal
+              visible={this.state.showDetails}
+              item={this.state.selectedItem}
+              closeModal={this.closeModal}
+              handleDeleteAndClose={this.handleDeleteAndClose}
+            />
+          )}
         </View>
       </TouchableWithoutFeedback>
     );
