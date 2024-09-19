@@ -1,56 +1,55 @@
-import React from "react";
+import React, { useState, useEffect } from "react";
 import { Platform, StatusBar, StyleSheet, View } from "react-native";
-import { AppLoading, Asset, Font, Icon } from "expo";
+import * as SplashScreen from "expo-splash-screen";
+import { Asset } from "expo-asset";
+import * as Font from "expo-font";
 import AppNavigator from "./navigation/AppNavigator";
+import { Ionicons } from "@expo/vector-icons";
+import { AppRegistry } from "react-native";
+import { name as appName } from "./app.json"; // Correctly import the name from app.json
 
-export default class App extends React.Component {
-  state = {
-    isLoadingComplete: true,
-  };
+SplashScreen.preventAutoHideAsync();
 
-  render() {
-    if (!this.state.isLoadingComplete && !this.props.skipLoadingScreen) {
-      return (
-        <AppLoading
-          startAsync={this._loadResourcesAsync}
-          onError={this._handleLoadingError}
-          onFinish={this._handleFinishLoading}
-        />
-      );
-    } else {
-      return (
-        <View style={styles.container}>
-          {Platform.OS === "ios" && <StatusBar barStyle="default" />}
-          <AppNavigator />
-        </View>
-      );
+function Main() {
+  const [isLoadingComplete, setLoadingComplete] = useState(false);
+
+  useEffect(() => {
+    async function loadResourcesAndDataAsync() {
+      try {
+        await Asset.loadAsync([
+          require("./assets/images/robot-dev.png"),
+          require("./assets/images/robot-prod.png"),
+        ]);
+
+        await Font.loadAsync({
+          ...Ionicons.font,
+          "space-mono": require("./assets/fonts/SpaceMono-Regular.ttf"),
+        });
+      } catch (e) {
+        console.warn(e);
+      } finally {
+        setLoadingComplete(true);
+        await SplashScreen.hideAsync();
+      }
     }
+
+    loadResourcesAndDataAsync();
+  }, []);
+
+  if (!isLoadingComplete) {
+    return null;
   }
 
-  _loadResourcesAsync = async () => {
-    return Promise.all([
-      Asset.loadAsync([
-        require("./assets/images/robot-dev.png"),
-        require("./assets/images/robot-prod.png"),
-      ]),
-      Font.loadAsync({
-        // This is the font that we are using for our tab bar
-        ...Icon.Ionicons.font,
-        "space-mono": require("./assets/fonts/SpaceMono-Regular.ttf"),
-      }),
-    ]);
-  };
-
-  _handleLoadingError = (error) => {
-    // In this case, you might want to report the error to your error
-    // reporting service, for example Sentry
-    console.warn(error);
-  };
-
-  _handleFinishLoading = () => {
-    this.setState({ isLoadingComplete: true });
-  };
+  return (
+    <View style={styles.container}>
+      {Platform.OS === "ios" && <StatusBar barStyle="default" />}
+      <AppNavigator />
+    </View>
+  );
 }
+
+// Register the component using the correct name
+AppRegistry.registerComponent(appName, () => Main);
 
 const styles = StyleSheet.create({
   container: {
@@ -58,3 +57,5 @@ const styles = StyleSheet.create({
     backgroundColor: "#fff",
   },
 });
+
+export default Main;

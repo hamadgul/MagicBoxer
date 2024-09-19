@@ -1,6 +1,6 @@
 import React from "react";
 import { View, Text, StyleSheet, ScrollView } from "react-native";
-import { carrierBoxes } from "./packing"; // Import carrier boxes from packing.js
+import { carrierBoxes } from "../packing_algo/packing";
 
 const CarrierBoxListPage = () => {
   // List of carriers
@@ -12,7 +12,8 @@ const CarrierBoxListPage = () => {
 
       <Text style={styles.introText}>
         Here is a list of standard box sizes for each carrier. Prices are
-        estimates and box dimensions are derived from the carrier websites.
+        estimates (box only) and box dimensions are derived from the carrier
+        websites.
       </Text>
 
       {carriers.map((carrier) => {
