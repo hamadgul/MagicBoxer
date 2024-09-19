@@ -1,14 +1,17 @@
 import React from "react";
-import { View, Text, StyleSheet, ScrollView } from "react-native";
+import { View, Text, StyleSheet, ScrollView, Image } from "react-native";
 import { Button } from "native-base";
-import AntDesign from "@expo/vector-icons/AntDesign";
+import {
+  FontAwesome,
+  MaterialIcons,
+  Entypo,
+  AntDesign,
+} from "@expo/vector-icons";
 
 const GettingStartedPage = ({ navigation }) => {
   return (
     <ScrollView contentContainerStyle={styles.container}>
-      {/* <Text style={styles.header}>Getting Started</Text> */}
-
-      {/* Section 2: App Features */}
+      {/* Section 1: App Features */}
       <View style={styles.section}>
         <Text style={styles.sectionHeader}>Unique Features of MagicBoxer</Text>
         <Text style={styles.sectionSubText}>
@@ -16,12 +19,11 @@ const GettingStartedPage = ({ navigation }) => {
           optimize space, and save on shipping costs with these unique features:
         </Text>
 
-        {/* Add a line break for better visual separation */}
         <View style={{ height: 10 }} />
 
         <View style={styles.bulletContainer}>
           <View style={styles.bulletPoint}>
-            <AntDesign name="checkcircle" size={20} color="#1C6EA4" />
+            <FontAwesome name="gears" size={20} color="#1C6EA4" />
             <Text style={styles.bulletText}>
               <Text style={styles.boldText}>Smart Packing Algorithm:</Text>{" "}
               Automatically finds the best box for your items, maximizing space
@@ -29,7 +31,7 @@ const GettingStartedPage = ({ navigation }) => {
             </Text>
           </View>
           <View style={styles.bulletPoint}>
-            <AntDesign name="checkcircle" size={20} color="#1C6EA4" />
+            <MaterialIcons name="view-in-ar" size={20} color="#1C6EA4" />
             <Text style={styles.bulletText}>
               <Text style={styles.boldText}>
                 Interactive 3D Packing Visuals:
@@ -39,7 +41,7 @@ const GettingStartedPage = ({ navigation }) => {
             </Text>
           </View>
           <View style={styles.bulletPoint}>
-            <AntDesign name="checkcircle" size={20} color="#1C6EA4" />
+            <Entypo name="price-tag" size={20} color="#1C6EA4" />
             <Text style={styles.bulletText}>
               <Text style={styles.boldText}>Shipping Cost Comparisons:</Text>{" "}
               Compare prices across top shipping carriers to find the best and
@@ -49,7 +51,7 @@ const GettingStartedPage = ({ navigation }) => {
         </View>
       </View>
 
-      {/* Section 1: Who is This App For? */}
+      {/* Section 2: Who is This App For? */}
       <View style={styles.section}>
         <Text style={styles.sectionHeader}>Who is This App For?</Text>
         <View style={styles.bulletContainer}>
@@ -121,7 +123,7 @@ const GettingStartedPage = ({ navigation }) => {
           If you have an iPhone, you can use the built-in Measure app to get
           accurate measurements of your items. Follow these steps:
         </Text>
-        {/* Add a line break for better visual separation */}
+
         <View style={{ height: 10 }} />
 
         <View style={styles.stepContainer}>
@@ -189,11 +191,11 @@ const styles = StyleSheet.create({
     padding: 20,
     backgroundColor: "#f8f9fa",
   },
-  header: {
-    fontSize: 24,
-    fontWeight: "bold",
-    color: "#1C6EA4",
-    textAlign: "center",
+  logo: {
+    width: 150,
+    height: 150,
+    resizeMode: "contain",
+    alignSelf: "center",
     marginBottom: 20,
   },
   section: {
