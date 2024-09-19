@@ -1,6 +1,8 @@
+
 {
   "expo": {
-    "name": "magic-packaging-app",
+    "name": "MagicBoxer",
+    "displayName": "MagicBoxer",
     "description": "A very interesting project.",
     "slug": "magic-packaging-app",
     "privacy": "public",
@@ -9,6 +11,7 @@
       "android"
     ],
     "version": "1.0.0",
+    "sdkVersion": "51.0.0",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
     "splash": {
@@ -17,7 +20,7 @@
       "backgroundColor": "#ffffff"
     },
     "updates": {
-      "fallbackToCacheTimeout": 0
+      "fallbackToCacheTimeout": 3000
     },
     "assetBundlePatterns": [
       "**/*"

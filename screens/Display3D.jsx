@@ -1,3 +1,5 @@
+//Display3D.js
+
 import React, { Component } from "react";
 import { View, StyleSheet, Text, PanResponder } from "react-native";
 import Slider from "@react-native-community/slider";
