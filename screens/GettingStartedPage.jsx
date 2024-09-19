@@ -1,26 +1,83 @@
 import React from "react";
-import { View, Text, StyleSheet, ScrollView, Image } from "react-native";
+import { View, Text, StyleSheet, ScrollView } from "react-native";
 import { Button } from "native-base";
 import AntDesign from "@expo/vector-icons/AntDesign";
 
 const GettingStartedPage = ({ navigation }) => {
   return (
     <ScrollView contentContainerStyle={styles.container}>
-      <Text style={styles.header}>Getting Started: Measure Your Items</Text>
+      {/* <Text style={styles.header}>Getting Started</Text> */}
 
-      {/* Section 1: Introduction */}
+      {/* Section 2: App Features */}
       <View style={styles.section}>
-        <Text style={styles.sectionHeader}>
-          Why Measuring Accurately is Important
+        <Text style={styles.sectionHeader}>Unique Features of MagicBoxer</Text>
+        <Text style={styles.sectionSubText}>
+          MagicBoxer simplifies packing, helping you choose the perfect box,
+          optimize space, and save on shipping costs with these unique features:
         </Text>
-        <Text style={styles.sectionText}>
-          Properly measuring your items ensures they fit into the optimal box
-          size, saving you costs and reducing waste. Follow these steps to
-          measure your items accurately in inches.
-        </Text>
+
+        {/* Add a line break for better visual separation */}
+        <View style={{ height: 10 }} />
+
+        <View style={styles.bulletContainer}>
+          <View style={styles.bulletPoint}>
+            <AntDesign name="checkcircle" size={20} color="#1C6EA4" />
+            <Text style={styles.bulletText}>
+              <Text style={styles.boldText}>Smart Packing Algorithm:</Text>{" "}
+              Automatically finds the best box for your items, maximizing space
+              and minimizing hassle.
+            </Text>
+          </View>
+          <View style={styles.bulletPoint}>
+            <AntDesign name="checkcircle" size={20} color="#1C6EA4" />
+            <Text style={styles.bulletText}>
+              <Text style={styles.boldText}>
+                Interactive 3D Packing Visuals:
+              </Text>{" "}
+              Get a 360-degree view of exactly how to pack your items, ensuring
+              everything fits perfectly.
+            </Text>
+          </View>
+          <View style={styles.bulletPoint}>
+            <AntDesign name="checkcircle" size={20} color="#1C6EA4" />
+            <Text style={styles.bulletText}>
+              <Text style={styles.boldText}>Shipping Cost Comparisons:</Text>{" "}
+              Compare prices across top shipping carriers to find the best and
+              most cost-effective option for your needs.
+            </Text>
+          </View>
+        </View>
       </View>
 
-      {/* Section 2: Manual Measurement Instructions */}
+      {/* Section 1: Who is This App For? */}
+      <View style={styles.section}>
+        <Text style={styles.sectionHeader}>Who is This App For?</Text>
+        <View style={styles.bulletContainer}>
+          <View style={styles.bulletPoint}>
+            <AntDesign name="checkcircle" size={20} color="#1C6EA4" />
+            <Text style={styles.bulletText}>
+              <Text style={styles.boldText}>Movers:</Text> Pack efficiently and
+              make the most of your space.
+            </Text>
+          </View>
+          <View style={styles.bulletPoint}>
+            <AntDesign name="checkcircle" size={20} color="#1C6EA4" />
+            <Text style={styles.bulletText}>
+              <Text style={styles.boldText}>Frequent Shippers:</Text> Find the
+              right box and the cheapest carrier for your items.
+            </Text>
+          </View>
+          <View style={styles.bulletPoint}>
+            <AntDesign name="checkcircle" size={20} color="#1C6EA4" />
+            <Text style={styles.bulletText}>
+              <Text style={styles.boldText}>Casual Shippers:</Text> Send gifts
+              to family and friends without the packing hassle.
+            </Text>
+          </View>
+        </View>
+      </View>
+
+      {/* Section 3: Manual Measurement Instructions */}
       <View style={styles.section}>
         <Text style={styles.sectionHeader}>
           How to Measure Your Items in Inches
@@ -48,7 +105,6 @@ const GettingStartedPage = ({ navigation }) => {
             perpendicular to the length.
           </Text>
         </View>
-
         <View style={styles.stepContainer}>
           <AntDesign name="arrowright" size={24} color="#1C6EA4" />
           <Text style={styles.stepText}>
@@ -58,13 +114,15 @@ const GettingStartedPage = ({ navigation }) => {
         </View>
       </View>
 
-      {/* Section 3: Using the Apple Measure App */}
+      {/* Section 4: Using the Apple Measure App */}
       <View style={styles.section}>
         <Text style={styles.sectionHeader}>Using the Apple Measure App</Text>
         <Text style={styles.sectionText}>
           If you have an iPhone, you can use the built-in Measure app to get
           accurate measurements of your items. Follow these steps:
         </Text>
+        {/* Add a line break for better visual separation */}
+        <View style={{ height: 10 }} />
 
         <View style={styles.stepContainer}>
           <AntDesign name="mobile1" size={24} color="#1C6EA4" />
@@ -155,10 +213,24 @@ const styles = StyleSheet.create({
     color: "#333",
     marginBottom: 10,
   },
-  sectionText: {
+  bulletContainer: {
+    marginBottom: 10,
+  },
+  bulletPoint: {
+    flexDirection: "row",
+    alignItems: "center",
+    marginBottom: 8,
+  },
+  bulletText: {
     fontSize: 16,
     color: "#555",
-    marginBottom: 10,
+    marginLeft: 10,
+    flex: 1,
+  },
+  sectionSubText: {
+    fontSize: 16,
+    color: "#555",
+    marginTop: 10,
   },
   stepContainer: {
     flexDirection: "row",
@@ -173,17 +245,6 @@ const styles = StyleSheet.create({
   },
   boldText: {
     fontWeight: "bold",
-  },
-  image: {
-    width: "100%",
-    height: 200,
-    borderRadius: 8,
-    marginVertical: 10,
-  },
-  imageCaption: {
-    textAlign: "center",
-    fontSize: 14,
-    color: "#888",
   },
   buttonContainer: {
     alignItems: "center",
