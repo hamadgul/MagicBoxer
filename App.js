@@ -1,3 +1,4 @@
+// App.js
 import React, { useState, useEffect } from "react";
 import { Platform, StatusBar, StyleSheet, View } from "react-native";
 import * as SplashScreen from "expo-splash-screen";
@@ -5,12 +6,10 @@ import { Asset } from "expo-asset";
 import * as Font from "expo-font";
 import AppNavigator from "./navigation/AppNavigator";
 import { Ionicons } from "@expo/vector-icons";
-import { AppRegistry } from "react-native";
-import { name as appName } from "./app.json"; // Correctly import the name from app.json
 
 SplashScreen.preventAutoHideAsync();
 
-function Main() {
+export default function Main() {
   const [isLoadingComplete, setLoadingComplete] = useState(false);
 
   useEffect(() => {
@@ -37,7 +36,7 @@ function Main() {
   }, []);
 
   if (!isLoadingComplete) {
-    return null;
+    return null; // Render nothing while loading resources
   }
 
   return (
@@ -48,14 +47,9 @@ function Main() {
   );
 }
 
-// Register the component using the correct name
-AppRegistry.registerComponent(appName, () => Main);
-
 const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: "#fff",
   },
 });
-
-export default Main;
