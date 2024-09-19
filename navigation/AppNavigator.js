@@ -28,9 +28,9 @@ function DrawerNavigator() {
         options={{ drawerLabel: "Items to Pack", title: "Add Items!" }}
       />
       <Drawer.Screen
-        name="CarrierBoxList"
+        name="Box Sizes Used"
         component={CarrierBoxListPage}
-        options={{ drawerLabel: "Carrier Box Sizes" }}
+        options={{ drawerLabel: "Box Sizes Used" }}
       />
     </Drawer.Navigator>
   );

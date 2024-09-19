@@ -6,6 +6,9 @@ const CarrierBoxListPage = () => {
   // List of carriers
   const carriers = ["USPS", "FedEx", "UPS", "No Carrier"];
 
+  // Function to round dimension values to the nearest tenth
+  const roundToTenth = (value) => Math.round(value * 10) / 10;
+
   return (
     <ScrollView contentContainerStyle={styles.container}>
       <Text style={styles.header}>Carrier Box Sizes and Pricing</Text>
@@ -22,27 +25,71 @@ const CarrierBoxListPage = () => {
         return (
           <View key={carrier} style={styles.carrierSection}>
             <Text style={styles.sectionHeader}>{carrier}</Text>
-            <View style={styles.table}>
-              {/* Table Header */}
-              <View style={styles.tableRow}>
-                <Text style={styles.tableHeader}>Box Type</Text>
-                <Text style={styles.tableHeader}>Dimensions (in)</Text>
-                <Text style={styles.tableHeader}>Price</Text>
-              </View>
-
-              {/* Table Rows */}
-              {boxes.map((box, index) => (
-                <View key={index} style={styles.tableRow}>
-                  <Text style={styles.tableCell}>{box[5]}</Text>
-                  <Text style={styles.tableCell}>
-                    {box[0]} x {box[1]} x {box[2]}
+            <ScrollView horizontal showsHorizontalScrollIndicator={false}>
+              <View style={styles.table}>
+                {/* Table Header */}
+                <View style={[styles.tableRow, styles.tableHeaderRow]}>
+                  <Text
+                    style={[
+                      styles.tableHeader,
+                      styles.cell,
+                      styles.cellBorder,
+                      { width: 220 }, // Further increase the width for Box Type
+                    ]}
+                  >
+                    Box Type
                   </Text>
-                  <Text style={styles.tableCell}>
-                    {box[3] === 0 ? "N/A" : `$${box[3].toFixed(2)}`}
+                  <Text
+                    style={[
+                      styles.tableHeader,
+                      styles.cell,
+                      styles.cellBorder,
+                      { width: 150 },
+                    ]}
+                  >
+                    Dimensions (in)
+                  </Text>
+                  <Text
+                    style={[
+                      styles.tableHeader,
+                      styles.cell,
+                      styles.cellBorder,
+                      { width: 80 },
+                    ]}
+                  >
+                    Price
                   </Text>
                 </View>
-              ))}
-            </View>
+
+                {/* Table Rows */}
+                {boxes.map((box, index) => (
+                  <View key={index} style={styles.tableRow}>
+                    <Text
+                      style={[styles.cell, styles.cellBorder, { width: 220 }]}
+                      numberOfLines={3}
+                      ellipsizeMode="tail"
+                    >
+                      {box[5]}
+                    </Text>
+                    <Text
+                      style={[styles.cell, styles.cellBorder, { width: 150 }]}
+                      numberOfLines={1}
+                      ellipsizeMode="tail"
+                    >
+                      {roundToTenth(box[0])} x {roundToTenth(box[1])} x{" "}
+                      {roundToTenth(box[2])}
+                    </Text>
+                    <Text
+                      style={[styles.cell, styles.cellBorder, { width: 80 }]}
+                    >
+                      {box[3] === 0
+                        ? "Free with service"
+                        : `$${box[3].toFixed(2)}`}
+                    </Text>
+                  </View>
+                ))}
+              </View>
+            </ScrollView>
           </View>
         );
       })}
@@ -88,22 +135,36 @@ const styles = StyleSheet.create({
   },
   table: {
     marginBottom: 20,
+    borderWidth: 1,
+    borderColor: "#ccc",
+    borderRadius: 8,
   },
   tableRow: {
     flexDirection: "row",
-    justifyContent: "space-between",
-    paddingVertical: 8,
     borderBottomWidth: 1,
     borderBottomColor: "#ccc",
+  },
+  tableHeaderRow: {
+    backgroundColor: "#f1f1f1",
   },
   tableHeader: {
     fontSize: 16,
     fontWeight: "bold",
     color: "#555",
+    textAlign: "center",
+    paddingVertical: 8,
   },
-  tableCell: {
+  cell: {
     fontSize: 16,
     color: "#333",
+    paddingVertical: 8,
+    paddingHorizontal: 10,
+    textAlign: "center",
+    flexWrap: "wrap",
+  },
+  cellBorder: {
+    borderWidth: 1,
+    borderColor: "#ccc",
   },
 });
 
