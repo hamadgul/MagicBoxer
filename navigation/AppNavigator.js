@@ -18,7 +18,7 @@ function DrawerNavigator() {
   return (
     <Drawer.Navigator drawerPosition="right">
       <Drawer.Screen
-        name="GettingStarted"
+        name="Getting Started"
         component={GettingStartedPage}
         options={{ drawerLabel: "Getting Started" }}
       />

@@ -58,6 +58,12 @@ const styles = StyleSheet.create({
     alignItems: "center",
     marginTop: 22,
   },
+  itemsList: {
+    flexDirection: "row",
+    flexWrap: "wrap", // Allows items to wrap to the next line
+    justifyContent: "flex-start",
+    alignItems: "flex-start", // Align items to the top of the row
+  },
   modalContent: {
     backgroundColor: "white",
     padding: 20,
@@ -107,13 +113,14 @@ const styles = StyleSheet.create({
     marginTop: 20,
   },
   itemButton: {
-    marginHorizontal: 5,
-    marginVertical: 5,
     padding: 10,
-    borderRadius: 8,
-    elevation: 2,
-    alignItems: "center",
+    borderRadius: 5,
+    margin: 4, // Reduced margin to allow four items per line
     justifyContent: "center",
+    alignItems: "center",
+    width: "22%", // Set width to slightly less than 25% to account for margins
+    minWidth: 75, // Ensure items have a consistent size
+    maxWidth: 75, // Set maximum width for consistency
   },
   dropdown: {
     borderWidth: 1,
@@ -161,6 +168,39 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.1,
     shadowRadius: 5,
     elevation: 3, // Shadow for Android
+  },
+  itemsContainer: {
+    flex: 1,
+    marginTop: 20,
+    padding: 15,
+    borderRadius: 10,
+    backgroundColor: "#ffffff", // Background for the items section
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.2,
+    shadowRadius: 5,
+    elevation: 3, // For Android shadow
+  },
+  itemsContainer: {
+    flex: 1,
+    marginTop: 20,
+    padding: 15,
+    borderRadius: 10,
+    backgroundColor: "#ffffff", // Background for the items section
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.2,
+    shadowRadius: 5,
+    elevation: 3, // For Android shadow
+  },
+  itemButton: {
+    padding: 10,
+    borderRadius: 5,
+    margin: 5,
+    justifyContent: "center",
+    alignItems: "center",
+    width: "22%", // Approximately 25% minus margins to fit four items per row
+    maxWidth: 80, // Optional max width to ensure consistent size
   },
   buttonClose: {
     backgroundColor: "orange", // Orange color for "Close" button
