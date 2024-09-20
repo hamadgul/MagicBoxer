@@ -1,5 +1,5 @@
 import React from "react";
-import { View, Text, StyleSheet, ScrollView, Image } from "react-native";
+import { View, Text, StyleSheet, ScrollView, Image, Alert } from "react-native";
 import { Button } from "native-base";
 import {
   FontAwesome,
@@ -7,8 +7,19 @@ import {
   Entypo,
   AntDesign,
 } from "@expo/vector-icons";
+import { Linking } from "react-native"; // Import Linking
 
 const GettingStartedPage = ({ navigation }) => {
+  // Function to handle opening the Measure app
+  const openMeasureApp = () => {
+    const measureAppUrl = "https://apps.apple.com/us/app/measure/id1383426740"; // App Store link for Measure app
+
+    Linking.openURL(measureAppUrl).catch((err) => {
+      Alert.alert("Error", "Unable to open the Measure app.");
+      console.error("Error opening Measure app: ", err);
+    });
+  };
+
   return (
     <ScrollView contentContainerStyle={styles.container}>
       {/* Section 1: App Features */}
@@ -170,6 +181,11 @@ const GettingStartedPage = ({ navigation }) => {
             reference.
           </Text>
         </View>
+
+        {/* Button to open Measure App */}
+        <Button style={styles.proceedButton} onPress={openMeasureApp}>
+          <Text style={styles.proceedButtonText}>Open Measure App</Text>
+        </Button>
       </View>
 
       {/* Button to Proceed */}

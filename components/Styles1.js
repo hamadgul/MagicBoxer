@@ -42,13 +42,21 @@ const styles = StyleSheet.create({
     marginHorizontal: 5,
   },
   visualizeButton: {
-    flex: 1,
+    //flex: 1,
     backgroundColor: "#2ecc71", // Green button color
+    paddingVertical: 10,
+    paddingHorizontal: 20,
     padding: 12,
     borderRadius: 8,
     alignItems: "center",
+    justifyContent: "center",
     marginHorizontal: 5,
-    maxHeight: 40,
+    width: "96%",
+  },
+  buttonContainer: {
+    padding: 10,
+    backgroundColor: "#f5f5f5",
+    alignItems: "center", // Center the content inside this container
   },
   centeredView: {
     flex: 1,
