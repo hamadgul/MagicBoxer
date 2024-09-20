@@ -1,10 +1,11 @@
+// styles.js
 import { StyleSheet } from "react-native";
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: "#f5f5f5",
-    padding: 20,
+    padding: 12,
   },
   label: {
     fontSize: 16,
@@ -32,11 +33,12 @@ const styles = StyleSheet.create({
     marginTop: 20,
   },
   submitButton: {
-    flex: 1,
     backgroundColor: "#3498db", // Blue button color
-    padding: 12,
+    paddingVertical: 10,
+    paddingHorizontal: 20,
     borderRadius: 8,
     alignItems: "center",
+    justifyContent: "center",
     marginHorizontal: 5,
   },
   visualizeButton: {
@@ -46,11 +48,7 @@ const styles = StyleSheet.create({
     borderRadius: 8,
     alignItems: "center",
     marginHorizontal: 5,
-  },
-  itemBorder: {
-    borderWidth: 2, // Updated to valid integer width
-    borderStyle: "solid",
-    borderColor: "#1C6EA4",
+    maxHeight: 40,
   },
   centeredView: {
     flex: 1,
@@ -160,9 +158,11 @@ const styles = StyleSheet.create({
   },
   formContainer: {
     backgroundColor: "white",
-    padding: 20,
+    paddingVertical: 12,
+    paddingHorizontal: 16,
     borderRadius: 10,
-    marginVertical: 20,
+    marginVertical: 10,
+    marginTop: 10,
     shadowColor: "#000",
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
@@ -170,43 +170,18 @@ const styles = StyleSheet.create({
     elevation: 3, // Shadow for Android
   },
   itemsContainer: {
-    flex: 1,
-    marginTop: 20,
+    flexShrink: 1, // Shrinks the container when space is limited
+    flexGrow: 0, // Doesn't grow when empty
     padding: 15,
     borderRadius: 10,
-    backgroundColor: "#ffffff", // Background for the items section
+    backgroundColor: "#ffffff",
     shadowColor: "#000",
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.2,
     shadowRadius: 5,
-    elevation: 3, // For Android shadow
-  },
-  itemsContainer: {
-    flex: 1,
-    marginTop: 20,
-    padding: 15,
-    borderRadius: 10,
-    backgroundColor: "#ffffff", // Background for the items section
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.2,
-    shadowRadius: 5,
-    elevation: 3, // For Android shadow
-  },
-  itemButton: {
-    padding: 10,
-    borderRadius: 5,
-    margin: 5,
-    justifyContent: "center",
-    alignItems: "center",
-    width: "22%", // Approximately 25% minus margins to fit four items per row
-    maxWidth: 80, // Optional max width to ensure consistent size
-  },
-  buttonClose: {
-    backgroundColor: "orange", // Orange color for "Close" button
-    borderRadius: 8,
-    padding: 10,
-    marginHorizontal: 5,
+    elevation: 3,
+    marginTop: 5,
+    minHeight: 50, // Minimum height when no items are present
   },
 });
 
