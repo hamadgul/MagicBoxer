@@ -1,7 +1,7 @@
+// FormPage.js
 import React, { Component } from "react";
 import {
   Alert,
-  Button,
   Text,
   TextInput,
   View,
@@ -37,6 +37,7 @@ const itemButtonColors = [
   "#6A0DAD", // Purple
   "#008B8B", // Dark Cyan
 ];
+
 export default class FormPage extends Component {
   static ItemDetailsModal = (props) => {
     return (
@@ -51,13 +52,13 @@ export default class FormPage extends Component {
               <View style={styles.modalButtonContainer}>
                 <TouchableOpacity
                   onPress={() => props.handleDeleteAndClose(props.item)}
-                  style={styles.buttonDelete} // Updated style for Delete button
+                  style={styles.buttonDelete}
                 >
                   <Text style={styles.buttonText}>Delete</Text>
                 </TouchableOpacity>
                 <TouchableOpacity
                   onPress={props.closeModal}
-                  style={styles.buttonClose} // Updated style for Close button
+                  style={styles.buttonClose}
                 >
                   <Text style={styles.buttonText}>Close</Text>
                 </TouchableOpacity>
@@ -151,7 +152,7 @@ export default class FormPage extends Component {
   handleVisualize = async () => {
     if (this.state.items.length === 0) {
       Alert.alert("No Items", "Please add at least one item before packing.");
-      return; // Exit the function early if there are no items
+      return;
     }
     try {
       const itemListString = await AsyncStorage.getItem("itemList");
@@ -179,8 +180,6 @@ export default class FormPage extends Component {
         console.log("Selected", this.state.selectedCarrier);
         packedResult.push(pack(itemsTotal, this.state.selectedCarrier, 0));
         console.log("Packed Result:", packedResult);
-        console.log("Packed Result:", packedResult);
-        console.log("Box Type in Packed Result: ", packedResult[0].boxType); // Add this line
 
         if (packedResult === 0) {
           Alert.alert(
@@ -223,20 +222,18 @@ export default class FormPage extends Component {
   };
 
   handleSubmit = (e) => {
-    // Check if a carrier has been selected
     if (this.state.selectedCarrier === "Select Carrier") {
       Alert.alert(
         "Carrier Not Selected",
         "Please select a carrier before adding an item."
       );
-      return; // Exit the function early if no carrier is selected
+      return;
     }
     if (
       this.state.itemLength === "" ||
       this.state.itemWidth === "" ||
       this.state.itemHeight === "" ||
       this.state.itemName === "" ||
-      this.state.itemHeight === "" ||
       this.state.selectedCarrier === ""
     ) {
       Alert.alert(
@@ -248,7 +245,6 @@ export default class FormPage extends Component {
     if (
       this.state.itemLength === "0" ||
       this.state.itemWidth === "0" ||
-      this.state.itemHeight === "0" ||
       this.state.itemHeight === "0"
     ) {
       Alert.alert("Error", "Item dimensions cannot be 0.");
@@ -295,7 +291,7 @@ export default class FormPage extends Component {
       this._storeData();
     });
 
-    Alert.alert("Success", "An item was submitted: " + this.state.itemName); // Use Alert.alert for messages
+    Alert.alert("Success", "An item was submitted: " + this.state.itemName);
     this.resetForm();
     Keyboard.dismiss();
   };
@@ -379,44 +375,45 @@ export default class FormPage extends Component {
                 placeholderTextColor={"#d3d3d3"}
                 maxLength={2}
               />
+              <TouchableOpacity
+                style={styles.submitButton}
+                onPress={this.handleSubmit}
+              >
+                <Text style={styles.buttonText}>Add Item</Text>
+              </TouchableOpacity>
             </Form>
           </View>
 
-          {/* Action buttons */}
+          {/* Items List Container with ScrollView */}
+          <ScrollView
+            style={styles.itemsContainer}
+            contentContainerStyle={styles.itemsList}
+          >
+            {this.state.items.map((item, index) => (
+              <TouchableOpacity
+                key={item.id}
+                style={[
+                  styles.itemButton,
+                  {
+                    backgroundColor:
+                      itemButtonColors[index % itemButtonColors.length],
+                  },
+                ]}
+                onPress={() => this.openModal(item)}
+              >
+                <Text style={styles.buttonText}>{item.itemName}</Text>
+              </TouchableOpacity>
+            ))}
+          </ScrollView>
+
+          {/* Fixed position Pack button */}
           <View style={styles.buttonContainer}>
-            <TouchableOpacity
-              style={styles.submitButton}
-              onPress={this.handleSubmit}
-            >
-              <Text style={styles.buttonText}>Add Item</Text>
-            </TouchableOpacity>
             <TouchableOpacity
               style={styles.visualizeButton}
               onPress={this.handleVisualize}
             >
               <Text style={styles.buttonText}>Pack!</Text>
             </TouchableOpacity>
-          </View>
-
-          {/* Items List Container */}
-          <View style={styles.itemsContainer}>
-            <ScrollView contentContainerStyle={styles.itemsList}>
-              {this.state.items.map((item, index) => (
-                <TouchableOpacity
-                  key={item.id}
-                  style={[
-                    styles.itemButton,
-                    {
-                      backgroundColor:
-                        itemButtonColors[index % itemButtonColors.length], // Assign dynamic colors to buttons
-                    },
-                  ]}
-                  onPress={() => this.openModal(item)}
-                >
-                  <Text style={styles.buttonText}>{item.itemName}</Text>
-                </TouchableOpacity>
-              ))}
-            </ScrollView>
           </View>
 
           {/* Modal for item details */}
