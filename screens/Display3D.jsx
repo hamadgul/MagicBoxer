@@ -226,25 +226,8 @@ export default class Display3D extends Component {
               : `$${selectedBox.price.toFixed(2)}`
             : "N/A"}
         </Text>
-        <Text>Box Type: {selectedBox.finalBoxType}</Text>
-        <Text style={styles.carrierText}>Carrier: {selectedCarrier}</Text>
-      </View>
-    );
-
-    return (
-      <View style={styles.container}>
-        <View style={styles.sliderContainer}>
-          <Slider
-            style={{ width: "100%", height: 40 }}
-            minimumValue={0}
-            maximumValue={Math.PI}
-            step={0.01}
-            value={this.state.rotationY}
-            onValueChange={this.handleRotationChange}
-          />
-        </View>
-        <View style={styles.carrierContainer}>
-          {/* <Text style={styles.label}>Carrier:</Text> */}
+        <View style={styles.carrierDropdownContainer}>
+          <Text style={styles.carrierLabel}>Carrier:</Text>
           <Dropdown
             style={styles.input}
             data={carrierData}
@@ -261,6 +244,21 @@ export default class Display3D extends Component {
                 size={20}
               />
             )}
+          />
+        </View>
+      </View>
+    );
+
+    return (
+      <View style={styles.container}>
+        <View style={styles.sliderContainer}>
+          <Slider
+            style={{ width: "100%", height: 40 }}
+            minimumValue={0}
+            maximumValue={Math.PI}
+            step={0.01}
+            value={this.state.rotationY}
+            onValueChange={this.handleRotationChange}
           />
         </View>
         {boxDimensions}
@@ -312,10 +310,15 @@ const styles = StyleSheet.create({
     fontWeight: "600",
     color: "#007bff",
   },
-  carrierText: {
+  carrierDropdownContainer: {
+    flexDirection: "row",
+    alignItems: "center",
+    marginTop: 10,
+  },
+  carrierLabel: {
     fontSize: 16,
     color: "#666",
-    marginTop: 5,
+    marginRight: 5,
   },
   noBoxText: {
     fontSize: 16,
@@ -323,27 +326,8 @@ const styles = StyleSheet.create({
     textAlign: "center",
     margin: 20,
   },
-  carrierContainer: {
-    backgroundColor: "#ffffff",
-    paddingHorizontal: 10, // Reduced horizontal padding
-    paddingVertical: 10, // Reduced vertical padding to keep height minimal
-    borderRadius: 8, // Slightly rounded corners for visual distinction
-    marginVertical: 1, // Small vertical margin for spacing
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 1 }, // Reduced shadow offset for a lighter effect
-    shadowOpacity: 0.1,
-    shadowRadius: 3,
-    elevation: 2, // Lower elevation for a subtler shadow
-    borderColor: "#ddd",
-    borderWidth: 1, // Light border for distinction without adding bulk
-  },
-  label: {
-    fontSize: 16,
-    fontWeight: "bold",
-    color: "#333",
-    marginBottom: 8,
-  },
   input: {
+    flex: 1,
     borderWidth: 1,
     borderColor: "#ddd",
     borderRadius: 8,
