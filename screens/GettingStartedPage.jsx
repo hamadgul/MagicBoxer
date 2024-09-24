@@ -7,14 +7,20 @@ import {
   Entypo,
   AntDesign,
 } from "@expo/vector-icons";
-import { Linking } from "react-native";
+import AppLink from "react-native-app-link";
 
 const GettingStartedPage = ({ navigation }) => {
-  // Function to handle opening the Measure app
+  // Function to handle opening the Measure app directly
   const openMeasureApp = () => {
-    const measureAppUrl = "https://apps.apple.com/us/app/measure/id1383426740"; // App Store link for Measure app
+    // Assuming the Measure app uses a basic deep link URL schema
+    const measureAppUrl = "measure://"; // Replace with the correct deep link if known
 
-    Linking.openURL(measureAppUrl).catch((err) => {
+    AppLink.maybeOpenURL(measureAppUrl, {
+      appName: "Measure",
+      appStoreId: "1383426740", // App Store ID for the Measure app
+      appStoreLocale: "us", // Locale can be adjusted based on the App Store location
+      playStoreId: "", // Leave empty as the Measure app is iOS only
+    }).catch((err) => {
       Alert.alert("Error", "Unable to open the Measure app.");
       console.error("Error opening Measure app: ", err);
     });
@@ -181,8 +187,7 @@ const GettingStartedPage = ({ navigation }) => {
             <AntDesign name="camera" size={24} color="#1C6EA4" />
             <Text style={styles.stepText}>
               <Text style={styles.boldText}>Step 5</Text>: Repeat the process
-              for measuring the Width and Height. You can also take a screenshot
-              for reference.
+              for measuring the Width and Height.
             </Text>
           </View>
 
