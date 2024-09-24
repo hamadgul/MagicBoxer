@@ -1,4 +1,3 @@
-// FormPage.js
 import React, { Component } from "react";
 import {
   Alert,
@@ -27,15 +26,15 @@ const carrierData = [
   { label: "FedEx", value: "FedEx" },
   { label: "No Carrier", value: "No Carrier" },
 ];
-// Define colors for buttons that open the ItemDetailsModal
+
 const itemButtonColors = [
-  "#3B5998", // Deep Blue
-  "#008080", // Teal
-  "#556B2F", // Dark Olive Green
-  "#8B0000", // Dark Red
-  "#FF8C00", // Dark Orange
-  "#6A0DAD", // Purple
-  "#008B8B", // Dark Cyan
+  "#3B5998",
+  "#008080",
+  "#556B2F",
+  "#8B0000",
+  "#FF8C00",
+  "#6A0DAD",
+  "#008B8B",
 ];
 
 export default class FormPage extends Component {
@@ -80,16 +79,11 @@ export default class FormPage extends Component {
       items: [],
       showDetails: false,
       unit: "inches",
-      selectedCarrier: "Select Carrier",
+      selectedCarrier: "No Carrier", // Set default carrier
     };
-
-    this.handleChange = this.handleChange.bind(this);
-    this.handleSubmit = this.handleSubmit.bind(this);
-    this.resetForm = this.resetForm.bind(this);
-    this.handleVisualize = this.handleVisualize.bind(this);
-    this.closeModal = this.closeModal.bind(this);
   }
 
+  // Use arrow functions to automatically bind 'this'
   resetForm = () => {
     this.setState({
       itemName: "",
@@ -175,45 +169,37 @@ export default class FormPage extends Component {
             item.selectedCarrier,
           ]);
         });
-        var packedResult = [];
-        console.log("Test Dims:", itemsTotal);
-        console.log("Selected", this.state.selectedCarrier);
-        packedResult.push(pack(itemsTotal, this.state.selectedCarrier, 0));
-        console.log("Packed Result:", packedResult);
 
-        if (packedResult === 0) {
-          Alert.alert(
-            "Items are too big for a single standard box. Multiple boxed orders have not been implemented yet."
-          );
-        } else {
-          var scale = 10;
-          if (
-            Math.max(packedResult[0].x, packedResult[0].y, packedResult[0].z) >
-            15
-          ) {
-            scale = 20;
-          }
-          packedResult.push(createDisplay(packedResult[0], scale));
+        // Call pack function with "No Carrier" initially
+        const packedResult = pack(itemsTotal, "No Carrier", 0);
 
-          var selectedBox = {
-            dimensions: [
-              packedResult[0].x,
-              packedResult[0].y,
-              packedResult[0].z,
-            ],
-            price: packedResult[0].price,
-            finalBoxType: packedResult[0].type,
-          };
-
-          console.log("selected box:", selectedBox);
-
-          this.props.navigation.navigate("Display3D", {
-            box: packedResult[0],
-            itemsTotal: packedResult[1],
-            selectedBox: selectedBox,
-            selectedCarrier: this.state.selectedCarrier,
-          });
+        // Check if packedResult has the necessary data
+        if (!packedResult || packedResult.length === 0) {
+          Alert.alert("Error", "Failed to pack items.");
+          return;
         }
+
+        const scale =
+          Math.max(packedResult.x, packedResult.y, packedResult.z) > 15
+            ? 20
+            : 10;
+        const itemsDisplay = createDisplay(packedResult, scale);
+
+        // Create selectedBox data to pass to Display3D
+        const selectedBox = {
+          dimensions: [packedResult.x, packedResult.y, packedResult.z],
+          price: packedResult.price,
+          finalBoxType: packedResult.type,
+        };
+
+        // Navigate to Display3D with all required data
+        this.props.navigation.navigate("Display3D", {
+          box: packedResult,
+          itemsTotal: itemsDisplay,
+          selectedBox: selectedBox,
+          selectedCarrier: "No Carrier", // Pass the default carrier
+          items: this.state.items, // Pass item details to Display3D
+        });
       });
     } catch (error) {
       console.error(error);
@@ -222,13 +208,6 @@ export default class FormPage extends Component {
   };
 
   handleSubmit = (e) => {
-    if (this.state.selectedCarrier === "Select Carrier") {
-      Alert.alert(
-        "Carrier Not Selected",
-        "Please select a carrier before adding an item."
-      );
-      return;
-    }
     if (
       this.state.itemLength === "" ||
       this.state.itemWidth === "" ||
@@ -263,15 +242,6 @@ export default class FormPage extends Component {
       return;
     }
 
-    if (
-      !Number.isFinite(length) ||
-      !Number.isFinite(width) ||
-      !Number.isFinite(height)
-    ) {
-      Alert.alert("Error", "Invalid item dimensions.");
-      return;
-    }
-
     const exists = this.state.items.some(
       (item) => item.itemName === this.state.itemName
     );
@@ -296,45 +266,20 @@ export default class FormPage extends Component {
     Keyboard.dismiss();
   };
 
-  selectItem = (item) => {
-    this.setState({ selectedItem: item });
+  closeModal = () => {
+    this.setState({ showDetails: false, selectedItem: null });
   };
 
   openModal = (item) => {
     this.setState({ showDetails: true, selectedItem: item });
   };
 
-  closeModal = () => {
-    this.setState({ showDetails: false, selectedItem: null });
-  };
-
   render() {
     return (
       <TouchableWithoutFeedback onPress={Keyboard.dismiss} accessible={false}>
         <View style={styles.container}>
-          {/* Input form for adding items */}
           <View style={styles.formContainer}>
             <Form onSubmit={this.handleSubmit}>
-              <Text style={styles.label}>Select Carrier:</Text>
-              <Dropdown
-                style={styles.input}
-                data={carrierData}
-                labelField="label"
-                valueField="value"
-                placeholder="Select Carrier"
-                value={this.state.selectedCarrier}
-                onChange={(item) =>
-                  this.setState({ selectedCarrier: item.value })
-                }
-                renderLeftIcon={() => (
-                  <AntDesign
-                    style={styles.icon}
-                    color="black"
-                    name="Safety"
-                    size={20}
-                  />
-                )}
-              />
               <Text style={styles.label}>Item Name:</Text>
               <TextInput
                 style={styles.input}
@@ -384,7 +329,6 @@ export default class FormPage extends Component {
             </Form>
           </View>
 
-          {/* Items List Container with ScrollView */}
           <ScrollView
             style={styles.itemsContainer}
             contentContainerStyle={styles.itemsList}
@@ -406,7 +350,6 @@ export default class FormPage extends Component {
             ))}
           </ScrollView>
 
-          {/* Fixed position Pack button */}
           <View style={styles.buttonContainer}>
             <TouchableOpacity
               style={styles.visualizeButton}
@@ -416,7 +359,6 @@ export default class FormPage extends Component {
             </TouchableOpacity>
           </View>
 
-          {/* Modal for item details */}
           {this.state.showDetails && this.state.selectedItem && (
             <FormPage.ItemDetailsModal
               visible={this.state.showDetails}

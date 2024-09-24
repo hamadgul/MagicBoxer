@@ -4,7 +4,7 @@ import { StyleSheet } from "react-native";
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#f5f5f5",
+    backgroundColor: "#fdfdfd",
     padding: 12,
   },
   label: {
@@ -55,7 +55,7 @@ const styles = StyleSheet.create({
   },
   buttonContainer: {
     padding: 10,
-    backgroundColor: "#f5f5f5",
+    backgroundColor: "#fdfdfd",
     alignItems: "center", // Center the content inside this container
   },
   centeredView: {
@@ -135,6 +135,9 @@ const styles = StyleSheet.create({
     backgroundColor: "#fff",
     paddingHorizontal: 10,
     marginBottom: 16,
+    justifyContent: "center",
+    alignContent: "center",
+    alignItems: "center",
   },
   icon: {
     marginRight: 5,
@@ -182,7 +185,7 @@ const styles = StyleSheet.create({
     flexGrow: 0, // Doesn't grow when empty
     padding: 15,
     borderRadius: 10,
-    backgroundColor: "#ffffff",
+    backgroundColor: "#f5f5f5",
     shadowColor: "#000",
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.2,
@@ -190,6 +193,20 @@ const styles = StyleSheet.create({
     elevation: 3,
     marginTop: 5,
     minHeight: 50, // Minimum height when no items are present
+  },
+  carrierContainer: {
+    backgroundColor: "#ffffff",
+    paddingHorizontal: 10, // Reduced horizontal padding
+    paddingVertical: 6, // Reduced vertical padding to keep height minimal
+    borderRadius: 8, // Slightly rounded corners for visual distinction
+    marginVertical: 1, // Small vertical margin for spacing
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 1 }, // Reduced shadow offset for a lighter effect
+    shadowOpacity: 0.1,
+    shadowRadius: 3,
+    elevation: 2, // Lower elevation for a subtler shadow
+    borderColor: "#ddd",
+    borderWidth: 1, // Light border for distinction without adding bulk
   },
 });
 
