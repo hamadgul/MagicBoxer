@@ -244,6 +244,14 @@ export default class Display3D extends Component {
                 size={20}
               />
             )}
+            renderRightIcon={() => (
+              <AntDesign
+                style={styles.icon}
+                color="black"
+                name="down"
+                size={16}
+              />
+            )}
           />
         </View>
       </View>
