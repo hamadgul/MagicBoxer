@@ -9,10 +9,10 @@ import AntDesign from "@expo/vector-icons/AntDesign";
 import { pack, createDisplay } from "../packing_algo/packing";
 
 const carrierData = [
+  { label: "No Carrier", value: "No Carrier" },
   { label: "UPS", value: "UPS" },
   { label: "USPS", value: "USPS" },
   { label: "FedEx", value: "FedEx" },
-  { label: "No Carrier", value: "No Carrier" },
 ];
 
 export default class Display3D extends Component {
