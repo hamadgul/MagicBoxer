@@ -11,21 +11,12 @@ import {
   ScrollView,
 } from "react-native";
 import { Form } from "native-base";
-import { Dropdown } from "react-native-element-dropdown";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { generateUUID } from "three/src/math/MathUtils";
 import { pack, createDisplay } from "../packing_algo/packing";
 import styles from "../components/Styles1";
-import AntDesign from "@expo/vector-icons/AntDesign";
 
 var Buffer = require("@craftzdog/react-native-buffer").Buffer;
-
-const carrierData = [
-  { label: "UPS", value: "UPS" },
-  { label: "USPS", value: "USPS" },
-  { label: "FedEx", value: "FedEx" },
-  { label: "No Carrier", value: "No Carrier" },
-];
 
 const itemButtonColors = [
   "#3B5998",
@@ -216,8 +207,8 @@ export default class FormPage extends Component {
       this.state.selectedCarrier === ""
     ) {
       Alert.alert(
-        "Error",
-        "Item name, length, width, and height cannot be empty."
+        "Missing Field",
+        "Name, Length, Width, or Height can't be empty."
       );
       return;
     }
@@ -298,7 +289,7 @@ export default class FormPage extends Component {
                 keyboardType="numeric"
                 placeholder="-- inches"
                 placeholderTextColor={"#d3d3d3"}
-                maxLength={2}
+                maxLength={3}
               />
               <Text style={styles.label}>Width:</Text>
               <TextInput
@@ -308,7 +299,7 @@ export default class FormPage extends Component {
                 keyboardType="numeric"
                 placeholder="-- inches"
                 placeholderTextColor={"#d3d3d3"}
-                maxLength={2}
+                maxLength={3}
               />
               <Text style={styles.label}>Height:</Text>
               <TextInput
@@ -318,7 +309,7 @@ export default class FormPage extends Component {
                 keyboardType="numeric"
                 placeholder="-- inches"
                 placeholderTextColor={"#d3d3d3"}
-                maxLength={2}
+                maxLength={3}
               />
               <TouchableOpacity
                 style={styles.submitButton}

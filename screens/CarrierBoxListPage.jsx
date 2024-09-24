@@ -6,8 +6,8 @@ const CarrierBoxListPage = () => {
   // List of carriers
   const carriers = ["USPS", "FedEx", "UPS", "No Carrier"];
 
-  // Function to round dimension values to the nearest tenth
-  const roundToTenth = (value) => Math.round(value * 10) / 10;
+  // Function to round dimension values down to the nearest 20th
+  const roundToTwentieth = (value) => Math.floor(value * 20) / 20;
 
   return (
     <ScrollView contentContainerStyle={styles.container}>
@@ -34,7 +34,7 @@ const CarrierBoxListPage = () => {
                       styles.tableHeader,
                       styles.cell,
                       styles.cellBorder,
-                      { width: 220 }, // Further increase the width for Box Type
+                      { width: 250 }, // Increased width for Box Type
                     ]}
                   >
                     Box Type
@@ -44,7 +44,7 @@ const CarrierBoxListPage = () => {
                       styles.tableHeader,
                       styles.cell,
                       styles.cellBorder,
-                      { width: 150 },
+                      { width: 180 }, // Increased width for Dimensions
                     ]}
                   >
                     Dimensions (in)
@@ -54,7 +54,7 @@ const CarrierBoxListPage = () => {
                       styles.tableHeader,
                       styles.cell,
                       styles.cellBorder,
-                      { width: 80 },
+                      { width: 100 }, // Increased width for Price
                     ]}
                   >
                     Price
@@ -65,22 +65,22 @@ const CarrierBoxListPage = () => {
                 {boxes.map((box, index) => (
                   <View key={index} style={styles.tableRow}>
                     <Text
-                      style={[styles.cell, styles.cellBorder, { width: 220 }]}
-                      numberOfLines={3}
+                      style={[styles.cell, styles.cellBorder, { width: 250 }]}
+                      numberOfLines={3} // Allowing more lines for text wrapping
                       ellipsizeMode="tail"
                     >
                       {box[5]}
                     </Text>
                     <Text
-                      style={[styles.cell, styles.cellBorder, { width: 150 }]}
+                      style={[styles.cell, styles.cellBorder, { width: 180 }]}
                       numberOfLines={1}
                       ellipsizeMode="tail"
                     >
-                      {roundToTenth(box[0])} x {roundToTenth(box[1])} x{" "}
-                      {roundToTenth(box[2])}
+                      {roundToTwentieth(box[0])} x {roundToTwentieth(box[1])} x{" "}
+                      {roundToTwentieth(box[2])}
                     </Text>
                     <Text
-                      style={[styles.cell, styles.cellBorder, { width: 80 }]}
+                      style={[styles.cell, styles.cellBorder, { width: 100 }]}
                     >
                       {box[3] === 0
                         ? "Free with service"
