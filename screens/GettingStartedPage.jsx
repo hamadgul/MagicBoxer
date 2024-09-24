@@ -210,11 +210,12 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: "center",
     alignItems: "center",
+    backgroundColor: "#fdfdfd",
   },
   container: {
     flexGrow: 1,
     padding: 20,
-    backgroundColor: "#f8f9fa",
+    backgroundColor: "#fdfdfd",
   },
   section: {
     backgroundColor: "#fff",
