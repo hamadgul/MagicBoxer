@@ -155,9 +155,18 @@ export default class Display3D extends Component {
   };
 
   updateVisualsBasedOnCarrier = (carrier) => {
-    this.setState({ selectedCarrier: carrier }, () => {
-      this.handleVisualize();
-    });
+    this.setState(
+      {
+        selectedCarrier: carrier,
+        rotationY: 0, // Reset the slider to its default value
+        userInteracted: false, // Reset user interaction state if needed
+      },
+      () => {
+        // Reset the 3D visualization
+        this.handleVisualize();
+        this.initialize3DScene(); // Reinitialize the 3D scene with updated state
+      }
+    );
   };
 
   handleVisualize = () => {
