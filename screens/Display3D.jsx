@@ -235,6 +235,8 @@ export default class Display3D extends Component {
               : `$${selectedBox.price.toFixed(2)}`
             : "N/A"}
         </Text>
+        <Text style={styles.text}>{selectedBox.finalBoxType || "N/A"}</Text>
+        {/* This line displays the finalBoxType */}
         <View style={styles.carrierDropdownContainer}>
           <Text style={styles.carrierLabel}>Carrier:</Text>
           <Dropdown
