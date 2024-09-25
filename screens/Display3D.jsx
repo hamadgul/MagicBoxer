@@ -1,3 +1,5 @@
+//Display3D.js
+
 import React, { Component } from "react";
 import { View, StyleSheet, Text, PanResponder, Alert } from "react-native";
 import Slider from "@react-native-community/slider";
@@ -43,6 +45,35 @@ export default class Display3D extends Component {
     this.setState({ gl }, () => {
       this.initialize3DScene();
     });
+  };
+
+  renderLegend = () => {
+    const { itemsTotal } = this.state;
+
+    // Calculate the maximum text width based on the longest itemName
+    const maxTextWidth = itemsTotal.reduce((maxWidth, item) => {
+      const textWidth = item.itemName.length * 8; // Approximate width per character, adjust if needed
+      return textWidth > maxWidth ? textWidth : maxWidth;
+    }, 60); // Set a minimum width to prevent too narrow appearance
+
+    return (
+      <View style={[styles.legendContainer, { width: maxTextWidth + 40 }]}>
+        <Text style={styles.legendTitle}>Legend:</Text>
+        {itemsTotal.map((item, index) => (
+          <View key={index} style={styles.legendItem}>
+            <View
+              style={[
+                styles.colorBox,
+                { backgroundColor: item.color }, // Use the color assigned to each item
+              ]}
+            />
+            <Text style={styles.legendText}>
+              {item.itemName || "Unnamed Item"}
+            </Text>
+          </View>
+        ))}
+      </View>
+    );
   };
 
   initialize3DScene = () => {
@@ -183,6 +214,7 @@ export default class Display3D extends Component {
       item.itemHeight,
       item.id,
       selectedCarrier,
+      item.itemName,
     ]);
 
     const packedResult = pack(itemsTotal, selectedCarrier, 0);
@@ -236,7 +268,6 @@ export default class Display3D extends Component {
             : "N/A"}
         </Text>
         <Text style={styles.text}>{selectedBox.finalBoxType || "N/A"}</Text>
-        {/* This line displays the finalBoxType */}
         <View style={styles.carrierDropdownContainer}>
           <Text style={styles.carrierLabel}>Carrier:</Text>
           <Dropdown
@@ -280,8 +311,11 @@ export default class Display3D extends Component {
             onValueChange={this.handleRotationChange}
           />
         </View>
-        {boxDimensions}
-
+        <View style={styles.infoContainer}>
+          {/* Wrap the boxDimensions and legend together */}
+          {boxDimensions}
+          {this.renderLegend()}
+        </View>
         <GLView
           {...this.panResponder.panHandlers}
           style={styles.glView}
@@ -358,5 +392,37 @@ const styles = StyleSheet.create({
   },
   icon: {
     marginRight: 5,
+  },
+  legendContainer: {
+    backgroundColor: "rgba(255, 255, 255, 0.8)",
+    padding: 10,
+    borderRadius: 5,
+    borderWidth: 1,
+    borderColor: "#ddd",
+    alignItems: "flex-start",
+    maxWidth: 150, // Set a reasonable max width to keep it within bounds
+  },
+  legendTitle: {
+    fontWeight: "bold",
+    marginBottom: 5,
+    fontSize: 16,
+  },
+  legendItem: {
+    flexDirection: "row",
+    alignItems: "center",
+    marginBottom: 5,
+  },
+  colorBox: {
+    width: 20,
+    height: 20,
+    marginRight: 10,
+  },
+  legendText: {
+    fontSize: 14,
+    color: "#333",
+    flexShrink: 1, // Allow text to shrink to fit within the container
+    maxWidth: 110, // Set a max width for each text to control overflow
+    numberOfLines: 1, // Limit to one line and add ellipsis if text is too long
+    ellipsizeMode: "tail", // Show ellipsis at the end if text is truncated
   },
 });

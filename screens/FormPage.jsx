@@ -1,3 +1,5 @@
+//FormPage.js
+
 import React, { Component } from "react";
 import {
   Alert,
@@ -158,6 +160,7 @@ export default class FormPage extends Component {
             item.itemHeight,
             item.id,
             item.selectedCarrier,
+            item.itemName, // Ensure itemName is correctly added here
           ]);
         });
 
@@ -197,7 +200,6 @@ export default class FormPage extends Component {
       Alert.alert("Error", "An error occurred while retrieving the item list");
     }
   };
-
   handleSubmit = (e) => {
     if (
       this.state.itemLength === "" ||
