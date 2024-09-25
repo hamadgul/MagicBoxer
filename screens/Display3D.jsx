@@ -1,7 +1,14 @@
-//Display3D.js
-
 import React, { Component } from "react";
-import { View, StyleSheet, Text, PanResponder, Alert } from "react-native";
+import {
+  View,
+  StyleSheet,
+  Text,
+  PanResponder,
+  Alert,
+  TouchableOpacity,
+  Modal,
+  ScrollView,
+} from "react-native";
 import Slider from "@react-native-community/slider";
 import { GLView } from "expo-gl";
 import * as THREE from "three";
@@ -31,6 +38,7 @@ export default class Display3D extends Component {
       box: this.props.route.params.box || null,
       selectedBox: this.props.route.params.selectedBox || null,
       gl: null, // Initialize GL context as null
+      isLegendVisible: false, // State to manage the visibility of the legend modal
     };
 
     this.panResponder = PanResponder.create({
@@ -47,32 +55,41 @@ export default class Display3D extends Component {
     });
   };
 
-  renderLegend = () => {
-    const { itemsTotal } = this.state;
-
-    // Calculate the maximum text width based on the longest itemName
-    const maxTextWidth = itemsTotal.reduce((maxWidth, item) => {
-      const textWidth = item.itemName.length * 8; // Approximate width per character, adjust if needed
-      return textWidth > maxWidth ? textWidth : maxWidth;
-    }, 60); // Set a minimum width to prevent too narrow appearance
+  // Function to render the legend inside a modal
+  renderLegendModal = () => {
+    const { itemsTotal, isLegendVisible } = this.state;
 
     return (
-      <View style={[styles.legendContainer, { width: maxTextWidth + 40 }]}>
-        <Text style={styles.legendTitle}>Legend:</Text>
-        {itemsTotal.map((item, index) => (
-          <View key={index} style={styles.legendItem}>
-            <View
-              style={[
-                styles.colorBox,
-                { backgroundColor: item.color }, // Use the color assigned to each item
-              ]}
-            />
-            <Text style={styles.legendText}>
-              {item.itemName || "Unnamed Item"}
-            </Text>
+      <Modal
+        visible={isLegendVisible}
+        transparent={true}
+        animationType="slide"
+        onRequestClose={() => this.setState({ isLegendVisible: false })}
+      >
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalContent}>
+            <Text style={styles.legendTitle}>Legend:</Text>
+            <ScrollView>
+              {itemsTotal.map((item, index) => (
+                <View key={index} style={styles.legendItem}>
+                  <View
+                    style={[styles.colorBox, { backgroundColor: item.color }]}
+                  />
+                  <Text style={styles.legendText}>
+                    {item.itemName || "Unnamed Item"}
+                  </Text>
+                </View>
+              ))}
+            </ScrollView>
+            <TouchableOpacity
+              style={styles.closeButton}
+              onPress={() => this.setState({ isLegendVisible: false })}
+            >
+              <Text style={styles.closeButtonText}>Close</Text>
+            </TouchableOpacity>
           </View>
-        ))}
-      </View>
+        </View>
+      </Modal>
     );
   };
 
@@ -296,26 +313,32 @@ export default class Display3D extends Component {
             )}
           />
         </View>
+        {/* Show Legend button placed directly below box dimensions */}
+        <TouchableOpacity
+          style={styles.legendButton}
+          onPress={() => this.setState({ isLegendVisible: true })}
+        >
+          <Text style={styles.legendButtonText}>Show Legend</Text>
+        </TouchableOpacity>
       </View>
     );
 
     return (
       <View style={styles.container}>
-        <View style={styles.sliderContainer}>
-          <Slider
-            style={{ width: "100%", height: 40 }}
-            minimumValue={0}
-            maximumValue={Math.PI}
-            step={0.01}
-            value={this.state.rotationY}
-            onValueChange={this.handleRotationChange}
-          />
-        </View>
-        <View style={styles.infoContainer}>
-          {/* Wrap the boxDimensions and legend together */}
+        <View style={styles.topContainer}>
+          <View style={styles.sliderContainer}>
+            <Slider
+              style={{ width: "100%", height: 40 }}
+              minimumValue={0}
+              maximumValue={Math.PI}
+              step={0.01}
+              value={this.state.rotationY}
+              onValueChange={this.handleRotationChange}
+            />
+          </View>
           {boxDimensions}
-          {this.renderLegend()}
         </View>
+        {this.renderLegendModal()}
         <GLView
           {...this.panResponder.panHandlers}
           style={styles.glView}
@@ -338,15 +361,22 @@ const styles = StyleSheet.create({
   glView: {
     flex: 1,
   },
+  infoContainer: {
+    flexDirection: "row",
+    alignItems: "flex-start",
+    paddingHorizontal: 10,
+  },
   boxDimensionsContainer: {
     padding: 20,
     backgroundColor: "#f8f9fa",
     borderRadius: 10,
-    margin: 10,
+    marginHorizontal: 20,
+    marginBottom: 10,
     alignItems: "center",
     borderWidth: 1,
     borderColor: "#e1e1e1",
   },
+
   boxTitle: {
     fontSize: 18,
     fontWeight: "bold",
@@ -393,19 +423,50 @@ const styles = StyleSheet.create({
   icon: {
     marginRight: 5,
   },
-  legendContainer: {
-    backgroundColor: "rgba(255, 255, 255, 0.8)",
+  legendButton: {
+    backgroundColor: "#007bff",
     padding: 10,
     borderRadius: 5,
-    borderWidth: 1,
-    borderColor: "#ddd",
-    alignItems: "flex-start",
-    maxWidth: 150, // Set a reasonable max width to keep it within bounds
+    alignItems: "center",
+    marginLeft: 10,
+  },
+  legendButton: {
+    backgroundColor: "#007bff",
+    paddingVertical: 8,
+    paddingHorizontal: 16,
+    borderRadius: 5,
+    alignItems: "center",
+    marginTop: 10, // Adds space between the box dimensions and the button
+    alignSelf: "center", // Centers the button directly below the box dimensions
+  },
+  legendButtonText: {
+    color: "#fff",
+    fontSize: 14,
+    fontWeight: "bold",
+  },
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: "rgba(0, 0, 0, 0.5)",
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  modalContent: {
+    backgroundColor: "#fff",
+    padding: 20,
+    borderRadius: 10,
+    width: "85%",
+    maxHeight: "70%",
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.25,
+    shadowRadius: 3.84,
+    elevation: 5,
   },
   legendTitle: {
     fontWeight: "bold",
     marginBottom: 5,
     fontSize: 16,
+    textAlign: "center",
   },
   legendItem: {
     flexDirection: "row",
@@ -420,9 +481,23 @@ const styles = StyleSheet.create({
   legendText: {
     fontSize: 14,
     color: "#333",
-    flexShrink: 1, // Allow text to shrink to fit within the container
-    maxWidth: 110, // Set a max width for each text to control overflow
-    numberOfLines: 1, // Limit to one line and add ellipsis if text is too long
-    ellipsizeMode: "tail", // Show ellipsis at the end if text is truncated
+  },
+  closeButton: {
+    backgroundColor: "#007bff",
+    padding: 10,
+    borderRadius: 5,
+    marginTop: 15,
+    alignItems: "center",
+  },
+  closeButtonText: {
+    color: "#fff",
+    fontSize: 16,
+  },
+  infoContainer: {
+    flexDirection: "row",
+    alignItems: "center", // Aligns the button with the box dimensions
+    justifyContent: "space-between", // Spreads the button and box dimensions evenly
+    paddingHorizontal: 10,
+    marginBottom: 10,
   },
 });
