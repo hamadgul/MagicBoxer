@@ -71,6 +71,7 @@ function Item(dims) {
   this.sec = [];
   this.SKU = dims[3];
   this.color = "";
+  this.itemName = dims[5];
 
   if (isNaN(this.y)) {
     console.error("Invalid y dimension in item", { y: this.y });
@@ -264,6 +265,7 @@ function carrierBoxes(carrier) {
         [37, 4, 27, 4.5, false, "Flat Box (for artwork and mirrors)"],
         [16, 12, 10, 2.25, false, "Banker Box"],
         [18, 18, 24, 5, false, "Heavy-Duty Box"],
+        [48, 6.4, 48.4, 39.98, false, "Heavy Duty Picture HomeDepot Box"],
       ];
   }
 }
@@ -433,9 +435,9 @@ export function test(box) {
 }
 
 export function createDisplay(box, scale) {
-  var boxes = flatten2(box);
-  var items = [];
-  var difcolors = [
+  const boxes = flatten2(box);
+  const items = [];
+  const difcolors = [
     "#FF5733",
     "#2DAE42",
     "#63D7D6",
@@ -447,41 +449,43 @@ export function createDisplay(box, scale) {
     "#63d7a7",
     "#B655E7",
   ];
-  for (var i = 0; i < boxes.length; i++) {
-    item = boxes[i].items[0];
-    const geo = new THREE.BoxGeometry(
-      item.xx / scale - 0.001,
-      item.yy / scale - 0.001,
-      item.zz / scale - 0.001
-    );
-    const mat = new THREE.MeshBasicMaterial({
-      color: difcolors[i % 10],
-      opacity: 1,
-      visible: true,
-    });
-    item.color = difcolors[i % 10];
-    const box1 = new THREE.Mesh(geo, mat);
-    box1.position.set(
-      (boxes[i].cx - item.xx / 2) / scale,
-      (boxes[i].cy + item.yy / 2) / scale,
-      (boxes[i].cz - item.zz / 2) / scale
-    );
-    item.dis = box1;
-    item.pos = [
-      (boxes[i].cx - item.xx / 2) / scale,
-      (boxes[i].cy + item.yy / 2) / scale,
-      (boxes[i].cz - item.zz / 2) / scale,
-    ];
-    item.boxType = boxes[i].type; // Include box type
-    items.push(item);
-    console.log(
-      "item ",
-      i + 1,
-      " added at position: ",
-      (boxes[i].cx - item.xx / 2) / scale,
-      (boxes[i].cy + item.yy / 2) / scale,
-      (boxes[i].cz - item.zz / 2) / scale
-    );
+
+  for (let i = 0; i < boxes.length; i++) {
+    const item = boxes[i].items[0]; // Ensure items are being accessed correctly
+    if (item) {
+      const geo = new THREE.BoxGeometry(
+        item.xx / scale - 0.001,
+        item.yy / scale - 0.001,
+        item.zz / scale - 0.001
+      );
+      const mat = new THREE.MeshBasicMaterial({
+        color: difcolors[i % 10],
+        opacity: 1,
+        visible: true,
+      });
+      item.color = difcolors[i % 10];
+      const box1 = new THREE.Mesh(geo, mat);
+      box1.position.set(
+        (boxes[i].cx - item.xx / 2) / scale,
+        (boxes[i].cy + item.yy / 2) / scale,
+        (boxes[i].cz - item.zz / 2) / scale
+      );
+      item.dis = box1;
+      item.pos = [
+        (boxes[i].cx - item.xx / 2) / scale,
+        (boxes[i].cy + item.yy / 2) / scale,
+        (boxes[i].cz - item.zz / 2) / scale,
+      ];
+      item.boxType = boxes[i].type;
+
+      // Check and ensure itemName is preserved and correctly assigned
+      items.push({
+        ...item,
+        itemName: item.itemName || "Unnamed Item", // This should now carry the correct itemName
+      });
+    } else {
+      console.warn("No item found in box:", boxes[i]);
+    }
   }
 
   return items;
