@@ -264,6 +264,7 @@ function carrierBoxes(carrier) {
         [37, 4, 27, 4.5, false, "Flat Box (for artwork and mirrors)"],
         [16, 12, 10, 2.25, false, "Banker Box"],
         [18, 18, 24, 5, false, "Heavy-Duty Box"],
+        [48, 6.4, 48.4, 39.98, false, "Heavy Duty Picture HomeDepot Box"],
       ];
   }
 }
