@@ -4,7 +4,8 @@ import { StyleSheet } from "react-native";
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#fdfdfd",
+    //backgroundColor: "#fdfdfd",
+    backgroundColor: "#fff",
     padding: 12,
   },
   label: {
@@ -55,7 +56,8 @@ const styles = StyleSheet.create({
   },
   buttonContainer: {
     padding: 10,
-    backgroundColor: "#fdfdfd",
+    //backgroundColor: "#fdfdfd",
+    backgroundColor: "#fff",
     alignItems: "center", // Center the content inside this container
   },
   centeredView: {
@@ -168,7 +170,8 @@ const styles = StyleSheet.create({
     fontWeight: "bold",
   },
   formContainer: {
-    backgroundColor: "white",
+    //backgroundColor: "white",
+    backgroundColor: "#fff",
     paddingVertical: 12,
     paddingHorizontal: 16,
     borderRadius: 10,
@@ -185,7 +188,7 @@ const styles = StyleSheet.create({
     flexGrow: 0, // Doesn't grow when empty
     padding: 15,
     borderRadius: 10,
-    backgroundColor: "#f5f5f5",
+    backgroundColor: "#fdfdfd",
     shadowColor: "#000",
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.2,

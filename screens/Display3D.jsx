@@ -68,7 +68,7 @@ export default class Display3D extends Component {
       >
         <View style={styles.modalOverlay}>
           <View style={styles.modalContent}>
-            <Text style={styles.legendTitle}>Legend:</Text>
+            <Text style={styles.legendTitle}>Legend</Text>
             <ScrollView>
               {itemsTotal.map((item, index) => (
                 <View key={index} style={styles.legendItem}>
@@ -313,7 +313,6 @@ export default class Display3D extends Component {
             )}
           />
         </View>
-        {/* Show Legend button placed directly below box dimensions */}
         <TouchableOpacity
           style={styles.legendButton}
           onPress={() => this.setState({ isLegendVisible: true })}
@@ -325,25 +324,25 @@ export default class Display3D extends Component {
 
     return (
       <View style={styles.container}>
-        <View style={styles.topContainer}>
-          <View style={styles.sliderContainer}>
-            <Slider
-              style={{ width: "100%", height: 40 }}
-              minimumValue={0}
-              maximumValue={Math.PI}
-              step={0.01}
-              value={this.state.rotationY}
-              onValueChange={this.handleRotationChange}
-            />
-          </View>
-          {boxDimensions}
+        <View style={styles.topContainer}>{boxDimensions}</View>
+        <View style={styles.glViewContainer}>
+          <GLView
+            {...this.panResponder.panHandlers}
+            style={styles.glView}
+            onContextCreate={this._onGLContextCreate}
+          />
         </View>
         {this.renderLegendModal()}
-        <GLView
-          {...this.panResponder.panHandlers}
-          style={styles.glView}
-          onContextCreate={this._onGLContextCreate}
-        />
+        <View style={styles.sliderContainer}>
+          <Slider
+            style={{ width: "100%", height: 40 }}
+            minimumValue={0}
+            maximumValue={Math.PI}
+            step={0.01}
+            value={this.state.rotationY}
+            onValueChange={this.handleRotationChange}
+          />
+        </View>
       </View>
     );
   }
@@ -352,31 +351,36 @@ export default class Display3D extends Component {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-  },
-  sliderContainer: {
-    height: 40,
-    paddingHorizontal: 10,
     backgroundColor: "#fff",
+  },
+  topContainer: {
+    paddingHorizontal: 10,
+  },
+  glViewContainer: {
+    height: 460, // Set a specific height for the GLView to control its size
+    // marginHorizontal: 1,
+    marginTop: 2,
   },
   glView: {
     flex: 1,
+    borderWidth: 1, // Optional: add a border to see the GLView bounds clearly
+    borderColor: "#fff",
   },
-  infoContainer: {
-    flexDirection: "row",
-    alignItems: "flex-start",
-    paddingHorizontal: 10,
+  sliderContainer: {
+    height: 40,
+    paddingHorizontal: 30,
+    marginBottom: 30,
   },
   boxDimensionsContainer: {
-    padding: 20,
-    backgroundColor: "#f8f9fa",
+    padding: 10,
+    backgroundColor: "#fff",
     borderRadius: 10,
     marginHorizontal: 20,
-    marginBottom: 10,
+    marginTop: 10,
     alignItems: "center",
     borderWidth: 1,
     borderColor: "#e1e1e1",
   },
-
   boxTitle: {
     fontSize: 18,
     fontWeight: "bold",
@@ -425,19 +429,12 @@ const styles = StyleSheet.create({
   },
   legendButton: {
     backgroundColor: "#007bff",
-    padding: 10,
-    borderRadius: 5,
-    alignItems: "center",
-    marginLeft: 10,
-  },
-  legendButton: {
-    backgroundColor: "#007bff",
     paddingVertical: 8,
     paddingHorizontal: 16,
     borderRadius: 5,
     alignItems: "center",
-    marginTop: 10, // Adds space between the box dimensions and the button
-    alignSelf: "center", // Centers the button directly below the box dimensions
+    marginTop: 10,
+    alignSelf: "center",
   },
   legendButtonText: {
     color: "#fff",
@@ -492,12 +489,5 @@ const styles = StyleSheet.create({
   closeButtonText: {
     color: "#fff",
     fontSize: 16,
-  },
-  infoContainer: {
-    flexDirection: "row",
-    alignItems: "center", // Aligns the button with the box dimensions
-    justifyContent: "space-between", // Spreads the button and box dimensions evenly
-    paddingHorizontal: 10,
-    marginBottom: 10,
   },
 });

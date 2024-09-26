@@ -280,6 +280,7 @@ export default class FormPage extends Component {
                 onChangeText={this.handleChange}
                 maxLength={10}
                 returnKeyType={"next"}
+                keyboardAppearance="light"
                 placeholder="MacBook, Xbox etc"
                 placeholderTextColor={"#d3d3d3"}
               />
@@ -289,6 +290,7 @@ export default class FormPage extends Component {
                 value={this.state.itemLength}
                 onChangeText={(text) => this.setState({ itemLength: text })}
                 keyboardType="numeric"
+                keyboardAppearance="light"
                 placeholder="-- inches"
                 placeholderTextColor={"#d3d3d3"}
                 maxLength={3}
@@ -300,6 +302,7 @@ export default class FormPage extends Component {
                 onChangeText={(text) => this.setState({ itemWidth: text })}
                 keyboardType="numeric"
                 placeholder="-- inches"
+                keyboardAppearance="light"
                 placeholderTextColor={"#d3d3d3"}
                 maxLength={3}
               />
@@ -310,6 +313,7 @@ export default class FormPage extends Component {
                 onChangeText={(text) => this.setState({ itemHeight: text })}
                 keyboardType="numeric"
                 placeholder="-- inches"
+                keyboardAppearance="light"
                 placeholderTextColor={"#d3d3d3"}
                 maxLength={3}
               />
