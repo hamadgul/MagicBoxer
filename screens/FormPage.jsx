@@ -32,36 +32,141 @@ const itemButtonColors = [
 
 export default class FormPage extends Component {
   static ItemDetailsModal = (props) => {
+    const [isEditable, setIsEditable] = React.useState(false);
+    const [editedItem, setEditedItem] = React.useState({
+      itemName: props.item.itemName,
+      itemLength: props.item.itemLength.toString(),
+      itemWidth: props.item.itemWidth.toString(),
+      itemHeight: props.item.itemHeight.toString(),
+    });
+
+    const handleEditToggle = () => {
+      setIsEditable(!isEditable);
+    };
+
+    const handleApplyChanges = () => {
+      const updatedItem = {
+        ...props.item,
+        itemName: editedItem.itemName,
+        itemLength: parseFloat(editedItem.itemLength),
+        itemWidth: parseFloat(editedItem.itemWidth),
+        itemHeight: parseFloat(editedItem.itemHeight),
+      };
+
+      props.handleUpdateItem(updatedItem);
+      setIsEditable(false);
+    };
+
     return (
       <View style={styles.centeredView}>
         <Modal visible={props.visible} animationType="slide" transparent={true}>
-          <View style={styles.centeredView}>
-            <View style={styles.modalContent}>
-              <Text style={styles.label}>Item Name: {props.item.itemName}</Text>
-              <Text style={styles.label}>Length: {props.item.itemLength}</Text>
-              <Text style={styles.label}>Width: {props.item.itemWidth}</Text>
-              <Text style={styles.label}>Height: {props.item.itemHeight}</Text>
-              <View style={styles.modalButtonContainer}>
-                <TouchableOpacity
-                  onPress={() => props.handleDeleteAndClose(props.item)}
-                  style={styles.buttonDelete}
-                >
-                  <Text style={styles.buttonText}>Delete</Text>
-                </TouchableOpacity>
-                <TouchableOpacity
-                  onPress={props.closeModal}
-                  style={styles.buttonClose}
-                >
-                  <Text style={styles.buttonText}>Close</Text>
-                </TouchableOpacity>
+          <TouchableWithoutFeedback
+            onPress={Keyboard.dismiss}
+            accessible={false}
+          >
+            <View style={styles.centeredView}>
+              <View style={styles.modalContent}>
+                {isEditable ? (
+                  <>
+                    <View style={styles.fieldContainer}>
+                      <Text style={styles.label}>Name</Text>
+                      <TextInput
+                        style={styles.input}
+                        value={editedItem.itemName}
+                        onChangeText={(text) =>
+                          setEditedItem({ ...editedItem, itemName: text })
+                        }
+                        placeholder="Enter Name"
+                      />
+                    </View>
+                    <View style={styles.fieldContainer}>
+                      <Text style={styles.label}>Length</Text>
+                      <TextInput
+                        style={styles.input}
+                        value={editedItem.itemLength}
+                        onChangeText={(text) =>
+                          setEditedItem({ ...editedItem, itemLength: text })
+                        }
+                        keyboardType="numeric"
+                        placeholder="Enter Length"
+                      />
+                    </View>
+                    <View style={styles.fieldContainer}>
+                      <Text style={styles.label}>Width</Text>
+                      <TextInput
+                        style={styles.input}
+                        value={editedItem.itemWidth}
+                        onChangeText={(text) =>
+                          setEditedItem({ ...editedItem, itemWidth: text })
+                        }
+                        keyboardType="numeric"
+                        placeholder="Enter Width"
+                      />
+                    </View>
+                    <View style={styles.fieldContainer}>
+                      <Text style={styles.label}>Height</Text>
+                      <TextInput
+                        style={styles.input}
+                        value={editedItem.itemHeight}
+                        onChangeText={(text) =>
+                          setEditedItem({ ...editedItem, itemHeight: text })
+                        }
+                        keyboardType="numeric"
+                        placeholder="Enter Height"
+                      />
+                    </View>
+                    <TouchableOpacity
+                      onPress={handleApplyChanges}
+                      style={styles.buttonApply}
+                    >
+                      <Text style={styles.buttonText}>Apply Changes</Text>
+                    </TouchableOpacity>
+                  </>
+                ) : (
+                  <>
+                    <Text style={styles.label}>
+                      Item Name: {props.item.itemName}
+                    </Text>
+                    <Text style={styles.label}>
+                      Length: {props.item.itemLength}
+                    </Text>
+                    <Text style={styles.label}>
+                      Width: {props.item.itemWidth}
+                    </Text>
+                    <Text style={styles.label}>
+                      Height: {props.item.itemHeight}
+                    </Text>
+                  </>
+                )}
+                <View style={styles.modalButtonContainer}>
+                  <TouchableOpacity
+                    onPress={() => props.handleDeleteAndClose(props.item)}
+                    style={styles.buttonDelete}
+                  >
+                    <Text style={styles.buttonText}>Delete</Text>
+                  </TouchableOpacity>
+                  <TouchableOpacity
+                    onPress={handleEditToggle}
+                    style={styles.buttonEdit}
+                  >
+                    <Text style={styles.buttonText}>
+                      {isEditable ? "Cancel" : "Edit"}
+                    </Text>
+                  </TouchableOpacity>
+                  <TouchableOpacity
+                    onPress={props.closeModal}
+                    style={styles.buttonClose}
+                  >
+                    <Text style={styles.buttonText}>Close</Text>
+                  </TouchableOpacity>
+                </View>
               </View>
             </View>
-          </View>
+          </TouchableWithoutFeedback>
         </Modal>
       </View>
     );
   };
-
   constructor(props) {
     super(props);
     this.state = {
@@ -71,10 +176,30 @@ export default class FormPage extends Component {
       itemLength: 0,
       items: [],
       showDetails: false,
+      selectedItem: null,
       unit: "inches",
       selectedCarrier: "No Carrier", // Set default carrier
     };
   }
+
+  handleUpdateItem = (updatedItem) => {
+    const updatedItems = this.state.items.map((item) =>
+      item.id === updatedItem.id ? updatedItem : item
+    );
+
+    this.setState({ items: updatedItems }, async () => {
+      try {
+        const serializedItems = Buffer.from(
+          JSON.stringify(this.state.items)
+        ).toString("base64");
+        await AsyncStorage.setItem("itemList", serializedItems);
+        Alert.alert("Item Updated");
+        this.closeModal();
+      } catch (error) {
+        Alert.alert("Error updating item", error.message);
+      }
+    });
+  };
 
   // Use arrow functions to automatically bind 'this'
   resetForm = () => {
@@ -362,6 +487,7 @@ export default class FormPage extends Component {
               item={this.state.selectedItem}
               closeModal={this.closeModal}
               handleDeleteAndClose={this.handleDeleteAndClose}
+              handleUpdateItem={this.handleUpdateItem}
             />
           )}
         </View>
