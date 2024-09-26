@@ -1,43 +1,61 @@
-import { Button, StyleSheet, Text, TextInput, View, Modal } from "react-native";
-import { Form } from "native-base";
-import { Keyboard } from "react-native";
+import { StyleSheet } from "react-native";
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    padding: 20,
+    backgroundColor: "#fff",
+    padding: 12,
   },
   label: {
-    fontSize: 16,
-    marginTop: 20,
-    fontWeight: "bold",
-    color: "#1C6EA4",
+    fontSize: 14,
+    fontWeight: "500",
+    color: "#444", // Softer color for labels
+    marginBottom: 4,
   },
   input: {
-    height: 40,
-    borderColor: "#ddd",
     borderWidth: 1,
-    marginTop: 10,
-    padding: 10,
-    fontSize: 14,
-    borderRadius: 4,
+    borderColor: "#ddd", // Light border color
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    borderRadius: 10, // More rounded corners
+    backgroundColor: "#f9f9f9",
+    marginBottom: 8,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.05,
+    shadowRadius: 4,
+    elevation: 1,
   },
   buttonContainer: {
     flexDirection: "row",
     justifyContent: "space-between",
+    marginTop: 20,
   },
   submitButton: {
-    flex: 1,
-    marginRight: 5,
+    backgroundColor: "#3498db", // Blue button color
+    paddingVertical: 10,
+    paddingHorizontal: 20,
+    borderRadius: 8,
+    alignItems: "center",
+    justifyContent: "center",
+    marginHorizontal: 5,
+    marginTop: 10,
   },
   visualizeButton: {
-    flex: 1,
-    marginLeft: 5,
+    backgroundColor: "#2ecc71", // Green button color
+    paddingVertical: 10,
+    paddingHorizontal: 20,
+    padding: 12,
+    borderRadius: 8,
+    alignItems: "center",
+    justifyContent: "center",
+    marginHorizontal: 5,
+    width: "96%",
   },
-  itemBorder: {
-    borderWidth: "2px",
-    borderStyle: "solid",
-    borderColor: "#1C6EA4",
+  buttonContainer: {
+    padding: 10,
+    backgroundColor: "#fff",
+    alignItems: "center", // Center the content inside this container
   },
   centeredView: {
     flex: 1,
@@ -45,48 +63,84 @@ const styles = StyleSheet.create({
     alignItems: "center",
     marginTop: 22,
   },
+  itemsList: {
+    flexDirection: "row",
+    flexWrap: "wrap", // Allows items to wrap to the next line
+    justifyContent: "flex-start",
+    alignItems: "flex-start", // Align items to the top of the row
+  },
   modalContent: {
-    margin: 20,
-    backgroundColor: "#eeeeee",
-    borderRadius: 20,
-    padding: 35,
+    backgroundColor: "#f2f2f2",
+    padding: 20,
+    borderRadius: 10,
     alignItems: "center",
-    justifyContent: "center",
     shadowColor: "#000",
-    shadowOffset: {
-      width: 0,
-      height: 2,
-    },
-    shadowOpacity: 0.25,
-    shadowRadius: 4,
-    elevation: 5,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 5,
+    elevation: 5, // Shadow for Android
   },
   button: {
-    borderRadius: 20,
+    borderRadius: 8,
     padding: 10,
     elevation: 2,
+    marginVertical: 10,
+    alignItems: "center",
+    justifyContent: "center",
   },
   buttonOpen: {
-    backgroundColor: "#d0e0e3",
+    backgroundColor: "#e74c3c", // Red color for "Delete" button
+    borderRadius: 8,
+    padding: 10,
+    marginHorizontal: 5,
   },
   buttonClose: {
-    backgroundColor: "#2196F3",
+    backgroundColor: "#f39c12", // Orange color for the Close button
+    paddingVertical: 10,
+    paddingHorizontal: 20,
+    borderRadius: 8,
+    alignItems: "center",
+    flex: 1, // Make all buttons equal width
+    marginHorizontal: 5, // Add margin between buttons
+  },
+  buttonDelete: {
+    backgroundColor: "#e74c3c", // Red color for the Delete button
+    paddingVertical: 10,
+    paddingHorizontal: 20,
+    borderRadius: 8,
+    alignItems: "center",
+    flex: 1, // Make all buttons equal width
+    marginHorizontal: 5, // Add margin between buttons
   },
   textStyle: {
     color: "white",
     fontWeight: "bold",
   },
   modalButtonContainer: {
-    justifyContent: "space-evenly",
     flexDirection: "row",
-    alignContent: "flex-start",
-    flexWrap: "wrap",
+    justifyContent: "space-around", // Evenly distribute buttons
+    marginTop: 12,
+  },
+  itemButton: {
+    padding: 10,
+    borderRadius: 5,
+    margin: 4, // Reduced margin to allow four items per line
+    justifyContent: "center",
+    alignItems: "center",
+    width: "22%", // Set width to slightly less than 25% to account for margins
+    minWidth: 75, // Ensure items have a consistent size
+    maxWidth: 75, // Set maximum width for consistency
   },
   dropdown: {
-    margin: 16,
-    height: 50,
-    borderBottomColor: "gray",
-    borderBottomWidth: 0.5,
+    borderWidth: 1,
+    borderColor: "#ddd", // Matching input style
+    borderRadius: 8,
+    backgroundColor: "#fff",
+    paddingHorizontal: 10,
+    marginBottom: 16,
+    justifyContent: "center",
+    alignContent: "center",
+    alignItems: "center",
   },
   icon: {
     marginRight: 5,
@@ -111,15 +165,74 @@ const styles = StyleSheet.create({
     alignItems: "center",
     padding: 15,
   },
+  buttonText: {
+    color: "#fff",
+    fontSize: 14,
+    fontWeight: "bold",
+  },
   formContainer: {
-    backgroundColor: "white", // Set background color to white
-    padding: 100, // Add padding for spacing
-    borderRadius: 10, // Optional: Add border radius for rounded corners
-    shadowColor: "#000", // Optional: Add shadow for elevation effect
+    backgroundColor: "#fff",
+    paddingVertical: 12,
+    paddingHorizontal: 16,
+    borderRadius: 10,
+    marginVertical: 10,
+    marginTop: 10,
+    shadowColor: "#000",
     shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.25,
-    shadowRadius: 3.84,
-    elevation: 5, // Android shadow equivalent
+    shadowOpacity: 0.1,
+    shadowRadius: 5,
+    elevation: 3, // Shadow for Android
+  },
+  itemsContainer: {
+    flexShrink: 1, // Shrinks the container when space is limited
+    flexGrow: 0, // Doesn't grow when empty
+    padding: 15,
+    borderRadius: 10,
+    backgroundColor: "#fdfdfd",
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.2,
+    shadowRadius: 5,
+    elevation: 3,
+    marginTop: 5,
+    minHeight: 50, // Minimum height when no items are present
+  },
+  carrierContainer: {
+    backgroundColor: "#ffffff",
+    paddingHorizontal: 10, // Reduced horizontal padding
+    paddingVertical: 6, // Reduced vertical padding to keep height minimal
+    borderRadius: 8, // Slightly rounded corners for visual distinction
+    marginVertical: 1, // Small vertical margin for spacing
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 1 }, // Reduced shadow offset for a lighter effect
+    shadowOpacity: 0.1,
+    shadowRadius: 3,
+    elevation: 2, // Lower elevation for a subtler shadow
+    borderColor: "#ddd",
+    borderWidth: 1, // Light border for distinction without adding bulk
+  },
+  buttonEdit: {
+    backgroundColor: "#3498db", // Blue color for the Edit button
+    paddingVertical: 10,
+    paddingHorizontal: 20,
+    borderRadius: 8,
+    alignItems: "center",
+    flex: 1, // Make all buttons equal width
+    marginHorizontal: 5, // Add margin between buttons
+  },
+  buttonApply: {
+    backgroundColor: "#28A745", // Green color for the Apply Changes button
+    paddingVertical: 10,
+    paddingHorizontal: 20,
+    borderRadius: 10,
+    marginVertical: 10,
+    alignItems: "center",
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.1,
+    shadowRadius: 2,
+    elevation: 2,
   },
 });
+
 export default styles;

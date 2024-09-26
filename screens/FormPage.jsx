@@ -16,7 +16,7 @@ import { Form } from "native-base";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { generateUUID } from "three/src/math/MathUtils";
 import { pack, createDisplay } from "../packing_algo/packing";
-import styles from "../components/Styles1";
+import styles from "../components/Styles";
 
 var Buffer = require("@craftzdog/react-native-buffer").Buffer;
 
@@ -38,6 +38,7 @@ export default class FormPage extends Component {
       itemLength: props.item.itemLength.toString(),
       itemWidth: props.item.itemWidth.toString(),
       itemHeight: props.item.itemHeight.toString(),
+      quantity: props.item.quantity?.toString() || "1", // Track quantity separately
     });
 
     const handleEditToggle = () => {
@@ -51,9 +52,10 @@ export default class FormPage extends Component {
         itemLength: parseFloat(editedItem.itemLength),
         itemWidth: parseFloat(editedItem.itemWidth),
         itemHeight: parseFloat(editedItem.itemHeight),
+        quantity: parseInt(editedItem.quantity) || 1, // Apply changes with parsed quantity
       };
 
-      props.handleUpdateItem(updatedItem);
+      props.handleUpdateItem(updatedItem); // Pass the updated item to be saved
       setIsEditable(false);
     };
 
@@ -115,6 +117,18 @@ export default class FormPage extends Component {
                         placeholder="Enter Height"
                       />
                     </View>
+                    <View style={styles.fieldContainer}>
+                      <Text style={styles.label}>Quantity</Text>
+                      <TextInput
+                        style={styles.input}
+                        value={editedItem.quantity}
+                        onChangeText={(text) =>
+                          setEditedItem({ ...editedItem, quantity: text })
+                        }
+                        keyboardType="numeric"
+                        placeholder="Enter Quantity"
+                      />
+                    </View>
                     <TouchableOpacity
                       onPress={handleApplyChanges}
                       style={styles.buttonApply}
@@ -135,6 +149,9 @@ export default class FormPage extends Component {
                     </Text>
                     <Text style={styles.label}>
                       Height: {props.item.itemHeight}
+                    </Text>
+                    <Text style={styles.label}>
+                      Quantity: {props.item.quantity || 1}
                     </Text>
                   </>
                 )}
@@ -179,12 +196,27 @@ export default class FormPage extends Component {
       selectedItem: null,
       unit: "inches",
       selectedCarrier: "No Carrier", // Set default carrier
+      quantity: 1, // new state variable for quantity
     };
   }
 
   handleUpdateItem = (updatedItem) => {
+    // Regenerate replicated names based on the updated quantity
+    const quantity = parseInt(updatedItem.quantity) || 1; // Ensure quantity is a number
+    const replicatedNames = Array.from({ length: quantity }, (_, i) =>
+      i === 0 ? updatedItem.itemName : `${updatedItem.itemName}${i + 1}`
+    );
+
+    // Update the item with new quantity and replicated names
+    const updatedItemWithReplications = {
+      ...updatedItem,
+      quantity: quantity,
+      replicatedNames: replicatedNames,
+    };
+
+    // Update items in the state and backend
     const updatedItems = this.state.items.map((item) =>
-      item.id === updatedItem.id ? updatedItem : item
+      item.id === updatedItem.id ? updatedItemWithReplications : item
     );
 
     this.setState({ items: updatedItems }, async () => {
@@ -208,6 +240,7 @@ export default class FormPage extends Component {
       itemWidth: "",
       itemHeight: "",
       itemLength: "",
+      quantity: 1,
     });
   };
 
@@ -277,22 +310,21 @@ export default class FormPage extends Component {
       }
 
       this.setState({ items: itemList }, () => {
-        var itemsTotal = [];
+        let itemsTotal = [];
         this.state.items.forEach((item) => {
-          itemsTotal.push([
-            item.itemLength,
-            item.itemWidth,
-            item.itemHeight,
-            item.id,
-            item.selectedCarrier,
-            item.itemName, // Ensure itemName is correctly added here
-          ]);
+          item.replicatedNames.forEach((name) => {
+            itemsTotal.push([
+              item.itemLength,
+              item.itemWidth,
+              item.itemHeight,
+              item.id,
+              item.selectedCarrier,
+              name, // Pass each replicated name
+            ]);
+          });
         });
 
-        // Call pack function with "No Carrier" initially
         const packedResult = pack(itemsTotal, "No Carrier", 0);
-
-        // Check if packedResult has the necessary data
         if (!packedResult || packedResult.length === 0) {
           Alert.alert("Error", "Failed to pack items.");
           return;
@@ -304,20 +336,18 @@ export default class FormPage extends Component {
             : 10;
         const itemsDisplay = createDisplay(packedResult, scale);
 
-        // Create selectedBox data to pass to Display3D
         const selectedBox = {
           dimensions: [packedResult.x, packedResult.y, packedResult.z],
           price: packedResult.price,
           finalBoxType: packedResult.type,
         };
 
-        // Navigate to Display3D with all required data
         this.props.navigation.navigate("Display3D", {
           box: packedResult,
           itemsTotal: itemsDisplay,
           selectedBox: selectedBox,
-          selectedCarrier: "No Carrier", // Pass the default carrier
-          items: this.state.items, // Pass item details to Display3D
+          selectedCarrier: "No Carrier",
+          items: this.state.items,
         });
       });
     } catch (error) {
@@ -325,7 +355,9 @@ export default class FormPage extends Component {
       Alert.alert("Error", "An error occurred while retrieving the item list");
     }
   };
+
   handleSubmit = (e) => {
+    // Validation checks
     if (
       this.state.itemLength === "" ||
       this.state.itemWidth === "" ||
@@ -351,6 +383,7 @@ export default class FormPage extends Component {
     const length = parseFloat(this.state.itemLength);
     const width = parseFloat(this.state.itemWidth);
     const height = parseFloat(this.state.itemHeight);
+    const quantity = this.state.quantity; // Get the quantity value
 
     if (isNaN(length) || isNaN(width) || isNaN(height)) {
       Alert.alert(
@@ -360,6 +393,7 @@ export default class FormPage extends Component {
       return;
     }
 
+    // Check if item already exists (using item name)
     const exists = this.state.items.some(
       (item) => item.itemName === this.state.itemName
     );
@@ -367,6 +401,12 @@ export default class FormPage extends Component {
       Alert.alert("Error", "An item with the same name already exists.");
       return;
     }
+
+    // Create a single item with the replicated details stored in backend
+    const replicatedNames = Array.from({ length: quantity }, (_, i) =>
+      i === 0 ? this.state.itemName : `${this.state.itemName}${i + 1}`
+    );
+
     const newItem = {
       id: generateUUID(),
       itemName: this.state.itemName,
@@ -374,12 +414,16 @@ export default class FormPage extends Component {
       itemWidth: width,
       itemHeight: height,
       selectedCarrier: this.state.selectedCarrier,
+      quantity: quantity, // Store the quantity
+      replicatedNames: replicatedNames, // Store replicated names in backend
     };
+
+    // Add the single new item to the items array
     this.setState({ items: [...this.state.items, newItem] }, () => {
       this._storeData();
     });
 
-    Alert.alert("Success", "An item was submitted: " + this.state.itemName);
+    Alert.alert("Success", "Item was submitted.");
     this.resetForm();
     Keyboard.dismiss();
   };
@@ -442,6 +486,23 @@ export default class FormPage extends Component {
                 placeholderTextColor={"#d3d3d3"}
                 maxLength={3}
               />
+              <Text style={styles.label}>Quantity:</Text>
+              <TextInput
+                style={styles.input}
+                value={this.state.quantity.toString()}
+                onChangeText={(text) => {
+                  // Allow empty string and valid numbers
+                  const newQuantity = text === "" ? "" : parseInt(text);
+                  // Only update state if newQuantity is a valid number or empty
+                  if (!isNaN(newQuantity) || text === "") {
+                    this.setState({ quantity: newQuantity });
+                  }
+                }}
+                keyboardType="numeric"
+                placeholder="Enter Quantity"
+                placeholderTextColor={"#d3d3d3"}
+                maxLength={3}
+              />
               <TouchableOpacity
                 style={styles.submitButton}
                 onPress={this.handleSubmit}
@@ -484,7 +545,10 @@ export default class FormPage extends Component {
           {this.state.showDetails && this.state.selectedItem && (
             <FormPage.ItemDetailsModal
               visible={this.state.showDetails}
-              item={this.state.selectedItem}
+              item={{
+                ...this.state.selectedItem,
+                quantity: this.state.selectedItem.quantity || 1,
+              }} // Provide a default value for quantity
               closeModal={this.closeModal}
               handleDeleteAndClose={this.handleDeleteAndClose}
               handleUpdateItem={this.handleUpdateItem}
