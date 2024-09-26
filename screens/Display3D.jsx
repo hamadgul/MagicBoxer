@@ -227,15 +227,19 @@ export default class Display3D extends Component {
       return;
     }
 
-    const itemsTotal = items.map((item) => [
-      item.itemLength,
-      item.itemWidth,
-      item.itemHeight,
-      item.id,
-      selectedCarrier,
-      item.itemName,
-    ]);
+    // Create a complete list of items with replicated names and dimensions based on the selected carrier
+    const itemsTotal = items.flatMap((item) =>
+      item.replicatedNames.map((name) => [
+        item.itemLength,
+        item.itemWidth,
+        item.itemHeight,
+        item.id,
+        selectedCarrier,
+        name, // Use each replicated name
+      ])
+    );
 
+    // Call the packing function with the updated carrier and items
     const packedResult = pack(itemsTotal, selectedCarrier, 0);
 
     if (!packedResult || packedResult.length === 0) {
@@ -258,7 +262,7 @@ export default class Display3D extends Component {
         },
       },
       () => {
-        this.initialize3DScene();
+        this.initialize3DScene(); // Reinitialize the 3D scene with the new box and items
       }
     );
   };
