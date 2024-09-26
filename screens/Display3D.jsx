@@ -94,9 +94,8 @@ export default class Display3D extends Component {
   };
 
   initialize3DScene = () => {
-    const { gl, box, itemsTotal } = this.state;
+    const { gl, box } = this.state;
 
-    // Ensure the GL context is initialized
     if (!gl || !box) {
       console.error("GL context or box data is not available.");
       return;
@@ -117,11 +116,14 @@ export default class Display3D extends Component {
     this.camera = camera;
     this.renderer = renderer;
 
-    this.cube = this.createBox(box, itemsTotal);
-
+    // Add the box with dynamic scaling
+    this.cube = this.createBox(box, this.state.itemsTotal);
     scene.add(this.cube);
 
-    camera.position.set(-1.2, 0.5, 5);
+    // Adjust camera position dynamically based on the scaled size of the box
+    const maxDimension = Math.max(box.x, box.y, box.z);
+    const distance = Math.max(5, maxDimension * 1.5); // Adjust distance dynamically
+    camera.position.set(0, distance * 0.5, distance);
     camera.lookAt(0, 0, 0);
 
     this.animate();
