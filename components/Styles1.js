@@ -1,31 +1,30 @@
-// styles.js
 import { StyleSheet } from "react-native";
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#fdfdfd",
+    backgroundColor: "#fff",
     padding: 12,
   },
   label: {
-    fontSize: 16,
-    fontWeight: "bold",
-    color: "#333", // Darker text for better readability
-    marginBottom: 8,
+    fontSize: 14,
+    fontWeight: "500",
+    color: "#444", // Softer color for labels
+    marginBottom: 4,
   },
   input: {
     borderWidth: 1,
     borderColor: "#ddd", // Light border color
-    paddingHorizontal: 10,
+    paddingHorizontal: 12,
     paddingVertical: 8,
-    borderRadius: 8,
-    backgroundColor: "#fff",
-    marginBottom: 16,
+    borderRadius: 10, // More rounded corners
+    backgroundColor: "#f9f9f9",
+    marginBottom: 8,
     shadowColor: "#000",
     shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.1,
-    shadowRadius: 2,
-    elevation: 2,
+    shadowOpacity: 0.05,
+    shadowRadius: 4,
+    elevation: 1,
   },
   buttonContainer: {
     flexDirection: "row",
@@ -40,9 +39,9 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
     marginHorizontal: 5,
+    marginTop: 10,
   },
   visualizeButton: {
-    //flex: 1,
     backgroundColor: "#2ecc71", // Green button color
     paddingVertical: 10,
     paddingHorizontal: 20,
@@ -55,7 +54,7 @@ const styles = StyleSheet.create({
   },
   buttonContainer: {
     padding: 10,
-    backgroundColor: "#fdfdfd",
+    backgroundColor: "#fff",
     alignItems: "center", // Center the content inside this container
   },
   centeredView: {
@@ -71,7 +70,7 @@ const styles = StyleSheet.create({
     alignItems: "flex-start", // Align items to the top of the row
   },
   modalContent: {
-    backgroundColor: "white",
+    backgroundColor: "#f2f2f2",
     padding: 20,
     borderRadius: 10,
     alignItems: "center",
@@ -96,27 +95,31 @@ const styles = StyleSheet.create({
     marginHorizontal: 5,
   },
   buttonClose: {
-    backgroundColor: "orange", // Orange color for "Close" button
+    backgroundColor: "#f39c12", // Orange color for the Close button
+    paddingVertical: 10,
+    paddingHorizontal: 20,
     borderRadius: 8,
-    padding: 10,
-    marginHorizontal: 5,
+    alignItems: "center",
+    flex: 1, // Make all buttons equal width
+    marginHorizontal: 5, // Add margin between buttons
   },
   buttonDelete: {
-    backgroundColor: "#e74c3c", // Red color for "Delete" button
+    backgroundColor: "#e74c3c", // Red color for the Delete button
+    paddingVertical: 10,
+    paddingHorizontal: 20,
     borderRadius: 8,
-    padding: 10,
-    marginHorizontal: 5,
+    alignItems: "center",
+    flex: 1, // Make all buttons equal width
+    marginHorizontal: 5, // Add margin between buttons
   },
   textStyle: {
     color: "white",
     fontWeight: "bold",
   },
   modalButtonContainer: {
-    flexDirection: "row", // Ensure buttons are in a row
-    flexWrap: "wrap", // Allow wrapping if there are many buttons
-    justifyContent: "flex-start", // Align buttons to the start of the container
-    alignItems: "center",
-    marginTop: 20,
+    flexDirection: "row",
+    justifyContent: "space-around", // Evenly distribute buttons
+    marginTop: 12,
   },
   itemButton: {
     padding: 10,
@@ -163,12 +166,12 @@ const styles = StyleSheet.create({
     padding: 15,
   },
   buttonText: {
-    color: "#fff", // White text color for contrast
-    fontSize: 16,
+    color: "#fff",
+    fontSize: 14,
     fontWeight: "bold",
   },
   formContainer: {
-    backgroundColor: "white",
+    backgroundColor: "#fff",
     paddingVertical: 12,
     paddingHorizontal: 16,
     borderRadius: 10,
@@ -185,7 +188,7 @@ const styles = StyleSheet.create({
     flexGrow: 0, // Doesn't grow when empty
     padding: 15,
     borderRadius: 10,
-    backgroundColor: "#f5f5f5",
+    backgroundColor: "#fdfdfd",
     shadowColor: "#000",
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.2,
@@ -207,6 +210,28 @@ const styles = StyleSheet.create({
     elevation: 2, // Lower elevation for a subtler shadow
     borderColor: "#ddd",
     borderWidth: 1, // Light border for distinction without adding bulk
+  },
+  buttonEdit: {
+    backgroundColor: "#3498db", // Blue color for the Edit button
+    paddingVertical: 10,
+    paddingHorizontal: 20,
+    borderRadius: 8,
+    alignItems: "center",
+    flex: 1, // Make all buttons equal width
+    marginHorizontal: 5, // Add margin between buttons
+  },
+  buttonApply: {
+    backgroundColor: "#28A745", // Green color for the Apply Changes button
+    paddingVertical: 10,
+    paddingHorizontal: 20,
+    borderRadius: 10,
+    marginVertical: 10,
+    alignItems: "center",
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.1,
+    shadowRadius: 2,
+    elevation: 2,
   },
 });
 
