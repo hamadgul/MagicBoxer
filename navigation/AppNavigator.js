@@ -9,6 +9,7 @@ import GettingStartedPage from "../screens/GettingStartedPage";
 import FormPage from "../screens/FormPage";
 import CarrierBoxListPage from "../screens/CarrierBoxListPage";
 import Display3D from "../screens/Display3D";
+import PrivacyPolicyPage from "../screens/PrivacyPolicyPage";
 
 const Stack = createNativeStackNavigator();
 const Drawer = createDrawerNavigator();
@@ -31,6 +32,11 @@ function DrawerNavigator() {
         name="Box Sizes Used"
         component={CarrierBoxListPage}
         options={{ drawerLabel: "Box Sizes Used" }}
+      />
+      <Drawer.Screen
+        name="Privacy Policy"
+        component={PrivacyPolicyPage}
+        options={{ drawerLabel: "Privacy Policy" }}
       />
     </Drawer.Navigator>
   );

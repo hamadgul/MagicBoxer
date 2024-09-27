@@ -38,7 +38,7 @@ export default class FormPage extends Component {
       itemLength: props.item.itemLength.toString(),
       itemWidth: props.item.itemWidth.toString(),
       itemHeight: props.item.itemHeight.toString(),
-      quantity: props.item.quantity?.toString() || "1", // Track quantity separately
+      quantity: props.item.quantity?.toString() || "1", // Track quantity
     });
 
     const handleEditToggle = () => {
@@ -52,10 +52,10 @@ export default class FormPage extends Component {
         itemLength: parseFloat(editedItem.itemLength),
         itemWidth: parseFloat(editedItem.itemWidth),
         itemHeight: parseFloat(editedItem.itemHeight),
-        quantity: parseInt(editedItem.quantity) || 1, // Apply changes with parsed quantity
+        quantity: parseInt(editedItem.quantity) || 1,
       };
 
-      props.handleUpdateItem(updatedItem); // Pass the updated item to be saved
+      props.handleUpdateItem(updatedItem);
       setIsEditable(false);
     };
 
@@ -195,8 +195,8 @@ export default class FormPage extends Component {
       showDetails: false,
       selectedItem: null,
       unit: "inches",
-      selectedCarrier: "No Carrier", // Set default carrier
-      quantity: 1, // new state variable for quantity
+      selectedCarrier: "No Carrier",
+      quantity: 1,
     };
   }
 
@@ -233,7 +233,7 @@ export default class FormPage extends Component {
     });
   };
 
-  // Use arrow functions to automatically bind 'this'
+  // Use arrow functions to automatically bind
   resetForm = () => {
     this.setState({
       itemName: "",
@@ -319,7 +319,7 @@ export default class FormPage extends Component {
               item.itemHeight,
               item.id,
               item.selectedCarrier,
-              name, // Pass each replicated name
+              name,
             ]);
           });
         });
@@ -383,7 +383,7 @@ export default class FormPage extends Component {
     const length = parseFloat(this.state.itemLength);
     const width = parseFloat(this.state.itemWidth);
     const height = parseFloat(this.state.itemHeight);
-    const quantity = this.state.quantity; // Get the quantity value
+    const quantity = this.state.quantity;
 
     if (isNaN(length) || isNaN(width) || isNaN(height)) {
       Alert.alert(
@@ -414,8 +414,8 @@ export default class FormPage extends Component {
       itemWidth: width,
       itemHeight: height,
       selectedCarrier: this.state.selectedCarrier,
-      quantity: quantity, // Store the quantity
-      replicatedNames: replicatedNames, // Store replicated names in backend
+      quantity: quantity,
+      replicatedNames: replicatedNames, // replicated names for items > 1
     };
 
     // Add the single new item to the items array
