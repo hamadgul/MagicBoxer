@@ -37,8 +37,8 @@ export default class Display3D extends Component {
       itemsTotal: this.props.route.params.itemsTotal || [],
       box: this.props.route.params.box || null,
       selectedBox: this.props.route.params.selectedBox || null,
-      gl: null, // Initialize GL context as null
-      isLegendVisible: false, // State to manage the visibility of the legend modal
+      gl: null,
+      isLegendVisible: false,
     };
 
     this.panResponder = PanResponder.create({
@@ -48,7 +48,6 @@ export default class Display3D extends Component {
     });
   }
 
-  // Called when the GLView creates a WebGL context
   _onGLContextCreate = (gl) => {
     this.setState({ gl }, () => {
       this.initialize3DScene();
@@ -235,7 +234,7 @@ export default class Display3D extends Component {
         item.itemHeight,
         item.id,
         selectedCarrier,
-        name, // Use each replicated name
+        name,
       ])
     );
 
@@ -363,7 +362,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 10,
   },
   glViewContainer: {
-    height: 460, // Set a specific height for the GLView to control its size
+    height: 460, // Set a specific height for the GLView to control size
     // marginHorizontal: 1,
     marginTop: 2,
   },
