@@ -67,11 +67,22 @@ function AppNavigator() {
           <Stack.Screen
             name="Privacy Policy"
             component={PrivacyPolicyPage}
+            options={{
+              headerShown: true, // Show stack header with back button
+              gestureEnabled: true, // Enable gestures for back navigation
+              headerBackTitle: "Help",
+            }}
             // Enable gestures for back navigation
           />
           <Stack.Screen
             name="Box Sizes Used"
             component={CarrierBoxListPage}
+            options={{
+              title: "Box Sizes in-App",
+              headerShown: true, // Show stack header with back button
+              gestureEnabled: true, // Enable gestures for back navigation
+              headerBackTitle: "Help",
+            }}
             // Enable gestures for back navigation
           />
         </Stack.Navigator>
