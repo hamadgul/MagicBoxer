@@ -1,6 +1,6 @@
-//FormPage.js
+// FormPage.js
 
-import React, { Component } from "react";
+import React, { Component, useState } from "react"; // Correct import for useState
 import {
   Alert,
   Text,
@@ -17,7 +17,6 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import { generateUUID } from "three/src/math/MathUtils";
 import { pack, createDisplay } from "../packing_algo/packing";
 import styles from "../components/Styles";
-
 var Buffer = require("@craftzdog/react-native-buffer").Buffer;
 
 const itemButtonColors = [
@@ -30,160 +29,160 @@ const itemButtonColors = [
   "#008B8B",
 ];
 
-export default class FormPage extends Component {
-  static ItemDetailsModal = (props) => {
-    const [isEditable, setIsEditable] = React.useState(false);
-    const [editedItem, setEditedItem] = React.useState({
-      itemName: props.item.itemName,
-      itemLength: props.item.itemLength.toString(),
-      itemWidth: props.item.itemWidth.toString(),
-      itemHeight: props.item.itemHeight.toString(),
-      quantity: props.item.quantity?.toString() || "1", // Track quantity
-    });
+// Make sure ItemDetailsModal is exported correctly
+export const ItemDetailsModal = ({
+  visible,
+  item,
+  closeModal,
+  handleUpdateItem,
+  handleDeleteAndClose,
+}) => {
+  const [isEditable, setIsEditable] = useState(false);
+  const [editedItem, setEditedItem] = useState({
+    itemName: item?.itemName || "",
+    itemLength: item?.itemLength.toString() || "",
+    itemWidth: item?.itemWidth.toString() || "",
+    itemHeight: item?.itemHeight.toString() || "",
+    quantity: item?.quantity?.toString() || "1",
+  });
 
-    const handleEditToggle = () => {
-      setIsEditable(!isEditable);
-    };
+  console.log("Modal Props:", { visible, item }); // Debug log to check props
 
-    const handleApplyChanges = () => {
-      const updatedItem = {
-        ...props.item,
-        itemName: editedItem.itemName,
-        itemLength: parseFloat(editedItem.itemLength),
-        itemWidth: parseFloat(editedItem.itemWidth),
-        itemHeight: parseFloat(editedItem.itemHeight),
-        quantity: parseInt(editedItem.quantity) || 1,
-      };
-
-      props.handleUpdateItem(updatedItem);
-      setIsEditable(false);
-    };
-
-    return (
-      <View style={styles.centeredView}>
-        <Modal visible={props.visible} animationType="slide" transparent={true}>
-          <TouchableWithoutFeedback
-            onPress={Keyboard.dismiss}
-            accessible={false}
-          >
-            <View style={styles.centeredView}>
-              <View style={styles.modalContent}>
-                {isEditable ? (
-                  <>
-                    <View style={styles.fieldContainer}>
-                      <Text style={styles.label}>Name</Text>
-                      <TextInput
-                        style={styles.input}
-                        value={editedItem.itemName}
-                        onChangeText={(text) =>
-                          setEditedItem({ ...editedItem, itemName: text })
-                        }
-                        placeholder="Enter Name"
-                      />
-                    </View>
-                    <View style={styles.fieldContainer}>
-                      <Text style={styles.label}>Length</Text>
-                      <TextInput
-                        style={styles.input}
-                        value={editedItem.itemLength}
-                        onChangeText={(text) =>
-                          setEditedItem({ ...editedItem, itemLength: text })
-                        }
-                        keyboardType="numeric"
-                        placeholder="Enter Length"
-                      />
-                    </View>
-                    <View style={styles.fieldContainer}>
-                      <Text style={styles.label}>Width</Text>
-                      <TextInput
-                        style={styles.input}
-                        value={editedItem.itemWidth}
-                        onChangeText={(text) =>
-                          setEditedItem({ ...editedItem, itemWidth: text })
-                        }
-                        keyboardType="numeric"
-                        placeholder="Enter Width"
-                      />
-                    </View>
-                    <View style={styles.fieldContainer}>
-                      <Text style={styles.label}>Height</Text>
-                      <TextInput
-                        style={styles.input}
-                        value={editedItem.itemHeight}
-                        onChangeText={(text) =>
-                          setEditedItem({ ...editedItem, itemHeight: text })
-                        }
-                        keyboardType="numeric"
-                        placeholder="Enter Height"
-                      />
-                    </View>
-                    <View style={styles.fieldContainer}>
-                      <Text style={styles.label}>Quantity</Text>
-                      <TextInput
-                        style={styles.input}
-                        value={editedItem.quantity}
-                        onChangeText={(text) =>
-                          setEditedItem({ ...editedItem, quantity: text })
-                        }
-                        keyboardType="numeric"
-                        placeholder="Enter Quantity"
-                      />
-                    </View>
-                    <TouchableOpacity
-                      onPress={handleApplyChanges}
-                      style={styles.buttonApply}
-                    >
-                      <Text style={styles.buttonText}>Apply Changes</Text>
-                    </TouchableOpacity>
-                  </>
-                ) : (
-                  <>
-                    <Text style={styles.label}>
-                      Item Name: {props.item.itemName}
-                    </Text>
-                    <Text style={styles.label}>
-                      Length: {props.item.itemLength}
-                    </Text>
-                    <Text style={styles.label}>
-                      Width: {props.item.itemWidth}
-                    </Text>
-                    <Text style={styles.label}>
-                      Height: {props.item.itemHeight}
-                    </Text>
-                    <Text style={styles.label}>
-                      Quantity: {props.item.quantity || 1}
-                    </Text>
-                  </>
-                )}
-                <View style={styles.modalButtonContainer}>
-                  <TouchableOpacity
-                    onPress={() => props.handleDeleteAndClose(props.item)}
-                    style={styles.buttonDelete}
-                  >
-                    <Text style={styles.buttonText}>Delete</Text>
-                  </TouchableOpacity>
-                  <TouchableOpacity
-                    onPress={handleEditToggle}
-                    style={styles.buttonEdit}
-                  >
-                    <Text style={styles.buttonText}>
-                      {isEditable ? "Cancel" : "Edit"}
-                    </Text>
-                  </TouchableOpacity>
-                  <TouchableOpacity
-                    onPress={props.closeModal}
-                    style={styles.buttonClose}
-                  >
-                    <Text style={styles.buttonText}>Close</Text>
-                  </TouchableOpacity>
-                </View>
-              </View>
-            </View>
-          </TouchableWithoutFeedback>
-        </Modal>
-      </View>
-    );
+  const handleEditToggle = () => {
+    setIsEditable(!isEditable);
   };
+
+  const handleApplyChanges = () => {
+    const updatedItem = {
+      ...item,
+      itemName: editedItem.itemName,
+      itemLength: parseFloat(editedItem.itemLength),
+      itemWidth: parseFloat(editedItem.itemWidth),
+      itemHeight: parseFloat(editedItem.itemHeight),
+      quantity: parseInt(editedItem.quantity) || 1,
+    };
+    handleUpdateItem(updatedItem);
+    setIsEditable(false);
+  };
+
+  if (!item) {
+    return null; // Prevent modal from rendering without an item
+  }
+
+  return (
+    <Modal
+      visible={visible}
+      animationType="slide"
+      transparent={true}
+      onRequestClose={closeModal} // Handles closing when back button is pressed on Android
+    >
+      <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
+        <View style={styles.centeredView}>
+          <View style={styles.modalContent}>
+            {isEditable ? (
+              <>
+                <View style={styles.fieldContainer}>
+                  <Text style={styles.label}>Name</Text>
+                  <TextInput
+                    style={styles.input}
+                    value={editedItem.itemName}
+                    onChangeText={(text) =>
+                      setEditedItem({ ...editedItem, itemName: text })
+                    }
+                    placeholder="Enter Name"
+                  />
+                </View>
+                <View style={styles.fieldContainer}>
+                  <Text style={styles.label}>Length</Text>
+                  <TextInput
+                    style={styles.input}
+                    value={editedItem.itemLength}
+                    onChangeText={(text) =>
+                      setEditedItem({ ...editedItem, itemLength: text })
+                    }
+                    keyboardType="numeric"
+                    placeholder="Enter Length"
+                  />
+                </View>
+                <View style={styles.fieldContainer}>
+                  <Text style={styles.label}>Width</Text>
+                  <TextInput
+                    style={styles.input}
+                    value={editedItem.itemWidth}
+                    onChangeText={(text) =>
+                      setEditedItem({ ...editedItem, itemWidth: text })
+                    }
+                    keyboardType="numeric"
+                    placeholder="Enter Width"
+                  />
+                </View>
+                <View style={styles.fieldContainer}>
+                  <Text style={styles.label}>Height</Text>
+                  <TextInput
+                    style={styles.input}
+                    value={editedItem.itemHeight}
+                    onChangeText={(text) =>
+                      setEditedItem({ ...editedItem, itemHeight: text })
+                    }
+                    keyboardType="numeric"
+                    placeholder="Enter Height"
+                  />
+                </View>
+                <View style={styles.fieldContainer}>
+                  <Text style={styles.label}>Quantity</Text>
+                  <TextInput
+                    style={styles.input}
+                    value={editedItem.quantity}
+                    onChangeText={(text) =>
+                      setEditedItem({ ...editedItem, quantity: text })
+                    }
+                    keyboardType="numeric"
+                    placeholder="Enter Quantity"
+                  />
+                </View>
+                <TouchableOpacity
+                  onPress={handleApplyChanges}
+                  style={styles.buttonApply}
+                >
+                  <Text style={styles.buttonText}>Apply Changes</Text>
+                </TouchableOpacity>
+              </>
+            ) : (
+              <>
+                <Text style={styles.label}>Item Name: {item.itemName}</Text>
+                <Text style={styles.label}>Length: {item.itemLength}</Text>
+                <Text style={styles.label}>Width: {item.itemWidth}</Text>
+                <Text style={styles.label}>Height: {item.itemHeight}</Text>
+                <Text style={styles.label}>Quantity: {item.quantity || 1}</Text>
+              </>
+            )}
+            <View style={styles.modalButtonContainer}>
+              <TouchableOpacity
+                onPress={() => handleDeleteAndClose(item)}
+                style={styles.buttonDelete}
+              >
+                <Text style={styles.buttonText}>Delete</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                onPress={handleEditToggle}
+                style={styles.buttonEdit}
+              >
+                <Text style={styles.buttonText}>
+                  {isEditable ? "Cancel" : "Edit"}
+                </Text>
+              </TouchableOpacity>
+              <TouchableOpacity onPress={closeModal} style={styles.buttonClose}>
+                <Text style={styles.buttonText}>Close</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
+      </TouchableWithoutFeedback>
+    </Modal>
+  );
+};
+
+export default class FormPage extends Component {
   constructor(props) {
     super(props);
     this.state = {
@@ -197,24 +196,85 @@ export default class FormPage extends Component {
       unit: "inches",
       selectedCarrier: "No Carrier",
       quantity: 1,
+      showSavePackageModal: false,
+      packageName: "",
     };
   }
 
+  componentDidMount() {
+    this.loadItems();
+  }
+
+  // Load items from AsyncStorage
+  loadItems = async () => {
+    try {
+      const itemListString = await AsyncStorage.getItem("itemList");
+      if (itemListString) {
+        const deserializedItems = JSON.parse(
+          Buffer.from(itemListString, "base64").toString("utf8")
+        );
+        this.setState({ items: deserializedItems });
+      }
+    } catch (error) {
+      Alert.alert("Error", "Failed to load items.");
+    }
+  };
+
+  // Save Package Modal Toggle
+  toggleSavePackageModal = () => {
+    this.setState({ showSavePackageModal: !this.state.showSavePackageModal });
+  };
+
+  // Handle Saving Package
+  handleSavePackage = async () => {
+    const { packageName, items } = this.state;
+
+    if (!packageName.trim()) {
+      Alert.alert("Error", "Package name cannot be empty.");
+      return;
+    }
+
+    try {
+      const existingPackages = await AsyncStorage.getItem("packages");
+      const packages = existingPackages ? JSON.parse(existingPackages) : {};
+      packages[packageName] = items;
+
+      await AsyncStorage.setItem("packages", JSON.stringify(packages));
+      Alert.alert("Success", "Package saved successfully.");
+      this.toggleSavePackageModal();
+      this.resetForm(); // Reset form after saving
+    } catch (error) {
+      Alert.alert("Error", "Failed to save package.");
+    }
+  };
+
+  resetForm = () => {
+    // Reset form fields and clear item list
+    this.setState({
+      itemName: "",
+      itemWidth: "",
+      itemHeight: "",
+      itemLength: "",
+      quantity: 1,
+      items: [],
+      selectedItem: null,
+    });
+    // Clear saved items in AsyncStorage if needed
+    AsyncStorage.removeItem("itemList");
+  };
+
   handleUpdateItem = (updatedItem) => {
-    // Regenerate replicated names based on the updated quantity
-    const quantity = parseInt(updatedItem.quantity) || 1; // Ensure quantity is a number
+    const quantity = parseInt(updatedItem.quantity) || 1;
     const replicatedNames = Array.from({ length: quantity }, (_, i) =>
       i === 0 ? updatedItem.itemName : `${updatedItem.itemName}${i + 1}`
     );
 
-    // Update the item with new quantity and replicated names
     const updatedItemWithReplications = {
       ...updatedItem,
       quantity: quantity,
       replicatedNames: replicatedNames,
     };
 
-    // Update items in the state and backend
     const updatedItems = this.state.items.map((item) =>
       item.id === updatedItem.id ? updatedItemWithReplications : item
     );
@@ -233,7 +293,6 @@ export default class FormPage extends Component {
     });
   };
 
-  // Use arrow functions to automatically bind
   resetForm = () => {
     this.setState({
       itemName: "",
@@ -357,7 +416,6 @@ export default class FormPage extends Component {
   };
 
   handleSubmit = (e) => {
-    // Validation checks
     if (
       this.state.itemLength === "" ||
       this.state.itemWidth === "" ||
@@ -393,7 +451,6 @@ export default class FormPage extends Component {
       return;
     }
 
-    // Check if item already exists (using item name)
     const exists = this.state.items.some(
       (item) => item.itemName === this.state.itemName
     );
@@ -402,7 +459,6 @@ export default class FormPage extends Component {
       return;
     }
 
-    // Create a single item with the replicated details stored in backend
     const replicatedNames = Array.from({ length: quantity }, (_, i) =>
       i === 0 ? this.state.itemName : `${this.state.itemName}${i + 1}`
     );
@@ -415,10 +471,9 @@ export default class FormPage extends Component {
       itemHeight: height,
       selectedCarrier: this.state.selectedCarrier,
       quantity: quantity,
-      replicatedNames: replicatedNames, // replicated names for items > 1
+      replicatedNames: replicatedNames,
     };
 
-    // Add the single new item to the items array
     this.setState({ items: [...this.state.items, newItem] }, () => {
       this._storeData();
     });
@@ -491,9 +546,7 @@ export default class FormPage extends Component {
                 style={styles.input}
                 value={this.state.quantity.toString()}
                 onChangeText={(text) => {
-                  // Allow empty string and valid numbers
                   const newQuantity = text === "" ? "" : parseInt(text);
-                  // Only update state if newQuantity is a valid number or empty
                   if (!isNaN(newQuantity) || text === "") {
                     this.setState({ quantity: newQuantity });
                   }
@@ -540,15 +593,52 @@ export default class FormPage extends Component {
             >
               <Text style={styles.buttonText}>Pack!</Text>
             </TouchableOpacity>
+            <TouchableOpacity
+              style={styles.savePackageButton}
+              onPress={this.toggleSavePackageModal}
+            >
+              <Text style={styles.buttonText}>Save Package</Text>
+            </TouchableOpacity>
           </View>
 
+          {/* Save Package Modal */}
+          <Modal
+            visible={this.state.showSavePackageModal}
+            animationType="slide"
+            transparent={true}
+          >
+            <View style={styles.centeredView}>
+              <View style={styles.modalContent}>
+                <Text style={styles.label}>Enter Package Name</Text>
+                <TextInput
+                  style={styles.input}
+                  value={this.state.packageName}
+                  onChangeText={(text) => this.setState({ packageName: text })}
+                  placeholder="Package Name"
+                />
+                <TouchableOpacity
+                  style={styles.buttonApply}
+                  onPress={this.handleSavePackage}
+                >
+                  <Text style={styles.buttonText}>Save</Text>
+                </TouchableOpacity>
+                <TouchableOpacity
+                  style={styles.buttonClose}
+                  onPress={this.toggleSavePackageModal}
+                >
+                  <Text style={styles.buttonText}>Cancel</Text>
+                </TouchableOpacity>
+              </View>
+            </View>
+          </Modal>
+
           {this.state.showDetails && this.state.selectedItem && (
-            <FormPage.ItemDetailsModal
+            <ItemDetailsModal
               visible={this.state.showDetails}
               item={{
                 ...this.state.selectedItem,
                 quantity: this.state.selectedItem.quantity || 1,
-              }} // Provide a default value for quantity
+              }}
               closeModal={this.closeModal}
               handleDeleteAndClose={this.handleDeleteAndClose}
               handleUpdateItem={this.handleUpdateItem}

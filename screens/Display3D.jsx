@@ -32,11 +32,11 @@ export default class Display3D extends Component {
       theta: 0,
       phi: Math.PI / 2,
       userInteracted: false,
-      selectedCarrier: this.props.route.params.selectedCarrier || "No Carrier",
-      items: this.props.route.params.items || [],
-      itemsTotal: this.props.route.params.itemsTotal || [],
-      box: this.props.route.params.box || null,
-      selectedBox: this.props.route.params.selectedBox || null,
+      selectedCarrier: props.route.params.selectedCarrier || "No Carrier",
+      items: props.route.params.items || [],
+      itemsTotal: props.route.params.itemsTotal || [],
+      box: props.route.params.box || null,
+      selectedBox: props.route.params.selectedBox || null,
       gl: null,
       isLegendVisible: false,
     };
@@ -48,13 +48,51 @@ export default class Display3D extends Component {
     });
   }
 
+  componentDidMount() {
+    this.unsubscribeFocus = this.props.navigation.addListener("focus", () => {
+      this.forceUpdateWithProps();
+    });
+  }
+
+  componentWillUnmount() {
+    if (this.unsubscribeFocus) {
+      this.unsubscribeFocus();
+    }
+  }
+  forceUpdateWithProps() {
+    const { route } = this.props;
+    this.setState(
+      {
+        items: route.params.items || [],
+        itemsTotal: route.params.itemsTotal || [],
+        box: route.params.box || null,
+        selectedBox: route.params.selectedBox || null,
+      },
+      () => {
+        if (this.state.gl) {
+          this.initialize3DScene();
+        }
+      }
+    );
+  }
+
+  componentDidUpdate(prevProps) {
+    if (
+      JSON.stringify(prevProps.route.params.items) !==
+      JSON.stringify(this.props.route.params.items)
+    ) {
+      this.forceUpdateWithProps();
+    }
+  }
+
   _onGLContextCreate = (gl) => {
     this.setState({ gl }, () => {
-      this.initialize3DScene();
+      if (this.state.box && this.state.itemsTotal.length > 0) {
+        this.initialize3DScene();
+      }
     });
   };
 
-  // Function to render the legend inside a modal
   renderLegendModal = () => {
     const { itemsTotal, isLegendVisible } = this.state;
 
@@ -94,7 +132,6 @@ export default class Display3D extends Component {
 
   initialize3DScene = () => {
     const { gl, box } = this.state;
-
     if (!gl || !box) {
       console.error("GL context or box data is not available.");
       return;
@@ -115,19 +152,16 @@ export default class Display3D extends Component {
     this.camera = camera;
     this.renderer = renderer;
 
-    // Add the box with dynamic scaling
     this.cube = this.createBox(box, this.state.itemsTotal);
     scene.add(this.cube);
 
-    // Adjust camera position dynamically based on the scaled size of the box
     const maxDimension = Math.max(box.x, box.y, box.z);
-    const distance = Math.max(5, maxDimension * 1.5); // Adjust distance dynamically
+    const distance = Math.max(5, maxDimension * 1.5);
     camera.position.set(0, distance * 0.5, distance);
     camera.lookAt(0, 0, 0);
 
     this.animate();
   };
-
   createBox = (box, itemsTotal) => {
     const scale = Math.max(box.x, box.y, box.z) > 15 ? 20 : 10;
     const geometry = new THREE.BoxGeometry(
@@ -207,13 +241,14 @@ export default class Display3D extends Component {
     this.setState(
       {
         selectedCarrier: carrier,
-        rotationY: 0, // Reset the slider to its default value
-        userInteracted: false, // Reset user interaction state if needed
+        rotationY: 0,
+        userInteracted: false,
       },
       () => {
-        // Reset the 3D visualization
         this.handleVisualize();
-        this.initialize3DScene(); // Reinitialize the 3D scene with updated state
+        if (this.state.gl) {
+          this.initialize3DScene();
+        }
       }
     );
   };
@@ -226,7 +261,6 @@ export default class Display3D extends Component {
       return;
     }
 
-    // Create a complete list of items with replicated names and dimensions based on the selected carrier
     const itemsTotal = items.flatMap((item) =>
       item.replicatedNames.map((name) => [
         item.itemLength,
@@ -238,7 +272,6 @@ export default class Display3D extends Component {
       ])
     );
 
-    // Call the packing function with the updated carrier and items
     const packedResult = pack(itemsTotal, selectedCarrier, 0);
 
     if (!packedResult || packedResult.length === 0) {
@@ -261,7 +294,9 @@ export default class Display3D extends Component {
         },
       },
       () => {
-        this.initialize3DScene(); // Reinitialize the 3D scene with the new box and items
+        if (this.state.gl) {
+          this.initialize3DScene();
+        }
       }
     );
   };
@@ -362,13 +397,12 @@ const styles = StyleSheet.create({
     paddingHorizontal: 10,
   },
   glViewContainer: {
-    height: 460, // Set a specific height for the GLView to control size
-    // marginHorizontal: 1,
+    height: 460,
     marginTop: 2,
   },
   glView: {
     flex: 1,
-    borderWidth: 1, // Optional: add a border to see the GLView bounds clearly
+    borderWidth: 1,
     borderColor: "#fff",
   },
   sliderContainer: {
