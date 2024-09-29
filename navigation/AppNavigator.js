@@ -10,6 +10,7 @@ import FormPage from "../screens/FormPage";
 import CarrierBoxListPage from "../screens/CarrierBoxListPage";
 import Display3D from "../screens/Display3D";
 import PrivacyPolicyPage from "../screens/PrivacyPolicyPage";
+import PackagesPage from "../screens/PackagesPage";
 
 const Stack = createNativeStackNavigator();
 const Drawer = createDrawerNavigator();
@@ -29,10 +30,16 @@ function DrawerNavigator() {
         options={{ drawerLabel: "Items to Pack", title: "Add Items!" }}
       />
       <Drawer.Screen
+        name="Saved Packages"
+        component={PackagesPage}
+        options={{ drawerLabel: "Saved Packages" }}
+      />
+      <Drawer.Screen
         name="Box Sizes Used"
         component={CarrierBoxListPage}
         options={{ drawerLabel: "Box Sizes Used" }}
       />
+
       <Drawer.Screen
         name="Privacy Policy"
         component={PrivacyPolicyPage}

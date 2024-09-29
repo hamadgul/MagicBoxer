@@ -438,16 +438,21 @@ export function createDisplay(box, scale) {
   const boxes = flatten2(box);
   const items = [];
   const difcolors = [
-    "#FF5733",
-    "#2DAE42",
-    "#63D7D6",
-    "#33C9BF",
-    "#617DB3",
-    "#C576AE",
-    "#D75B65",
-    "#7B61B3",
-    "#63d7a7",
-    "#B655E7",
+    "#FF5733", // Bright Orange-Red
+    "#2DAE42", // Green
+    "#63D7D6", // Light Cyan
+    "#FF7F50", // Coral
+    "#4682B4", // Steel Blue
+    "#9B59B6", // Amethyst Purple
+    "#FFD700", // Gold
+    "#40E0D0", // Turquoise
+    "#DC143C", // Crimson Red
+    "#32CD32", // Lime Green
+    "#FF4500", // Orange Red
+    "#1E90FF", // Dodger Blue
+    "#DA70D6", // Orchid
+    "#8A2BE2", // Blue Violet
+    "#FF1493", // Deep Pink
   ];
 
   for (let i = 0; i < boxes.length; i++) {
@@ -459,11 +464,11 @@ export function createDisplay(box, scale) {
         item.zz / scale - 0.001
       );
       const mat = new THREE.MeshBasicMaterial({
-        color: difcolors[i % 10],
+        color: difcolors[i % difcolors.length],
         opacity: 1,
         visible: true,
       });
-      item.color = difcolors[i % 10];
+      item.color = difcolors[i % difcolors.length];
       const box1 = new THREE.Mesh(geo, mat);
       box1.position.set(
         (boxes[i].cx - item.xx / 2) / scale,

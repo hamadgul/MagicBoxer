@@ -64,7 +64,7 @@ const GettingStartedPage = ({ navigation }) => {
             <View style={styles.bulletPoint}>
               <Entypo name="price-tag" size={20} color="#1C6EA4" />
               <Text style={styles.bulletText}>
-                <Text style={styles.boldText}>Shipping Cost Comparisons:</Text>{" "}
+                <Text style={styles.boldText}>Box Cost Comparisons:</Text>{" "}
                 Compare prices across top shipping carriers to find the best and
                 most cost-effective option for your needs.
               </Text>
