@@ -8,6 +8,7 @@ import {
   Modal,
   StyleSheet,
   FlatList,
+  TextInput,
 } from "react-native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { Ionicons } from "@expo/vector-icons"; // Assuming you're using Expo or replace with appropriate icon library
@@ -21,6 +22,9 @@ export default class PackagesPage extends Component {
     showPackageModal: false,
     selectedItem: null,
     showDetailsModal: false,
+    showOptionsModal: false,
+    renamePackageModal: false,
+    newPackageName: "",
   };
 
   componentDidMount() {
@@ -53,11 +57,39 @@ export default class PackagesPage extends Component {
       const packages = packagesString ? JSON.parse(packagesString) : {};
       delete packages[packageName];
       await AsyncStorage.setItem("packages", JSON.stringify(packages));
-      this.setState({ packages });
+      this.setState({ packages, showOptionsModal: false });
       Alert.alert("Success", "Package deleted.");
     } catch (error) {
       Alert.alert("Error", "Failed to delete package.");
     }
+  };
+
+  handleRenamePackage = async () => {
+    const { selectedPackage, newPackageName, packages } = this.state;
+    if (!newPackageName.trim()) {
+      Alert.alert("Error", "Package name cannot be empty.");
+      return;
+    }
+    if (packages[newPackageName]) {
+      Alert.alert("Error", "A package with this name already exists.");
+      return;
+    }
+
+    // Rename the package in the state and AsyncStorage
+    packages[newPackageName] = packages[selectedPackage];
+    delete packages[selectedPackage];
+
+    this.setState(
+      { packages, renamePackageModal: false, newPackageName: "" },
+      async () => {
+        try {
+          await AsyncStorage.setItem("packages", JSON.stringify(packages));
+          Alert.alert("Success", "Package renamed successfully.");
+        } catch (error) {
+          Alert.alert("Error", "Failed to rename package.");
+        }
+      }
+    );
   };
 
   openPackageDetails = (packageName) => {
@@ -199,6 +231,7 @@ export default class PackagesPage extends Component {
         finalBoxType: packedResult.type,
       };
 
+      // Navigate to Display3D screen with necessary parameters
       this.props.navigation.navigate("Display3D", {
         box: packedResult,
         itemsTotal: itemsDisplay,
@@ -206,6 +239,9 @@ export default class PackagesPage extends Component {
         selectedCarrier: "No Carrier",
         items: updatedPackage,
       });
+
+      // Close the package modal
+      this.closePackageModal();
     } catch (error) {
       Alert.alert("Error", "An error occurred while preparing the package.");
     }
@@ -218,6 +254,9 @@ export default class PackagesPage extends Component {
       showPackageModal,
       showDetailsModal,
       selectedItem,
+      showOptionsModal,
+      renamePackageModal,
+      newPackageName,
     } = this.state;
 
     return (
@@ -235,7 +274,12 @@ export default class PackagesPage extends Component {
                 key={packageName}
                 style={styles.packageCard}
                 onPress={() => this.openPackageDetails(packageName)}
-                onLongPress={() => this.handleDeletePackage(packageName)}
+                onLongPress={() =>
+                  this.setState({
+                    selectedPackage: packageName,
+                    showOptionsModal: true,
+                  })
+                }
               >
                 <Ionicons name="cube" size={20} color="#3B5998" />
                 <Text style={styles.packageCardText}>{packageName}</Text>
@@ -243,6 +287,75 @@ export default class PackagesPage extends Component {
             ))
           )}
         </ScrollView>
+
+        {/* Options Modal */}
+        <Modal
+          visible={showOptionsModal}
+          transparent={true}
+          animationType="fade"
+          onRequestClose={() => this.setState({ showOptionsModal: false })}
+        >
+          {/* Touchable outside the modal content to close it */}
+          <TouchableOpacity
+            style={styles.modalOverlay}
+            activeOpacity={1}
+            onPress={() => this.setState({ showOptionsModal: false })}
+          >
+            <View style={styles.modalContent}>
+              <TouchableOpacity
+                style={styles.optionButton}
+                onPress={() =>
+                  this.setState({
+                    showOptionsModal: false,
+                    renamePackageModal: true,
+                  })
+                }
+              >
+                <Text style={styles.optionText}>Rename Package</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={styles.optionButtonClose}
+                onPress={() => this.handleDeletePackage(selectedPackage)}
+              >
+                <Text style={styles.optionText}>Delete Package</Text>
+              </TouchableOpacity>
+            </View>
+          </TouchableOpacity>
+        </Modal>
+
+        {/* Rename Package Modal */}
+        <Modal
+          visible={renamePackageModal}
+          transparent={true}
+          animationType="slide"
+          onRequestClose={() => this.setState({ renamePackageModal: false })}
+        >
+          <View style={styles.modalOverlay}>
+            <View style={styles.modalContent}>
+              <Text style={styles.modalTitle}>Rename Package</Text>
+              <TextInput
+                style={styles.input}
+                value={newPackageName}
+                onChangeText={(text) => this.setState({ newPackageName: text })}
+                placeholder="Enter new package name"
+              />
+              <TouchableOpacity
+                style={styles.buttonApply}
+                onPress={this.handleRenamePackage}
+              >
+                <Text style={styles.buttonText}>Save</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={styles.buttonClose1}
+                onPress={() => this.setState({ renamePackageModal: false })}
+              >
+                <Text style={styles.buttonText}>Cancel</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </Modal>
+
+        {/* Package Details Modal */}
         <Modal
           visible={showPackageModal}
           animationType="slide"
@@ -270,15 +383,23 @@ export default class PackagesPage extends Component {
                     </TouchableOpacity>
                   )}
                   contentContainerStyle={styles.flatListContainer}
+                  style={styles.flatListStyle} // Add style to restrict height
                 />
               )}
-              <TouchableOpacity
-                style={styles.modalCloseButton}
-                onPress={this.closePackageModal}
-              >
-                <Ionicons name="close-circle" size={24} color="#FF6347" />
-                <Text style={styles.modalCloseButtonText}>Close</Text>
-              </TouchableOpacity>
+              <View style={styles.modalButtonContainer}>
+                <TouchableOpacity
+                  style={styles.visualizeButton}
+                  onPress={this.handlePackItems}
+                >
+                  <Text style={styles.buttonText}>Pack</Text>
+                </TouchableOpacity>
+                <TouchableOpacity
+                  style={styles.buttonClose}
+                  onPress={this.closePackageModal}
+                >
+                  <Text style={styles.buttonText}>Close</Text>
+                </TouchableOpacity>
+              </View>
             </View>
           </View>
         </Modal>
@@ -341,14 +462,17 @@ const styles = StyleSheet.create({
   modalOverlay: {
     flex: 1,
     justifyContent: "center",
+    alignItems: "center",
     backgroundColor: "rgba(0, 0, 0, 0.5)",
   },
   modalContent: {
+    width: "90%",
+    maxHeight: "80%", // Ensures the modal fits within the screen
     backgroundColor: "#fff",
     padding: 20,
-    marginHorizontal: 20,
     borderRadius: 10,
     alignItems: "center",
+    justifyContent: "flex-start",
   },
   modalTitle: {
     fontSize: 18,
@@ -356,6 +480,7 @@ const styles = StyleSheet.create({
     marginBottom: 10,
   },
   flatListContainer: {
+    flexGrow: 1, // Allows the FlatList to grow with items
     paddingBottom: 20,
   },
   itemContainer: {
@@ -386,6 +511,57 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: "#FF6347",
   },
+  optionButton: {
+    padding: 10,
+    backgroundColor: "#FF8C00",
+    marginVertical: 5,
+    borderRadius: 5,
+    alignSelf: "center",
+    width: "80%",
+  },
+  optionButtonClose: {
+    padding: 10,
+    backgroundColor: "red",
+    marginVertical: 5,
+    borderRadius: 5,
+    alignSelf: "center",
+    width: "80%",
+  },
+  optionText: {
+    color: "#fff",
+    fontSize: 16,
+    textAlign: "center",
+  },
+  input: {
+    borderWidth: 1,
+    borderColor: "#ccc",
+    padding: 10,
+    marginVertical: 10,
+    borderRadius: 5,
+    width: "90%",
+    alignSelf: "center",
+  },
+  buttonApply: {
+    backgroundColor: "#3B5998",
+    padding: 10,
+    marginTop: 10,
+    borderRadius: 5,
+    width: "40%",
+  },
+  buttonText: {
+    color: "#fff",
+    fontSize: 16,
+    textAlign: "center",
+  },
+  buttonClose: {
+    marginTop: 10,
+  },
+  packButton: {
+    backgroundColor: "#008B8B",
+    padding: 10,
+    marginTop: 10,
+    borderRadius: 5,
+  },
   fab: {
     position: "absolute",
     bottom: 20,
@@ -397,5 +573,55 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     alignItems: "center",
     elevation: 5,
+  },
+  modalButtonContainer: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    width: "100%",
+    paddingHorizontal: 10,
+    marginTop: "auto", // Pushes buttons to the bottom
+  },
+  visualizeButton: {
+    backgroundColor: "#2ecc71",
+    paddingVertical: 6, // Further reduced padding for smaller button size
+    paddingHorizontal: 10, // Further adjustment for better fit
+    borderRadius: 6,
+    alignItems: "center",
+    justifyContent: "center",
+    marginHorizontal: 5,
+    flex: 1, // Ensures buttons share equal space
+    maxWidth: "45%", // Limits the maximum width of the button
+  },
+  buttonClose: {
+    backgroundColor: "red",
+    paddingVertical: 6, // Further reduced padding for smaller button size
+    paddingHorizontal: 10, // Further adjustment for better fit
+    borderRadius: 6,
+    alignItems: "center",
+    justifyContent: "center",
+    marginHorizontal: 5,
+    flex: 1, // Ensures buttons share equal space
+    maxWidth: "45%", // Limits the maximum width of the button
+  },
+  flatListWrapper: {
+    flex: 1, // Takes the remaining space within modalContent
+    width: "100%",
+  },
+  flatListStyle: {
+    maxHeight: "65%", // Restricts FlatList height to ensure scrolling
+    width: "100%", // Makes the FlatList take full width inside the modal
+  },
+  // Adjusted style for buttonClose
+  buttonClose1: {
+    backgroundColor: "#f39c12", // Set to a clear, visible color
+    paddingVertical: 10,
+    paddingHorizontal: 15,
+    alignItems: "center",
+    justifyContent: "center",
+    width: "40%", // Adjust width to ensure it fits well
+    alignSelf: "center", // Center the button horizontally
+    padding: 10,
+    marginTop: 10,
+    borderRadius: 5,
   },
 });

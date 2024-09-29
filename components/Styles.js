@@ -95,7 +95,18 @@ const styles = StyleSheet.create({
     elevation: 5,
   },
   buttonApply: {
-    backgroundColor: "#28A745",
+    backgroundColor: "#28A745", // Green color for the Save button
+    paddingVertical: 10,
+    paddingHorizontal: 20,
+    borderRadius: 8,
+    alignItems: "center",
+    justifyContent: "center",
+    marginHorizontal: 5,
+    width: "38%", // Set width to make it consistent with Cancel button
+    flex: 1, // Ensures equal width for both buttons
+  },
+  buttonApply1: {
+    backgroundColor: "#28A745", // Green color for the Apply Changes button
     paddingVertical: 10,
     paddingHorizontal: 20,
     borderRadius: 10,
@@ -108,13 +119,15 @@ const styles = StyleSheet.create({
     elevation: 2,
   },
   buttonClose: {
-    backgroundColor: "#f39c12", // Orange color for the Close button
+    backgroundColor: "#f39c12", // Orange color for the Cancel button
     paddingVertical: 10,
     paddingHorizontal: 20,
     borderRadius: 8,
     alignItems: "center",
-    //flex: 1, // Make all buttons equal width
-    marginHorizontal: 5, // Add margin between buttons
+    justifyContent: "center",
+    marginHorizontal: 5,
+    width: "38%", // Set width to make it consistent with Save button
+    flex: 1, // Ensures equal width for both buttons
   },
   buttonDelete: {
     backgroundColor: "#e74c3c", // Red color for the Delete button

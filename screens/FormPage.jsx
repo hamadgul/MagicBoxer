@@ -142,7 +142,7 @@ export const ItemDetailsModal = ({
                 </View>
                 <TouchableOpacity
                   onPress={handleApplyChanges}
-                  style={styles.buttonApply}
+                  style={styles.buttonApply1}
                 >
                   <Text style={styles.buttonText}>Apply Changes</Text>
                 </TouchableOpacity>
@@ -629,18 +629,20 @@ export default class FormPage extends Component {
                   onChangeText={(text) => this.setState({ packageName: text })}
                   placeholder="Package Name"
                 />
-                <TouchableOpacity
-                  style={styles.buttonApply}
-                  onPress={this.handleSavePackage}
-                >
-                  <Text style={styles.buttonText}>Save</Text>
-                </TouchableOpacity>
-                <TouchableOpacity
-                  style={styles.buttonClose}
-                  onPress={this.toggleSavePackageModal}
-                >
-                  <Text style={styles.buttonText}>Cancel</Text>
-                </TouchableOpacity>
+                <View style={styles.modalButtonContainer}>
+                  <TouchableOpacity
+                    style={styles.buttonApply}
+                    onPress={this.handleSavePackage}
+                  >
+                    <Text style={styles.buttonText}>Save</Text>
+                  </TouchableOpacity>
+                  <TouchableOpacity
+                    style={styles.buttonClose}
+                    onPress={this.toggleSavePackageModal}
+                  >
+                    <Text style={styles.buttonText}>Cancel</Text>
+                  </TouchableOpacity>
+                </View>
               </View>
             </View>
           </Modal>
