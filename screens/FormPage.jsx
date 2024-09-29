@@ -220,8 +220,16 @@ export default class FormPage extends Component {
     }
   };
 
-  // Save Package Modal Toggle
   toggleSavePackageModal = () => {
+    const { items } = this.state;
+
+    // Check if there are any items in the package
+    if (items.length === 0) {
+      Alert.alert("Error", "Cannot save a package with no items.");
+      return;
+    }
+
+    // Toggle the Save Package modal if items are present
     this.setState({ showSavePackageModal: !this.state.showSavePackageModal });
   };
 
@@ -231,6 +239,11 @@ export default class FormPage extends Component {
 
     if (!packageName.trim()) {
       Alert.alert("Error", "Package name cannot be empty.");
+      return;
+    }
+
+    if (items.length === 0) {
+      Alert.alert("Error", "Cannot save a package with no items.");
       return;
     }
 
