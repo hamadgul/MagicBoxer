@@ -220,6 +220,27 @@ export default class FormPage extends Component {
     }
   };
 
+  // Clear the items and reset form fields
+  clearItems = async () => {
+    try {
+      // Clear the item list in AsyncStorage
+      await AsyncStorage.removeItem("itemList");
+
+      // Reset the state
+      this.setState({
+        itemName: "",
+        itemWidth: "",
+        itemHeight: "",
+        itemLength: "",
+        quantity: 1,
+        items: [], // Clear the list of items
+        selectedItem: null,
+      });
+    } catch (error) {
+      Alert.alert("Error", `Failed to clear items: ${error.message}`);
+    }
+  };
+
   toggleSavePackageModal = () => {
     const { items } = this.state;
 
@@ -248,34 +269,32 @@ export default class FormPage extends Component {
     }
 
     try {
+      // Retrieve existing packages from AsyncStorage
       const existingPackages = await AsyncStorage.getItem("packages");
       const packages = existingPackages ? JSON.parse(existingPackages) : {};
+
+      // Check if a package with the same name already exists
+      if (packages[packageName]) {
+        Alert.alert("Error", "A package with this name already exists.");
+        return;
+      }
+
+      // Save the package
       packages[packageName] = items;
-
       await AsyncStorage.setItem("packages", JSON.stringify(packages));
-      Alert.alert("Success", "Package saved successfully.");
-      this.toggleSavePackageModal();
-      this.clearItems(); // Clear items after saving
-    } catch (error) {
-      Alert.alert("Error", "Failed to save package.");
-    }
-  };
 
-  clearItems = () => {
-    // Clear the state items and reset form fields
-    this.setState({
-      itemName: "",
-      itemWidth: "",
-      itemHeight: "",
-      itemLength: "",
-      quantity: 1,
-      items: [],
-      selectedItem: null,
-    });
-    // Clear saved items in AsyncStorage if needed
-    AsyncStorage.removeItem("itemList").catch((error) => {
-      console.error("Failed to clear item list in storage", error);
-    });
+      // Once saved successfully, alert success and clear items
+      Alert.alert("Success", "Package saved successfully.");
+
+      // Clear items after successful save
+      this.clearItems();
+
+      // Close the modal
+      this.toggleSavePackageModal();
+    } catch (error) {
+      // Catch and display any errors
+      Alert.alert("Error", `Failed to save package: ${error.message}`);
+    }
   };
 
   resetForm = () => {
