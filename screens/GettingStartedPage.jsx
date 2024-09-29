@@ -10,9 +10,8 @@ import {
 import AppLink from "react-native-app-link";
 
 const GettingStartedPage = ({ navigation }) => {
-  // Function to handle opening the Measure app directly
+  // Function to handle opening the Measure app directly for iOS
   const openMeasureApp = () => {
-    // Assuming the Measure app uses a basic deep link URL schema
     const measureAppUrl = "measure://"; // Replace with the correct deep link if known
 
     AppLink.maybeOpenURL(measureAppUrl, {
@@ -23,6 +22,21 @@ const GettingStartedPage = ({ navigation }) => {
     }).catch((err) => {
       Alert.alert("Error", "Unable to open the Measure app.");
       console.error("Error opening Measure app: ", err);
+    });
+  };
+
+  // Function to handle opening the Ruler app for Android
+  const openGoogleRulerApp = () => {
+    const playStoreId = "org.nixgame.ruler"; // Ruler app Play Store ID
+    AppLink.maybeOpenURL(
+      "https://play.google.com/store/apps/details?id=" + playStoreId,
+      {
+        appName: "Ruler",
+        playStoreId,
+      }
+    ).catch((err) => {
+      Alert.alert("Error", "Unable to open the Ruler app.");
+      console.error("Error opening Ruler app: ", err);
     });
   };
 
@@ -100,7 +114,7 @@ const GettingStartedPage = ({ navigation }) => {
           </View>
         </View>
 
-        {/* Additional Sections */}
+        {/* Section: How to Measure Items in Inches */}
         <View style={styles.section}>
           <Text style={styles.sectionHeader}>
             How to Measure Your Items in Inches
@@ -137,9 +151,11 @@ const GettingStartedPage = ({ navigation }) => {
           </View>
         </View>
 
-        {/* Section 4: Using the Apple Measure App */}
+        {/* Section: Using the Apple Measure App */}
         <View style={styles.section}>
-          <Text style={styles.sectionHeader}>Using the Apple Measure App</Text>
+          <Text style={styles.sectionHeader}>
+            Using the Apple 'Measure' App
+          </Text>
           <Text style={styles.sectionText}>
             If you have an iPhone, you can use the built-in Measure app to get
             accurate measurements of your items. Follow these steps:
@@ -154,7 +170,6 @@ const GettingStartedPage = ({ navigation }) => {
               on your iPhone.
             </Text>
           </View>
-
           <View style={styles.stepContainer}>
             <AntDesign name="scan1" size={24} color="#1C6EA4" />
             <Text style={styles.stepText}>
@@ -163,7 +178,6 @@ const GettingStartedPage = ({ navigation }) => {
               it’s ready.
             </Text>
           </View>
-
           <View style={styles.stepContainer}>
             <AntDesign name="arrowsalt" size={24} color="#1C6EA4" />
             <Text style={styles.stepText}>
@@ -172,7 +186,6 @@ const GettingStartedPage = ({ navigation }) => {
               <Text style={styles.boldText}>+</Text> button to start measuring.
             </Text>
           </View>
-
           <View style={styles.stepContainer}>
             <AntDesign name="arrowsalt" size={24} color="#1C6EA4" />
             <Text style={styles.stepText}>
@@ -182,7 +195,6 @@ const GettingStartedPage = ({ navigation }) => {
               the measurement.
             </Text>
           </View>
-
           <View style={styles.stepContainer}>
             <AntDesign name="camera" size={24} color="#1C6EA4" />
             <Text style={styles.stepText}>
@@ -193,6 +205,36 @@ const GettingStartedPage = ({ navigation }) => {
 
           <Button style={styles.measureApp} onPress={openMeasureApp}>
             <Text style={styles.measureButtonText}>Open Measure App</Text>
+          </Button>
+        </View>
+
+        {/* Section: Using the Ruler App for Android */}
+        <View style={styles.section}>
+          <Text style={styles.sectionHeader}>
+            Using the Android 'Ruler' App
+          </Text>
+          <Text style={styles.sectionText}>
+            Android users can use the Ruler app to get quick and accurate
+            measurements of your items. Here's how:
+          </Text>
+
+          <View style={styles.stepContainer}>
+            <AntDesign name="android" size={24} color="#1C6EA4" />
+            <Text style={styles.stepText}>
+              <Text style={styles.boldText}>Step 1</Text>: Download the Ruler
+              app from the Google Play Store.
+            </Text>
+          </View>
+          <View style={styles.stepContainer}>
+            <AntDesign name="scan1" size={24} color="#1C6EA4" />
+            <Text style={styles.stepText}>
+              <Text style={styles.boldText}>Step 2</Text>: Open the app and
+              follow the instructions to start measuring your items.
+            </Text>
+          </View>
+
+          <Button style={styles.measureApp} onPress={openGoogleRulerApp}>
+            <Text style={styles.measureButtonText}>Download Ruler App</Text>
           </Button>
         </View>
       </ScrollView>
