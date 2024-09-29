@@ -255,14 +255,14 @@ export default class FormPage extends Component {
       await AsyncStorage.setItem("packages", JSON.stringify(packages));
       Alert.alert("Success", "Package saved successfully.");
       this.toggleSavePackageModal();
-      this.resetForm(); // Reset form after saving
+      this.clearItems(); // Clear items after saving
     } catch (error) {
       Alert.alert("Error", "Failed to save package.");
     }
   };
 
-  resetForm = () => {
-    // Reset form fields and clear item list
+  clearItems = () => {
+    // Clear the state items and reset form fields
     this.setState({
       itemName: "",
       itemWidth: "",
@@ -273,7 +273,19 @@ export default class FormPage extends Component {
       selectedItem: null,
     });
     // Clear saved items in AsyncStorage if needed
-    AsyncStorage.removeItem("itemList");
+    AsyncStorage.removeItem("itemList").catch((error) => {
+      console.error("Failed to clear item list in storage", error);
+    });
+  };
+
+  resetForm = () => {
+    this.setState({
+      itemName: "",
+      itemWidth: "",
+      itemHeight: "",
+      itemLength: "",
+      quantity: 1,
+    });
   };
 
   handleUpdateItem = (updatedItem) => {
