@@ -414,7 +414,10 @@ export default class PackagesPage extends Component {
           />
         )}
 
-        <TouchableOpacity style={styles.fab} onPress={() => {}}>
+        <TouchableOpacity
+          style={styles.fab}
+          onPress={() => this.props.navigation.navigate("FormPage")}
+        >
           <Ionicons name="add" size={30} color="white" />
         </TouchableOpacity>
       </View>

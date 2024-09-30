@@ -11,6 +11,7 @@ import CarrierBoxListPage from "../screens/CarrierBoxListPage";
 import Display3D from "../screens/Display3D";
 import PrivacyPolicyPage from "../screens/PrivacyPolicyPage";
 import PackagesPage from "../screens/PackagesPage";
+import FAQsPage from "../screens/FAQsPage";
 
 const Stack = createNativeStackNavigator();
 const Drawer = createDrawerNavigator();
@@ -35,15 +36,9 @@ function DrawerNavigator() {
         options={{ drawerLabel: "Saved Packages" }}
       />
       <Drawer.Screen
-        name="Box Sizes Used"
-        component={CarrierBoxListPage}
-        options={{ drawerLabel: "Box Sizes Used" }}
-      />
-
-      <Drawer.Screen
-        name="Privacy Policy"
-        component={PrivacyPolicyPage}
-        options={{ drawerLabel: "Privacy Policy" }}
+        name="Help"
+        component={FAQsPage}
+        options={{ drawerLabel: "Help" }}
       />
     </Drawer.Navigator>
   );
@@ -68,6 +63,27 @@ function AppNavigator() {
               headerShown: true, // Show stack header with back button
               gestureEnabled: true, // Enable gestures for back navigation
             }}
+          />
+          <Stack.Screen
+            name="Privacy Policy"
+            component={PrivacyPolicyPage}
+            options={{
+              headerShown: true, // Show stack header with back button
+              gestureEnabled: true, // Enable gestures for back navigation
+              headerBackTitle: "Help",
+            }}
+            // Enable gestures for back navigation
+          />
+          <Stack.Screen
+            name="Box Sizes Used"
+            component={CarrierBoxListPage}
+            options={{
+              title: "Box Sizes in-App",
+              headerShown: true, // Show stack header with back button
+              gestureEnabled: true, // Enable gestures for back navigation
+              headerBackTitle: "Help",
+            }}
+            // Enable gestures for back navigation
           />
         </Stack.Navigator>
       </NavigationContainer>

@@ -156,15 +156,6 @@ const PrivacyPolicyPage = ({ navigation }) => {
           </Text>
         </View>
       </ScrollView>
-
-      {/* Button to Go Back */}
-      <View style={styles.centeredButtonContainer}>
-        <Button
-          title="Back to Home"
-          color="#3498db"
-          onPress={() => navigation.goBack()}
-        />
-      </View>
     </View>
   );
 };
