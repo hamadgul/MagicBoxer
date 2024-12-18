@@ -12,9 +12,16 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontWeight: "500",
     color: "#444",
-    marginBottom: 4,
+    marginBottom: 2,
+  },
+  condensedLabel: {
+    marginBottom: 1,
+    fontSize: 13,
+    fontWeight: "500",
+    color: "#444",
   },
   input: {
+    height: 40,
     borderWidth: 1,
     borderColor: "#ddd",
     paddingHorizontal: 12,
@@ -22,6 +29,21 @@ const styles = StyleSheet.create({
     borderRadius: 10,
     backgroundColor: "#f9f9f9",
     marginBottom: 8,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.05,
+    shadowRadius: 4,
+    elevation: 1,
+  },
+  condensedInput: {
+    height: 35,
+    marginBottom: 6,
+    borderWidth: 1,
+    borderColor: "#ddd",
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 10,
+    backgroundColor: "#f9f9f9",
     shadowColor: "#000",
     shadowOffset: { width: 0, height: 1 },
     shadowOpacity: 0.05,
@@ -69,17 +91,6 @@ const styles = StyleSheet.create({
     alignItems: "center",
     backgroundColor: "rgba(0,0,0,0.5)", // Ensure the background overlay is visible
   },
-  // modalContent: {
-  //   backgroundColor: "#f2f2f2",
-  //   padding: 20,
-  //   borderRadius: 10,
-  //   alignItems: "center",
-  //   shadowColor: "#000",
-  //   shadowOffset: { width: 0, height: 2 },
-  //   shadowOpacity: 0.1,
-  //   shadowRadius: 5,
-  //   elevation: 5,
-  // },
   modalContent: {
     backgroundColor: "#fff",
     borderRadius: 20,
@@ -95,15 +106,15 @@ const styles = StyleSheet.create({
     elevation: 5,
   },
   buttonApply: {
-    backgroundColor: "#28A745", // Green color for the Save button
+    backgroundColor: "#28A745",
     paddingVertical: 10,
     paddingHorizontal: 20,
     borderRadius: 8,
     alignItems: "center",
     justifyContent: "center",
     marginHorizontal: 5,
-    width: "38%", // Set width to make it consistent with Cancel button
-    flex: 1, // Ensures equal width for both buttons
+    width: "30%",
+    alignSelf: "center",
   },
   buttonApply1: {
     backgroundColor: "#28A745", // Green color for the Apply Changes button
@@ -130,22 +141,22 @@ const styles = StyleSheet.create({
     flex: 1, // Ensures equal width for both buttons
   },
   buttonDelete: {
-    backgroundColor: "#e74c3c", // Red color for the Delete button
+    backgroundColor: "#e74c3c",
     paddingVertical: 10,
     paddingHorizontal: 20,
     borderRadius: 8,
     alignItems: "center",
-    flex: 1, // Make all buttons equal width
-    marginHorizontal: 5, // Add margin between buttons
+    marginHorizontal: 5,
+    width: "30%",
   },
   buttonEdit: {
-    backgroundColor: "#3498db", // Blue color for the Edit button
+    backgroundColor: "#3498db",
     paddingVertical: 10,
     paddingHorizontal: 20,
     borderRadius: 8,
     alignItems: "center",
-    flex: 1, // Make all buttons equal width
-    marginHorizontal: 5, // Add margin between buttons
+    marginHorizontal: 5,
+    width: "30%",
   },
   buttonText: {
     color: "#fff",
@@ -174,11 +185,12 @@ const styles = StyleSheet.create({
     maxWidth: 75,
   },
   formContainer: {
-    backgroundColor: "#fff",
-    paddingVertical: 12,
-    paddingHorizontal: 16,
+    backgroundColor: '#fff',
+    padding: 10,
+    width: "100%",
+    maxHeight: "60%",
     borderRadius: 10,
-    marginVertical: 10,
+    marginVertical: 8,
     shadowColor: "#000",
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,

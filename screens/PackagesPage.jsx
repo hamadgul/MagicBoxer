@@ -383,21 +383,21 @@ export default class PackagesPage extends Component {
                     </TouchableOpacity>
                   )}
                   contentContainerStyle={styles.flatListContainer}
-                  style={styles.flatListStyle} // Add style to restrict height
+                  style={styles.flatListStyle}
                 />
               )}
               <View style={styles.modalButtonContainer}>
                 <TouchableOpacity
-                  style={styles.visualizeButton}
-                  onPress={this.handlePackItems}
-                >
-                  <Text style={styles.buttonText}>Pack</Text>
-                </TouchableOpacity>
-                <TouchableOpacity
-                  style={styles.buttonClose}
+                  style={styles.closeButton}
                   onPress={this.closePackageModal}
                 >
                   <Text style={styles.buttonText}>Close</Text>
+                </TouchableOpacity>
+                <TouchableOpacity
+                  style={styles.packButton}
+                  onPress={this.handlePackItems}
+                >
+                  <Text style={styles.buttonText}>Pack!</Text>
                 </TouchableOpacity>
               </View>
             </View>
@@ -470,12 +470,72 @@ const styles = StyleSheet.create({
   },
   modalContent: {
     width: "90%",
-    maxHeight: "80%", // Ensures the modal fits within the screen
+    maxHeight: "85%",
     backgroundColor: "#fff",
     padding: 20,
     borderRadius: 10,
     alignItems: "center",
-    justifyContent: "flex-start",
+    justifyContent: "space-between",
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.25,
+    shadowRadius: 3.84,
+    elevation: 5,
+  },
+  flatListStyle: {
+    maxHeight: "70%",
+    width: "100%",
+  },
+  itemContainer: {
+    padding: 15,
+    backgroundColor: "#4A90E2",
+    marginVertical: 8,
+    borderRadius: 8,
+    width: "100%",
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.2,
+    shadowRadius: 2,
+    elevation: 2,
+  },
+  itemText: {
+    color: "#fff",
+    fontSize: 16,
+    marginBottom: 4,
+    textAlign: "center",
+  },
+  itemDimensions: {
+    color: "#fff",
+    fontSize: 14,
+    opacity: 0.9,
+    textAlign: "center",
+  },
+  modalButtonContainer: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    width: "100%",
+    marginTop: "auto",
+    paddingTop: 15,
+    paddingHorizontal: 10,
+  },
+  closeButton: {
+    backgroundColor: "#E74C3C",
+    padding: 12,
+    borderRadius: 8,
+    minWidth: 100,
+    alignItems: "center",
+  },
+  packButton: {
+    backgroundColor: "#2ECC71",
+    padding: 12,
+    borderRadius: 8,
+    minWidth: 100,
+    alignItems: "center",
+  },
+  buttonText: {
+    color: "#fff",
+    fontSize: 16,
+    fontWeight: "500",
   },
   modalTitle: {
     fontSize: 18,
@@ -483,36 +543,9 @@ const styles = StyleSheet.create({
     marginBottom: 10,
   },
   flatListContainer: {
-    flexGrow: 1, // Allows the FlatList to grow with items
-    paddingBottom: 20,
-  },
-  itemContainer: {
-    padding: 10,
-    backgroundColor: "#FF8C00",
-    marginVertical: 5,
-    borderRadius: 5,
-    width: "90%",
-    alignSelf: "center",
-  },
-  itemText: {
-    color: "#fff",
-    fontSize: 16,
-    textAlign: "center",
-  },
-  itemDimensions: {
-    color: "#fff",
-    fontSize: 14,
-    textAlign: "center",
-  },
-  modalCloseButton: {
-    flexDirection: "row",
-    alignItems: "center",
-    marginTop: 20,
-  },
-  modalCloseButtonText: {
-    marginLeft: 5,
-    fontSize: 16,
-    color: "#FF6347",
+    flexGrow: 0,
+    width: "100%",
+    paddingBottom: 10,
   },
   optionButton: {
     padding: 10,
@@ -551,16 +584,17 @@ const styles = StyleSheet.create({
     borderRadius: 5,
     width: "40%",
   },
-  buttonText: {
-    color: "#fff",
-    fontSize: 16,
-    textAlign: "center",
-  },
   buttonClose: {
     marginTop: 10,
   },
-  packButton: {
-    backgroundColor: "#008B8B",
+  buttonClose1: {
+    backgroundColor: "#f39c12",
+    paddingVertical: 10,
+    paddingHorizontal: 15,
+    alignItems: "center",
+    justifyContent: "center",
+    width: "40%",
+    alignSelf: "center",
     padding: 10,
     marginTop: 10,
     borderRadius: 5,
@@ -577,54 +611,10 @@ const styles = StyleSheet.create({
     alignItems: "center",
     elevation: 5,
   },
-  modalButtonContainer: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    width: "100%",
-    paddingHorizontal: 10,
-    marginTop: "auto", // Pushes buttons to the bottom
-  },
-  visualizeButton: {
-    backgroundColor: "#2ecc71",
-    paddingVertical: 6, // Further reduced padding for smaller button size
-    paddingHorizontal: 10, // Further adjustment for better fit
-    borderRadius: 6,
-    alignItems: "center",
-    justifyContent: "center",
-    marginHorizontal: 5,
-    flex: 1, // Ensures buttons share equal space
-    maxWidth: "45%", // Limits the maximum width of the button
-  },
-  buttonClose: {
-    backgroundColor: "red",
-    paddingVertical: 6, // Further reduced padding for smaller button size
-    paddingHorizontal: 10, // Further adjustment for better fit
-    borderRadius: 6,
-    alignItems: "center",
-    justifyContent: "center",
-    marginHorizontal: 5,
-    flex: 1, // Ensures buttons share equal space
-    maxWidth: "45%", // Limits the maximum width of the button
-  },
-  flatListWrapper: {
-    flex: 1, // Takes the remaining space within modalContent
-    width: "100%",
-  },
-  flatListStyle: {
-    maxHeight: "65%", // Restricts FlatList height to ensure scrolling
-    width: "100%", // Makes the FlatList take full width inside the modal
-  },
-  // Adjusted style for buttonClose
-  buttonClose1: {
-    backgroundColor: "#f39c12", // Set to a clear, visible color
-    paddingVertical: 10,
-    paddingHorizontal: 15,
-    alignItems: "center",
-    justifyContent: "center",
-    width: "40%", // Adjust width to ensure it fits well
-    alignSelf: "center", // Center the button horizontally
-    padding: 10,
-    marginTop: 10,
-    borderRadius: 5,
+  noPackagesText: {
+    fontSize: 16,
+    color: "#666",
+    textAlign: "center",
+    padding: 20,
   },
 });

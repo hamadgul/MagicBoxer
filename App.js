@@ -6,6 +6,14 @@ import { Asset } from "expo-asset";
 import * as Font from "expo-font";
 import AppNavigator from "./navigation/AppNavigator";
 import { Ionicons } from "@expo/vector-icons";
+import { NativeBaseProvider } from 'native-base';
+
+// Suppress the legacy context API warning
+const originalWarn = console.warn;
+console.warn = (...args) => {
+  if (args[0]?.includes?.('childContextTypes')) return;
+  originalWarn.apply(console, args);
+};
 
 SplashScreen.preventAutoHideAsync();
 
@@ -36,15 +44,17 @@ export default function Main() {
   }, []);
 
   if (!isLoadingComplete) {
-    return null; // Render nothing while loading resources
+    return null;
+  } else {
+    return (
+      <NativeBaseProvider>
+        <View style={styles.container}>
+          {Platform.OS === "ios" && <StatusBar barStyle="default" />}
+          <AppNavigator />
+        </View>
+      </NativeBaseProvider>
+    );
   }
-
-  return (
-    <View style={styles.container}>
-      {Platform.OS === "ios" && <StatusBar barStyle="default" />}
-      <AppNavigator />
-    </View>
-  );
 }
 
 const styles = StyleSheet.create({

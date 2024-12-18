@@ -1,6 +1,6 @@
 // FormPage.js
 
-import React, { Component, useState } from "react"; // Correct import for useState
+import React, { Component, useState } from "react"; 
 import {
   Alert,
   Text,
@@ -12,7 +12,7 @@ import {
   TouchableOpacity,
   ScrollView,
 } from "react-native";
-import { Form } from "native-base";
+import { VStack } from "native-base";  
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { generateUUID } from "three/src/math/MathUtils";
 import { pack, createDisplay } from "../packing_algo/packing";
@@ -76,106 +76,107 @@ export const ItemDetailsModal = ({
       transparent={true}
       onRequestClose={closeModal} // Handles closing when back button is pressed on Android
     >
-      <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
+      <TouchableWithoutFeedback onPress={closeModal}>
         <View style={styles.centeredView}>
-          <View style={styles.modalContent}>
-            {isEditable ? (
-              <>
-                <View style={styles.fieldContainer}>
-                  <Text style={styles.label}>Name</Text>
-                  <TextInput
-                    style={styles.input}
-                    value={editedItem.itemName}
-                    onChangeText={(text) =>
-                      setEditedItem({ ...editedItem, itemName: text })
-                    }
-                    placeholder="Enter Name"
-                  />
-                </View>
-                <View style={styles.fieldContainer}>
-                  <Text style={styles.label}>Length</Text>
-                  <TextInput
-                    style={styles.input}
-                    value={editedItem.itemLength}
-                    onChangeText={(text) =>
-                      setEditedItem({ ...editedItem, itemLength: text })
-                    }
-                    keyboardType="numeric"
-                    placeholder="Enter Length"
-                  />
-                </View>
-                <View style={styles.fieldContainer}>
-                  <Text style={styles.label}>Width</Text>
-                  <TextInput
-                    style={styles.input}
-                    value={editedItem.itemWidth}
-                    onChangeText={(text) =>
-                      setEditedItem({ ...editedItem, itemWidth: text })
-                    }
-                    keyboardType="numeric"
-                    placeholder="Enter Width"
-                  />
-                </View>
-                <View style={styles.fieldContainer}>
-                  <Text style={styles.label}>Height</Text>
-                  <TextInput
-                    style={styles.input}
-                    value={editedItem.itemHeight}
-                    onChangeText={(text) =>
-                      setEditedItem({ ...editedItem, itemHeight: text })
-                    }
-                    keyboardType="numeric"
-                    placeholder="Enter Height"
-                  />
-                </View>
-                <View style={styles.fieldContainer}>
-                  <Text style={styles.label}>Quantity</Text>
-                  <TextInput
-                    style={styles.input}
-                    value={editedItem.quantity}
-                    onChangeText={(text) =>
-                      setEditedItem({ ...editedItem, quantity: text })
-                    }
-                    keyboardType="numeric"
-                    placeholder="Enter Quantity"
-                  />
-                </View>
+          <TouchableWithoutFeedback onPress={(e) => e.stopPropagation()}>
+            <View style={[styles.modalContent, { alignItems: 'center' }]}>
+              {isEditable ? (
+                <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
+                  <View style={{ width: '100%', alignItems: 'center' }}>
+                    <View style={[styles.fieldContainer, { alignItems: 'center' }]}>
+                      <Text style={[styles.label, { textAlign: 'center' }]}>Name</Text>
+                      <TextInput
+                        style={[styles.input, { textAlign: 'center', width: '80%' }]}
+                        value={editedItem.itemName}
+                        onChangeText={(text) =>
+                          setEditedItem({ ...editedItem, itemName: text })
+                        }
+                        placeholder="Enter Name"
+                      />
+                    </View>
+                    <View style={[styles.fieldContainer, { alignItems: 'center' }]}>
+                      <Text style={[styles.label, { textAlign: 'center' }]}>Length</Text>
+                      <TextInput
+                        style={[styles.input, { textAlign: 'center', width: '80%' }]}
+                        value={editedItem.itemLength}
+                        onChangeText={(text) =>
+                          setEditedItem({ ...editedItem, itemLength: text })
+                        }
+                        keyboardType="numeric"
+                        placeholder="Enter Length"
+                      />
+                    </View>
+                    <View style={[styles.fieldContainer, { alignItems: 'center' }]}>
+                      <Text style={[styles.label, { textAlign: 'center' }]}>Width</Text>
+                      <TextInput
+                        style={[styles.input, { textAlign: 'center', width: '80%' }]}
+                        value={editedItem.itemWidth}
+                        onChangeText={(text) =>
+                          setEditedItem({ ...editedItem, itemWidth: text })
+                        }
+                        keyboardType="numeric"
+                        placeholder="Enter Width"
+                      />
+                    </View>
+                    <View style={[styles.fieldContainer, { alignItems: 'center' }]}>
+                      <Text style={[styles.label, { textAlign: 'center' }]}>Height</Text>
+                      <TextInput
+                        style={[styles.input, { textAlign: 'center', width: '80%' }]}
+                        value={editedItem.itemHeight}
+                        onChangeText={(text) =>
+                          setEditedItem({ ...editedItem, itemHeight: text })
+                        }
+                        keyboardType="numeric"
+                        placeholder="Enter Height"
+                      />
+                    </View>
+                    <View style={[styles.fieldContainer, { alignItems: 'center' }]}>
+                      <Text style={[styles.label, { textAlign: 'center' }]}>Quantity</Text>
+                      <TextInput
+                        style={[styles.input, { textAlign: 'center', width: '80%' }]}
+                        value={editedItem.quantity}
+                        onChangeText={(text) =>
+                          setEditedItem({ ...editedItem, quantity: text })
+                        }
+                        keyboardType="numeric"
+                        placeholder="Enter Quantity"
+                      />
+                    </View>
+                    <TouchableOpacity
+                      onPress={handleApplyChanges}
+                      style={styles.buttonApply1}
+                    >
+                      <Text style={styles.buttonText}>Apply Changes</Text>
+                    </TouchableOpacity>
+                  </View>
+                </TouchableWithoutFeedback>
+              ) : (
+                <>
+                  <Text style={styles.label}>Item Name: {item.itemName}</Text>
+                  <Text style={styles.label}>Length: {item.itemLength}</Text>
+                  <Text style={styles.label}>Width: {item.itemWidth}</Text>
+                  <Text style={styles.label}>Height: {item.itemHeight}</Text>
+                  <Text style={styles.label}>Quantity: {item.quantity || 1}</Text>
+                </>
+              )}
+              <View style={[styles.modalButtonContainer, { justifyContent: 'center' }]}>
                 <TouchableOpacity
-                  onPress={handleApplyChanges}
-                  style={styles.buttonApply1}
+                  onPress={handleEditToggle}
+                  style={styles.buttonEdit}
                 >
-                  <Text style={styles.buttonText}>Apply Changes</Text>
+                  <Text style={styles.buttonText}>
+                    {isEditable ? "Cancel" : "Edit"}
+                  </Text>
                 </TouchableOpacity>
-              </>
-            ) : (
-              <>
-                <Text style={styles.label}>Item Name: {item.itemName}</Text>
-                <Text style={styles.label}>Length: {item.itemLength}</Text>
-                <Text style={styles.label}>Width: {item.itemWidth}</Text>
-                <Text style={styles.label}>Height: {item.itemHeight}</Text>
-                <Text style={styles.label}>Quantity: {item.quantity || 1}</Text>
-              </>
-            )}
-            <View style={styles.modalButtonContainer}>
-              <TouchableOpacity
-                onPress={() => handleDeleteAndClose(item)}
-                style={styles.buttonDelete}
-              >
-                <Text style={styles.buttonText}>Delete</Text>
-              </TouchableOpacity>
-              <TouchableOpacity
-                onPress={handleEditToggle}
-                style={styles.buttonEdit}
-              >
-                <Text style={styles.buttonText}>
-                  {isEditable ? "Cancel" : "Edit"}
-                </Text>
-              </TouchableOpacity>
-              <TouchableOpacity onPress={closeModal} style={styles.buttonClose}>
-                <Text style={styles.buttonText}>Close</Text>
-              </TouchableOpacity>
+                <TouchableOpacity
+                  onPress={() => handleDeleteAndClose(item)}
+                  style={styles.buttonDelete}
+                >
+                  <Text style={styles.buttonText}>Delete</Text>
+                </TouchableOpacity>
+              </View>
             </View>
-          </View>
+          </TouchableWithoutFeedback>
         </View>
       </TouchableWithoutFeedback>
     </Modal>
@@ -537,13 +538,13 @@ export default class FormPage extends Component {
 
   render() {
     return (
-      <TouchableWithoutFeedback onPress={Keyboard.dismiss} accessible={false}>
+      <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
         <View style={styles.container}>
           <View style={styles.formContainer}>
-            <Form onSubmit={this.handleSubmit}>
-              <Text style={styles.label}>Item Name:</Text>
+            <VStack space={2} width="100%">
+              <Text style={[styles.label, styles.condensedLabel]}>Item Name:</Text>
               <TextInput
-                style={styles.input}
+                style={[styles.input, styles.condensedInput]}
                 value={this.state.itemName}
                 onChangeText={this.handleChange}
                 maxLength={10}
@@ -552,9 +553,9 @@ export default class FormPage extends Component {
                 placeholder="MacBook, Xbox etc"
                 placeholderTextColor={"#d3d3d3"}
               />
-              <Text style={styles.label}>Length:</Text>
+              <Text style={[styles.label, styles.condensedLabel]}>Length:</Text>
               <TextInput
-                style={styles.input}
+                style={[styles.input, styles.condensedInput]}
                 value={this.state.itemLength}
                 onChangeText={(text) => this.setState({ itemLength: text })}
                 keyboardType="numeric"
@@ -563,9 +564,9 @@ export default class FormPage extends Component {
                 placeholderTextColor={"#d3d3d3"}
                 maxLength={3}
               />
-              <Text style={styles.label}>Width:</Text>
+              <Text style={[styles.label, styles.condensedLabel]}>Width:</Text>
               <TextInput
-                style={styles.input}
+                style={[styles.input, styles.condensedInput]}
                 value={this.state.itemWidth}
                 onChangeText={(text) => this.setState({ itemWidth: text })}
                 keyboardType="numeric"
@@ -574,9 +575,9 @@ export default class FormPage extends Component {
                 placeholderTextColor={"#d3d3d3"}
                 maxLength={3}
               />
-              <Text style={styles.label}>Height:</Text>
+              <Text style={[styles.label, styles.condensedLabel]}>Height:</Text>
               <TextInput
-                style={styles.input}
+                style={[styles.input, styles.condensedInput]}
                 value={this.state.itemHeight}
                 onChangeText={(text) => this.setState({ itemHeight: text })}
                 keyboardType="numeric"
@@ -585,9 +586,9 @@ export default class FormPage extends Component {
                 placeholderTextColor={"#d3d3d3"}
                 maxLength={3}
               />
-              <Text style={styles.label}>Quantity:</Text>
+              <Text style={[styles.label, styles.condensedLabel]}>Quantity:</Text>
               <TextInput
-                style={styles.input}
+                style={[styles.input, styles.condensedInput]}
                 value={this.state.quantity.toString()}
                 onChangeText={(text) => {
                   const newQuantity = text === "" ? "" : parseInt(text);
@@ -606,7 +607,7 @@ export default class FormPage extends Component {
               >
                 <Text style={styles.buttonText}>Add Item</Text>
               </TouchableOpacity>
-            </Form>
+            </VStack>
           </View>
 
           <ScrollView
@@ -632,16 +633,16 @@ export default class FormPage extends Component {
 
           <View style={styles.buttonContainer}>
             <TouchableOpacity
-              style={styles.visualizeButton}
-              onPress={this.handleVisualize}
-            >
-              <Text style={styles.buttonText}>Pack!</Text>
-            </TouchableOpacity>
-            <TouchableOpacity
               style={styles.savePackageButton}
               onPress={this.toggleSavePackageModal}
             >
               <Text style={styles.buttonText}>Save Package</Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={styles.visualizeButton}
+              onPress={this.handleVisualize}
+            >
+              <Text style={styles.buttonText}>Pack!</Text>
             </TouchableOpacity>
           </View>
 
@@ -650,32 +651,31 @@ export default class FormPage extends Component {
             visible={this.state.showSavePackageModal}
             animationType="slide"
             transparent={true}
+            onRequestClose={this.toggleSavePackageModal}
           >
-            <View style={styles.centeredView}>
-              <View style={styles.modalContent}>
-                <Text style={styles.label}>Enter Package Name</Text>
-                <TextInput
-                  style={styles.input}
-                  value={this.state.packageName}
-                  onChangeText={(text) => this.setState({ packageName: text })}
-                  placeholder="Package Name"
-                />
-                <View style={styles.modalButtonContainer}>
-                  <TouchableOpacity
-                    style={styles.buttonApply}
-                    onPress={this.handleSavePackage}
-                  >
-                    <Text style={styles.buttonText}>Save</Text>
-                  </TouchableOpacity>
-                  <TouchableOpacity
-                    style={styles.buttonClose}
-                    onPress={this.toggleSavePackageModal}
-                  >
-                    <Text style={styles.buttonText}>Cancel</Text>
-                  </TouchableOpacity>
-                </View>
+            <TouchableWithoutFeedback onPress={this.toggleSavePackageModal}>
+              <View style={styles.centeredView}>
+                <TouchableWithoutFeedback onPress={(e) => e.stopPropagation()}>
+                  <View style={styles.modalContent}>
+                    <Text style={styles.label}>Enter Package Name</Text>
+                    <TextInput
+                      style={styles.input}
+                      value={this.state.packageName}
+                      onChangeText={(text) => this.setState({ packageName: text })}
+                      placeholder="Package Name"
+                    />
+                    <View style={styles.modalButtonContainer}>
+                      <TouchableOpacity
+                        style={styles.buttonApply}
+                        onPress={this.handleSavePackage}
+                      >
+                        <Text style={styles.buttonText}>Save</Text>
+                      </TouchableOpacity>
+                    </View>
+                  </View>
+                </TouchableWithoutFeedback>
               </View>
-            </View>
+            </TouchableWithoutFeedback>
           </Modal>
 
           {this.state.showDetails && this.state.selectedItem && (
