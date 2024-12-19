@@ -147,9 +147,14 @@ export const ItemDetailsModal = ({
                     </View>
                     <TouchableOpacity
                       onPress={handleApplyChanges}
-                      style={styles.buttonApply1}
+                      style={[styles.buttonApply1, { 
+                        width: 100,
+                        height: 40,
+                        alignItems: 'center',
+                        justifyContent: 'center'
+                      }]}
                     >
-                      <Text style={styles.buttonText}>Apply Changes</Text>
+                      <Text style={[styles.buttonText, { textAlign: 'center' }]}>Apply</Text>
                     </TouchableOpacity>
                   </View>
                 </TouchableWithoutFeedback>
@@ -659,24 +664,27 @@ export default class FormPage extends Component {
             onRequestClose={this.toggleSavePackageModal}
           >
             <TouchableWithoutFeedback onPress={this.toggleSavePackageModal}>
-              <View style={styles.centeredView}>
+              <View style={styles.modalOverlay}>
                 <TouchableWithoutFeedback onPress={(e) => e.stopPropagation()}>
-                  <View style={styles.modalContent}>
-                    <Text style={styles.label}>Enter Package Name</Text>
+                  <View style={[styles.modalContent, { alignItems: 'center' }]}>
+                    <Text style={styles.modalTitle}>Enter Package Name:</Text>
                     <TextInput
-                      style={styles.input}
+                      style={[styles.input, { textAlign: 'center', width: '80%' }]}
                       value={this.state.packageName}
                       onChangeText={(text) => this.setState({ packageName: text })}
                       placeholder="Package Name"
                     />
-                    <View style={styles.modalButtonContainer}>
-                      <TouchableOpacity
-                        style={styles.buttonApply}
-                        onPress={this.handleSavePackage}
-                      >
-                        <Text style={styles.buttonText}>Save</Text>
-                      </TouchableOpacity>
-                    </View>
+                    <TouchableOpacity
+                      style={[styles.buttonApply1, { 
+                        width: 100,
+                        height: 40,
+                        alignItems: 'center', 
+                        justifyContent: 'center'
+                      }]}
+                      onPress={this.handleSavePackage}
+                    >
+                      <Text style={[styles.buttonText, { textAlign: 'center' }]}>Save</Text>
+                    </TouchableOpacity>
                   </View>
                 </TouchableWithoutFeedback>
               </View>

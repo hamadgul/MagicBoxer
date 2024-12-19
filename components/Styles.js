@@ -91,12 +91,18 @@ const styles = StyleSheet.create({
     alignItems: "center",
     backgroundColor: "rgba(0, 0, 0, 0.5)",
   },
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
   modalContent: {
     backgroundColor: "white",
     borderRadius: 20,
     padding: 20,
     width: "90%",
-    maxHeight: "80%",
+    alignItems: "center",
     shadowColor: "#000",
     shadowOffset: {
       width: 0,
@@ -106,24 +112,31 @@ const styles = StyleSheet.create({
     shadowRadius: 4,
     elevation: 5,
   },
+  modalTitle: {
+    fontSize: 18,
+    fontWeight: "bold",
+    marginBottom: 15,
+    textAlign: "center",
+    width: "100%",
+  },
   buttonApply: {
     backgroundColor: "#28A745",
     paddingVertical: 10,
     paddingHorizontal: 20,
     borderRadius: 8,
-    alignItems: "center",
-    justifyContent: "center",
-    marginHorizontal: 5,
-    width: "30%",
-    alignSelf: "center",
+    marginVertical: 5,
+    alignItems: 'center',
+    justifyContent: 'center',
+    width: '80%',
   },
   buttonApply1: {
-    backgroundColor: "#28A745", // Green color for the Apply Changes button
+    backgroundColor: "#28A745",
     paddingVertical: 10,
     paddingHorizontal: 20,
     borderRadius: 10,
     marginVertical: 10,
     alignItems: "center",
+    justifyContent: "center",
     shadowColor: "#000",
     shadowOffset: { width: 0, height: 1 },
     shadowOpacity: 0.1,
@@ -140,6 +153,16 @@ const styles = StyleSheet.create({
     marginHorizontal: 5,
     width: "38%", // Set width to make it consistent with Save button
     flex: 1, // Ensures equal width for both buttons
+  },
+  buttonClose1: {
+    backgroundColor: "#DC3545",
+    paddingVertical: 10,
+    paddingHorizontal: 20,
+    borderRadius: 8,
+    marginVertical: 5,
+    alignItems: 'center',
+    justifyContent: 'center',
+    width: '80%',
   },
   buttonDelete: {
     backgroundColor: "#e74c3c",
@@ -161,8 +184,9 @@ const styles = StyleSheet.create({
   },
   buttonText: {
     color: "#fff",
-    fontSize: 14,
+    fontSize: 16,
     fontWeight: "bold",
+    textAlign: 'center',
   },
   modalButtonContainer: {
     flexDirection: "row",

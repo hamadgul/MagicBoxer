@@ -335,29 +335,32 @@ export default class PackagesPage extends Component {
           animationType="slide"
           onRequestClose={() => this.setState({ renamePackageModal: false })}
         >
-          <View style={styles.modalOverlay}>
-            <View style={styles.modalContent}>
-              <Text style={styles.modalTitle}>Rename Package</Text>
-              <TextInput
-                style={styles.input}
-                value={newPackageName}
-                onChangeText={(text) => this.setState({ newPackageName: text })}
-                placeholder="Enter new package name"
-              />
-              <TouchableOpacity
-                style={styles.buttonApply}
-                onPress={this.handleRenamePackage}
-              >
-                <Text style={styles.buttonText}>Save</Text>
-              </TouchableOpacity>
-              <TouchableOpacity
-                style={styles.buttonClose1}
-                onPress={() => this.setState({ renamePackageModal: false })}
-              >
-                <Text style={styles.buttonText}>Cancel</Text>
-              </TouchableOpacity>
+          <TouchableWithoutFeedback onPress={() => this.setState({ renamePackageModal: false })}>
+            <View style={styles.modalOverlay}>
+              <TouchableWithoutFeedback onPress={(e) => e.stopPropagation()}>
+                <View style={[styles.modalContent, { alignItems: 'center' }]}>
+                  <Text style={styles.modalTitle}>Enter Package Name:</Text>
+                  <TextInput
+                    style={[styles.input, { textAlign: 'center', width: '80%' }]}
+                    value={newPackageName}
+                    onChangeText={(text) => this.setState({ newPackageName: text })}
+                    placeholder="Package Name"
+                  />
+                  <TouchableOpacity
+                    style={[styles.buttonApply1, { 
+                      width: 100,
+                      height: 40,
+                      alignItems: 'center', 
+                      justifyContent: 'center'
+                    }]}
+                    onPress={this.handleRenamePackage}
+                  >
+                    <Text style={[styles.buttonText, { textAlign: 'center' }]}>Save</Text>
+                  </TouchableOpacity>
+                </View>
+              </TouchableWithoutFeedback>
             </View>
-          </View>
+          </TouchableWithoutFeedback>
         </Modal>
 
         {/* Package Details Modal */}
@@ -386,7 +389,7 @@ export default class PackagesPage extends Component {
                       >
                         <Text style={styles.itemText}>{item.itemName}</Text>
                         <Text style={styles.itemDimensions}>
-                          {item.itemLength} x {item.itemWidth} x {item.itemHeight}
+                          {item.itemLength}L x {item.itemWidth}W x {item.itemHeight}H
                         </Text>
                         <Text style={styles.itemDimensions}>
                           Quantity: {item.quantity}
@@ -429,7 +432,7 @@ export default class PackagesPage extends Component {
           style={styles.infoFab}
           onPress={() => Alert.alert(
             "Package Options",
-            "Long press on any package to rename or delete it.",
+            "Long press on any package to rename or delete the entire package.",
             [{ text: "OK", onPress: () => {} }]
           )}
         >
@@ -590,8 +593,8 @@ const styles = StyleSheet.create({
     width: "90%",
     alignSelf: "center",
   },
-  buttonApply: {
-    backgroundColor: "#3B5998",
+  buttonApply1: {
+    backgroundColor: "#2ECC71",
     padding: 10,
     marginTop: 10,
     borderRadius: 5,

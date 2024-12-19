@@ -215,8 +215,10 @@ const GettingStartedPage = ({ navigation }) => {
           </Text>
           <Text style={styles.sectionText}>
             Android users can use the Ruler app to get quick and accurate
-            measurements of your items. Here's how:
+            measurements of your items. Here's how to use it:
           </Text>
+
+          <View style={{ height: 10 }} />
 
           <View style={styles.stepContainer}>
             <AntDesign name="android" size={24} color="#1C6EA4" />
