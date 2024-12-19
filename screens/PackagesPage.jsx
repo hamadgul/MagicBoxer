@@ -9,6 +9,7 @@ import {
   StyleSheet,
   FlatList,
   TextInput,
+  TouchableWithoutFeedback,
 } from "react-native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { Ionicons } from "@expo/vector-icons"; // Assuming you're using Expo or replace with appropriate icon library
@@ -114,14 +115,18 @@ export default class PackagesPage extends Component {
   handleSaveEditedItem = (updatedItem) => {
     const { selectedPackage, packages } = this.state;
 
-    const quantity = parseInt(updatedItem.quantity) || 1;
-    const replicatedNames = Array.from({ length: quantity }, (_, i) =>
+    // If quantity is 0, treat it as a delete operation
+    if (updatedItem.quantity === 0) {
+      this.handleDeleteItem(updatedItem);
+      return;
+    }
+
+    const replicatedNames = Array.from({ length: updatedItem.quantity }, (_, i) =>
       i === 0 ? updatedItem.itemName : `${updatedItem.itemName}${i + 1}`
     );
 
     const updatedItemWithReplications = {
       ...updatedItem,
-      quantity: quantity,
       replicatedNames: replicatedNames,
     };
 
@@ -358,50 +363,49 @@ export default class PackagesPage extends Component {
         {/* Package Details Modal */}
         <Modal
           visible={showPackageModal}
-          animationType="slide"
           transparent={true}
+          animationType="slide"
+          onRequestClose={this.closePackageModal}
         >
-          <View style={styles.modalOverlay}>
-            <View style={styles.modalContent}>
-              <Text style={styles.modalTitle}>Items in {selectedPackage}</Text>
-              {selectedPackage && packages[selectedPackage] && (
-                <FlatList
-                  data={packages[selectedPackage]}
-                  keyExtractor={(item, index) => index.toString()}
-                  renderItem={({ item }) => (
+          <TouchableWithoutFeedback onPress={this.closePackageModal}>
+            <View style={styles.modalOverlay}>
+              <TouchableWithoutFeedback onPress={(e) => e.stopPropagation()}>
+                <View style={styles.modalContent}>
+                  <Text style={styles.modalTitle}>
+                    {selectedPackage} Items
+                  </Text>
+                  <FlatList
+                    data={selectedPackage ? packages[selectedPackage] : []}
+                    style={styles.flatListStyle}
+                    contentContainerStyle={styles.flatListContainer}
+                    keyExtractor={(item) => item.id}
+                    renderItem={({ item }) => (
+                      <TouchableOpacity
+                        style={styles.itemContainer}
+                        onPress={() => this.handleEditItem(item)}
+                      >
+                        <Text style={styles.itemText}>{item.itemName}</Text>
+                        <Text style={styles.itemDimensions}>
+                          {item.itemLength} x {item.itemWidth} x {item.itemHeight}
+                        </Text>
+                        <Text style={styles.itemDimensions}>
+                          Quantity: {item.quantity}
+                        </Text>
+                      </TouchableOpacity>
+                    )}
+                  />
+                  <View style={styles.modalButtonContainer}>
                     <TouchableOpacity
-                      style={styles.itemContainer}
-                      onPress={() => this.handleEditItem(item)}
+                      style={styles.packButton}
+                      onPress={this.handlePackItems}
                     >
-                      <Text style={styles.itemText}>
-                        {item.itemName} - {item.quantity}x
-                      </Text>
-                      <Text style={styles.itemDimensions}>
-                        Dimensions: {item.itemLength} x {item.itemWidth} x{" "}
-                        {item.itemHeight}
-                      </Text>
+                      <Text style={styles.buttonText}>Pack Items</Text>
                     </TouchableOpacity>
-                  )}
-                  contentContainerStyle={styles.flatListContainer}
-                  style={styles.flatListStyle}
-                />
-              )}
-              <View style={styles.modalButtonContainer}>
-                <TouchableOpacity
-                  style={styles.closeButton}
-                  onPress={this.closePackageModal}
-                >
-                  <Text style={styles.buttonText}>Close</Text>
-                </TouchableOpacity>
-                <TouchableOpacity
-                  style={styles.packButton}
-                  onPress={this.handlePackItems}
-                >
-                  <Text style={styles.buttonText}>Pack!</Text>
-                </TouchableOpacity>
-              </View>
+                  </View>
+                </View>
+              </TouchableWithoutFeedback>
             </View>
-          </View>
+          </TouchableWithoutFeedback>
         </Modal>
 
         {showDetailsModal && selectedItem && (
@@ -419,6 +423,17 @@ export default class PackagesPage extends Component {
           onPress={() => this.props.navigation.navigate("FormPage")}
         >
           <Ionicons name="add" size={30} color="white" />
+        </TouchableOpacity>
+
+        <TouchableOpacity
+          style={styles.infoFab}
+          onPress={() => Alert.alert(
+            "Package Options",
+            "Long press on any package to rename or delete it.",
+            [{ text: "OK", onPress: () => {} }]
+          )}
+        >
+          <Ionicons name="information-circle" size={30} color="white" />
         </TouchableOpacity>
       </View>
     );
@@ -511,12 +526,10 @@ const styles = StyleSheet.create({
     textAlign: "center",
   },
   modalButtonContainer: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    width: "100%",
-    marginTop: "auto",
-    paddingTop: 15,
-    paddingHorizontal: 10,
+    width: '100%',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 15,
   },
   closeButton: {
     backgroundColor: "#E74C3C",
@@ -526,11 +539,11 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
   packButton: {
-    backgroundColor: "#2ECC71",
-    padding: 12,
+    backgroundColor: '#2ECC71',
+    padding: 15,
     borderRadius: 8,
-    minWidth: 100,
-    alignItems: "center",
+    width: '50%',
+    alignItems: 'center',
   },
   buttonText: {
     color: "#fff",
@@ -600,16 +613,36 @@ const styles = StyleSheet.create({
     borderRadius: 5,
   },
   fab: {
-    position: "absolute",
-    bottom: 20,
+    position: 'absolute',
     right: 20,
-    backgroundColor: "#3B5998",
-    width: 60,
-    height: 60,
-    borderRadius: 30,
-    justifyContent: "center",
-    alignItems: "center",
-    elevation: 5,
+    bottom: 20,
+    width: 56,
+    height: 56,
+    borderRadius: 28,
+    backgroundColor: '#3B5998',
+    justifyContent: 'center',
+    alignItems: 'center',
+    elevation: 8,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.25,
+    shadowRadius: 3.84,
+  },
+  infoFab: {
+    position: 'absolute',
+    left: 20,
+    bottom: 20,
+    width: 56,
+    height: 56,
+    borderRadius: 28,
+    backgroundColor: '#3B5998',
+    justifyContent: 'center',
+    alignItems: 'center',
+    elevation: 8,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.25,
+    shadowRadius: 3.84,
   },
   noPackagesText: {
     fontSize: 16,

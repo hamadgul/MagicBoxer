@@ -89,13 +89,14 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: "center",
     alignItems: "center",
-    backgroundColor: "rgba(0,0,0,0.5)", // Ensure the background overlay is visible
+    backgroundColor: "rgba(0, 0, 0, 0.5)",
   },
   modalContent: {
-    backgroundColor: "#fff",
+    backgroundColor: "white",
     borderRadius: 20,
-    padding: 35,
-    alignItems: "center",
+    padding: 20,
+    width: "90%",
+    maxHeight: "80%",
     shadowColor: "#000",
     shadowOffset: {
       width: 0,
@@ -211,9 +212,16 @@ const styles = StyleSheet.create({
     marginTop: 5,
     minHeight: 50,
   },
+  dimensionsContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    width: '90%',
+    marginBottom: 10,
+  },
   fieldContainer: {
     marginBottom: 10,
-    width: "100%",
+    width: '100%',
+    alignItems: 'center',
   },
 });
 

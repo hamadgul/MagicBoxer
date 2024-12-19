@@ -46,39 +46,42 @@ export const ItemDetailsModal = ({
     quantity: item?.quantity?.toString() || "1",
   });
 
-  console.log("Modal Props:", { visible, item }); // Debug log to check props
-
   const handleEditToggle = () => {
     setIsEditable(!isEditable);
+    setEditedItem({
+      itemName: item?.itemName || "",
+      itemLength: item?.itemLength.toString() || "",
+      itemWidth: item?.itemWidth.toString() || "",
+      itemHeight: item?.itemHeight.toString() || "",
+      quantity: item?.quantity?.toString() || "1",
+    });
   };
 
   const handleApplyChanges = () => {
-    const updatedItem = {
+    handleUpdateItem({
       ...item,
-      itemName: editedItem.itemName,
+      ...editedItem,
       itemLength: parseFloat(editedItem.itemLength),
       itemWidth: parseFloat(editedItem.itemWidth),
       itemHeight: parseFloat(editedItem.itemHeight),
-      quantity: parseInt(editedItem.quantity) || 1,
-    };
-    handleUpdateItem(updatedItem);
+      quantity: parseInt(editedItem.quantity),
+    });
     setIsEditable(false);
   };
 
-  if (!item) {
-    return null; // Prevent modal from rendering without an item
-  }
-
   return (
     <Modal
-      visible={visible}
       animationType="slide"
       transparent={true}
-      onRequestClose={closeModal} // Handles closing when back button is pressed on Android
+      visible={visible}
+      onRequestClose={closeModal}
     >
-      <TouchableWithoutFeedback onPress={closeModal}>
+      <TouchableWithoutFeedback onPress={() => {
+        Keyboard.dismiss();
+        if (!isEditable) closeModal();
+      }}>
         <View style={styles.centeredView}>
-          <TouchableWithoutFeedback onPress={(e) => e.stopPropagation()}>
+          <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
             <View style={[styles.modalContent, { alignItems: 'center' }]}>
               {isEditable ? (
                 <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
@@ -86,7 +89,7 @@ export const ItemDetailsModal = ({
                     <View style={[styles.fieldContainer, { alignItems: 'center' }]}>
                       <Text style={[styles.label, { textAlign: 'center' }]}>Name</Text>
                       <TextInput
-                        style={[styles.input, { textAlign: 'center', width: '80%' }]}
+                        style={[styles.input, { textAlign: 'center', width: '20%' }]}
                         value={editedItem.itemName}
                         onChangeText={(text) =>
                           setEditedItem({ ...editedItem, itemName: text })
@@ -97,49 +100,49 @@ export const ItemDetailsModal = ({
                     <View style={[styles.fieldContainer, { alignItems: 'center' }]}>
                       <Text style={[styles.label, { textAlign: 'center' }]}>Length</Text>
                       <TextInput
-                        style={[styles.input, { textAlign: 'center', width: '80%' }]}
+                        style={[styles.input, { textAlign: 'center', width: '20%' }]}
                         value={editedItem.itemLength}
                         onChangeText={(text) =>
                           setEditedItem({ ...editedItem, itemLength: text })
                         }
                         keyboardType="numeric"
-                        placeholder="Enter Length"
+                        placeholder="Length"
                       />
                     </View>
                     <View style={[styles.fieldContainer, { alignItems: 'center' }]}>
                       <Text style={[styles.label, { textAlign: 'center' }]}>Width</Text>
                       <TextInput
-                        style={[styles.input, { textAlign: 'center', width: '80%' }]}
+                        style={[styles.input, { textAlign: 'center', width: '20%' }]}
                         value={editedItem.itemWidth}
                         onChangeText={(text) =>
                           setEditedItem({ ...editedItem, itemWidth: text })
                         }
                         keyboardType="numeric"
-                        placeholder="Enter Width"
+                        placeholder="Width"
                       />
                     </View>
                     <View style={[styles.fieldContainer, { alignItems: 'center' }]}>
                       <Text style={[styles.label, { textAlign: 'center' }]}>Height</Text>
                       <TextInput
-                        style={[styles.input, { textAlign: 'center', width: '80%' }]}
+                        style={[styles.input, { textAlign: 'center', width: '20%' }]}
                         value={editedItem.itemHeight}
                         onChangeText={(text) =>
                           setEditedItem({ ...editedItem, itemHeight: text })
                         }
                         keyboardType="numeric"
-                        placeholder="Enter Height"
+                        placeholder="Height"
                       />
                     </View>
                     <View style={[styles.fieldContainer, { alignItems: 'center' }]}>
                       <Text style={[styles.label, { textAlign: 'center' }]}>Quantity</Text>
                       <TextInput
-                        style={[styles.input, { textAlign: 'center', width: '80%' }]}
+                        style={[styles.input, { textAlign: 'center', width: '20%' }]}
                         value={editedItem.quantity}
                         onChangeText={(text) =>
                           setEditedItem({ ...editedItem, quantity: text })
                         }
                         keyboardType="numeric"
-                        placeholder="Enter Quantity"
+                        placeholder="Quantity"
                       />
                     </View>
                     <TouchableOpacity
@@ -151,13 +154,15 @@ export const ItemDetailsModal = ({
                   </View>
                 </TouchableWithoutFeedback>
               ) : (
-                <>
-                  <Text style={styles.label}>Item Name: {item.itemName}</Text>
-                  <Text style={styles.label}>Length: {item.itemLength}</Text>
-                  <Text style={styles.label}>Width: {item.itemWidth}</Text>
-                  <Text style={styles.label}>Height: {item.itemHeight}</Text>
-                  <Text style={styles.label}>Quantity: {item.quantity || 1}</Text>
-                </>
+                <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
+                  <View style={{ alignItems: 'center', width: '100%' }}>
+                    <Text style={[styles.label, { textAlign: 'center', marginBottom: 10 }]}>Item Name: {item.itemName}</Text>
+                    <Text style={[styles.label, { textAlign: 'center', marginBottom: 10 }]}>Length: {item.itemLength}</Text>
+                    <Text style={[styles.label, { textAlign: 'center', marginBottom: 10 }]}>Width: {item.itemWidth}</Text>
+                    <Text style={[styles.label, { textAlign: 'center', marginBottom: 10 }]}>Height: {item.itemHeight}</Text>
+                    <Text style={[styles.label, { textAlign: 'center', marginBottom: 10 }]}>Quantity: {item.quantity || 1}</Text>
+                  </View>
+                </TouchableWithoutFeedback>
               )}
               <View style={[styles.modalButtonContainer, { justifyContent: 'center' }]}>
                 <TouchableOpacity
