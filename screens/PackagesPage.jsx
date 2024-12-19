@@ -467,7 +467,7 @@ export default class PackagesPage extends Component {
                     <View style={[styles.modalContent, { alignItems: 'center' }]}>
                       <Text style={styles.modalTitle}>Edit Package Name:</Text>
                       <TextInput
-                        style={[styles.input, { textAlign: 'center', width: '80%' }]}
+                        style={styles.renameInput}
                         value={newPackageName}
                         onChangeText={(text) => this.setState({ newPackageName: text })}
                         placeholder="Package Name"
@@ -759,6 +759,25 @@ const styles = StyleSheet.create({
     color: "#fff",
     fontSize: 16,
     textAlign: "center",
+  },
+  renameInput: {
+    height: 42,
+    width: '80%',
+    borderWidth: 1,
+    borderColor: '#e8e8e8',
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    borderRadius: 21,
+    backgroundColor: '#ffffff',
+    marginBottom: 12,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.06,
+    shadowRadius: 4,
+    elevation: 2,
+    color: '#2c3e50',
+    fontSize: 15,
+    textAlign: 'center',
   },
   input: {
     borderWidth: 1,
