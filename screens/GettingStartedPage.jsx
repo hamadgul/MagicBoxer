@@ -1,11 +1,27 @@
 import React from "react";
-import { View, Text, StyleSheet, ScrollView, Alert } from "react-native";
+import {
+  View,
+  Text,
+  TouchableOpacity,
+  ScrollView,
+  Alert,
+  Modal,
+  StyleSheet,
+  FlatList,
+  TextInput,
+  TouchableWithoutFeedback,
+  Animated,
+  Easing,
+  Keyboard,
+  Image,
+} from "react-native";
 import { Button } from "native-base";
 import {
   FontAwesome,
   MaterialIcons,
   Entypo,
   AntDesign,
+  MaterialCommunityIcons,
 } from "@expo/vector-icons";
 import AppLink from "react-native-app-link";
 
@@ -42,212 +58,139 @@ const GettingStartedPage = ({ navigation }) => {
 
   return (
     <View style={styles.outerContainer}>
-      <ScrollView contentContainerStyle={styles.container}>
-        {/* Content Sections */}
-        <View style={styles.section}>
+      <ScrollView
+        contentContainerStyle={{ flexGrow: 1, padding: 16, paddingTop: 24 }}
+        showsVerticalScrollIndicator={false}
+      >
+        {/* Welcome Section */}
+        <View style={styles.welcomeContent}>
+          <View style={styles.headerContainer}>
+            <View style={styles.iconContainer}>
+              <Image 
+                source={require('../assets/images/icon.png')}
+                style={styles.appIcon}
+                resizeMode="contain"
+              />
+            </View>
+            <Text style={styles.welcomeTitle}>
+              Welcome to{'\n'}
+              <Text style={styles.brandName}>MagicBoxer</Text>
+            </Text>
+          </View>
+        </View>
+
+        {/* Features Section */}
+        <View style={[styles.section, { marginTop: 24 }]}>
           <Text style={styles.sectionHeader}>
-            Unique Features of MagicBoxer
+            Smart Features
           </Text>
           <Text style={styles.sectionSubText}>
-            MagicBoxer simplifies packing, helping you choose the perfect box,
-            optimize space, and save on shipping costs with these unique
-            features:
+            Take the guesswork out of shipping with our intelligent packing solutions.
           </Text>
-
-          <View style={{ height: 10 }} />
-
           <View style={styles.bulletContainer}>
             <View style={styles.bulletPoint}>
-              <FontAwesome name="gears" size={20} color="#1C6EA4" />
-              <Text style={styles.bulletText}>
-                <Text style={styles.boldText}>Smart Packing Algorithm:</Text>{" "}
-                Automatically finds the best box for your items, maximizing
-                space and minimizing hassle.
+              <FontAwesome name="magic" size={20} color="#3B82F6" />
+              <Text style={[styles.label, { marginLeft: 12, flex: 1 }]}>
+                Smart Packing Algorithm
               </Text>
             </View>
             <View style={styles.bulletPoint}>
-              <MaterialIcons name="view-in-ar" size={20} color="#1C6EA4" />
-              <Text style={styles.bulletText}>
-                <Text style={styles.boldText}>
-                  Interactive 3D Packing Visuals:
-                </Text>{" "}
-                Get a 360-degree view of exactly how to pack your items,
-                ensuring everything fits perfectly.
+              <MaterialCommunityIcons name="cube-outline" size={20} color="#3B82F6" />
+              <Text style={[styles.label, { marginLeft: 12, flex: 1 }]}>
+                3D Packing Preview
               </Text>
             </View>
             <View style={styles.bulletPoint}>
-              <Entypo name="price-tag" size={20} color="#1C6EA4" />
-              <Text style={styles.bulletText}>
-                <Text style={styles.boldText}>Box Cost Comparisons:</Text>{" "}
-                Compare prices across top shipping carriers to find the best and
-                most cost-effective option for your needs.
+              <MaterialCommunityIcons name="cash" size={20} color="#3B82F6" />
+              <Text style={[styles.label, { marginLeft: 12, flex: 1 }]}>
+                Cost Optimization
               </Text>
             </View>
           </View>
         </View>
 
-        {/* Additional Sections */}
+        {/* Perfect For Section */}
         <View style={styles.section}>
-          <Text style={styles.sectionHeader}>Who is This App For?</Text>
+          <Text style={styles.sectionHeader}>Perfect For</Text>
           <View style={styles.bulletContainer}>
             <View style={styles.bulletPoint}>
-              <AntDesign name="checkcircle" size={20} color="#1C6EA4" />
-              <Text style={styles.bulletText}>
-                <Text style={styles.boldText}>Movers:</Text> Pack efficiently
-                and make the most of your space.
+              <MaterialCommunityIcons name="truck-delivery" size={20} color="#3B82F6" />
+              <Text style={[styles.label, { marginLeft: 12, flex: 1 }]}>
+                Movers
               </Text>
             </View>
             <View style={styles.bulletPoint}>
-              <AntDesign name="checkcircle" size={20} color="#1C6EA4" />
-              <Text style={styles.bulletText}>
-                <Text style={styles.boldText}>Frequent Shippers:</Text> Find the
-                right box and the cheapest carrier for your items.
+              <MaterialCommunityIcons name="shopping" size={20} color="#3B82F6" />
+              <Text style={[styles.label, { marginLeft: 12, flex: 1 }]}>
+                Online Sellers
               </Text>
             </View>
             <View style={styles.bulletPoint}>
-              <AntDesign name="checkcircle" size={20} color="#1C6EA4" />
-              <Text style={styles.bulletText}>
-                <Text style={styles.boldText}>Casual Shippers:</Text> Send gifts
-                to family and friends without the packing hassle.
+              <MaterialCommunityIcons name="gift" size={20} color="#3B82F6" />
+              <Text style={[styles.label, { marginLeft: 12, flex: 1 }]}>
+                Gift Senders
               </Text>
             </View>
           </View>
         </View>
 
-        {/* Section: How to Measure Items in Inches */}
+        {/* Measurement Guide */}
         <View style={styles.section}>
-          <Text style={styles.sectionHeader}>
-            How to Measure Your Items in Inches
-          </Text>
+          <Text style={styles.sectionHeader}>Quick Measurement Guide</Text>
           <View style={styles.stepContainer}>
-            <AntDesign name="infocirlce" size={24} color="#1C6EA4" />
+            <MaterialIcons name="straighten" size={24} color="#3B82F6" />
             <Text style={styles.stepText}>
-              Use a tape measure or ruler marked in inches to measure the{" "}
-              <Text style={styles.boldText}>Length</Text>,{" "}
-              <Text style={styles.boldText}>Width</Text>, and{" "}
-              <Text style={styles.boldText}>Height</Text> of your item.
-            </Text>
-          </View>
-          <View style={styles.stepContainer}>
-            <AntDesign name="arrowright" size={24} color="#1C6EA4" />
-            <Text style={styles.stepText}>
-              <Text style={styles.boldText}>Length</Text>: Measure the longest
-              side of the item.
-            </Text>
-          </View>
-          <View style={styles.stepContainer}>
-            <AntDesign name="arrowright" size={24} color="#1C6EA4" />
-            <Text style={styles.stepText}>
-              <Text style={styles.boldText}>Width</Text>: Measure the side
-              perpendicular to the length.
-            </Text>
-          </View>
-          <View style={styles.stepContainer}>
-            <AntDesign name="arrowright" size={24} color="#1C6EA4" />
-            <Text style={styles.stepText}>
-              <Text style={styles.boldText}>Height</Text>: Measure from the base
-              to the top of the item.
-            </Text>
-          </View>
-        </View>
-
-        {/* Section: Using the Apple Measure App */}
-        <View style={styles.section}>
-          <Text style={styles.sectionHeader}>
-            Using the Apple 'Measure' App
-          </Text>
-          <Text style={styles.sectionText}>
-            If you have an iPhone, you can use the built-in Measure app to get
-            accurate measurements of your items. Follow these steps:
-          </Text>
-
-          <View style={{ height: 10 }} />
-
-          <View style={styles.stepContainer}>
-            <AntDesign name="mobile1" size={24} color="#1C6EA4" />
-            <Text style={styles.stepText}>
-              <Text style={styles.boldText}>Step 1</Text>: Open the Measure app
-              on your iPhone.
-            </Text>
-          </View>
-          <View style={styles.stepContainer}>
-            <AntDesign name="scan1" size={24} color="#1C6EA4" />
-            <Text style={styles.stepText}>
-              <Text style={styles.boldText}>Step 2</Text>: Move your iPhone
-              around to calibrate it. You’ll see a white dot on the screen once
-              it’s ready.
-            </Text>
-          </View>
-          <View style={styles.stepContainer}>
-            <AntDesign name="arrowsalt" size={24} color="#1C6EA4" />
-            <Text style={styles.stepText}>
-              <Text style={styles.boldText}>Step 3</Text>: Align the white dot
-              with one end of the item and tap the{" "}
-              <Text style={styles.boldText}>+</Text> button to start measuring.
-            </Text>
-          </View>
-          <View style={styles.stepContainer}>
-            <AntDesign name="arrowsalt" size={24} color="#1C6EA4" />
-            <Text style={styles.stepText}>
-              <Text style={styles.boldText}>Step 4</Text>: Move the iPhone
-              slowly to the other end of the item and tap the{" "}
-              <Text style={styles.boldText}>+</Text> button again to complete
-              the measurement.
-            </Text>
-          </View>
-          <View style={styles.stepContainer}>
-            <AntDesign name="camera" size={24} color="#1C6EA4" />
-            <Text style={styles.stepText}>
-              <Text style={styles.boldText}>Step 5</Text>: Repeat the process
-              for measuring the Width and Height.
+              Measure <Text style={styles.boldText}>Length</Text> (longest side),{" "}
+              <Text style={styles.boldText}>Width</Text> (second longest), and{" "}
+              <Text style={styles.boldText}>Height</Text> in inches.
             </Text>
           </View>
 
-          <Button style={styles.measureApp} onPress={openMeasureApp}>
-            <Text style={styles.measureButtonText}>Open Measure App</Text>
-          </Button>
-        </View>
-
-        {/* Section: Using the Ruler App for Android */}
-        <View style={styles.section}>
-          <Text style={styles.sectionHeader}>
-            Using the Android 'Ruler' App
-          </Text>
-          <Text style={styles.sectionText}>
-            Android users can use the Ruler app to get quick and accurate
-            measurements of your items. Here's how to use it:
-          </Text>
-
-          <View style={{ height: 10 }} />
-
-          <View style={styles.stepContainer}>
-            <AntDesign name="android" size={24} color="#1C6EA4" />
-            <Text style={styles.stepText}>
-              <Text style={styles.boldText}>Step 1</Text>: Download the Ruler
-              app from the Google Play Store.
-            </Text>
-          </View>
-          <View style={styles.stepContainer}>
-            <AntDesign name="scan1" size={24} color="#1C6EA4" />
-            <Text style={styles.stepText}>
-              <Text style={styles.boldText}>Step 2</Text>: Open the app and
-              follow the instructions to start measuring your items.
-            </Text>
+          {/* iOS Users */}
+          <View style={[styles.section, { 
+            backgroundColor: '#F8FAFC',
+            marginTop: 16,
+            marginBottom: 0,
+            shadowOpacity: 0
+          }]}>
+            <View style={styles.stepContainer}>
+              <AntDesign name="apple1" size={24} color="#3B82F6" />
+              <Text style={styles.stepText}>
+                <Text style={styles.boldText}>iOS Users:</Text> Use the built-in Measure app
+              </Text>
+            </View>
+            <Button style={styles.measureApp} onPress={openMeasureApp}>
+              <Text style={styles.measureButtonText}>Open Measure App</Text>
+            </Button>
           </View>
 
-          <Button style={styles.measureApp} onPress={openGoogleRulerApp}>
-            <Text style={styles.measureButtonText}>Download Ruler App</Text>
-          </Button>
+          {/* Android Users */}
+          <View style={[styles.section, { 
+            backgroundColor: '#F8FAFC',
+            marginTop: 16,
+            marginBottom: 0,
+            shadowOpacity: 0
+          }]}>
+            <View style={styles.stepContainer}>
+              <AntDesign name="android1" size={24} color="#3B82F6" />
+              <Text style={styles.stepText}>
+                <Text style={styles.boldText}>Android Users:</Text> Get the Ruler app
+              </Text>
+            </View>
+            <Button style={styles.measureApp} onPress={openGoogleRulerApp}>
+              <Text style={styles.measureButtonText}>Download Ruler App</Text>
+            </Button>
+          </View>
         </View>
       </ScrollView>
 
-      {/* Button to Proceed */}
+      {/* Start Button */}
       <View style={styles.centeredButtonContainer}>
         <Button
           style={styles.proceedButton}
           onPress={() => navigation.navigate("FormPage")}
         >
-          <Text style={styles.proceedButtonText}>Start Adding Items</Text>
+          <Text style={styles.proceedButtonText}>Let's Get Started</Text>
         </Button>
       </View>
     </View>
@@ -257,98 +200,139 @@ const GettingStartedPage = ({ navigation }) => {
 const styles = StyleSheet.create({
   outerContainer: {
     flex: 1,
-    justifyContent: "center",
-    alignItems: "center",
-    backgroundColor: "#fdfdfd",
+    backgroundColor: "#F5F7FA",
   },
-  container: {
-    flexGrow: 1,
-    padding: 20,
-    backgroundColor: "#fdfdfd",
+  welcomeContent: {
+    width: '100%',
+    paddingHorizontal: 16,
+    paddingVertical: 24,
+  },
+  headerContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 20,
+  },
+  iconContainer: {
+    width: 85,
+    height: 85,
+    borderRadius: 22,
+    backgroundColor: '#F5F7FA',
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 8,
+  },
+  appIcon: {
+    width: '100%',
+    height: '100%',
+  },
+  welcomeTitle: {
+    fontSize: 26,
+    fontWeight: '600',
+    color: '#2D3748',
+    flex: 1,
+    lineHeight: 34,
+  },
+  brandName: {
+    fontSize: 32,
+    fontWeight: '800',
+    color: '#3B82F6',
+    letterSpacing: 0.5,
   },
   section: {
-    backgroundColor: "#fff",
-    borderRadius: 8,
-    padding: 16,
-    marginBottom: 20,
+    backgroundColor: "#FFFFFF",
+    borderRadius: 16,
+    padding: 20,
+    marginBottom: 24,
     shadowColor: "#000",
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 8,
-    elevation: 2,
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.08,
+    shadowRadius: 12,
+    elevation: 5,
   },
   sectionHeader: {
-    fontSize: 20,
-    fontWeight: "bold",
-    color: "#333",
-    marginBottom: 10,
-  },
-  bulletContainer: {
-    marginBottom: 10,
-  },
-  bulletPoint: {
-    flexDirection: "row",
-    alignItems: "center",
-    marginBottom: 8,
-  },
-  bulletText: {
-    fontSize: 16,
-    color: "#555",
-    marginLeft: 10,
-    flex: 1,
+    fontSize: 22,
+    fontWeight: "700",
+    color: "#2D3748",
+    marginBottom: 12,
+    letterSpacing: 0.3,
   },
   sectionSubText: {
     fontSize: 16,
-    color: "#555",
-    marginTop: 10,
+    color: "#4A5568",
+    lineHeight: 24,
+    marginBottom: 16,
+  },
+  bulletContainer: {
+    marginTop: 8,
+  },
+  bulletPoint: {
+    flexDirection: "row",
+    alignItems: "flex-start",
+    marginBottom: 16,
+    paddingRight: 8,
+  },
+  label: {
+    fontSize: 15,
+    color: "#4A5568",
+    flex: 1,
+    lineHeight: 22,
+  },
+  boldText: {
+    fontWeight: "600",
+    color: "#2D3748",
   },
   stepContainer: {
     flexDirection: "row",
-    alignItems: "center",
-    marginBottom: 10,
+    alignItems: "flex-start",
+    marginBottom: 16,
+    paddingRight: 8,
   },
   stepText: {
-    fontSize: 16,
-    color: "#333",
-    marginLeft: 10,
+    fontSize: 15,
+    color: "#4A5568",
+    marginLeft: 12,
     flex: 1,
-  },
-  boldText: {
-    fontWeight: "bold",
-  },
-  centeredButtonContainer: {
-    width: "100%",
-    justifyContent: "center",
-    alignItems: "center",
-    padding: 20,
-  },
-  proceedButton: {
-    backgroundColor: "#3498db",
-    borderRadius: 8,
-    paddingHorizontal: 20,
-    paddingVertical: 12,
-    alignItems: "center",
-    justifyContent: "center",
-    width: "100%",
+    lineHeight: 22,
   },
   measureApp: {
-    backgroundColor: "#1C6EA4",
-    borderRadius: 8,
-    paddingHorizontal: 20,
+    backgroundColor: "#3B82F6",
+    borderRadius: 12,
+    marginTop: 16,
     paddingVertical: 12,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  proceedButtonText: {
-    color: "#fff",
-    fontWeight: "bold",
-    textAlign: "center",
+    shadowColor: "#3B82F6",
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.2,
+    shadowRadius: 8,
+    elevation: 4,
   },
   measureButtonText: {
-    color: "#fff",
-    fontWeight: "bold",
-    alignItems: "center",
+    color: "#FFFFFF",
+    fontSize: 16,
+    fontWeight: "600",
+    textAlign: "center",
   },
+  centeredButtonContainer: {
+    padding: 16,
+    backgroundColor: "#F5F7FA",
+    borderTopWidth: 1,
+    borderTopColor: "#E2E8F0",
+  },
+  proceedButton: {
+    backgroundColor: "#3B82F6",
+    borderRadius: 12,
+    paddingVertical: 14,
+    shadowColor: "#3B82F6",
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.2,
+    shadowRadius: 8,
+    elevation: 4,
+  },
+  proceedButtonText: {
+    color: "#FFFFFF",
+    fontSize: 17,
+    fontWeight: "600",
+    textAlign: "center",
+  }
 });
 
 export default GettingStartedPage;

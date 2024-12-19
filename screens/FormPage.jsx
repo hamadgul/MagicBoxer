@@ -86,10 +86,12 @@ export const ItemDetailsModal = ({
               {isEditable ? (
                 <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
                   <View style={{ width: '100%', alignItems: 'center' }}>
-                    <View style={[styles.fieldContainer, { alignItems: 'center' }]}>
-                      <Text style={[styles.label, { textAlign: 'center' }]}>Name</Text>
+                    <View style={styles.fieldContainer}>
+                      <Text style={styles.bulletText}>
+                        <Text style={styles.boldText}>Name</Text>
+                      </Text>
                       <TextInput
-                        style={[styles.input, { textAlign: 'center', width: '20%' }]}
+                        style={styles.input}
                         value={editedItem.itemName}
                         onChangeText={(text) =>
                           setEditedItem({ ...editedItem, itemName: text })
@@ -97,52 +99,60 @@ export const ItemDetailsModal = ({
                         placeholder="Enter Name"
                       />
                     </View>
-                    <View style={[styles.fieldContainer, { alignItems: 'center' }]}>
-                      <Text style={[styles.label, { textAlign: 'center' }]}>Length</Text>
+                    <View style={styles.fieldContainer}>
+                      <Text style={styles.bulletText}>
+                        <Text style={styles.boldText}>Length</Text>
+                      </Text>
                       <TextInput
-                        style={[styles.input, { textAlign: 'center', width: '20%' }]}
+                        style={styles.input}
                         value={editedItem.itemLength}
                         onChangeText={(text) =>
                           setEditedItem({ ...editedItem, itemLength: text })
                         }
                         keyboardType="numeric"
-                        placeholder="Length"
+                        placeholder="Enter Length"
                       />
                     </View>
-                    <View style={[styles.fieldContainer, { alignItems: 'center' }]}>
-                      <Text style={[styles.label, { textAlign: 'center' }]}>Width</Text>
+                    <View style={styles.fieldContainer}>
+                      <Text style={styles.bulletText}>
+                        <Text style={styles.boldText}>Width</Text>
+                      </Text>
                       <TextInput
-                        style={[styles.input, { textAlign: 'center', width: '20%' }]}
+                        style={styles.input}
                         value={editedItem.itemWidth}
                         onChangeText={(text) =>
                           setEditedItem({ ...editedItem, itemWidth: text })
                         }
                         keyboardType="numeric"
-                        placeholder="Width"
+                        placeholder="Enter Width"
                       />
                     </View>
-                    <View style={[styles.fieldContainer, { alignItems: 'center' }]}>
-                      <Text style={[styles.label, { textAlign: 'center' }]}>Height</Text>
+                    <View style={styles.fieldContainer}>
+                      <Text style={styles.bulletText}>
+                        <Text style={styles.boldText}>Height</Text>
+                      </Text>
                       <TextInput
-                        style={[styles.input, { textAlign: 'center', width: '20%' }]}
+                        style={styles.input}
                         value={editedItem.itemHeight}
                         onChangeText={(text) =>
                           setEditedItem({ ...editedItem, itemHeight: text })
                         }
                         keyboardType="numeric"
-                        placeholder="Height"
+                        placeholder="Enter Height"
                       />
                     </View>
-                    <View style={[styles.fieldContainer, { alignItems: 'center' }]}>
-                      <Text style={[styles.label, { textAlign: 'center' }]}>Quantity</Text>
+                    <View style={styles.fieldContainer}>
+                      <Text style={styles.bulletText}>
+                        <Text style={styles.boldText}>Quantity</Text>
+                      </Text>
                       <TextInput
-                        style={[styles.input, { textAlign: 'center', width: '20%' }]}
+                        style={styles.input}
                         value={editedItem.quantity}
                         onChangeText={(text) =>
                           setEditedItem({ ...editedItem, quantity: text })
                         }
                         keyboardType="numeric"
-                        placeholder="Quantity"
+                        placeholder="Enter Quantity"
                       />
                     </View>
                     <TouchableOpacity
@@ -345,16 +355,6 @@ export default class FormPage extends Component {
       } catch (error) {
         Alert.alert("Error updating item", error.message);
       }
-    });
-  };
-
-  resetForm = () => {
-    this.setState({
-      itemName: "",
-      itemWidth: "",
-      itemHeight: "",
-      itemLength: "",
-      quantity: 1,
     });
   };
 
