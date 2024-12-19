@@ -372,7 +372,7 @@ export default class PackagesPage extends Component {
               onLongPress={() => this.toggleEditMode(packageName)}
             >
               <View style={styles.packageLeftContent}>
-                <Ionicons name="cube" size={20} color="#3B5998" style={styles.packageIcon} />
+                <Ionicons name="cube" size={20} color="#3B82F6" style={styles.packageIcon} />
                 <Text style={styles.packageName}>{packageName}</Text>
               </View>
               <Text style={styles.itemCount}>
@@ -586,7 +586,7 @@ const styles = StyleSheet.create({
   header: {
     flexDirection: "row",
     alignItems: "center",
-    backgroundColor: "#3B5998",
+    backgroundColor: "#3B82F6",
     padding: 15,
   },
   headerText: {
@@ -682,7 +682,7 @@ const styles = StyleSheet.create({
   },
   itemContainer: {
     padding: 15,
-    backgroundColor: "#4A90E2",
+    backgroundColor: "#3B82F6",
     marginVertical: 8,
     borderRadius: 8,
     width: "100%",
@@ -817,7 +817,7 @@ const styles = StyleSheet.create({
     width: 56,
     height: 56,
     borderRadius: 28,
-    backgroundColor: '#3B5998',
+    backgroundColor: '#3B82F6',
     justifyContent: 'center',
     alignItems: 'center',
     elevation: 8,
@@ -833,7 +833,7 @@ const styles = StyleSheet.create({
     width: 56,
     height: 56,
     borderRadius: 28,
-    backgroundColor: '#3B5998',
+    backgroundColor: '#3B82F6',
     justifyContent: 'center',
     alignItems: 'center',
     elevation: 8,
