@@ -10,6 +10,9 @@ import {
   FlatList,
   TextInput,
   TouchableWithoutFeedback,
+  Animated,
+  Easing,
+  Keyboard,
 } from "react-native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { Ionicons } from "@expo/vector-icons"; // Assuming you're using Expo or replace with appropriate icon library
@@ -26,7 +29,14 @@ export default class PackagesPage extends Component {
     showOptionsModal: false,
     renamePackageModal: false,
     newPackageName: "",
+    isEditMode: false,
+    editingPackage: null,
   };
+
+  constructor(props) {
+    super(props);
+    this.shakeAnimation = new Animated.Value(0);
+  }
 
   componentDidMount() {
     this.fetchPackages();
@@ -53,16 +63,38 @@ export default class PackagesPage extends Component {
   };
 
   handleDeletePackage = async (packageName) => {
-    try {
-      const packagesString = await AsyncStorage.getItem("packages");
-      const packages = packagesString ? JSON.parse(packagesString) : {};
-      delete packages[packageName];
-      await AsyncStorage.setItem("packages", JSON.stringify(packages));
-      this.setState({ packages, showOptionsModal: false });
-      Alert.alert("Success", "Package deleted.");
-    } catch (error) {
-      Alert.alert("Error", "Failed to delete package.");
-    }
+    Alert.alert(
+      "Delete Package",
+      `Are you sure you want to delete "${packageName}"? This action cannot be undone.`,
+      [
+        {
+          text: "Cancel",
+          style: "cancel"
+        },
+        {
+          text: "Delete",
+          style: "destructive",
+          onPress: async () => {
+            try {
+              const packagesString = await AsyncStorage.getItem("packages");
+              const packages = packagesString ? JSON.parse(packagesString) : {};
+              delete packages[packageName];
+              await AsyncStorage.setItem("packages", JSON.stringify(packages));
+              this.setState({ 
+                packages, 
+                showOptionsModal: false,
+                isEditMode: false,
+                editingPackage: null
+              });
+              Alert.alert("Success", "Package deleted successfully.");
+            } catch (error) {
+              Alert.alert("Error", "Failed to delete package.");
+            }
+          }
+        }
+      ],
+      { cancelable: true }
+    );
   };
 
   handleRenamePackage = async () => {
@@ -252,194 +284,295 @@ export default class PackagesPage extends Component {
     }
   };
 
+  startShakeAnimation = () => {
+    Animated.sequence([
+      Animated.timing(this.shakeAnimation, {
+        toValue: 10,
+        duration: 100,
+        useNativeDriver: true,
+        easing: Easing.linear,
+      }),
+      Animated.timing(this.shakeAnimation, {
+        toValue: -10,
+        duration: 100,
+        useNativeDriver: true,
+        easing: Easing.linear,
+      }),
+      Animated.timing(this.shakeAnimation, {
+        toValue: 10,
+        duration: 100,
+        useNativeDriver: true,
+        easing: Easing.linear,
+      }),
+      Animated.timing(this.shakeAnimation, {
+        toValue: 0,
+        duration: 100,
+        useNativeDriver: true,
+        easing: Easing.linear,
+      }),
+    ]).start();
+  };
+
+  toggleEditMode = (packageName) => {
+    const { isEditMode, editingPackage } = this.state;
+    
+    if (isEditMode && editingPackage === packageName) {
+      this.setState({ isEditMode: false, editingPackage: null });
+    } else {
+      this.setState({ isEditMode: true, editingPackage: packageName }, () => {
+        this.startShakeAnimation();
+      });
+    }
+  };
+
+  openRenameModal = (packageName) => {
+    this.setState({
+      showOptionsModal: false,
+      renamePackageModal: true,
+      selectedPackage: packageName,
+      newPackageName: packageName, // Pre-populate with current name
+    });
+  };
+
   render() {
     const {
       packages,
       selectedPackage,
       showPackageModal,
       showDetailsModal,
-      selectedItem,
       showOptionsModal,
       renamePackageModal,
       newPackageName,
+      isEditMode,
+      editingPackage,
+      selectedItem,
     } = this.state;
+
+    const renderPackage = (packageName) => {
+      const isEditing = isEditMode && editingPackage === packageName;
+      const animatedStyle = {
+        transform: [{ translateX: isEditing ? this.shakeAnimation : 0 }],
+      };
+
+      return (
+        <View key={packageName} style={styles.packageRow}>
+          {isEditing && (
+            <TouchableOpacity
+              style={styles.editButton}
+              onPress={() => this.handleDeletePackage(packageName)}
+            >
+              <Ionicons name="remove-circle" size={24} color="#e74c3c" />
+            </TouchableOpacity>
+          )}
+          
+          <Animated.View style={[styles.packageContainer, animatedStyle]}>
+            <TouchableOpacity
+              style={styles.package}
+              onPress={() => !isEditing && this.openPackageDetails(packageName)}
+              onLongPress={() => this.toggleEditMode(packageName)}
+            >
+              <View style={styles.packageLeftContent}>
+                <Ionicons name="cube" size={20} color="#3B5998" style={styles.packageIcon} />
+                <Text style={styles.packageName}>{packageName}</Text>
+              </View>
+              <Text style={styles.itemCount}>
+                {packages[packageName].length} items
+              </Text>
+            </TouchableOpacity>
+          </Animated.View>
+
+          {isEditing && (
+            <TouchableOpacity
+              style={styles.editButton}
+              onPress={() => this.openRenameModal(packageName)}
+            >
+              <Ionicons name="pencil" size={24} color="#3498db" />
+            </TouchableOpacity>
+          )}
+        </View>
+      );
+    };
 
     return (
       <View style={styles.container}>
-        <View style={styles.header}>
-          <Ionicons name="cube-outline" size={24} color="white" />
-          <Text style={styles.headerText}>Saved Packages</Text>
-        </View>
-        <ScrollView contentContainerStyle={styles.scrollViewContainer}>
-          {Object.keys(packages).length === 0 ? (
-            <Text style={styles.noPackagesText}>No saved packages found.</Text>
-          ) : (
-            Object.keys(packages).map((packageName) => (
-              <TouchableOpacity
-                key={packageName}
-                style={styles.packageCard}
-                onPress={() => this.openPackageDetails(packageName)}
-                onLongPress={() =>
-                  this.setState({
-                    selectedPackage: packageName,
-                    showOptionsModal: true,
-                  })
-                }
-              >
-                <Ionicons name="cube" size={20} color="#3B5998" />
-                <Text style={styles.packageCardText}>{packageName}</Text>
-              </TouchableOpacity>
-            ))
-          )}
-        </ScrollView>
-
-        {/* Options Modal */}
-        <Modal
-          visible={showOptionsModal}
-          transparent={true}
-          animationType="fade"
-          onRequestClose={() => this.setState({ showOptionsModal: false })}
+        <TouchableWithoutFeedback 
+          onPress={() => {
+            if (isEditMode) {
+              this.setState({ isEditMode: false, editingPackage: null });
+            }
+          }}
         >
-          {/* Touchable outside the modal content to close it */}
-          <TouchableOpacity
-            style={styles.modalOverlay}
-            activeOpacity={1}
-            onPress={() => this.setState({ showOptionsModal: false })}
-          >
-            <View style={styles.modalContent}>
-              <TouchableOpacity
-                style={styles.optionButton}
-                onPress={() =>
-                  this.setState({
-                    showOptionsModal: false,
-                    renamePackageModal: true,
-                  })
-                }
-              >
-                <Text style={styles.optionText}>Rename Package</Text>
-              </TouchableOpacity>
-              <TouchableOpacity
-                style={styles.optionButtonClose}
-                onPress={() => this.handleDeletePackage(selectedPackage)}
-              >
-                <Text style={styles.optionText}>Delete Package</Text>
-              </TouchableOpacity>
+          <View style={styles.container}>
+            <View style={styles.header}>
+              <Ionicons name="cube-outline" size={24} color="white" />
+              <Text style={styles.headerText}>Saved Packages</Text>
             </View>
-          </TouchableOpacity>
-        </Modal>
+            <ScrollView contentContainerStyle={styles.scrollViewContainer}>
+              {Object.keys(packages).map(renderPackage)}
+            </ScrollView>
 
-        {/* Rename Package Modal */}
-        <Modal
-          visible={renamePackageModal}
-          transparent={true}
-          animationType="slide"
-          onRequestClose={() => this.setState({ renamePackageModal: false })}
-        >
-          <TouchableWithoutFeedback onPress={() => this.setState({ renamePackageModal: false })}>
-            <View style={styles.modalOverlay}>
-              <TouchableWithoutFeedback onPress={(e) => e.stopPropagation()}>
-                <View style={[styles.modalContent, { alignItems: 'center' }]}>
-                  <Text style={styles.modalTitle}>Enter Package Name:</Text>
-                  <TextInput
-                    style={[styles.input, { textAlign: 'center', width: '80%' }]}
-                    value={newPackageName}
-                    onChangeText={(text) => this.setState({ newPackageName: text })}
-                    placeholder="Package Name"
-                  />
+            {/* Options Modal */}
+            <Modal
+              visible={showOptionsModal}
+              transparent={true}
+              animationType="fade"
+              onRequestClose={() => this.setState({ showOptionsModal: false })}
+            >
+              {/* Touchable outside the modal content to close it */}
+              <TouchableOpacity
+                style={styles.modalOverlay}
+                activeOpacity={1}
+                onPress={() => this.setState({ showOptionsModal: false })}
+              >
+                <View style={styles.modalContent}>
                   <TouchableOpacity
-                    style={[styles.buttonApply1, { 
-                      width: 100,
-                      height: 40,
-                      alignItems: 'center', 
-                      justifyContent: 'center'
-                    }]}
-                    onPress={this.handleRenamePackage}
+                    style={styles.optionButton}
+                    onPress={() =>
+                      this.setState({
+                        showOptionsModal: false,
+                        renamePackageModal: true,
+                      })
+                    }
                   >
-                    <Text style={[styles.buttonText, { textAlign: 'center' }]}>Save</Text>
+                    <Text style={styles.optionText}>Rename Package</Text>
+                  </TouchableOpacity>
+                  <TouchableOpacity
+                    style={styles.optionButtonClose}
+                    onPress={() => this.handleDeletePackage(selectedPackage)}
+                  >
+                    <Text style={styles.optionText}>Delete Package</Text>
                   </TouchableOpacity>
                 </View>
-              </TouchableWithoutFeedback>
-            </View>
-          </TouchableWithoutFeedback>
-        </Modal>
+              </TouchableOpacity>
+            </Modal>
 
-        {/* Package Details Modal */}
-        <Modal
-          visible={showPackageModal}
-          transparent={true}
-          animationType="slide"
-          onRequestClose={this.closePackageModal}
-        >
-          <TouchableWithoutFeedback onPress={this.closePackageModal}>
-            <View style={styles.modalOverlay}>
-              <TouchableWithoutFeedback onPress={(e) => e.stopPropagation()}>
-                <View style={styles.modalContent}>
-                  <Text style={styles.modalTitle}>
-                    {selectedPackage} Items
-                  </Text>
-                  <FlatList
-                    data={selectedPackage ? packages[selectedPackage] : []}
-                    style={styles.flatListStyle}
-                    contentContainerStyle={styles.flatListContainer}
-                    keyExtractor={(item) => item.id}
-                    renderItem={({ item }) => (
+            {/* Rename Package Modal */}
+            <Modal
+              visible={renamePackageModal}
+              transparent={true}
+              animationType="slide"
+              onRequestClose={() => {
+                Keyboard.dismiss();
+                this.setState({ renamePackageModal: false });
+              }}
+            >
+              <TouchableWithoutFeedback 
+                onPress={() => {
+                  Keyboard.dismiss();
+                  this.setState({ renamePackageModal: false });
+                }}
+              >
+                <View style={styles.modalOverlay}>
+                  <TouchableWithoutFeedback onPress={() => Keyboard.dismiss()}>
+                    <View style={[styles.modalContent, { alignItems: 'center' }]}>
+                      <Text style={styles.modalTitle}>Edit Package Name:</Text>
+                      <TextInput
+                        style={[styles.input, { textAlign: 'center', width: '80%' }]}
+                        value={newPackageName}
+                        onChangeText={(text) => this.setState({ newPackageName: text })}
+                        placeholder="Package Name"
+                        autoFocus={true}
+                        selectTextOnFocus={true}
+                      />
                       <TouchableOpacity
-                        style={styles.itemContainer}
-                        onPress={() => this.handleEditItem(item)}
+                        style={[styles.buttonApply1, { 
+                          width: 100,
+                          height: 40,
+                          alignItems: 'center', 
+                          justifyContent: 'center'
+                        }]}
+                        onPress={() => {
+                          Keyboard.dismiss();
+                          this.handleRenamePackage();
+                        }}
                       >
-                        <View style={{ width: "100%" }}>
-                          <Text style={styles.itemText}>{item.itemName}</Text>
-                          <Text style={styles.itemDimensions}>
-                            Quantity: {item.quantity}
-                          </Text>
-                          <Text style={styles.itemDimensions}>
-                            {item.itemLength}L x {item.itemWidth}W x {item.itemHeight}H
-                          </Text>
-                        </View>
+                        <Text style={[styles.buttonText, { textAlign: 'center' }]}>Save</Text>
                       </TouchableOpacity>
-                    )}
-                  />
-                  <View style={styles.modalButtonContainer}>
-                    <TouchableOpacity
-                      style={styles.packButton}
-                      onPress={this.handlePackItems}
-                    >
-                      <Text style={styles.buttonText}>Pack Items</Text>
-                    </TouchableOpacity>
-                  </View>
+                    </View>
+                  </TouchableWithoutFeedback>
                 </View>
               </TouchableWithoutFeedback>
-            </View>
-          </TouchableWithoutFeedback>
-        </Modal>
+            </Modal>
 
-        {showDetailsModal && selectedItem && (
-          <ItemDetailsModal
-            visible={showDetailsModal}
-            item={selectedItem}
-            closeModal={() => this.setState({ showDetailsModal: false })}
-            handleDeleteAndClose={() => this.handleDeleteItem(selectedItem)}
-            handleUpdateItem={this.handleSaveEditedItem}
-          />
-        )}
+            {/* Package Details Modal */}
+            <Modal
+              visible={showPackageModal}
+              transparent={true}
+              animationType="slide"
+              onRequestClose={this.closePackageModal}
+            >
+              <TouchableWithoutFeedback onPress={this.closePackageModal}>
+                <View style={styles.modalOverlay}>
+                  <TouchableWithoutFeedback onPress={(e) => e.stopPropagation()}>
+                    <View style={styles.modalContent}>
+                      <Text style={styles.modalTitle}>
+                        {selectedPackage} Items
+                      </Text>
+                      <FlatList
+                        data={selectedPackage ? packages[selectedPackage] : []}
+                        style={styles.flatListStyle}
+                        contentContainerStyle={styles.flatListContainer}
+                        keyExtractor={(item) => item.id}
+                        renderItem={({ item }) => (
+                          <TouchableOpacity
+                            style={styles.itemContainer}
+                            onPress={() => this.handleEditItem(item)}
+                          >
+                            <View style={{ width: "100%" }}>
+                              <Text style={styles.itemText}>{item.itemName}</Text>
+                              <Text style={styles.itemDimensions}>
+                                Quantity: {item.quantity}
+                              </Text>
+                              <Text style={styles.itemDimensions}>
+                                {item.itemLength}L x {item.itemWidth}W x {item.itemHeight}H
+                              </Text>
+                            </View>
+                          </TouchableOpacity>
+                        )}
+                      />
+                      <View style={styles.modalButtonContainer}>
+                        <TouchableOpacity
+                          style={styles.packButton}
+                          onPress={this.handlePackItems}
+                        >
+                          <Text style={styles.buttonText}>Pack Items</Text>
+                        </TouchableOpacity>
+                      </View>
+                    </View>
+                  </TouchableWithoutFeedback>
+                </View>
+              </TouchableWithoutFeedback>
+            </Modal>
 
-        <TouchableOpacity
-          style={styles.fab}
-          onPress={() => this.props.navigation.navigate("FormPage")}
-        >
-          <Ionicons name="add" size={30} color="white" />
-        </TouchableOpacity>
+            {showDetailsModal && selectedItem && (
+              <ItemDetailsModal
+                visible={showDetailsModal}
+                item={selectedItem}
+                closeModal={() => this.setState({ showDetailsModal: false })}
+                handleDeleteAndClose={() => this.handleDeleteItem(selectedItem)}
+                handleUpdateItem={this.handleSaveEditedItem}
+              />
+            )}
 
-        <TouchableOpacity
-          style={styles.infoFab}
-          onPress={() => Alert.alert(
-            "Package Options",
-            "Long press on any package to rename or delete the entire package.",
-            [{ text: "OK", onPress: () => {} }]
-          )}
-        >
-          <Ionicons name="information-circle" size={30} color="white" />
-        </TouchableOpacity>
+            <TouchableOpacity
+              style={styles.fab}
+              onPress={() => this.props.navigation.navigate("FormPage")}
+            >
+              <Ionicons name="add" size={30} color="white" />
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              style={styles.infoFab}
+              onPress={() => Alert.alert(
+                "Package Options",
+                "Long press on any package to rename or delete the entire package.",
+                [{ text: "OK", onPress: () => {} }]
+              )}
+            >
+              <Ionicons name="information-circle" size={30} color="white" />
+            </TouchableOpacity>
+          </View>
+        </TouchableWithoutFeedback>
       </View>
     );
   }
@@ -464,23 +597,64 @@ const styles = StyleSheet.create({
   scrollViewContainer: {
     padding: 10,
   },
-  packageCard: {
+  packageRow: {
     flexDirection: "row",
     alignItems: "center",
+    padding: 8,
+    marginHorizontal: 4,
+  },
+  packageContainer: {
+    flex: 1,
     backgroundColor: "#fff",
-    padding: 15,
-    marginVertical: 5,
-    borderRadius: 8,
+    borderRadius: 12,
     shadowColor: "#000",
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
-    shadowRadius: 5,
+    shadowRadius: 8,
     elevation: 3,
+    overflow: 'hidden',
   },
-  packageCardText: {
-    marginLeft: 10,
+  package: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    width: "100%",
+    padding: 16,
+  },
+  packageLeftContent: {
+    flexDirection: "row",
+    alignItems: "center",
+    flex: 1,
+  },
+  packageIcon: {
+    marginRight: 12,
+    marginLeft: 2,
+  },
+  packageName: {
     fontSize: 16,
-    color: "#3B5998",
+    fontWeight: "600",
+    color: "#2c3e50",
+    letterSpacing: 0.3,
+    flex: 1,
+  },
+  itemCount: {
+    fontSize: 14,
+    color: "#7f8c8d",
+    fontWeight: "500",
+  },
+  editButton: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    backgroundColor: "#fff",
+    justifyContent: "center",
+    alignItems: "center",
+    marginHorizontal: 6,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.2,
+    shadowRadius: 3,
+    elevation: 2,
   },
   modalOverlay: {
     flex: 1,
