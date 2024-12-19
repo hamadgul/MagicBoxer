@@ -247,6 +247,35 @@ const styles = StyleSheet.create({
     width: '100%',
     alignItems: 'center',
   },
+  itemContainer: {
+    backgroundColor: "#ffffff",
+    padding: 16,
+    borderRadius: 12,
+    marginBottom: 12,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 3,
+    elevation: 3,
+    borderWidth: 1,
+    borderColor: "#f0f0f0",
+    width: "100%",
+  },
+  itemText: {
+    fontSize: 17,
+    fontWeight: "600",
+    color: "#2c3e50",
+    marginBottom: 8,
+    textAlign: "left",
+    paddingHorizontal: 8,
+  },
+  itemDimensions: {
+    fontSize: 15,
+    color: "#666",
+    marginBottom: 4,
+    textAlign: "left",
+    paddingHorizontal: 8,
+  },
 });
 
 export default styles;

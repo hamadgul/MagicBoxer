@@ -387,13 +387,15 @@ export default class PackagesPage extends Component {
                         style={styles.itemContainer}
                         onPress={() => this.handleEditItem(item)}
                       >
-                        <Text style={styles.itemText}>{item.itemName}</Text>
-                        <Text style={styles.itemDimensions}>
-                          {item.itemLength}L x {item.itemWidth}W x {item.itemHeight}H
-                        </Text>
-                        <Text style={styles.itemDimensions}>
-                          Quantity: {item.quantity}
-                        </Text>
+                        <View style={{ width: "100%" }}>
+                          <Text style={styles.itemText}>{item.itemName}</Text>
+                          <Text style={styles.itemDimensions}>
+                            Quantity: {item.quantity}
+                          </Text>
+                          <Text style={styles.itemDimensions}>
+                            {item.itemLength}L x {item.itemWidth}W x {item.itemHeight}H
+                          </Text>
+                        </View>
                       </TouchableOpacity>
                     )}
                   />
