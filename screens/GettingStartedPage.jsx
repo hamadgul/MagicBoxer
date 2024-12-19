@@ -252,7 +252,7 @@ const styles = StyleSheet.create({
   sectionHeader: {
     fontSize: 22,
     fontWeight: "700",
-    color: "#2D3748",
+    color: "#3B82F6",
     marginBottom: 12,
     letterSpacing: 0.3,
   },
