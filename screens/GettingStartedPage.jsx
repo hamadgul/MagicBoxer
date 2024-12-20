@@ -313,6 +313,7 @@ const styles = StyleSheet.create({
   },
   centeredButtonContainer: {
     padding: 16,
+    paddingBottom: 32, // Increased bottom padding
     backgroundColor: "#F5F7FA",
     borderTopWidth: 1,
     borderTopColor: "#E2E8F0",
