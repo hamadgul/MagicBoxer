@@ -8,6 +8,7 @@ import {
   TouchableOpacity,
   Modal,
   ScrollView,
+  Animated,
 } from "react-native";
 import Slider from "@react-native-community/slider";
 import { GLView } from "expo-gl";
@@ -39,6 +40,9 @@ export default class Display3D extends Component {
       selectedBox: props.route.params.selectedBox || null,
       gl: null,
       isLegendVisible: false,
+      isBoxCollapsed: false,
+      boxContentHeight: new Animated.Value(1),
+      glViewHeight: new Animated.Value(420),
     };
 
     this.panResponder = PanResponder.create({
@@ -301,77 +305,150 @@ export default class Display3D extends Component {
     );
   };
 
+  toggleBoxCollapse = () => {
+    const { isBoxCollapsed } = this.state;
+    const newState = !isBoxCollapsed;
+    
+    const expandedHeight = 420;
+    const optimalBoxHeight = 220; 
+    const headerHeight = 40;
+
+    const collapsedHeight = expandedHeight + (optimalBoxHeight - headerHeight);
+
+    Animated.parallel([
+      Animated.timing(this.state.boxContentHeight, {
+        toValue: newState ? 0 : 1,
+        duration: 300,
+        useNativeDriver: false,
+      }),
+      Animated.timing(this.state.glViewHeight, {
+        toValue: newState ? collapsedHeight : expandedHeight,
+        duration: 300,
+        useNativeDriver: false,
+      }),
+    ]).start(() => {
+      if (this.state.gl) {
+        this.initialize3DScene();
+      }
+    });
+
+    this.setState({ isBoxCollapsed: newState });
+  };
+
   render() {
-    const { selectedBox, selectedCarrier } = this.state;
+    const { selectedBox, selectedCarrier, isBoxCollapsed } = this.state;
 
     if (!selectedBox || !selectedBox.dimensions) {
       return <Text style={styles.noBoxText}>No box selected</Text>;
     }
 
     const boxDimensions = (
-      <View style={styles.boxDimensionsContainer}>
-        <Text style={styles.boxTitle}>Optimal Box Size</Text>
-        <Text style={styles.boxSubtitle}>For This Package:</Text>
-        <Text style={styles.boxDetails}>
-          {selectedBox.dimensions[0]}L x {selectedBox.dimensions[1]}W x{" "}
-          {selectedBox.dimensions[2]}H
-        </Text>
-        <Text style={styles.text}>
-          Estimated Box Price:{" "}
-          {selectedBox.price !== null && selectedBox.price !== undefined
-            ? selectedBox.price === 0
-              ? "Free with Service"
-              : `$${selectedBox.price.toFixed(2)}`
-            : "N/A"}
-        </Text>
-        <Text style={styles.text}>{selectedBox.finalBoxType || "N/A"}</Text>
-        <View style={styles.carrierDropdownContainer}>
-          <Text style={styles.carrierLabel}>Carrier:</Text>
-          <Dropdown
-            style={styles.input}
-            data={carrierData}
-            labelField="label"
-            valueField="value"
-            placeholder="Select Carrier"
-            value={selectedCarrier}
-            onChange={(item) => this.updateVisualsBasedOnCarrier(item.value)}
-            renderLeftIcon={() => (
-              <AntDesign
-                style={styles.icon}
-                color="black"
-                name="Safety"
-                size={20}
-              />
-            )}
-            renderRightIcon={() => (
-              <AntDesign
-                style={styles.icon}
-                color="black"
-                name="down"
-                size={16}
-              />
-            )}
-          />
+      <View style={[styles.boxDimensionsContainer, isBoxCollapsed && styles.collapsedBox]}>
+        <View style={styles.boxHeaderContainer}>
+          <View style={styles.headerPlaceholder} />
+          <Text style={styles.boxTitle}>Optimal Box Size</Text>
+          <TouchableOpacity
+            style={styles.collapseButton}
+            onPress={this.toggleBoxCollapse}
+          >
+            <AntDesign
+              name={isBoxCollapsed ? "plus" : "minus"}
+              size={20}
+              color="#666"
+            />
+          </TouchableOpacity>
         </View>
-        <TouchableOpacity
-          style={styles.legendButton}
-          onPress={() => this.setState({ isLegendVisible: true })}
+        <Animated.View
+          style={[
+            styles.boxContent,
+            {
+              opacity: this.state.boxContentHeight,
+              maxHeight: this.state.boxContentHeight.interpolate({
+                inputRange: [0, 1],
+                outputRange: [0, 500],
+              }),
+            },
+          ]}
         >
-          <Text style={styles.legendButtonText}>Show Legend</Text>
-        </TouchableOpacity>
+          <Text style={styles.boxSubtitle}>For This Package:</Text>
+          <Text style={styles.boxDetails}>
+            {selectedBox.dimensions[0]}L x {selectedBox.dimensions[1]}W x{" "}
+            {selectedBox.dimensions[2]}H
+          </Text>
+          <Text style={styles.text}>
+            Estimated Box Price:{" "}
+            {selectedBox.price !== null && selectedBox.price !== undefined
+              ? selectedBox.price === 0
+                ? "Free with Service"
+                : `$${selectedBox.price.toFixed(2)}`
+              : "N/A"}
+          </Text>
+          <Text style={styles.text}>{selectedBox.finalBoxType || "N/A"}</Text>
+          <View style={styles.carrierDropdownContainer}>
+            <Dropdown
+              style={styles.input}
+              data={carrierData}
+              labelField="label"
+              valueField="value"
+              placeholder="Select Carrier"
+              value={selectedCarrier}
+              onChange={(item) => this.updateVisualsBasedOnCarrier(item.value)}
+              renderLeftIcon={() => (
+                <AntDesign
+                  style={styles.icon}
+                  color="black"
+                  name="Safety"
+                  size={20}
+                />
+              )}
+              renderRightIcon={() => (
+                <AntDesign
+                  style={styles.icon}
+                  color="black"
+                  name="down"
+                  size={16}
+                />
+              )}
+            />
+          </View>
+          <TouchableOpacity
+            style={styles.legendButton}
+            onPress={() => this.setState({ isLegendVisible: true })}
+          >
+            <AntDesign 
+              name="infocirlceo" 
+              size={14} 
+              color="#666" 
+              style={styles.legendIcon}
+            />
+            <Text style={styles.legendButtonText}>Legend</Text>
+          </TouchableOpacity>
+        </Animated.View>
       </View>
     );
 
     return (
       <View style={styles.container}>
-        <View style={styles.topContainer}>{boxDimensions}</View>
-        <View style={styles.glViewContainer}>
+        <View style={[styles.topContainer, isBoxCollapsed && styles.collapsedTopContainer]}>
+          <View style={styles.boxWrapper}>
+            {boxDimensions}
+          </View>
+        </View>
+        <Animated.View 
+          style={[
+            styles.glViewContainer,
+            {
+              height: this.state.glViewHeight,
+              marginTop: isBoxCollapsed ? 40 : 2,
+            }
+          ]}
+        >
           <GLView
             {...this.panResponder.panHandlers}
             style={styles.glView}
             onContextCreate={this._onGLContextCreate}
           />
-        </View>
+        </Animated.View>
         {this.renderLegendModal()}
         <View style={styles.sliderContainer}>
           <Slider
@@ -395,6 +472,8 @@ const styles = StyleSheet.create({
   },
   topContainer: {
     paddingHorizontal: 10,
+    width: '100%',
+    alignItems: 'center',
   },
   glViewContainer: {
     height: 460,
@@ -411,39 +490,89 @@ const styles = StyleSheet.create({
     marginBottom: 30,
   },
   boxDimensionsContainer: {
-    padding: 10,
+    padding: 6,
     backgroundColor: "#fff",
-    borderRadius: 10,
-    marginHorizontal: 20,
-    marginTop: 10,
-    alignItems: "center",
+    borderRadius: 8,
+    marginBottom: 8,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 2,
+    elevation: 3,
     borderWidth: 1,
     borderColor: "#e1e1e1",
+    width: '90%',
+    alignSelf: 'center',
+  },
+  boxHeaderContainer: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    marginBottom: 2,
+    paddingHorizontal: 5,
+    width: "100%",
+  },
+  headerPlaceholder: {
+    width: 30,
   },
   boxTitle: {
-    fontSize: 18,
-    fontWeight: "bold",
+    fontSize: 15,
+    fontWeight: "600",
     color: "#333",
-    marginBottom: 5,
+    flex: 1,
+    textAlign: "center",
+  },
+  collapseButton: {
+    padding: 3,
+    backgroundColor: "#f8f9fa",
+    borderRadius: 15,
+    width: 30,
+    height: 30,
+    justifyContent: "center",
+    alignItems: "center",
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.15,
+    shadowRadius: 1,
+    elevation: 1,
+  },
+  boxContent: {
+    overflow: "hidden",
   },
   boxSubtitle: {
-    fontSize: 16,
+    fontSize: 14,
     color: "#555",
-    marginBottom: 10,
+    marginBottom: 6,
+    textAlign: "center",
   },
   boxDetails: {
-    fontSize: 20,
+    fontSize: 18,
     fontWeight: "600",
     color: "#007bff",
+    textAlign: "center",
+    marginBottom: 6,
+  },
+  text: {
+    fontSize: 13,
+    color: "#666",
+    textAlign: "center",
+    marginBottom: 4,
   },
   carrierDropdownContainer: {
-    flexDirection: "row",
     alignItems: "center",
-    marginTop: 10,
+    marginTop: 6,
+    marginBottom: 8,
   },
-  carrierLabel: {
-    fontSize: 16,
-    color: "#666",
+  input: {
+    width: 160,
+    borderWidth: 1,
+    borderColor: "#ddd",
+    borderRadius: 8,
+    backgroundColor: "#fff",
+    paddingHorizontal: 10,
+    height: 32,
+  },
+  icon: {
     marginRight: 5,
   },
   noBoxText: {
@@ -452,33 +581,33 @@ const styles = StyleSheet.create({
     textAlign: "center",
     margin: 20,
   },
-  input: {
-    flex: 1,
-    borderWidth: 1,
-    borderColor: "#ddd",
-    borderRadius: 8,
-    backgroundColor: "#fff",
-    paddingHorizontal: 10,
-    justifyContent: "center",
-    alignContent: "center",
-    alignItems: "center",
-  },
-  icon: {
-    marginRight: 5,
-  },
   legendButton: {
-    backgroundColor: "#007bff",
-    paddingVertical: 8,
-    paddingHorizontal: 16,
-    borderRadius: 5,
-    alignItems: "center",
-    marginTop: 10,
-    alignSelf: "center",
+    backgroundColor: '#f8f9fa',
+    paddingVertical: 6,
+    paddingHorizontal: 10,
+    borderRadius: 16,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginTop: 6,
+    alignSelf: 'center',
+    width: 85,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.1,
+    shadowRadius: 2,
+    elevation: 2,
+    borderWidth: 1,
+    borderColor: '#e1e1e1',
   },
   legendButtonText: {
-    color: "#fff",
-    fontSize: 14,
-    fontWeight: "bold",
+    color: '#666',
+    fontSize: 13,
+    fontWeight: '500',
+    marginLeft: 2,
+  },
+  legendIcon: {
+    marginRight: 0,
   },
   modalOverlay: {
     flex: 1,
@@ -537,5 +666,22 @@ const styles = StyleSheet.create({
     color: "#fff",
     fontSize: 16,
     fontWeight: "600",
+  },
+  collapsedBox: {
+    position: 'absolute',
+    top: 0,
+    zIndex: 1,
+  },
+  collapsedTopContainer: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    zIndex: 1,
+    alignItems: 'center',
+  },
+  boxWrapper: {
+    width: '100%',
+    alignItems: 'center',
   },
 });
