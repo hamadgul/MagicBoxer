@@ -59,7 +59,7 @@ const GettingStartedPage = ({ navigation }) => {
   return (
     <View style={styles.outerContainer}>
       <ScrollView
-        contentContainerStyle={{ flexGrow: 1, padding: 16, paddingTop: 24 }}
+        contentContainerStyle={{ flexGrow: 1, padding: 16, paddingTop: 12 }}
         showsVerticalScrollIndicator={false}
       >
         {/* Welcome Section */}
@@ -205,7 +205,7 @@ const styles = StyleSheet.create({
   welcomeContent: {
     width: '100%',
     paddingHorizontal: 16,
-    paddingVertical: 24,
+    paddingVertical: 12,
   },
   headerContainer: {
     flexDirection: 'row',

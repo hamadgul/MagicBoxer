@@ -132,6 +132,7 @@ const styles = StyleSheet.create({
     color: "#1A365D",
     paddingTop: 16,
     paddingHorizontal: 16,
+    textAlign: "center",
   },
   faqItem: {
     backgroundColor: "#FFFFFF",
