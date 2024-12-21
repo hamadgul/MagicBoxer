@@ -451,8 +451,11 @@ export default class FormPage extends Component {
       return;
     }
 
-    // Toggle the Save Package modal if items are present
-    this.setState({ showSavePackageModal: !this.state.showSavePackageModal });
+    // Toggle the Save Package modal if items are present and clear package name
+    this.setState({ 
+      showSavePackageModal: !this.state.showSavePackageModal,
+      packageName: '' // Clear package name when toggling modal
+    });
   };
 
   // Handle Saving Package
@@ -490,8 +493,11 @@ export default class FormPage extends Component {
       // Clear items after successful save
       this.clearItems();
 
-      // Close the modal
-      this.toggleSavePackageModal();
+      // Close the modal and clear package name
+      this.setState({ 
+        showSavePackageModal: false,
+        packageName: '' // Clear package name after saving
+      });
     } catch (error) {
       // Catch and display any errors
       Alert.alert("Error", `Failed to save package: ${error.message}`);
@@ -846,13 +852,22 @@ export default class FormPage extends Component {
             <TouchableWithoutFeedback onPress={this.toggleSavePackageModal}>
               <View style={styles.modalOverlay}>
                 <TouchableWithoutFeedback onPress={(e) => e.stopPropagation()}>
-                  <View style={[styles.modalContent, { alignItems: 'center' }]}>
-                    <Text style={styles.modalTitle}>Enter Package Name:</Text>
+                  <View style={[styles.modalContent, { alignItems: 'center', paddingVertical: 24 }]}>
                     <TextInput
-                      style={[styles.input, { textAlign: 'center', width: '80%' }]}
+                      style={[styles.input, { 
+                        textAlign: 'center', 
+                        width: '80%',
+                        marginBottom: 20,
+                        fontSize: 16,
+                      }]}
                       value={this.state.packageName}
                       onChangeText={(text) => this.setState({ packageName: text })}
-                      placeholder="Package Name"
+                      placeholder="Enter Package Name"
+                      placeholderTextColor="#94A3B8"
+                      autoFocus={true}
+                      autoCorrect={false}
+                      autoCapitalize="none"
+                      spellCheck={false}
                     />
                     <TouchableOpacity
                       style={[styles.buttonApply1, { 
