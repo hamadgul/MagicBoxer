@@ -808,34 +808,36 @@ export default class FormPage extends Component {
             </VStack>
           </View>
 
-          <ScrollView
-            style={styles.itemsContainer}
-            contentContainerStyle={styles.itemsList}
-          >
-            {this.state.items.map((item, index) => (
-              <TouchableOpacity
-                key={item.id}
-                style={[
-                  styles.itemButton,
-                  {
-                    backgroundColor:
-                      itemButtonColors[index % itemButtonColors.length],
-                  },
-                ]}
-                onPress={() => this.openModal(item)}
-              >
-                <Text 
-                  style={styles.buttonText}
-                  numberOfLines={1}
-                  ellipsizeMode="tail"
+          <View style={styles.contentContainer}>
+            <ScrollView
+              style={styles.itemsContainer}
+              contentContainerStyle={styles.itemsList}
+            >
+              {this.state.items.map((item, index) => (
+                <TouchableOpacity
+                  key={item.id}
+                  style={[
+                    styles.itemButton,
+                    {
+                      backgroundColor:
+                        itemButtonColors[index % itemButtonColors.length],
+                    },
+                  ]}
+                  onPress={() => this.openModal(item)}
                 >
-                  {item.itemName}
-                </Text>
-              </TouchableOpacity>
-            ))}
-          </ScrollView>
+                  <Text 
+                    style={styles.buttonText}
+                    numberOfLines={1}
+                    ellipsizeMode="tail"
+                  >
+                    {item.itemName}
+                  </Text>
+                </TouchableOpacity>
+              ))}
+            </ScrollView>
+          </View>
 
-          <View style={styles.buttonContainer}>
+          <View style={styles.bottomButtonContainer}>
             <TouchableOpacity
               style={styles.savePackageButton}
               onPress={this.toggleSavePackageModal}

@@ -25,6 +25,12 @@ function DrawerNavigator() {
       screenOptions={{
         drawerActiveTintColor: '#3B82F6',
         drawerInactiveTintColor: '#64748B',
+        headerStyle: {
+          backgroundColor: '#fff'
+        },
+        headerTitleStyle: {
+          color: '#0f2d44'
+        }
       }}
     >
       <Drawer.Screen
