@@ -815,8 +815,11 @@ export default class FormPage extends Component {
             >
               {this.state.items.length === 0 ? (
                 <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center', padding: 20 }}>
+                  <Text style={{ color: '#94A3B8', fontSize: 16, textAlign: 'left', marginBottom: 10 }}>
+                    No items added yet for this package.
+                  </Text>
                   <Text style={{ color: '#94A3B8', fontSize: 16, textAlign: 'center' }}>
-                    No items added yet. Add items using the form above and they'll appear here!
+                    Add items above and access saved packages on the side menu.
                   </Text>
                 </View>
               ) : (

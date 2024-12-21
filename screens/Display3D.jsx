@@ -100,6 +100,36 @@ export default class Display3D extends Component {
   renderLegendModal = () => {
     const { itemsTotal, isLegendVisible } = this.state;
 
+    // Group items by name
+    const groupedItems = {};
+    itemsTotal.forEach(item => {
+      const name = item.itemName || "Unnamed Item";
+      if (!groupedItems[name]) {
+        groupedItems[name] = [];
+      }
+      groupedItems[name].push(item);
+    });
+
+    // Create final items array with proper numbering
+    const finalItems = [];
+    Object.keys(groupedItems).sort().forEach(name => {
+      const items = groupedItems[name];
+      const padLength = items.length > 1 ? String(items.length).length : 0;
+      
+      items.forEach((item, index) => {
+        const number = index + 1;
+        const paddedNumber = String(number).padStart(padLength, '0');
+        finalItems.push({
+          ...item,
+          displayName: items.length > 1 ? `${name}${paddedNumber}` : name,
+          sortKey: items.length > 1 ? `${name}${paddedNumber}` : name
+        });
+      });
+    });
+
+    // Sort by the sortKey to ensure proper numerical ordering
+    finalItems.sort((a, b) => a.sortKey.localeCompare(b.sortKey));
+
     return (
       <Modal
         visible={isLegendVisible}
@@ -111,13 +141,13 @@ export default class Display3D extends Component {
           <View style={styles.modalContent}>
             <Text style={styles.legendTitle}>Legend</Text>
             <ScrollView>
-              {itemsTotal.map((item, index) => (
+              {finalItems.map((item, index) => (
                 <View key={index} style={styles.legendItem}>
                   <View
                     style={[styles.colorBox, { backgroundColor: item.color }]}
                   />
                   <Text style={styles.legendText}>
-                    {item.itemName || "Unnamed Item"}
+                    {item.displayName}
                   </Text>
                 </View>
               ))}
