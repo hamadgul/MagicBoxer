@@ -411,8 +411,24 @@ export default class Display3D extends Component {
               )}
             />
           </View>
+          {!isBoxCollapsed && (
+            <TouchableOpacity
+              style={styles.legendButton}
+              onPress={() => this.setState({ isLegendVisible: true })}
+            >
+              <AntDesign 
+                name="infocirlceo" 
+                size={14} 
+                color="#666" 
+                style={styles.legendIcon}
+              />
+              <Text style={styles.legendButtonText}>Legend</Text>
+            </TouchableOpacity>
+          )}
+        </Animated.View>
+        {isBoxCollapsed && (
           <TouchableOpacity
-            style={styles.legendButton}
+            style={[styles.legendButton, styles.legendButtonCollapsed]}
             onPress={() => this.setState({ isLegendVisible: true })}
           >
             <AntDesign 
@@ -423,7 +439,7 @@ export default class Display3D extends Component {
             />
             <Text style={styles.legendButtonText}>Legend</Text>
           </TouchableOpacity>
-        </Animated.View>
+        )}
       </View>
     );
 
@@ -599,6 +615,10 @@ const styles = StyleSheet.create({
     elevation: 2,
     borderWidth: 1,
     borderColor: '#e1e1e1',
+  },
+  legendButtonCollapsed: {
+    marginTop: 8,
+    alignSelf: 'center',
   },
   legendButtonText: {
     color: '#666',
