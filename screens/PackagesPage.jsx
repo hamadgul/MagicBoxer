@@ -506,7 +506,7 @@ export default class PackagesPage extends Component {
                   <TouchableWithoutFeedback onPress={(e) => e.stopPropagation()}>
                     <View style={styles.modalContent}>
                       <Text style={styles.modalTitle}>
-                        {selectedPackage} Items
+                        {selectedPackage}
                       </Text>
                       <View style={styles.titleUnderline} />
                       <FlatList
