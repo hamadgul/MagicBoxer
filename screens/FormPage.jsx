@@ -748,6 +748,8 @@ export default class FormPage extends Component {
                 keyboardAppearance="light"
                 placeholder="MacBook, Xbox etc"
                 placeholderTextColor={"#d3d3d3"}
+                autoCorrect={false}
+                spellCheck={false}
               />
               <Text style={[styles.label, styles.condensedLabel]}>Length:</Text>
               <TextInput
@@ -822,7 +824,13 @@ export default class FormPage extends Component {
                 ]}
                 onPress={() => this.openModal(item)}
               >
-                <Text style={styles.buttonText}>{item.itemName}</Text>
+                <Text 
+                  style={styles.buttonText}
+                  numberOfLines={1}
+                  ellipsizeMode="tail"
+                >
+                  {item.itemName}
+                </Text>
               </TouchableOpacity>
             ))}
           </ScrollView>
