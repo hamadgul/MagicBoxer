@@ -90,19 +90,19 @@ const GettingStartedPage = ({ navigation }) => {
           <View style={styles.bulletContainer}>
             <View style={styles.bulletPoint}>
               <FontAwesome name="magic" size={20} color="#3B82F6" />
-              <Text style={[styles.label, { marginLeft: 12, flex: 1 }]}>
+              <Text style={[styles.label, { marginLeft: 8 }]}>
                 Smart Packing Algorithm
               </Text>
             </View>
             <View style={styles.bulletPoint}>
               <MaterialCommunityIcons name="cube-outline" size={20} color="#3B82F6" />
-              <Text style={[styles.label, { marginLeft: 12, flex: 1 }]}>
+              <Text style={[styles.label, { marginLeft: 8 }]}>
                 3D Packing Preview
               </Text>
             </View>
             <View style={styles.bulletPoint}>
               <MaterialCommunityIcons name="cash" size={20} color="#3B82F6" />
-              <Text style={[styles.label, { marginLeft: 12, flex: 1 }]}>
+              <Text style={[styles.label, { marginLeft: 8 }]}>
                 Cost Optimization
               </Text>
             </View>
@@ -115,19 +115,19 @@ const GettingStartedPage = ({ navigation }) => {
           <View style={styles.bulletContainer}>
             <View style={styles.bulletPoint}>
               <MaterialCommunityIcons name="truck-delivery" size={20} color="#3B82F6" />
-              <Text style={[styles.label, { marginLeft: 12, flex: 1 }]}>
+              <Text style={[styles.label, { marginLeft: 8 }]}>
                 Movers
               </Text>
             </View>
             <View style={styles.bulletPoint}>
               <MaterialCommunityIcons name="shopping" size={20} color="#3B82F6" />
-              <Text style={[styles.label, { marginLeft: 12, flex: 1 }]}>
+              <Text style={[styles.label, { marginLeft: 8 }]}>
                 Online Sellers
               </Text>
             </View>
             <View style={styles.bulletPoint}>
               <MaterialCommunityIcons name="gift" size={20} color="#3B82F6" />
-              <Text style={[styles.label, { marginLeft: 12, flex: 1 }]}>
+              <Text style={[styles.label, { marginLeft: 8 }]}>
                 Gift Senders
               </Text>
             </View>
@@ -267,15 +267,18 @@ const styles = StyleSheet.create({
   },
   bulletPoint: {
     flexDirection: "row",
-    alignItems: "flex-start",
+    alignItems: "center",
     marginBottom: 16,
-    paddingRight: 8,
+    paddingHorizontal: 8,
+    width: '100%',
+    justifyContent: 'flex-start',
   },
   label: {
     fontSize: 15,
     color: "#4A5568",
-    flex: 1,
     lineHeight: 22,
+    marginLeft: 8,
+    flex: 0,
   },
   boldText: {
     fontWeight: "600",

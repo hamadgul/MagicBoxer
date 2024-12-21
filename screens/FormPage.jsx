@@ -12,6 +12,8 @@ import {
   TouchableOpacity,
   ScrollView,
   StyleSheet,
+  KeyboardAvoidingView,
+  Platform,
 } from "react-native";
 import { VStack } from "native-base";  
 import AsyncStorage from "@react-native-async-storage/async-storage";
@@ -206,166 +208,175 @@ export const ItemDetailsModal = ({
         if (!isEditable) closeModal();
       }}
     >
-      <TouchableWithoutFeedback onPress={() => {
-        Keyboard.dismiss();
-        if (!isEditable) closeModal();
-      }}>
-        <View style={modalStyles.centeredView}>
-          <View style={modalStyles.modalContent}>
-            <View style={modalStyles.modalHeader}>
-              <Text style={modalStyles.modalTitle}>
-                {isEditable ? "Edit Item" : "Item Details"}
-              </Text>
-            </View>
+      <KeyboardAvoidingView 
+        behavior={Platform.OS === "ios" ? "padding" : "height"}
+        style={{ flex: 1 }}
+      >
+        <TouchableWithoutFeedback onPress={() => {
+          Keyboard.dismiss();
+          if (!isEditable) closeModal();
+        }}>
+          <View style={modalStyles.centeredView}>
+            <View style={modalStyles.modalContent}>
+              <View style={modalStyles.modalHeader}>
+                <Text style={modalStyles.modalTitle}>
+                  {isEditable ? "Edit Item" : "Item Details"}
+                </Text>
+              </View>
 
-            <ScrollView style={{ width: '100%' }} showsVerticalScrollIndicator={false}>
-              {isEditable ? (
-                <View style={{ width: '100%' }}>
-                  <View style={modalStyles.fieldContainer}>
-                    <Text style={modalStyles.bulletText}>
-                      <Text style={modalStyles.boldText}>Name</Text>
-                    </Text>
-                    <TextInput
-                      style={modalStyles.fieldInput}
-                      value={editedItem.itemName}
-                      onChangeText={(text) =>
-                        setEditedItem({ ...editedItem, itemName: text })
-                      }
-                      placeholder="Enter Name"
-                      maxLength={20}
-                    />
+              <ScrollView 
+                style={{ width: '100%', maxHeight: '70%' }} 
+                showsVerticalScrollIndicator={false}
+                keyboardShouldPersistTaps="handled"
+              >
+                {isEditable ? (
+                  <View style={{ width: '100%', paddingBottom: 16 }}>
+                    <View style={modalStyles.fieldContainer}>
+                      <Text style={modalStyles.bulletText}>
+                        <Text style={modalStyles.boldText}>Name</Text>
+                      </Text>
+                      <TextInput
+                        style={modalStyles.fieldInput}
+                        value={editedItem.itemName}
+                        onChangeText={(text) =>
+                          setEditedItem({ ...editedItem, itemName: text })
+                        }
+                        placeholder="Enter Name"
+                        maxLength={20}
+                      />
+                    </View>
+                    
+                    <View style={modalStyles.fieldContainer}>
+                      <Text style={modalStyles.bulletText}>
+                        <Text style={modalStyles.boldText}>Length (inches)</Text>
+                      </Text>
+                      <TextInput
+                        style={modalStyles.fieldInput}
+                        value={editedItem.itemLength}
+                        onChangeText={(text) =>
+                          setEditedItem({ ...editedItem, itemLength: text })
+                        }
+                        keyboardType="numeric"
+                        placeholder="Enter Length"
+                        maxLength={3}
+                      />
+                    </View>
+                    
+                    <View style={modalStyles.fieldContainer}>
+                      <Text style={modalStyles.bulletText}>
+                        <Text style={modalStyles.boldText}>Width (inches)</Text>
+                      </Text>
+                      <TextInput
+                        style={modalStyles.fieldInput}
+                        value={editedItem.itemWidth}
+                        onChangeText={(text) =>
+                          setEditedItem({ ...editedItem, itemWidth: text })
+                        }
+                        keyboardType="numeric"
+                        placeholder="Enter Width"
+                        maxLength={3}
+                      />
+                    </View>
+                    
+                    <View style={modalStyles.fieldContainer}>
+                      <Text style={modalStyles.bulletText}>
+                        <Text style={modalStyles.boldText}>Height (inches)</Text>
+                      </Text>
+                      <TextInput
+                        style={modalStyles.fieldInput}
+                        value={editedItem.itemHeight}
+                        onChangeText={(text) =>
+                          setEditedItem({ ...editedItem, itemHeight: text })
+                        }
+                        keyboardType="numeric"
+                        placeholder="Enter Height"
+                        maxLength={3}
+                      />
+                    </View>
+                    
+                    <View style={modalStyles.fieldContainer}>
+                      <Text style={modalStyles.bulletText}>
+                        <Text style={modalStyles.boldText}>Quantity</Text>
+                      </Text>
+                      <TextInput
+                        style={modalStyles.fieldInput}
+                        value={editedItem.quantity}
+                        onChangeText={(text) =>
+                          setEditedItem({ ...editedItem, quantity: text })
+                        }
+                        keyboardType="numeric"
+                        placeholder="Enter Quantity"
+                        maxLength={2}
+                      />
+                    </View>
                   </View>
-                  
-                  <View style={modalStyles.fieldContainer}>
-                    <Text style={modalStyles.bulletText}>
-                      <Text style={modalStyles.boldText}>Length (inches)</Text>
-                    </Text>
-                    <TextInput
-                      style={modalStyles.fieldInput}
-                      value={editedItem.itemLength}
-                      onChangeText={(text) =>
-                        setEditedItem({ ...editedItem, itemLength: text })
-                      }
-                      keyboardType="numeric"
-                      placeholder="Enter Length"
-                      maxLength={3}
-                    />
+                ) : (
+                  <View style={{ width: '100%' }}>
+                    <View style={modalStyles.fieldRow}>
+                      <Text style={modalStyles.fieldLabel}>Name:</Text>
+                      <Text style={modalStyles.fieldValue}>{item?.itemName}</Text>
+                    </View>
+                    
+                    <View style={modalStyles.fieldRow}>
+                      <Text style={modalStyles.fieldLabel}>Length:</Text>
+                      <Text style={modalStyles.fieldValue}>{item?.itemLength} inches</Text>
+                    </View>
+                    
+                    <View style={modalStyles.fieldRow}>
+                      <Text style={modalStyles.fieldLabel}>Width:</Text>
+                      <Text style={modalStyles.fieldValue}>{item?.itemWidth} inches</Text>
+                    </View>
+                    
+                    <View style={modalStyles.fieldRow}>
+                      <Text style={modalStyles.fieldLabel}>Height:</Text>
+                      <Text style={modalStyles.fieldValue}>{item?.itemHeight} inches</Text>
+                    </View>
+                    
+                    <View style={modalStyles.fieldRow}>
+                      <Text style={modalStyles.fieldLabel}>Quantity:</Text>
+                      <Text style={modalStyles.fieldValue}>{item?.quantity || 1}</Text>
+                    </View>
                   </View>
-                  
-                  <View style={modalStyles.fieldContainer}>
-                    <Text style={modalStyles.bulletText}>
-                      <Text style={modalStyles.boldText}>Width (inches)</Text>
-                    </Text>
-                    <TextInput
-                      style={modalStyles.fieldInput}
-                      value={editedItem.itemWidth}
-                      onChangeText={(text) =>
-                        setEditedItem({ ...editedItem, itemWidth: text })
-                      }
-                      keyboardType="numeric"
-                      placeholder="Enter Width"
-                      maxLength={3}
-                    />
-                  </View>
-                  
-                  <View style={modalStyles.fieldContainer}>
-                    <Text style={modalStyles.bulletText}>
-                      <Text style={modalStyles.boldText}>Height (inches)</Text>
-                    </Text>
-                    <TextInput
-                      style={modalStyles.fieldInput}
-                      value={editedItem.itemHeight}
-                      onChangeText={(text) =>
-                        setEditedItem({ ...editedItem, itemHeight: text })
-                      }
-                      keyboardType="numeric"
-                      placeholder="Enter Height"
-                      maxLength={3}
-                    />
-                  </View>
-                  
-                  <View style={modalStyles.fieldContainer}>
-                    <Text style={modalStyles.bulletText}>
-                      <Text style={modalStyles.boldText}>Quantity</Text>
-                    </Text>
-                    <TextInput
-                      style={modalStyles.fieldInput}
-                      value={editedItem.quantity}
-                      onChangeText={(text) =>
-                        setEditedItem({ ...editedItem, quantity: text })
-                      }
-                      keyboardType="numeric"
-                      placeholder="Enter Quantity"
-                      maxLength={2}
-                    />
-                  </View>
-                </View>
-              ) : (
-                <View style={{ width: '100%' }}>
-                  <View style={modalStyles.fieldRow}>
-                    <Text style={modalStyles.fieldLabel}>Name:</Text>
-                    <Text style={modalStyles.fieldValue}>{item?.itemName}</Text>
-                  </View>
-                  
-                  <View style={modalStyles.fieldRow}>
-                    <Text style={modalStyles.fieldLabel}>Length:</Text>
-                    <Text style={modalStyles.fieldValue}>{item?.itemLength} inches</Text>
-                  </View>
-                  
-                  <View style={modalStyles.fieldRow}>
-                    <Text style={modalStyles.fieldLabel}>Width:</Text>
-                    <Text style={modalStyles.fieldValue}>{item?.itemWidth} inches</Text>
-                  </View>
-                  
-                  <View style={modalStyles.fieldRow}>
-                    <Text style={modalStyles.fieldLabel}>Height:</Text>
-                    <Text style={modalStyles.fieldValue}>{item?.itemHeight} inches</Text>
-                  </View>
-                  
-                  <View style={modalStyles.fieldRow}>
-                    <Text style={modalStyles.fieldLabel}>Quantity:</Text>
-                    <Text style={modalStyles.fieldValue}>{item?.quantity || 1}</Text>
-                  </View>
-                </View>
-              )}
-            </ScrollView>
+                )}
+              </ScrollView>
 
-            <View style={modalStyles.modalButtonContainer}>
-              {isEditable ? (
-                <>
-                  <TouchableOpacity
-                    style={[modalStyles.button, modalStyles.applyButton]}
-                    onPress={handleApplyChanges}
-                  >
-                    <Text style={modalStyles.buttonText}>Apply</Text>
-                  </TouchableOpacity>
-                  <TouchableOpacity
-                    style={[modalStyles.button, modalStyles.cancelButton]}
-                    onPress={handleEditToggle}
-                  >
-                    <Text style={modalStyles.buttonText}>Cancel</Text>
-                  </TouchableOpacity>
-                </>
-              ) : (
-                <>
-                  <TouchableOpacity
-                    style={[modalStyles.button, modalStyles.editButton]}
-                    onPress={handleEditToggle}
-                  >
-                    <Text style={modalStyles.buttonText}>Edit</Text>
-                  </TouchableOpacity>
-                  <TouchableOpacity
-                    style={[modalStyles.button, modalStyles.deleteButton]}
-                    onPress={() => handleDeleteAndClose(item)}
-                  >
-                    <Text style={modalStyles.buttonText}>Delete</Text>
-                  </TouchableOpacity>
-                </>
-              )}
+              <View style={modalStyles.modalButtonContainer}>
+                {isEditable ? (
+                  <>
+                    <TouchableOpacity
+                      style={[modalStyles.button, modalStyles.applyButton]}
+                      onPress={handleApplyChanges}
+                    >
+                      <Text style={modalStyles.buttonText}>Apply</Text>
+                    </TouchableOpacity>
+                    <TouchableOpacity
+                      style={[modalStyles.button, modalStyles.cancelButton]}
+                      onPress={handleEditToggle}
+                    >
+                      <Text style={modalStyles.buttonText}>Cancel</Text>
+                    </TouchableOpacity>
+                  </>
+                ) : (
+                  <>
+                    <TouchableOpacity
+                      style={[modalStyles.button, modalStyles.editButton]}
+                      onPress={handleEditToggle}
+                    >
+                      <Text style={modalStyles.buttonText}>Edit</Text>
+                    </TouchableOpacity>
+                    <TouchableOpacity
+                      style={[modalStyles.button, modalStyles.deleteButton]}
+                      onPress={() => handleDeleteAndClose(item)}
+                    >
+                      <Text style={modalStyles.buttonText}>Delete</Text>
+                    </TouchableOpacity>
+                  </>
+                )}
+              </View>
             </View>
           </View>
-        </View>
-      </TouchableWithoutFeedback>
+        </TouchableWithoutFeedback>
+      </KeyboardAvoidingView>
     </Modal>
   );
 };
