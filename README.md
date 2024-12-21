@@ -23,10 +23,10 @@ Compare prices across top shipping carriers to find the best and most cost-effec
 ✨ Whether you’re moving, frequently shipping, or just sending a gift, MagicBoxer takes the guesswork out of packing so you can focus on what matters most. Say goodbye to packing headaches and hello to seamless, stress-free shipping! ✨
 
 <div style="display: flex; flex-wrap: wrap; justify-content: space-between;">
-  <img src="/demo/1.PNG" alt="1" width="400"/>
-  <img src="/demo/2.PNG" alt="2" width="400"/>
+  <img src="/demo/1.PNG" alt="1" width="400" style="border: 2px solid #ccc; margin-right: 10px;"/>
+  <img src="/demo/2.PNG" alt="2" width="400" style="border: 2px solid #ccc;"/>
 </div>
-<div style="display: flex; flex-wrap: wrap; justify-content: space-between;">
-  <img src="/demo/3.PNG" alt="3" width="400"/>
-  <img src="/demo/4.PNG" alt="4" width="400"/>
+<div style="display: flex; flex-wrap: wrap; justify-content: space-between; margin-top: 10px;">
+  <img src="/demo/3.PNG" alt="3" width="400" style="border: 2px solid #ccc; margin-right: 10px;"/>
+  <img src="/demo/4.PNG" alt="4" width="400" style="border: 2px solid #ccc;"/>
 </div>
