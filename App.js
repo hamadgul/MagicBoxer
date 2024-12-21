@@ -1,60 +1,58 @@
-// App.js
-import React, { useState, useEffect } from "react";
+import React, { useCallback, useEffect, useState } from "react";
 import { Platform, StatusBar, StyleSheet, View } from "react-native";
 import * as SplashScreen from "expo-splash-screen";
-import { Asset } from "expo-asset";
 import * as Font from "expo-font";
 import AppNavigator from "./navigation/AppNavigator";
 import { Ionicons } from "@expo/vector-icons";
 import { NativeBaseProvider } from 'native-base';
 
-// Suppress the legacy context API warning
-const originalWarn = console.warn;
-console.warn = (...args) => {
-  if (args[0]?.includes?.('childContextTypes')) return;
-  originalWarn.apply(console, args);
-};
+// Keep the splash screen visible while we fetch resources
+SplashScreen.preventAutoHideAsync().catch(() => {
+  /* reloading the app might trigger some race conditions, ignore them */
+});
 
-SplashScreen.preventAutoHideAsync();
-
-export default function Main() {
-  const [isLoadingComplete, setLoadingComplete] = useState(false);
+export default function App() {
+  const [appIsReady, setAppIsReady] = useState(false);
 
   useEffect(() => {
-    async function loadResourcesAndDataAsync() {
+    async function prepare() {
       try {
-        await Asset.loadAsync([
-          require("./assets/images/robot-dev.png"),
-          require("./assets/images/robot-prod.png"),
-        ]);
-
+        // Pre-load fonts, make any API calls you need to do here
         await Font.loadAsync({
           ...Ionicons.font,
-          "space-mono": require("./assets/fonts/SpaceMono-Regular.ttf"),
         });
+        
+        // Artificially delay for two seconds to simulate a slow loading
+        await new Promise(resolve => setTimeout(resolve, 2000));
       } catch (e) {
         console.warn(e);
       } finally {
-        setLoadingComplete(true);
-        await SplashScreen.hideAsync();
+        // Tell the application to render
+        setAppIsReady(true);
       }
     }
 
-    loadResourcesAndDataAsync();
+    prepare();
   }, []);
 
-  if (!isLoadingComplete) {
+  const onLayoutRootView = useCallback(async () => {
+    if (appIsReady) {
+      await SplashScreen.hideAsync();
+    }
+  }, [appIsReady]);
+
+  if (!appIsReady) {
     return null;
-  } else {
-    return (
-      <NativeBaseProvider>
-        <View style={styles.container}>
-          {Platform.OS === "ios" && <StatusBar barStyle="default" />}
-          <AppNavigator />
-        </View>
-      </NativeBaseProvider>
-    );
   }
+
+  return (
+    <NativeBaseProvider>
+      <View style={styles.container} onLayout={onLayoutRootView}>
+        {Platform.OS === "ios" && <StatusBar barStyle="default" />}
+        <AppNavigator />
+      </View>
+    </NativeBaseProvider>
+  );
 }
 
 const styles = StyleSheet.create({

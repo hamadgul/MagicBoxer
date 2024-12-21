@@ -813,27 +813,35 @@ export default class FormPage extends Component {
               style={styles.itemsContainer}
               contentContainerStyle={styles.itemsList}
             >
-              {this.state.items.map((item, index) => (
-                <TouchableOpacity
-                  key={item.id}
-                  style={[
-                    styles.itemButton,
-                    {
-                      backgroundColor:
-                        itemButtonColors[index % itemButtonColors.length],
-                    },
-                  ]}
-                  onPress={() => this.openModal(item)}
-                >
-                  <Text 
-                    style={styles.buttonText}
-                    numberOfLines={1}
-                    ellipsizeMode="tail"
-                  >
-                    {item.itemName}
+              {this.state.items.length === 0 ? (
+                <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center', padding: 20 }}>
+                  <Text style={{ color: '#94A3B8', fontSize: 16, textAlign: 'center' }}>
+                    No items added yet. Add items using the form above and they'll appear here!
                   </Text>
-                </TouchableOpacity>
-              ))}
+                </View>
+              ) : (
+                this.state.items.map((item, index) => (
+                  <TouchableOpacity
+                    key={item.id}
+                    style={[
+                      styles.itemButton,
+                      {
+                        backgroundColor:
+                          itemButtonColors[index % itemButtonColors.length],
+                      },
+                    ]}
+                    onPress={() => this.openModal(item)}
+                  >
+                    <Text 
+                      style={styles.buttonText}
+                      numberOfLines={1}
+                      ellipsizeMode="tail"
+                    >
+                      {item.itemName}
+                    </Text>
+                  </TouchableOpacity>
+                ))
+              )}
             </ScrollView>
           </View>
 
