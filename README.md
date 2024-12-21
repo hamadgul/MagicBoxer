@@ -29,6 +29,7 @@ Compare prices across top shipping carriers to find the best and most cost-effec
   </tr>
   <tr>
     <td style="padding: 10px;"><img src="/demo/3.PNG" alt="3" width="400"/></td>
-    <td style="padding: 10px;"><img src="/demo/4.PNG" alt="4" width="400"/></td>
+    <td style="padding: 10px;"><img src="/demo/5.PNG" alt="5" width="400"/></td>
   </tr>
+  <td style="padding: 10px;"><img src="/demo/4.PNG" alt="4" width="400"/></td>
 </table>
