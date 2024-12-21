@@ -225,7 +225,7 @@ export const ItemDetailsModal = ({
               </View>
 
               <ScrollView 
-                style={{ width: '100%', maxHeight: '70%' }} 
+                style={{ width: '97%', maxHeight: '80%' }} 
                 showsVerticalScrollIndicator={false}
                 keyboardShouldPersistTaps="handled"
               >
@@ -340,7 +340,9 @@ export const ItemDetailsModal = ({
                 )}
               </ScrollView>
 
-              <View style={modalStyles.modalButtonContainer}>
+              <View style={{ flex: 1 }} />
+
+              <View style={[modalStyles.modalButtonContainer, { marginTop: 'auto', paddingVertical: 16 }]}>
                 {isEditable ? (
                   <>
                     <TouchableOpacity
