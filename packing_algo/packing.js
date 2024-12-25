@@ -123,14 +123,14 @@ export function pack(itemList, carrier, optionalBox) {
   itemVol = vol(itemList);
   boxSizes = filterVol(boxSizes, itemVol);
   if (boxSizes.length === 0) {
-    return 0;
+    return null;
   }
   itemList = quickSort(itemList, 0, itemList.length - 1).reverse();
   boxSizes = quickSort(boxSizes, 0, boxSizes.length - 1);
-  finalBox = findBox(itemList, boxSizes, 0);
+  var finalBox = findBox(itemList, boxSizes, 0);
   return finalBox;
 }
-// Generate the box sizes for the specific carrier
+
 // Generate the box sizes for the specific carrier
 function carrierBoxes(carrier) {
   switch (carrier) {
@@ -240,6 +240,8 @@ function carrierBoxes(carrier) {
       ];
     case "No Carrier":
       return [
+        [6, 4, 2, 0.95, false, "Small Box"],
+        [6, 6, 6, 0.95, false, "Small Box"],
         [9, 6, 3, 0.75, false, "Small Mailing Box"],
         [11, 8.5, 5.5, 1, false, "Medium Mailing Box"],
         [12, 12, 8, 1.25, false, "Large Mailing Box"],
@@ -263,9 +265,36 @@ function carrierBoxes(carrier) {
         [18, 18, 28, 5.5, false, "Dish Pack Box"],
         [24, 24, 40, 15, false, "Wardrobe Box"],
         [37, 4, 27, 4.5, false, "Flat Box (for artwork and mirrors)"],
-        [16, 12, 10, 2.25, false, "Banker Box"],
+        [16, 12, 10, 2.25,false, "Banker Box"],
         [18, 18, 24, 5, false, "Heavy-Duty Box"],
         [48, 6.4, 48.4, 39.98, false, "Heavy Duty Picture HomeDepot Box"],
+        [6, 4, 4, 0.95, false, "Small Box"],
+        [8, 8, 4, 0.95, false, "Small Box"],
+        [9, 6, 5, 0.95, false, "Small Box"],
+        [12, 9, 4, 1.49, false, "Small Box"],
+        [12, 12, 6, 1.35, false, "Small Box"],
+        [12, 10, 8, 1.3, false, "Small Box"],
+        [14, 10, 4, 1.99, false, "Medium Box"],
+        [16, 16, 12, 3.95, false, "Medium Box"],
+        [18, 12, 6, 2.15, false, "Medium Box"],
+        [18, 12, 12, 2.25, false, "Medium Box"],
+        [20, 14, 6, 2.4, false, "Medium Box"],
+        [24, 18, 12, 3.85, false, "Medium Box"],
+        [18, 18, 18, 3.9, false, "Large Box"],
+        [20, 20, 20, 6.95, false, "Large Box"],
+        [30, 24, 18, 10.99, false, "Large Box"],
+        [36, 24, 12, 9.9, false, "Large Box"],
+        [36, 36, 36, 17.95, false, "Large Box"],
+        [9, 12, 2, 1.25, false, "Flat Box"],
+        [12, 12, 1, 1.35, false, "Flat Box"],
+        [18, 12, 4, 2.15, false, "Flat Box"],
+        [20, 16, 2, 2.4, false, "Flat Box"],
+        [24, 24, 6, 4.99, false, "Flat Box"],
+        [6, 6, 36, 3.25, false, "Specialty Box"],
+        [12, 6, 6, 0.95, false, "Specialty Box"],
+        [18, 18, 6, 3.25, false, "Specialty Box"],
+        [24, 6, 6, 2.95, false, "Specialty Box"],
+        [36, 6, 6, 3.65, false, "Specialty Box"]
       ];
   }
 }

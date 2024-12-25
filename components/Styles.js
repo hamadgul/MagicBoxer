@@ -57,6 +57,7 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     justifyContent: "space-between",
     marginTop: 20,
+    paddingTop: 20,
   },
   submitButton: {
     backgroundColor: "#3B82F6",
@@ -301,9 +302,8 @@ const styles = StyleSheet.create({
     justifyContent: "space-between",
     paddingVertical: 10,
     backgroundColor: '#fff',
-    borderTopWidth: 1,
-    borderTopColor: '#e9ecef',
     paddingHorizontal: 5,
+    marginTop: 10,
   },
 });
 

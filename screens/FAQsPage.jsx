@@ -20,6 +20,15 @@ if (Platform.OS === 'android' && UIManager.setLayoutAnimationEnabledExperimental
 const FAQsPage = ({ navigation }) => {
   const [expandedIndex, setExpandedIndex] = useState(null);
 
+  const Header = () => (
+    <View style={styles.headerContainer}>
+      <View style={styles.headerContent}>
+        <Text style={styles.headerTitle}>Frequently Asked Questions</Text>
+        <Text style={styles.headerSubtitle}>Find answers to common questions</Text>
+      </View>
+    </View>
+  );
+
   const toggleExpand = (index) => {
     LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
     setExpandedIndex(expandedIndex === index ? null : index);
@@ -74,7 +83,7 @@ const FAQsPage = ({ navigation }) => {
 
   return (
     <View style={styles.container}>
-      <Text style={styles.header}>Frequently Asked Questions</Text>
+      <Header />
       <ScrollView style={styles.scrollView}>
         {faqs.map((faq, index) => (
           <TouchableOpacity
@@ -122,17 +131,39 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: "#F5F7FA",
   },
+  headerContainer: {
+    backgroundColor: '#4A90E2',
+    paddingVertical: 24,
+    paddingHorizontal: 20,
+    borderBottomLeftRadius: 25,
+    borderBottomRightRadius: 25,
+    shadowColor: "#000",
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.25,
+    shadowRadius: 3.84,
+    elevation: 5,
+  },
+  headerContent: {
+    alignItems: 'center',
+  },
+  headerTitle: {
+    fontSize: 28,
+    fontWeight: '700',
+    color: '#FFFFFF',
+    textAlign: 'center',
+    letterSpacing: 0.5,
+    marginBottom: 8,
+  },
+  headerSubtitle: {
+    fontSize: 16,
+    color: 'rgba(255, 255, 255, 0.9)',
+    textAlign: 'center',
+  },
   scrollView: {
     padding: 16,
-  },
-  header: {
-    fontSize: 28,
-    fontWeight: "700",
-    marginBottom: 20,
-    color: "#1A365D",
-    paddingTop: 16,
-    paddingHorizontal: 16,
-    textAlign: "center",
   },
   faqItem: {
     backgroundColor: "#FFFFFF",
