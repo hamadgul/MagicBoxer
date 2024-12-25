@@ -517,7 +517,7 @@ export default class FormPage extends Component {
   handleUpdateItem = (updatedItem) => {
     const quantity = parseInt(updatedItem.quantity) || 1;
     const replicatedNames = Array.from({ length: quantity }, (_, i) =>
-      i === 0 ? updatedItem.itemName : `${updatedItem.itemName}${i + 1}`
+      i === 0 ? updatedItem.itemName : `${updatedItem.itemName} ${i + 1}`
     );
 
     const updatedItemWithReplications = {
@@ -701,7 +701,7 @@ export default class FormPage extends Component {
     }
 
     const replicatedNames = Array.from({ length: quantity }, (_, i) =>
-      i === 0 ? this.state.itemName : `${this.state.itemName}${i + 1}`
+      i === 0 ? this.state.itemName : `${this.state.itemName} ${i + 1}`
     );
 
     const newItem = {

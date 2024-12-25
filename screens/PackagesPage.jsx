@@ -154,7 +154,7 @@ export default class PackagesPage extends Component {
     }
 
     const replicatedNames = Array.from({ length: updatedItem.quantity }, (_, i) =>
-      i === 0 ? updatedItem.itemName : `${updatedItem.itemName}${i + 1}`
+      i === 0 ? updatedItem.itemName : `${updatedItem.itemName} ${i + 1}`
     );
 
     const updatedItemWithReplications = {

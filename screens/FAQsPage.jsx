@@ -64,7 +64,7 @@ const FAQsPage = ({ navigation }) => {
     },
     {
       question: "How do multiple quantities of the same item appear in the 3D view?",
-      answer: "In the legend, multiple quantities of an item (e.g., 'Charger') will be labeled as Charger2, Charger3, etc.",
+      answer: "In the legend, multiple quantities of an item (e.g., 'Charger') will be labeled as Charger, Charger 2, Charger 3, etc.",
       icon: "copy"
     },
     {

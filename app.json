@@ -1,4 +1,3 @@
-
 {
   "expo": {
     "newArchEnabled": true,
@@ -16,10 +15,19 @@
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
     "splash": {
-      "image": "./assets/images/splash-screen.png",
+      "image": "./assets/images/splash.png",
       "resizeMode": "contain",
       "backgroundColor": "#0f2d44"
     },
+    "plugins": [
+      [
+        "expo-splash-screen",
+        {
+          "backgroundColor": "#0f2d44",
+          "image": "./assets/images/splash.png"
+        }
+      ]
+    ],
     "updates": {
       "fallbackToCacheTimeout": 3000
     },
