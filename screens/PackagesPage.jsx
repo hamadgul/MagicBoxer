@@ -275,6 +275,7 @@ export default class PackagesPage extends Component {
         selectedBox: selectedBox,
         selectedCarrier: "No Carrier",
         items: updatedPackage,
+        packageName: selectedPackage
       });
 
       // Close the package modal

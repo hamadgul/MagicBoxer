@@ -436,7 +436,7 @@ export default class Display3D extends Component {
             },
           ]}
         >
-          <Text style={styles.boxSubtitle}>For This Package:</Text>
+          <Text style={styles.boxSubtitle}>For {this.props.route.params.packageName || "This Package"}:</Text>
           <Text style={styles.boxDetails}>
             {selectedBox.dimensions[0]}L x {selectedBox.dimensions[1]}W x{" "}
             {selectedBox.dimensions[2]}H
