@@ -247,7 +247,7 @@ export default class PackagesPage extends Component {
             item.itemWidth,
             item.itemHeight,
             item.id,
-            item.selectedCarrier,
+            "No Carrier", // Always use No Carrier when packing from PackagesPage
             name,
           ]);
         });
@@ -264,7 +264,7 @@ export default class PackagesPage extends Component {
 
       const selectedBox = {
         dimensions: [packedResult.x, packedResult.y, packedResult.z],
-        price: packedResult.price,
+        priceText: packedResult.priceText, // Include priceText in selectedBox
         finalBoxType: packedResult.type,
       };
 
@@ -272,7 +272,7 @@ export default class PackagesPage extends Component {
       this.props.navigation.navigate("Display3D", {
         box: packedResult,
         itemsTotal: itemsDisplay,
-        selectedBox,
+        selectedBox: selectedBox,
         selectedCarrier: "No Carrier",
         items: updatedPackage,
       });

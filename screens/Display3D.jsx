@@ -9,6 +9,7 @@ import {
   Modal,
   ScrollView,
   Animated,
+  Linking
 } from "react-native";
 import Slider from "@react-native-community/slider";
 import { GLView } from "expo-gl";
@@ -24,6 +25,39 @@ const carrierData = [
   { label: "USPS", value: "USPS" },
   { label: "FedEx", value: "FedEx" },
 ];
+
+const PriceText = ({ carrier, priceText }) => {
+  if (!priceText) {
+    return <Text style={styles.text}>Price not available</Text>;
+  }
+
+  const handlePress = () => {
+    let url = "";
+    if (priceText.includes("Priority Mail")) {
+      url = "https://postcalc.usps.com/";
+    } else if (priceText.includes("FedEx One Rate")) {
+      url = "https://www.fedex.com/en-us/online/rating.html#";
+    } else if (priceText.includes("Flat Rates Start at")) {
+      url = "https://wwwapps.ups.com/ctc/request?loc=en_US";
+    }
+    
+    if (url) {
+      Linking.openURL(url);
+    }
+  };
+
+  const isClickable = priceText.includes("Priority Mail") || 
+                     priceText.includes("FedEx One Rate") || 
+                     priceText.includes("Flat Rates Start at");
+
+  return isClickable ? (
+    <TouchableOpacity onPress={handlePress}>
+      <Text style={[styles.text, styles.linkText]}>{priceText}</Text>
+    </TouchableOpacity>
+  ) : (
+    <Text style={styles.text}>{priceText}</Text>
+  );
+};
 
 export default class Display3D extends Component {
   constructor(props) {
@@ -56,6 +90,8 @@ export default class Display3D extends Component {
     this.unsubscribeFocus = this.props.navigation.addListener("focus", () => {
       this.forceUpdateWithProps();
     });
+    // Call handleVisualize to set up initial state
+    this.handleVisualize();
   }
 
   componentWillUnmount() {
@@ -301,7 +337,7 @@ export default class Display3D extends Component {
         item.itemWidth,
         item.itemHeight,
         item.id,
-        selectedCarrier,
+        selectedCarrier, // Use the current selectedCarrier
         name,
       ])
     );
@@ -323,8 +359,8 @@ export default class Display3D extends Component {
         itemsTotal: itemsDisplay,
         selectedBox: {
           dimensions: [packedResult.x, packedResult.y, packedResult.z],
-          price: packedResult.price,
           finalBoxType: packedResult.type,
+          priceText: packedResult.priceText
         },
       },
       () => {
@@ -405,15 +441,8 @@ export default class Display3D extends Component {
             {selectedBox.dimensions[0]}L x {selectedBox.dimensions[1]}W x{" "}
             {selectedBox.dimensions[2]}H
           </Text>
-          <Text style={styles.text}>
-            Estimated Box Price:{" "}
-            {selectedBox.price !== null && selectedBox.price !== undefined
-              ? selectedBox.price === 0
-                ? "Free with Service"
-                : `$${selectedBox.price.toFixed(2)}`
-              : "N/A"}
-          </Text>
-          <Text style={styles.text}>{selectedBox.finalBoxType || "N/A"}</Text>
+          <Text style={styles.text}>{selectedBox.finalBoxType}</Text>
+          <PriceText carrier={selectedCarrier} priceText={selectedBox.priceText} />
           <View style={styles.carrierDropdownContainer}>
             <Dropdown
               style={styles.input}
@@ -733,5 +762,9 @@ const styles = StyleSheet.create({
   boxWrapper: {
     width: '100%',
     alignItems: 'center',
+  },
+  linkText: {
+    color: '#007AFF',
+    textDecorationLine: 'underline'
   },
 });

@@ -618,7 +618,7 @@ export default class FormPage extends Component {
               item.itemWidth,
               item.itemHeight,
               item.id,
-              item.selectedCarrier,
+              "No Carrier", // Always use No Carrier initially
               name,
             ]);
           });
@@ -638,8 +638,8 @@ export default class FormPage extends Component {
 
         const selectedBox = {
           dimensions: [packedResult.x, packedResult.y, packedResult.z],
-          price: packedResult.price,
           finalBoxType: packedResult.type,
+          priceText: packedResult.priceText
         };
 
         this.props.navigation.navigate("Display3D", {

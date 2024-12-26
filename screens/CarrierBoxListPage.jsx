@@ -69,7 +69,7 @@ const CarrierBoxListPage = () => {
                       numberOfLines={3} // Allowing more lines for text wrapping
                       ellipsizeMode="tail"
                     >
-                      {box[5]}
+                      {box[3]} {/* Box type */}
                     </Text>
                     <Text
                       style={[styles.cell, styles.cellBorder, { width: 180 }]}
@@ -82,9 +82,7 @@ const CarrierBoxListPage = () => {
                     <Text
                       style={[styles.cell, styles.cellBorder, { width: 100 }]}
                     >
-                      {box[3] === 0
-                        ? "Free with service"
-                        : `$${box[3].toFixed(2)}`}
+                      {box[4]} {/* Price text */}
                     </Text>
                   </View>
                 ))}

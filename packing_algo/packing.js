@@ -38,13 +38,12 @@ function swap(arr, i, j) {
 //classes for boxes and items
 function Box(dims) {
   this.x = dims[0];
-  this.y = dims[1] || 0; // Ensure y is never undefined
+  this.y = dims[1] || 0;
   this.z = dims[2];
-  this.price = dims[3] || 0; // Price is the fourth element, default to 0 if not provided
-  this.isDefaultPrice = dims[4] || false; // Boolean flag indicating if the price is default
-  this.type = dims[5]; // Add type of the box
+  this.type = dims[3] || ""; // Box type is the fourth element
+  this.priceText = dims[4] || ""; // Price text is the fifth element
   this.cx = this.x / 2;
-  this.cy = -this.y / 2; // Check for NaN after computation
+  this.cy = -this.y / 2;
   this.cz = this.z / 2;
   this.vol = this.x * this.y * this.z;
   this.items = [];
@@ -54,7 +53,7 @@ function Box(dims) {
 
   if (isNaN(this.cy)) {
     console.error("Invalid y dimension", { y: this.y });
-    this.cy = 0; // Set a default or corrective value
+    this.cy = 0;
   }
 }
 
@@ -123,178 +122,184 @@ export function pack(itemList, carrier, optionalBox) {
   itemVol = vol(itemList);
   boxSizes = filterVol(boxSizes, itemVol);
   if (boxSizes.length === 0) {
-    return null;
+    // Return a default box with appropriate message for No Carrier
+    const box = new Box([12, 12, 12, "Custom Box", "Box size too small, please select larger dimensions"]);
+    return box;
   }
   itemList = quickSort(itemList, 0, itemList.length - 1).reverse();
   boxSizes = quickSort(boxSizes, 0, boxSizes.length - 1);
   var finalBox = findBox(itemList, boxSizes, 0);
+  if (finalBox === "No boxes found") {
+    const box = new Box([12, 12, 12, "Custom Box", "Box size too small, please select larger dimensions"]);
+    return box;
+  }
   return finalBox;
 }
 
 // Generate the box sizes for the specific carrier
 function carrierBoxes(carrier) {
   switch (carrier) {
+    case "No Carrier":
+      return [
+        [6, 4, 2, "Small Box", "Estimated Box Only Price: $0.95"],
+        [6, 6, 6, "Small Box", "Estimated Box Only Price: $0.95"],
+        [9, 6, 3, "Small Mailing Box", "Estimated Box Only Price: $0.75"],
+        [11, 8.5, 5.5, "Medium Mailing Box", "Estimated Box Only Price: $1.00"],
+        [12, 12, 8, "Large Mailing Box", "Estimated Box Only Price: $1.25"],
+        [14, 14, 14, "Extra Large Mailing Box", "Estimated Box Only Price: $2.00"],
+        [10, 7, 3, "Letter Box", "Estimated Box Only Price: $0.75"],
+        [15, 12, 10, "Legal Box, File Box", "Estimated Box Only Price: $1.25"],
+        [16, 12, 12, "Small Moving Box, Small Box", "Estimated Box Only Price: $1.75"],
+        [18, 18, 16, "Medium Moving Box, Medium Box", "Estimated Box Only Price: $2.50"],
+        [20, 14, 6, "Medium Moving Box", "Estimated Box Only Price: $2.40"],
+        [24, 18, 12, "Medium Moving Box", "Estimated Box Only Price: $3.85"],
+        [18, 18, 18, "Large Moving Box", "Estimated Box Only Price: $3.90"],
+        [20, 20, 20, "Large Moving Box", "Estimated Box Only Price: $6.95"],
+        [30, 24, 18, "Large Moving Box", "Estimated Box Only Price: $10.99"],
+        [36, 24, 12, "Large Moving Box", "Estimated Box Only Price: $9.90"],
+        [36, 36, 36, "Large Moving Box", "Estimated Box Only Price: $17.95"],
+        [9, 12, 2, "Flat Box", "Estimated Box Only Price: $1.25"],
+        [12, 12, 1, "Flat Box", "Estimated Box Only Price: $1.35"],
+        [18, 12, 4, "Flat Box", "Estimated Box Only Price: $2.15"],
+        [20, 16, 2, "Flat Box", "Estimated Box Only Price: $2.40"],
+        [24, 24, 6, "Flat Box", "Estimated Box Only Price: $4.99"],
+        [6.25, 3.125, 0.5, "Small Electronics Box", "Contact Carrier For Price"],
+        [9.5, 12.5, 1, "FedEx Envelope", "FedEx One Rate: From $9.95"],
+        [9.5, 15.5, 1, "FedEx Envelope", "FedEx One Rate: From $9.95"],
+        [9.75, 11.5, 1, "FedEx Envelope", "FedEx One Rate: From $9.95"],
+        [10.25, 12.75, 1, "FedEx Pak", "FedEx One Rate: From $10.95"],
+        [12, 15.5, 3, "FedEx Large Pak", "FedEx One Rate: From $11.95"],
+        [11.75, 14.75, 1.5, "FedEx Pak Padded", "FedEx One Rate: From $11.95"],
+        [6, 6, 38, "FedEx Tube", "FedEx One Rate: From $22.85"],
+        [15, 15, 48, "Golf Bag Box", "Contact Carrier For Price"],
+        [50, 9, 9, "Golf Club Tube", "Contact Carrier For Price"],
+        [54, 8, 28, "Bike Box", "Contact Carrier For Price"],
+        [20, 8, 50, "Guitar Box", "Contact Carrier For Price"],
+        [38, 8, 26, "Flat-Panel Small TV Box", "Contact Carrier For Price"],
+        [46, 8, 30, "Flat-Panel Medium TV Box", "Contact Carrier For Price"],
+        [56, 8, 36, "Flat Panel Large TV Box", "Contact Carrier For Price"],
+        [6.25, 3.125, 0.5, "Small Electronics Box", "Contact Carrier For Price"],
+      ];
     case "USPS":
       return [
-        [8.6875, 5.4375, 1.75, 0, false, "Priority Mail Flat Rate Small Box"],
+        [8.6875, 5.4375, 1.75, "Priority Mail Flat Rate Small Box", "Priority Mail from: $11.00+"],
         [
           11.25,
           8.75,
           6,
-          0,
-          false,
           "Priority Mail Express Side-Loading Medium Box Option 1",
+          "Priority Mail Express: $31.55+"
         ],
         [
           14.125,
           12,
           3.5,
-          0,
-          false,
           "Priority Mail Flat Rate Side-Loading Medium Box",
+          "Priority Mail from: $11.00+"
         ],
-        [12.25, 12, 6, 0, false, "Priority Mail Flat Rate Large Box"],
-        [14.875, 5.25, 7.375, 0, false, "Priority Mail Shoe Box"],
-        [13.6875, 12, 2.875, 0, false, "Priority Mail Medium Box 1"],
-        [8.75, 5.5625, 0.875, 0, false, "Priority Mail DVD Box"],
-        [38.0625, 6.25, 4.25, 0, false, "Priority Mail Medium Tube Box"],
-        [9.4375, 6.4375, 2.1875, 0, false, "Priority Mail Small Box"],
+        [12.25, 12, 6, "Priority Mail Flat Rate Large Box", "Priority Mail from: $11.00+"],
+        [14.875, 5.25, 7.375, "Priority Mail Shoe Box", "Priority Mail from: $11.00+"],
+        [13.6875, 12, 2.875, "Priority Mail Medium Box 1", "Priority Mail from: $11.00+"],
+        [8.75, 5.5625, 0.875, "Priority Mail DVD Box", "Priority Mail from: $11.00+"],
+        [38.0625, 6.25, 4.25, "Priority Mail Medium Tube Box", "Priority Mail from: $11.00+"],
+        [9.4375, 6.4375, 2.1875, "Priority Mail Small Box", "Priority Mail from: $11.00+"],
         [
           14.125,
           12,
           3.5,
-          0,
-          false,
           "Priority Mail Flat Rate Side-Loading Medium Box",
+          "Priority Mail from: $11.00+"
         ],
-        [12.25, 12, 8.5, 0, false, "Priority Mail Large Box"],
-        [25.5625, 6, 5.25, 0, false, "Priority Mail Small Tube Box"],
-        [7.25, 7.25, 6.5, 0, false, "Priority Mail Medium Cube-Shaped Box"],
-        [11.75, 8.75, 5.75, 0, false, "Priority Mail Express Medium Box"],
-        [13.4375, 11.625, 2.5, 0, false, "Priority Mail Medium Box 2"],
+        [12.25, 12, 8.5, "Priority Mail Large Box", "Priority Mail from: $11.00+"],
+        [25.5625, 6, 5.25, "Priority Mail Small Tube Box", "Priority Mail from: $11.00+"],
+        [7.25, 7.25, 6.5, "Priority Mail Medium Cube-Shaped Box", "Priority Mail from: $11.00+"],
+        [11.75, 8.75, 5.75, "Priority Mail Express Medium Box", "Priority Mail Express: $31.55+"],
+        [13.4375, 11.625, 2.5, "Priority Mail Medium Box 2", "Priority Mail from: $11.00+"],
       ];
     case "FedEx":
       return [
-        [10.875, 1.5, 12.375, 0, false, "FedEx Small Box"],
-        [8.75, 2.625, 11.25, 0, false, "FedEx Small Box"],
-        [11.5, 2.375, 13.25, 0, false, "FedEx Medium Box"],
-        [8.75, 2.625, 11.25, 0, false, "FedEx Medium Box"],
-        [12, 3, 17.5, 2.25, false, "Standard"],
-        [17, 17, 7, 3.25, false, "Standard"],
-        [12, 9, 6, 2, false, "Standard"],
-        [20, 20, 12, 4.5, false, "Standard"],
-        [13, 9, 11, 2.75, false, "Standard"],
-        [23, 17, 12, 4.75, false, "Standard"],
-        [8, 8, 8, 1.75, false, "Standard"],
-        [11, 11, 11, 2.5, false, "Standard"],
-        [24, 24, 24, 12, false, "Heavy-duty Double-Walled Box"],
-        [14, 14, 14, 3.75, false, "Standard"],
-        [28, 28, 28, 15, false, "Heavy-duty Double-Walled Box"],
-        [16, 16, 16, 4.29, false, "Standard"],
-        [12, 12, 18, 3.75, false, "Standard"],
-        [20, 20, 20, 6.29, false, "Standard"],
-        [22, 22, 22, 7, false, "Standard"],
-        [24, 24, 18, 10, false, "Heavy-duty Double-Walled Box"],
-        [18, 13, 11.75, 7, false, "Heavy-duty Double-Walled Box"],
-        [9.5, 12.5, 1, 0, false, "Reusable Envelope"],
-        [9.5, 15.5, 1, 0, false, "Reusable Envelope"],
-        [9.75, 11.5, 1, 0, false, "Reusable Envelope"],
-        [10.25, 12.75, 1, 0, false, "FedEx Small Pak"],
-        [12, 15.5, 3, 0, false, "FedEx Large Pak"],
-        [11.75, 14.75, 1.5, 0, false, "FedEx Pak Padded"],
-        [6, 6, 38, 0, false, "FedEx Tube"],
-        [15, 15, 48, 14, false, "Golf Bag Box"],
-        [50, 9, 9, 7.5, false, "Golf Club Tube"],
-        [54, 8, 28, 16, false, "Bike Box"],
-        [20, 8, 50, 14, false, "Guitar Box"],
-        [38, 8, 26, 15, false, "Flat-Panel Small TV Box"],
-        [46, 8, 30, 20, false, "Flat-Panel Medium TV Box"],
-        [56, 8, 36, 28, false, "Flat Panel Large TV Box"],
-        [6.25, 3.125, 0.5, 8, false, "Small Electronics Box"],
-        [10.4375, 7.5, 1, 10, false, "Tablet Box"],
-        [21, 16, 5, 20, false, "Laptop Box with Kit"],
+        [10.875, 1.5, 12.375, "FedEx Small Box", "FedEx One Rate: From $12.95"],
+        [8.75, 2.625, 11.25, "FedEx Small Box", "FedEx One Rate: From $12.95"],
+        [11.5, 2.375, 13.25, "FedEx Medium Box", "FedEx One Rate: From $18.25"],
+        [8.75, 2.625, 11.25, "FedEx Medium Box", "FedEx One Rate: From $18.25"],
+        [8.75, 4.375,11.25, "FedEx Medium Box", "FedEx One Rate: From $18.25"],
+        [12, 3, 17.5, "FedEx Large Box", "FedEx One Rate: From $24.45"],
+        [17, 17, 7, "FedEx Large Box", "FedEx One Rate: From $24.45"],
+        [12, 9, 6, "FedEx Extra Large Box", "FedEx One Rate: From $32.50"],
+        [20, 20, 12, "FedEx Extra Large Box", "FedEx One Rate: From $32.50"],
+        [13, 9, 11, "FedEx Extra Large Box", "FedEx One Rate: From $32.50"],
+        [23, 17, 12, "Standard", "Contact Carrier For Price"],
+        [24, 24, 24, "Heavy-duty Double-Walled Box", "Contact Carrier For Price"],
+        [14, 14, 14, "Standard", "Contact Carrier For Price"],
+        [28, 28, 28, "Heavy-duty Double-Walled Box", "Contact Carrier For Price"],
+        [16, 16, 16, "Standard", "Contact Carrier For Price"],
+        [32, 32, 32, "Heavy-duty Double-Walled Box", "Contact Carrier For Price"],
+        [18, 18, 18, "Standard", "Contact Carrier For Price"],
+        [36, 36, 36, "Heavy-duty Double-Walled Box", "Contact Carrier For Price"],
+        [20, 20, 20, "Standard", "Contact Carrier For Price"],
+        [40, 40, 40, "Heavy-duty Double-Walled Box", "Contact Carrier For Price"],
+        [22, 22, 22, "Standard", "Contact Carrier For Price"],
+        [44, 44, 44, "Heavy-duty Double-Walled Box", "Contact Carrier For Price"],
+        [50, 9, 9, "Golf Club Tube", "Contact Carrier For Price"],
+        [54, 8, 28, "Bike Box", "Contact Carrier For Price"],
+        [20, 8, 50, "Guitar Box", "Contact Carrier For Price"],
+        [38, 8, 26, "Flat-Panel Small TV Box", "Contact Carrier For Price"],
+        [46, 8, 30, "Flat-Panel Medium TV Box", "Contact Carrier For Price"],
+        [56, 8, 36, "Flat Panel Large TV Box", "Contact Carrier For Price"],
+        [6.25, 3.125, 0.5, "Small Electronics Box", "Contact Carrier For Price"],
+        [9.5, 12.5, 1, "FedEx Envelope", "FedEx One Rate: From $9.95"],
+        [9.5, 15.5, 1, "FedEx Envelope", "FedEx One Rate: From $9.95"],
+        [9.75, 11.5, 1, "FedEx Envelope", "FedEx One Rate: From $9.95"],
+        [10.25, 12.75, 1, "FedEx Pak", "FedEx One Rate: From $10.95"],
+        [12, 15.5, 3, "FedEx Large Pak", "FedEx One Rate: From $11.95"],
+        [11.75, 14.75, 1.5, "FedEx Pak Padded", "FedEx One Rate: From $11.95"],
+        [6, 6, 38, "FedEx Tube", "FedEx One Rate: From $22.85"],
+        [15, 15, 48, "Golf Bag Box", "Contact Carrier For Price"],
+        [50, 9, 9, "Golf Club Tube", "Contact Carrier For Price"],
+        [54, 8, 28, "Bike Box", "Contact Carrier For Price"],
+        [20, 8, 50, "Guitar Box", "Contact Carrier For Price"],
+        [38, 8, 26, "Flat-Panel Small TV Box", "Contact Carrier For Price"],
+        [46, 8, 30, "Flat-Panel Medium TV Box", "Contact Carrier For Price"],
+        [56, 8, 36, "Flat Panel Large TV Box", "Contact Carrier For Price"],
+        [6.25, 3.125, 0.5, "Small Electronics Box", "Contact Carrier For Price"],
       ];
     case "UPS":
       return [
-        [6, 6, 6, 0, false, "Standard"],
-        [6, 6, 48, 0, false, "Standard"],
-        [8, 8, 8, 0, false, "Standard"],
-        [10, 10, 10, 0, false, "Standard"],
-        [12, 12, 6, 0, false, "Standard"],
-        [12, 12, 12, 0, false, "Standard"],
-        [14, 14, 14, 0, false, "Standard"],
-        [15, 12, 10, 0, false, "Standard"],
-        [15, 15, 48, 0, false, "Standard"],
-        [16, 16, 4, 0, false, "Standard"],
-        [16, 16, 16, 0, false, "Standard"],
-        [17, 11, 8, 0, false, "Standard"],
-        [18, 18, 18, 0, false, "Standard"],
-        [20, 12, 12, 0, false, "Standard"],
-        [20, 20, 12, 0, false, "Standard"],
-        [20, 20, 20, 0, false, "Standard"],
-        [24, 18, 6, 0, false, "Standard"],
-        [24, 18, 18, 0, false, "Standard"],
-        [24, 24, 16, 0, false, "Standard"],
-        [24, 24, 24, 0, false, "Standard"],
-        [30, 24, 6, 0, false, "Standard"],
+        [6, 6, 6, "Small Box","Flat Rates Start at $14.90"],
+        [6, 6, 48, "Extra Large Box", "Flat Rates Start at $29.25"],
+        [8, 8, 8, "Medium Box", "Flat Rates Start at $17.85"],
+        [10, 10, 10, "Large Box","Flat Rates Start at $23.50"],
+        [12, 12, 6, "Large Box","Flat Rates Start at $23.50"],
+        [12, 12, 12, "Extra Large Box","Flat Rates Start at $29.25"],
+        [14, 14, 14, "Standard"],
+        [15, 12, 10, "Extra Large Box","Flat Rates Start at $29.25"],
+        [15, 15, 48, "Standard"],
+        [16, 16, 4, "Large Box", "Flat Rates Start at $23.50"],
+        [16, 16, 16, "Standard"],
+        [17, 11, 8, "Extra Large Box", "Flat Rates Start at $29.25"],
+        [18, 18, 18, "Standard"],
+        [20, 12, 12, "Standard"],
+        [20, 20, 12, "Standard"],
+        [20, 20, 20, "Standard"],
+        [24, 18, 6, "Standard"],
+        [24, 18, 18, "Standard"],
+        [24, 24, 16, "Standard"],
+        [24, 24, 24, "Standard"],
+        [30, 24, 6, "Standard"],
+        // Additional Standard Retail Box Sizes
+        [8, 6, 4, "Extra Small Box", "Flat Rates Start at $14.90"],
+        [13, 11, 2, "Small Document Box", "Flat Rates Start at $14.90"],
+        [13, 11, 4, "Small Box", "Flat Rates Start at $14.90"],
+        [16, 13, 3, "Medium Document Box", "Flat Rates Start at $17.85"],
+        [15, 11, 11, "Medium Box", "Flat Rates Start at $17.85"],
+        [18, 13, 16, "Large Box", "Flat Rates Start at $23.50"],
+        [17, 17, 17, "Large Box", "Flat Rates Start at $23.50"],
+        [24, 18, 18, "Extra Large Box", "Flat Rates Start at $29.25"],
+        [24, 24, 18, "Extra Large Box", "Flat Rates Start at $29.25"]
       ];
-    case "No Carrier":
+    default:
       return [
-        [6, 4, 2, 0.95, false, "Small Box"],
-        [6, 6, 6, 0.95, false, "Small Box"],
-        [9, 6, 3, 0.75, false, "Small Mailing Box"],
-        [11, 8.5, 5.5, 1, false, "Medium Mailing Box"],
-        [12, 12, 8, 1.25, false, "Large Mailing Box"],
-        [14, 14, 14, 2, false, "Extra Large Mailing Box"],
-        [10, 7, 3, 0.75, false, "Letter Box"],
-        [15, 12, 10, 1.25, false, "Legal Box, File Box"],
-        [16, 12, 12, 1.75, false, "Small Moving Box, Small Box"],
-        [18, 18, 16, 2.5, false, "Medium Moving Box, Medium Box"],
-        [20, 20, 15, 3.25, false, "Large Moving Box"],
-        [23, 23, 16, 4, false, "Extra Large Moving Box"],
-        [14, 8, 5, 1, false, "Shoe Box"],
-        [24, 20, 46, 15, false, "Wardrobe Box"],
-        [8.625, 5.375, 1.625, 1, false, "Small Flat Rate Box (USPS)"],
-        [11.25, 8.75, 6, 1.25, false, "Medium Flat Rate Box (USPS)"],
-        [12.25, 12.25, 6, 1.5, false, "Large Flat Rate Box (USPS)"],
-        [40, 48, 36, 40, false, "Standard Pallet Box"],
-        [18, 14, 14, 2.5, false, "Medium Box"],
-        [24, 18, 18, 3.75, false, "Large Box"],
-        [24, 20, 20, 4.5, false, "Extra Large Box"],
-        [24, 24, 24, 5, false, "Extra Large Box"],
-        [18, 18, 28, 5.5, false, "Dish Pack Box"],
-        [24, 24, 40, 15, false, "Wardrobe Box"],
-        [37, 4, 27, 4.5, false, "Flat Box (for artwork and mirrors)"],
-        [16, 12, 10, 2.25,false, "Banker Box"],
-        [18, 18, 24, 5, false, "Heavy-Duty Box"],
-        [48, 6.4, 48.4, 39.98, false, "Heavy Duty Picture HomeDepot Box"],
-        [6, 4, 4, 0.95, false, "Small Box"],
-        [8, 8, 4, 0.95, false, "Small Box"],
-        [9, 6, 5, 0.95, false, "Small Box"],
-        [12, 9, 4, 1.49, false, "Small Box"],
-        [12, 12, 6, 1.35, false, "Small Box"],
-        [12, 10, 8, 1.3, false, "Small Box"],
-        [14, 10, 4, 1.99, false, "Medium Box"],
-        [16, 16, 12, 3.95, false, "Medium Box"],
-        [18, 12, 6, 2.15, false, "Medium Box"],
-        [18, 12, 12, 2.25, false, "Medium Box"],
-        [20, 14, 6, 2.4, false, "Medium Box"],
-        [24, 18, 12, 3.85, false, "Medium Box"],
-        [18, 18, 18, 3.9, false, "Large Box"],
-        [20, 20, 20, 6.95, false, "Large Box"],
-        [30, 24, 18, 10.99, false, "Large Box"],
-        [36, 24, 12, 9.9, false, "Large Box"],
-        [36, 36, 36, 17.95, false, "Large Box"],
-        [9, 12, 2, 1.25, false, "Flat Box"],
-        [12, 12, 1, 1.35, false, "Flat Box"],
-        [18, 12, 4, 2.15, false, "Flat Box"],
-        [20, 16, 2, 2.4, false, "Flat Box"],
-        [24, 24, 6, 4.99, false, "Flat Box"],
-        [6, 6, 36, 3.25, false, "Specialty Box"],
-        [12, 6, 6, 0.95, false, "Specialty Box"],
-        [18, 18, 6, 3.25, false, "Specialty Box"],
-        [24, 6, 6, 2.95, false, "Specialty Box"],
-        [36, 6, 6, 3.65, false, "Specialty Box"]
+        [12, 12, 12, "Standard box", "Contact carrier for price"]
       ];
   }
 }
