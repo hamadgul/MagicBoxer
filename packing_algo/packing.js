@@ -122,16 +122,26 @@ export function pack(itemList, carrier, optionalBox) {
   itemVol = vol(itemList);
   boxSizes = filterVol(boxSizes, itemVol);
   if (boxSizes.length === 0) {
-    // Return a default box with appropriate message for No Carrier
-    const box = new Box([12, 12, 12, "Custom Box", "Box size too small, please select larger dimensions"]);
-    return box;
+    // Return appropriate message based on carrier
+    if (carrier === "No Carrier") {
+      const box = new Box([12, 12, 12, "Custom Box", "Box size too small, please select larger dimensions"]);
+      return box;
+    } else {
+      const box = new Box([12, 12, 12, "No Box Found", `No suitable box found in ${carrier}'s standard sizes. Try a different carrier or custom dimensions.`]);
+      return box;
+    }
   }
   itemList = quickSort(itemList, 0, itemList.length - 1).reverse();
   boxSizes = quickSort(boxSizes, 0, boxSizes.length - 1);
   var finalBox = findBox(itemList, boxSizes, 0);
   if (finalBox === "No boxes found") {
-    const box = new Box([12, 12, 12, "Custom Box", "Box size too small, please select larger dimensions"]);
-    return box;
+    if (carrier === "No Carrier") {
+      const box = new Box([12, 12, 12, "Custom Box", "Box size too small, please select larger dimensions"]);
+      return box;
+    } else {
+      const box = new Box([12, 12, 12, "No Box Found", `No suitable box found in ${carrier}'s standard sizes. Try a different carrier or custom dimensions.`]);
+      return box;
+    }
   }
   return finalBox;
 }
@@ -148,9 +158,9 @@ function carrierBoxes(carrier) {
         [12, 12, 8, "Large Mailing Box", "Estimated Box Only Price: $1.25"],
         [14, 14, 14, "Extra Large Mailing Box", "Estimated Box Only Price: $2.00"],
         [10, 7, 3, "Letter Box", "Estimated Box Only Price: $0.75"],
-        [15, 12, 10, "Legal Box, File Box", "Estimated Box Only Price: $1.25"],
-        [16, 12, 12, "Small Moving Box, Small Box", "Estimated Box Only Price: $1.75"],
-        [18, 18, 16, "Medium Moving Box, Medium Box", "Estimated Box Only Price: $2.50"],
+        [15, 12, 10, "Legal/File Box", "Estimated Box Only Price: $1.25"],
+        [16, 12, 12, "Small Moving Box", "Estimated Box Only Price: $1.75"],
+        [18, 18, 16, "Medium Moving Box", "Estimated Box Only Price: $2.50"],
         [20, 14, 6, "Medium Moving Box", "Estimated Box Only Price: $2.40"],
         [24, 18, 12, "Medium Moving Box", "Estimated Box Only Price: $3.85"],
         [18, 18, 18, "Large Moving Box", "Estimated Box Only Price: $3.90"],
