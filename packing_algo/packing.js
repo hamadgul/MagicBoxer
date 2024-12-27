@@ -3,12 +3,9 @@ import * as THREE from "three";
 
 //quicksort needed for itemList/boxList
 function quickSort(arr, l, r) {
-  var len = arr.length,
-    pivot,
-    partIndex;
   if (l < r) {
-    pivot = r;
-    partIndex = partition(arr, pivot, l, r);
+    const pivot = r;
+    const partIndex = partition(arr, pivot, l, r);
     quickSort(arr, l, partIndex - 1);
     quickSort(arr, partIndex + 1, r);
   }
@@ -16,10 +13,10 @@ function quickSort(arr, l, r) {
 }
 
 function partition(arr, pivot, l, r) {
-  var val = arr[pivot].vol,
-    partIndex = l;
+  const val = arr[pivot].vol;
+  let partIndex = l;
 
-  for (var i = l; i < r; i++) {
+  for (let i = l; i < r; i++) {
     if (arr[i].vol < val) {
       swap(arr, i, partIndex);
       partIndex++;
@@ -30,119 +27,94 @@ function partition(arr, pivot, l, r) {
 }
 
 function swap(arr, i, j) {
-  var temp = arr[i];
-  arr[i] = arr[j];
-  arr[j] = temp;
+  [arr[i], arr[j]] = [arr[j], arr[i]];
 }
 
-//classes for boxes and items
-function Box(dims) {
-  this.x = dims[0];
-  this.y = dims[1] || 0;
-  this.z = dims[2];
-  this.type = dims[3] || ""; // Box type is the fourth element
-  this.priceText = dims[4] || ""; // Price text is the fifth element
-  this.cx = this.x / 2;
-  this.cy = -this.y / 2;
-  this.cz = this.z / 2;
-  this.vol = this.x * this.y * this.z;
-  this.items = [];
-  this.parts = null;
-  this.sec = [];
-  this.remainvol = this.vol;
+class Box {
+  constructor(dims) {
+    this.x = dims[0];
+    this.y = dims[1] || 0;
+    this.z = dims[2];
+    this.type = dims[3] || "";
+    this.priceText = dims[4] || "";
+    this.cx = this.x / 2;
+    this.cy = -this.y / 2;
+    this.cz = this.z / 2;
+    this.vol = this.x * this.y * this.z;
+    this.items = [];
+    this.parts = null;
+    this.sec = [];
+    this.remainvol = this.vol;
 
-  if (isNaN(this.cy)) {
-    console.error("Invalid y dimension", { y: this.y });
-    this.cy = 0;
+    if (isNaN(this.cy)) {
+      console.error("Invalid y dimension", { y: this.y });
+      this.cy = 0;
+    }
   }
 }
 
-function Item(dims) {
-  this.x = dims[0];
-  this.y = dims[1] || 0; // Ensure y is never undefined
-  this.z = dims[2];
-  this.xx = null; // Will be set during box fitting
-  this.yy = null; // Will be set during box fitting
-  this.zz = null; // Will be set during box fitting
-  this.vol = this.x * this.y * this.z;
-  this.dis = null;
-  this.pos = null;
-  this.sec = [];
-  this.SKU = dims[3];
-  this.color = "";
-  this.itemName = dims[5];
+class Item {
+  constructor(dims) {
+    this.x = dims[0];
+    this.y = dims[1] || 0;
+    this.z = dims[2];
+    this.xx = null;
+    this.yy = null;
+    this.zz = null;
+    this.vol = this.x * this.y * this.z;
+    this.dis = null;
+    this.pos = null;
+    this.sec = [];
+    this.SKU = dims[3];
+    this.color = "";
+    this.itemName = dims[5];
 
-  if (isNaN(this.y)) {
-    console.error("Invalid y dimension in item", { y: this.y });
-    this.y = 0; // Set a default or corrective value
+    if (isNaN(this.y)) {
+      console.error("Invalid y dimension in item", { y: this.y });
+      this.y = 0;
+    }
   }
 }
 
 //find the total volume of the list of items
 function vol(itemList) {
-  let len = itemList.length;
-  var tot = 0;
-  for (var i = 0; i < len; i++) {
-    tot += itemList[i].vol;
-  }
-  return tot;
+  return itemList.reduce((tot, item) => tot + item.vol, 0);
 }
 
 //filter out the boxes that aren't big enough to hold all items
 function filterVol(boxes, itemVol) {
-  let len = boxes.length;
-  result = boxes.filter((box) => box.vol >= itemVol);
-  return result;
+  return boxes.filter(box => box.vol >= itemVol);
 }
 
 //make each dimension into an instance of the class
 function initialize(boxes, items) {
-  var boxLen = boxes.length;
-  var itemLen = items.length;
-  for (var i = 0; i < boxLen; i++) {
-    boxes[i] = new Box(boxes[i]);
-  }
-  for (var i = 0; i < itemLen; i++) {
-    console.log(items[i]);
-    let x = new Item(items[i]);
-    items[i] = x;
-  }
+  return {
+    boxes: boxes.map(box => new Box(box)),
+    items: items.map(item => new Item(item))
+  };
 }
 
 //main packing function that will be called from the details screen
 export function pack(itemList, carrier, optionalBox) {
-  var boxSizes;
-  if (optionalBox != 0) {
-    boxSizes = optionalBox;
-  } else {
-    boxSizes = carrierBoxes(carrier);
+  const boxSizes = optionalBox || carrierBoxes(carrier);
+  const { boxes, items } = initialize(boxSizes, itemList);
+  const itemVol = vol(items);
+  const filteredBoxes = filterVol(boxes, itemVol);
+  
+  if (filteredBoxes.length === 0) {
+    return new Box([12, 12, 12, "No Box Found", 
+      `No suitable box found in ${carrier}'s standard sizes. Try a different carrier or split the items between multiple boxes.`]);
   }
-  initialize(boxSizes, itemList);
-  var itemVol;
-  itemVol = vol(itemList);
-  boxSizes = filterVol(boxSizes, itemVol);
-  if (boxSizes.length === 0) {
-    // Return appropriate message based on carrier
-    if (carrier === "No Carrier") {
-      const box = new Box([12, 12, 12, "Custom Box", "Box size too small, please select larger dimensions"]);
-      return box;
-    } else {
-      const box = new Box([12, 12, 12, "No Box Found", `No suitable box found in ${carrier}'s standard sizes. Try a different carrier or custom dimensions.`]);
-      return box;
-    }
-  }
-  itemList = quickSort(itemList, 0, itemList.length - 1).reverse();
-  boxSizes = quickSort(boxSizes, 0, boxSizes.length - 1);
-  var finalBox = findBox(itemList, boxSizes, 0);
+
+  const sortedItems = quickSort([...items], 0, items.length - 1).reverse();
+  const sortedBoxes = quickSort(filteredBoxes, 0, filteredBoxes.length - 1);
+  const finalBox = findBox(sortedItems, sortedBoxes, 0);
+  
   if (finalBox === "No boxes found") {
-    if (carrier === "No Carrier") {
-      const box = new Box([12, 12, 12, "Custom Box", "Box size too small, please select larger dimensions"]);
-      return box;
-    } else {
-      const box = new Box([12, 12, 12, "No Box Found", `No suitable box found in ${carrier}'s standard sizes. Try a different carrier or custom dimensions.`]);
-      return box;
-    }
+    return new Box([12, 12, 12, "No Box Found", 
+      `No suitable box found in ${carrier}'s standard sizes. Try a different carrier or split the items between multiple boxes.`]);
   }
+  
   return finalBox;
 }
 
@@ -319,9 +291,9 @@ function findBox(itemList, boxSizes, j) {
   if (j >= boxSizes.length) {
     return "No boxes found";
   }
-  currentBox = boxSizes[j];
-  for (var i = 0; i < itemList.length; i++) {
-    var b = fitItem(itemList[i], currentBox);
+  const currentBox = boxSizes[j];
+  for (let i = 0; i < itemList.length; i++) {
+    const b = fitItem(itemList[i], currentBox);
     if (!b) {
       return findBox(itemList, boxSizes, j + 1);
     }
@@ -331,66 +303,75 @@ function findBox(itemList, boxSizes, j) {
 
 //doesn't work completely; this function will take the resulting box object and unnest the boxes inside. This will tell us the positions of each item in the main box.
 function finalize(aBox) {
-  if (aBox.parts == null) {
-    console.log("Final Box Type: ", aBox.type); // Check the box type here
-    return aBox;
-  } else {
-    for (var i = aBox.parts.length - 1; i >= 0; i--) {
-      if (aBox.parts[i].items != []) {
-        aBox.items.concat(aBox.parts[i].items);
-        aBox.remainvol -= vol(aBox.parts[i].items);
-      }
-    }
-    console.log("Final Box Type After Parts: ", aBox.type); // Check the box type again
+  if (!aBox.parts) {
     return aBox;
   }
+
+  for (let i = aBox.parts.length - 1; i >= 0; i--) {
+    const part = aBox.parts[i];
+    if (part.items.length) {
+      aBox.items = aBox.items.concat(part.items);
+      aBox.remainvol -= vol(part.items);
+    }
+  }
+  return aBox;
 }
 
 //split the box into the biggest possible boxes. general (not optimal) approach is to split it up into 3 boxes: the space above the current item, and two resulting boxes next to the item
 function splitBox(item, curbox) {
   curbox.items.push(item);
-  item.sec = curbox.sec.slice();
+  item.sec = [...curbox.sec];
   curbox.remainvol -= item.vol;
-  var bx = curbox.x - item.xx;
-  var by = curbox.y - item.yy;
-  var bz = curbox.z - item.zz;
-  var boxes = [];
-  if (by != 0) {
-    //this doesn't catch yet; this will reduce the amount of boxes, since they won't be added if one of their dimensions is 0.
-    box1 = new Box([item.xx, by, item.zz]);
-    box1.cx = curbox.cx;
-    box1.cy = curbox.cy + item.yy;
-    box1.cz = curbox.cz;
-    box1.sec.push("upper");
+  
+  const bx = curbox.x - item.xx;
+  const by = curbox.y - item.yy;
+  const bz = curbox.z - item.zz;
+  const boxes = [];
+
+  if (by !== 0) {
+    const box1 = new Box([item.xx, by, item.zz]);
+    Object.assign(box1, {
+      cx: curbox.cx,
+      cy: curbox.cy + item.yy,
+      cz: curbox.cz,
+      sec: [...curbox.sec, "upper"]
+    });
     boxes.push(box1);
   }
-  if (bx != 0) {
-    box2 = new Box([bx, curbox.y, curbox.z]);
-    box2.cx = curbox.cx - item.xx;
-    box2.cy = curbox.cy;
-    box2.cz = curbox.cz;
-    box2.sec.push("side");
+
+  if (bx !== 0) {
+    const box2 = new Box([bx, curbox.y, curbox.z]);
+    Object.assign(box2, {
+      cx: curbox.cx - item.xx,
+      cy: curbox.cy,
+      cz: curbox.cz,
+      sec: [...curbox.sec, "side"]
+    });
     boxes.push(box2);
   }
-  if (bz != 0) {
-    box3 = new Box([item.xx, curbox.y, bz]);
-    box3.cx = curbox.cx;
-    box3.cy = curbox.cy;
-    box3.cz = curbox.cz - item.zz;
-    box3.sec.push("behind");
+
+  if (bz !== 0) {
+    const box3 = new Box([item.xx, curbox.y, bz]);
+    Object.assign(box3, {
+      cx: curbox.cx,
+      cy: curbox.cy,
+      cz: curbox.cz - item.zz,
+      sec: [...curbox.sec, "behind"]
+    });
     boxes.push(box3);
   }
+
   return boxes;
 }
+
 //truly checks if the item fits in the box. If the item's volume is greater than the remaining volume, immediately return false
 //else, rotate the item as much as it can until it fits inside the box. once it fits, split the resulting box, and return true
 //if there was no rotation where the item will fit, we also return false
 function checkDimensions(item, box) {
-  var fits = false;
   if (item.vol > box.remainvol) {
-    return fits;
+    return false;
   } else {
-    for (var rotation = 1; rotation <= 6; rotation++) {
+    for (let rotation = 1; rotation <= 6; rotation++) {
       switch (rotation) {
         case 1:
           item.xx = item.x;
@@ -424,41 +405,36 @@ function checkDimensions(item, box) {
       }
 
       if (item.xx <= box.x && item.yy <= box.y && item.zz <= box.z) {
-        fits = true;
         box.parts = splitBox(item, box);
-        return fits;
+        return true;
       }
     }
-    return fits;
+    return false;
   }
 }
+
 //checks to see if the item will fit inside the box. checks if the box is split up at all. if it isn't, run checkDimensions. If it is split, run this function recursively until it finds
 //the boxes that haven't been split and work back from there. we always return the result of checkDimensions, but if the item does fit, we want to stop seaching and immediately return.
 function fitItem(item, box) {
-  if (box.parts == null) {
+  if (!box.parts) {
     return checkDimensions(item, box);
   } else {
-    var r;
-    for (var i = 0; i < box.parts.length; i++) {
-      r = fitItem(item, box.parts[i]);
+    for (let i = 0; i < box.parts.length; i++) {
+      const r = fitItem(item, box.parts[i]);
       if (r) {
         return r;
       }
     }
-    if (!r) {
-      return r;
-    }
+    return false;
   }
 }
 
 function helper(ob, a) {
-  // Ensure 'ob.items' is defined and is an array
   if (Array.isArray(ob.items) && ob.items.length !== 0) {
     a.push(ob);
 
-    // Ensure 'ob.parts' is defined and is an array before iterating
     if (Array.isArray(ob.parts)) {
-      for (var i = 0; i < ob.parts.length; i++) {
+      for (let i = 0; i < ob.parts.length; i++) {
         helper(ob.parts[i], a);
       }
     } else {
@@ -469,7 +445,7 @@ function helper(ob, a) {
 }
 
 export function flatten2(ob) {
-  var a = [];
+  const a = [];
   helper(ob, a);
   return a;
 }
@@ -527,7 +503,6 @@ export function createDisplay(box, scale) {
       ];
       item.boxType = boxes[i].type;
 
-      // Check and ensure itemName is preserved and correctly assigned
       items.push({
         ...item,
         itemName: item.itemName || "Unnamed Item", // This should now carry the correct itemName
