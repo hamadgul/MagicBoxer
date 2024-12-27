@@ -67,7 +67,7 @@ const GettingStartedPage = ({ navigation }) => {
           <View style={styles.headerContainer}>
             <View style={styles.iconContainer}>
               <Image 
-                source={require('../assets/images/icon.png')}
+                source={require('../assets/images/icon_2.png')}
                 style={styles.appIcon}
                 resizeMode="contain"
               />

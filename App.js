@@ -7,8 +7,12 @@ import { Ionicons } from "@expo/vector-icons";
 import { NativeBaseProvider } from 'native-base';
 
 // Keep the splash screen visible while we fetch resources
-SplashScreen.preventAutoHideAsync().catch(() => {
-  /* reloading the app might trigger some race conditions, ignore them */
+SplashScreen.preventAutoHideAsync();
+
+// Set the animation options
+SplashScreen.setOptions({
+  duration: 1000,
+  fade: true,
 });
 
 export default function App() {
@@ -22,12 +26,11 @@ export default function App() {
           ...Ionicons.font,
         });
         
-        // Artificially delay for two seconds to simulate a slow loading
-        await new Promise(resolve => setTimeout(resolve, 2000));
+        // Artificial delay to ensure smooth splash screen
+        await new Promise(resolve => setTimeout(resolve, 1000));
       } catch (e) {
         console.warn(e);
       } finally {
-        // Tell the application to render
         setAppIsReady(true);
       }
     }
@@ -48,7 +51,7 @@ export default function App() {
   return (
     <NativeBaseProvider>
       <View style={styles.container} onLayout={onLayoutRootView}>
-        {Platform.OS === "ios" && <StatusBar barStyle="default" />}
+        <StatusBar barStyle="light-content" />
         <AppNavigator />
       </View>
     </NativeBaseProvider>
@@ -58,6 +61,6 @@ export default function App() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#fff",
+    backgroundColor: "#0f2d44", // Match splash screen background color
   },
 });

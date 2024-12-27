@@ -16,30 +16,25 @@
     "icon": "./assets/images/icon.png",
     "splash": {
       "image": "./assets/images/splash.png",
-      "resizeMode": "contain",
-      "backgroundColor": "#0f2d44"
+      "resizeMode": "cover",
+      "backgroundColor": "#b1fcfb"
     },
-    "plugins": [
-      [
-        "expo-splash-screen",
-        {
-          "backgroundColor": "#0f2d44",
-          "image": "./assets/images/splash.png"
-        }
-      ]
-    ],
-    "updates": {
-      "fallbackToCacheTimeout": 3000
-    },
-    "assetBundlePatterns": [
-      "**/*"
-    ],
     "ios": {
       "supportsTablet": true,
       "bundleIdentifier": "com.anonymous.magicpackagingapp"
     },
     "android": {
-      "package": "com.anonymous.magicpackagingapp"
-    }
+      "package": "com.anonymous.magicpackagingapp",
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/images/icon.png",
+        "backgroundColor": "#0f2d44"
+      }
+    },
+    "updates": {
+      "fallbackToCacheTimeout": 3000
+    },
+    "assetBundlePatterns": [
+      "**/*"
+    ]
   }
 }
