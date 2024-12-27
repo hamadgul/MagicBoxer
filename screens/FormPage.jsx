@@ -127,18 +127,34 @@ const modalStyles = StyleSheet.create({
   },
   cancelButton: {
     backgroundColor: '#6B7280',
-  }
+  },
+  modalTitle: {
+    fontSize: 24,
+    fontWeight: '700',
+    color: '#1F2937',
+    marginBottom: 8,
+    textAlign: 'center',
+  },
+  modalSubtitle: {
+    fontSize: 16,
+    color: '#64748B',
+    marginBottom: 24,
+    textAlign: 'center',
+    paddingHorizontal: 20,
+    lineHeight: 22,
+  },
+  inputContainer: {
+    width: '100%',
+    paddingHorizontal: 20,
+  },
+  inputLabel: {
+    fontSize: 14,
+    fontWeight: '500',
+    color: '#4B5563',
+    marginBottom: 8,
+    textAlign: 'left',
+  },
 });
-
-const itemButtonColors = [
-  "#3B5998",
-  "#008080",
-  "#556B2F",
-  "#8B0000",
-  "#FF8C00",
-  "#6A0DAD",
-  "#008B8B",
-];
 
 // Make sure ItemDetailsModal is exported correctly
 export const ItemDetailsModal = ({
@@ -733,6 +749,16 @@ export default class FormPage extends Component {
   };
 
   render() {
+    const itemButtonColors = [
+      "#3B5998",
+      "#008080",
+      "#556B2F",
+      "#8B0000",
+      "#FF8C00",
+      "#6A0DAD",
+      "#008B8B",
+    ];
+
     return (
       <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
         <View style={styles.container}>
@@ -874,32 +900,52 @@ export default class FormPage extends Component {
               <View style={styles.modalOverlay}>
                 <TouchableWithoutFeedback onPress={(e) => e.stopPropagation()}>
                   <View style={[styles.modalContent, { alignItems: 'center', paddingVertical: 24 }]}>
-                    <TextInput
-                      style={[styles.input, { 
-                        textAlign: 'center', 
-                        width: '80%',
-                        marginBottom: 20,
-                        fontSize: 16,
-                      }]}
-                      value={this.state.packageName}
-                      onChangeText={(text) => this.setState({ packageName: text })}
-                      placeholder="Enter Package Name"
-                      placeholderTextColor="#94A3B8"
-                      autoFocus={true}
-                      autoCorrect={false}
-                      autoCapitalize="none"
-                      spellCheck={false}
-                    />
+                    <Text style={modalStyles.modalTitle}>Save Your Package</Text>
+                    <Text style={modalStyles.modalSubtitle}>
+                    Access saved packages on the side menu under "Saved Packages"
+                    </Text>
+                    <View style={modalStyles.inputContainer}>
+                      <Text style={modalStyles.inputLabel}>Package Name</Text>
+                      <TextInput
+                        style={[styles.input, { 
+                          textAlign: 'center', 
+                          width: '100%',
+                          height: 50,
+                          marginBottom: 24,
+                          fontSize: 16,
+                          borderWidth: 1,
+                          borderColor: '#E2E8F0',
+                          borderRadius: 8,
+                          backgroundColor: '#F8FAFC',
+                          paddingHorizontal: 16,
+                        }]}
+                        value={this.state.packageName}
+                        onChangeText={(text) => this.setState({ packageName: text })}
+                        placeholder="e.g., Holiday Gifts 2024"
+                        placeholderTextColor="#94A3B8"
+                        autoFocus={true}
+                        autoCorrect={false}
+                        autoCapitalize="none"
+                        spellCheck={false}
+                      />
+                    </View>
                     <TouchableOpacity
                       style={[styles.buttonApply1, { 
-                        width: 100,
-                        height: 40,
+                        width: '100%',
+                        height: 48,
                         alignItems: 'center', 
-                        justifyContent: 'center'
+                        justifyContent: 'center',
+                        borderRadius: 8,
+                        backgroundColor: '#3B82F6',
+                        marginTop: 8,
                       }]}
                       onPress={this.handleSavePackage}
                     >
-                      <Text style={[styles.buttonText, { textAlign: 'center' }]}>Save</Text>
+                      <Text style={[styles.buttonText, { 
+                        textAlign: 'center',
+                        fontSize: 16,
+                        fontWeight: '600'
+                      }]}>Save Package</Text>
                     </TouchableOpacity>
                   </View>
                 </TouchableWithoutFeedback>
