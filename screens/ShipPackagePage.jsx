@@ -137,7 +137,7 @@ export default function ShipPackagePage({ route, navigation }) {
               <View key={index} style={styles.estimateCard}>
                 <View style={styles.estimateHeader}>
                   <Text style={styles.carrierName}>{estimate.carrier}</Text>
-                  <Text style={styles.estimatePrice}>${estimate.price}</Text>
+                  <Text style={styles.estimatePrice}>${estimate.price.toFixed(2)}</Text>
                 </View>
                 <Text style={styles.serviceType}>{estimate.service}</Text>
                 <Text style={styles.estimatedDays}>
