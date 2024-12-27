@@ -13,6 +13,7 @@ import Display3D from "../screens/Display3D";
 import PrivacyPolicyPage from "../screens/PrivacyPolicyPage";
 import PackagesPage from "../screens/PackagesPage";
 import FAQsPage from "../screens/FAQsPage";
+import ShipPackagePage from "../screens/ShipPackagePage";
 
 const Stack = createNativeStackNavigator();
 const Drawer = createDrawerNavigator();
@@ -96,6 +97,15 @@ function AppNavigator() {
               title: "Pack my Items!",
               headerShown: true, // Show stack header with back button
               gestureEnabled: true, // Enable gestures for back navigation
+            }}
+          />
+          <Stack.Screen
+            name="Shipping Estimate"
+            component={ShipPackagePage}
+            options={{
+              title: "Shipping Estimate",
+              headerShown: true,
+              gestureEnabled: true,
             }}
           />
           <Stack.Screen

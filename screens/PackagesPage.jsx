@@ -285,6 +285,25 @@ export default class PackagesPage extends Component {
     }
   };
 
+  handleShipPackage = (pkg) => {
+    this.closePackageModal();
+    this.props.navigation.navigate('Shipping Estimate', { 
+      package: {
+        name: pkg.name,
+        items: pkg.items,
+        weight: this.calculateTotalWeight(pkg.items)
+      }
+    });
+  };
+
+  calculateTotalWeight = (items) => {
+    // Sum up the weights of all items
+    return items.reduce((total, item) => {
+      const itemWeight = parseFloat(item.itemWeight) || 0;
+      return total + (itemWeight * (item.quantity || 1));
+    }, 0).toFixed(2);
+  };
+
   startShakeAnimation = () => {
     Animated.sequence([
       Animated.timing(this.shakeAnimation, {
@@ -532,12 +551,21 @@ export default class PackagesPage extends Component {
                           </TouchableOpacity>
                         )}
                       />
-                      <View style={styles.modalButtonContainer}>
+                      <View style={styles.modalFooter}>
                         <TouchableOpacity
-                          style={styles.packButton}
+                          style={[styles.footerButton, styles.packButton]}
                           onPress={this.handlePackItems}
                         >
-                          <Text style={styles.buttonText}>Pack Items</Text>
+                          <Ionicons name="cube" size={20} color="#fff" />
+                          <Text style={styles.footerButtonText}>Pack Items</Text>
+                        </TouchableOpacity>
+
+                        <TouchableOpacity
+                          style={[styles.footerButton, styles.shipButton]}
+                          onPress={() => this.handleShipPackage({ name: selectedPackage, items: packages[selectedPackage] })}
+                        >
+                          <Ionicons name="airplane" size={20} color="#fff" />
+                          <Text style={styles.footerButtonText}>Shipping Estimate</Text>
                         </TouchableOpacity>
                       </View>
                     </View>
@@ -855,5 +883,35 @@ const styles = StyleSheet.create({
     color: "#fff",
     fontSize: 16,
     textAlign: "center",
+  },
+  modalFooter: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    borderTopWidth: 1,
+    borderTopColor: '#e2e8f0',
+  },
+  footerButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 12,
+    paddingHorizontal: 20,
+    borderRadius: 8,
+    flex: 1,
+    marginHorizontal: 6,
+  },
+  packButton: {
+    backgroundColor: '#3b82f6',
+  },
+  shipButton: {
+    backgroundColor: '#10b981',
+  },
+  footerButtonText: {
+    color: '#fff',
+    fontSize: 16,
+    fontWeight: '600',
+    marginLeft: 8,
   },
 });
