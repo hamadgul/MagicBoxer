@@ -9,15 +9,18 @@ import {
   Modal,
   ScrollView,
   Animated,
-  Linking
+  Linking,
+  Platform
 } from "react-native";
-import Slider from "@react-native-community/slider";
-import { GLView } from "expo-gl";
+import {
+  GLView
+} from "expo-gl";
 import * as THREE from "three";
 import { Renderer } from "expo-three";
 import { Dropdown } from "react-native-element-dropdown";
 import AntDesign from "@expo/vector-icons/AntDesign";
 import { pack, createDisplay } from "../packing_algo/packing";
+import Slider from "@react-native-community/slider";
 
 const carrierData = [
   { label: "No Carrier", value: "No Carrier" },
@@ -62,8 +65,8 @@ const PriceText = ({ carrier, priceText }) => {
 export default class Display3D extends Component {
   constructor(props) {
     super(props);
+    this.rotationAnim = new Animated.Value(0);
     this.state = {
-      rotationY: 0,
       theta: 0,
       phi: Math.PI / 2,
       userInteracted: false,
@@ -84,21 +87,32 @@ export default class Display3D extends Component {
       onMoveShouldSetPanResponder: () => true,
       onPanResponderMove: this.handlePanResponderMove,
     });
+
+    // Add listener for slider animation
+    this.rotationAnim.addListener(({ value }) => {
+      if (this.cube && !this.state.userInteracted) {
+        this.cube.rotation.y = value;
+        const maxMovement = this.state.box ? (this.state.box.y / 10) * 1.5 : 0;
+        this.state.itemsTotal.forEach((item) => {
+          if (item.dis) {
+            item.dis.position.y = Math.sin(value) * maxMovement + item.pos[1];
+          }
+        });
+      }
+    });
+  }
+
+  componentWillUnmount() {
+    this.rotationAnim.removeAllListeners();
   }
 
   componentDidMount() {
     this.unsubscribeFocus = this.props.navigation.addListener("focus", () => {
       this.forceUpdateWithProps();
     });
-    // Call handleVisualize to set up initial state
     this.handleVisualize();
   }
 
-  componentWillUnmount() {
-    if (this.unsubscribeFocus) {
-      this.unsubscribeFocus();
-    }
-  }
   forceUpdateWithProps() {
     const { route } = this.props;
     this.setState(
@@ -136,7 +150,6 @@ export default class Display3D extends Component {
   renderLegendModal = () => {
     const { itemsTotal, isLegendVisible } = this.state;
 
-    // Group items by name
     const groupedItems = {};
     itemsTotal.forEach(item => {
       const name = item.itemName || "Unnamed Item";
@@ -146,7 +159,6 @@ export default class Display3D extends Component {
       groupedItems[name].push(item);
     });
 
-    // Create final items array with proper numbering
     const finalItems = [];
     Object.keys(groupedItems).sort().forEach(name => {
       const items = groupedItems[name];
@@ -163,7 +175,6 @@ export default class Display3D extends Component {
       });
     });
 
-    // Sort by the sortKey to ensure proper numerical ordering
     finalItems.sort((a, b) => a.sortKey.localeCompare(b.sortKey));
 
     return (
@@ -232,6 +243,7 @@ export default class Display3D extends Component {
 
     this.animate();
   };
+
   createBox = (box, itemsTotal) => {
     const scale = Math.max(box.x, box.y, box.z) > 15 ? 20 : 10;
     const geometry = new THREE.BoxGeometry(
@@ -255,29 +267,14 @@ export default class Display3D extends Component {
 
   animate = () => {
     requestAnimationFrame(this.animate);
+    const { gl, userInteracted } = this.state;
 
-    const { gl } = this.state;
+    if (!gl) return;
 
-    // Ensure GL context is available before rendering
-    if (!gl) {
-      return;
-    }
-
-    if (!this.state.userInteracted) {
-      this.cube.rotation.y = this.state.rotationY;
-
-      const maxMovement = (this.state.box.y / 10) * 1.5;
-      this.state.itemsTotal.forEach((item) => {
-        if (item.dis) {
-          item.dis.position.y =
-            Math.sin(this.state.rotationY) * maxMovement + item.pos[1];
-        }
-      });
-
-      this.camera.position.set(-1.2, 0.5, 5);
-      this.camera.lookAt(0, 0, 0);
-    } else {
-      const boxRotationY = this.state.rotationY;
+    if (userInteracted) {
+      // Use gesture-based rotation when user is interacting
+      const boxRotationY = this.state.theta;
+      this.cube.rotation.y = boxRotationY;
       this.camera.position.x =
         5 *
         Math.sin(this.state.phi) *
@@ -287,15 +284,24 @@ export default class Display3D extends Component {
         5 *
         Math.sin(this.state.phi) *
         Math.sin(this.state.theta + boxRotationY);
-      this.camera.lookAt(0, 0, 0);
+    } else {
+      // Use slider animation when not interacting
+      const value = this.rotationAnim._value;
+      this.cube.rotation.y = value;
+      if (this.state.box) {
+        const maxMovement = (this.state.box.y / 10) * 1.5;
+        this.state.itemsTotal.forEach((item) => {
+          if (item.dis) {
+            item.dis.position.y = Math.sin(value) * maxMovement + item.pos[1];
+          }
+        });
+      }
+      this.camera.position.set(-1.2, 0.5, 5);
     }
-
+    
+    this.camera.lookAt(0, 0, 0);
     this.renderer.render(this.scene, this.camera);
     gl.endFrameEXP();
-  };
-
-  handleRotationChange = (value) => {
-    this.setState({ rotationY: value, userInteracted: false });
   };
 
   handlePanResponderMove = (event, gestureState) => {
@@ -303,22 +309,30 @@ export default class Display3D extends Component {
     this.setState((prevState) => ({
       theta: prevState.theta - dx * 0.001,
       phi: Math.max(0.1, Math.min(Math.PI - 0.1, prevState.phi - dy * 0.001)),
-      userInteracted: true,
+      userInteracted: true
     }));
+  };
+
+  handleRotationChange = (value) => {
+    // When user touches slider, reset to slider mode
+    if (this.state.userInteracted) {
+      this.setState({
+        userInteracted: false,
+        theta: 0,
+        phi: Math.PI / 2
+      });
+    }
+    this.rotationAnim.setValue(value);
   };
 
   updateVisualsBasedOnCarrier = (carrier) => {
     this.setState(
       {
         selectedCarrier: carrier,
-        rotationY: 0,
-        userInteracted: false,
       },
       () => {
         this.handleVisualize();
-        if (this.state.gl) {
-          this.initialize3DScene();
-        }
+        this.rotationAnim.setValue(0);
       }
     );
   };
@@ -337,7 +351,7 @@ export default class Display3D extends Component {
         item.itemWidth,
         item.itemHeight,
         item.id,
-        selectedCarrier, // Use the current selectedCarrier
+        selectedCarrier,
         name,
       ])
     );
@@ -399,6 +413,24 @@ export default class Display3D extends Component {
     });
 
     this.setState({ isBoxCollapsed: newState });
+  };
+
+  renderCustomSlider = () => {
+    return (
+      <View style={styles.sliderContainer}>
+        <Slider
+          style={styles.slider}
+          minimumValue={0}
+          maximumValue={Math.PI}
+          step={Platform.OS === 'android' ? 0.02 : 0.01}
+          value={this.rotationAnim._value}
+          onValueChange={this.handleRotationChange}
+          minimumTrackTintColor="#007AFF"
+          maximumTrackTintColor="#B4B4B4"
+          thumbTintColor="#007AFF"
+        />
+      </View>
+    );
   };
 
   render() {
@@ -525,16 +557,7 @@ export default class Display3D extends Component {
           />
         </Animated.View>
         {this.renderLegendModal()}
-        <View style={styles.sliderContainer}>
-          <Slider
-            style={{ width: "100%", height: 40 }}
-            minimumValue={0}
-            maximumValue={Math.PI}
-            step={0.01}
-            value={this.state.rotationY}
-            onValueChange={this.handleRotationChange}
-          />
-        </View>
+        {this.renderCustomSlider()}
       </View>
     );
   }
@@ -563,6 +586,12 @@ const styles = StyleSheet.create({
     height: 40,
     paddingHorizontal: 30,
     marginBottom: 30,
+    justifyContent: 'center',
+  },
+  slider: {
+    width: '100%',
+    height: 40,
+    transform: Platform.OS === 'android' ? [{ scale: 1.2 }] : [],
   },
   boxDimensionsContainer: {
     padding: 6,
