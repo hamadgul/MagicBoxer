@@ -170,7 +170,8 @@ export default class Display3D extends Component {
         finalItems.push({
           ...item,
           displayName: items.length > 1 ? `${name}${paddedNumber}` : name,
-          sortKey: items.length > 1 ? `${name}${paddedNumber}` : name
+          sortKey: items.length > 1 ? `${name}${paddedNumber}` : name,
+          dimensions: `${item.x}L × ${item.y}W × ${item.z}H`
         });
       });
     });
@@ -187,15 +188,22 @@ export default class Display3D extends Component {
         <View style={styles.modalOverlay}>
           <View style={styles.modalContent}>
             <Text style={styles.legendTitle}>Legend</Text>
-            <ScrollView>
+            <ScrollView style={styles.legendScrollView}>
               {finalItems.map((item, index) => (
                 <View key={index} style={styles.legendItem}>
-                  <View
-                    style={[styles.colorBox, { backgroundColor: item.color }]}
-                  />
-                  <Text style={styles.legendText}>
-                    {item.displayName}
-                  </Text>
+                  <View style={styles.legendItemLeft}>
+                    <View
+                      style={[styles.colorBox, { backgroundColor: item.color }]}
+                    />
+                    <Text style={styles.legendText}>
+                      {item.displayName}
+                    </Text>
+                  </View>
+                  <View style={styles.dimensionsContainer}>
+                    <Text style={styles.dimensionsText}>
+                      {item.dimensions}
+                    </Text>
+                  </View>
                 </View>
               ))}
             </ScrollView>
@@ -724,36 +732,67 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
   modalContent: {
-    backgroundColor: "#fff",
+    backgroundColor: "white",
+    borderRadius: 20,
     padding: 20,
-    borderRadius: 10,
-    width: "85%",
-    maxHeight: "70%",
+    width: "90%",
+    maxHeight: "80%",
     shadowColor: "#000",
-    shadowOffset: { width: 0, height: 2 },
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
     shadowOpacity: 0.25,
-    shadowRadius: 3.84,
+    shadowRadius: 4,
     elevation: 5,
   },
   legendTitle: {
-    fontWeight: "bold",
-    marginBottom: 5,
-    fontSize: 16,
+    fontSize: 20,
+    fontWeight: "600",
+    marginBottom: 10,
     textAlign: "center",
+    color: "#333",
+  },
+  legendScrollView: {
+    marginVertical: 10,
   },
   legendItem: {
     flexDirection: "row",
     alignItems: "center",
-    marginBottom: 5,
+    justifyContent: "space-between",
+    paddingVertical: 8,
+    borderBottomWidth: 1,
+    borderBottomColor: "#f0f0f0",
+  },
+  legendItemLeft: {
+    flexDirection: "row",
+    alignItems: "center",
+    flex: 1,
   },
   colorBox: {
-    width: 20,
-    height: 20,
-    marginRight: 10,
+    width: 24,
+    height: 24,
+    borderRadius: 6,
+    marginRight: 12,
+    borderWidth: 1,
+    borderColor: "rgba(0,0,0,0.1)",
   },
   legendText: {
-    fontSize: 14,
+    fontSize: 16,
     color: "#333",
+    flex: 1,
+  },
+  dimensionsContainer: {
+    backgroundColor: "#f5f5f5",
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 6,
+    marginLeft: 8,
+  },
+  dimensionsText: {
+    fontSize: 14,
+    color: "#666",
+    fontFamily: Platform.OS === 'ios' ? 'Menlo' : 'monospace',
   },
   closeButton: {
     backgroundColor: "#3B82F6",
