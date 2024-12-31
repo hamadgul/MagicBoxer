@@ -482,10 +482,22 @@ export function createDisplay(box, scale) {
         (box.x === 12 && box.y === 15.5 && box.z === 3) ||
         (box.x === 17 && box.y === 11 && box.z === 8) ||
         (box.x === 17 && box.y === 17 && box.z === 7) ||
-        (box.x === 8 && box.y === 6 && box.z === 4)
+        (box.x === 8 && box.y === 6 && box.z === 4) ||
+        (box.x === 16 && box.y === 13 && box.z === 3) ||
+        (box.x === 9 && box.y === 6 && box.z === 3) ||
+        // General rules for small boxes
+        (Math.max(box.x, box.y) <= 9 && Math.min(box.x, box.y, box.z) <= 4) ||
+        (Math.min(box.x, box.y, box.z) <= 4 && Math.max(box.x, box.y) >= 8)
       );
 
-      const itemScale = isSpecialSize ? 15 : scale;
+      const itemScale = isSpecialSize ? 12 : scale;
+      
+      // Ensure item dimensions are set before creating geometry
+      if (!item.xx || !item.yy || !item.zz) {
+        item.xx = item.x;
+        item.yy = item.y;
+        item.zz = item.z;
+      }
 
       const geo = new THREE.BoxGeometry(
         item.xx / itemScale - 0.001,
@@ -499,6 +511,12 @@ export function createDisplay(box, scale) {
       });
       item.color = difcolors[i % difcolors.length];
       const box1 = new THREE.Mesh(geo, mat);
+
+      // Ensure box center coordinates are set
+      if (typeof boxes[i].cx === 'undefined') boxes[i].cx = boxes[i].x / 2;
+      if (typeof boxes[i].cy === 'undefined') boxes[i].cy = -boxes[i].y / 2;
+      if (typeof boxes[i].cz === 'undefined') boxes[i].cz = boxes[i].z / 2;
+
       box1.position.set(
         (boxes[i].cx - item.xx / 2) / scale,
         (boxes[i].cy + item.yy / 2) / scale,

@@ -111,26 +111,14 @@ export default class Display3D extends Component {
   }
 
   componentDidMount() {
-    const { route } = this.props;
-    this.setState(
-      {
-        items: route.params.items || [],
-        itemsTotal: route.params.itemsTotal || [],
-        box: route.params.box || null,
-        selectedBox: route.params.selectedBox || null,
-      },
-      () => {
-        if (this.state.gl) {
-          this.initialize3DScene();
-        }
-      }
-    );
-
-    // Add navigation focus listener
-    this.focusListener = this.props.navigation.addListener('focus', () => {
-      console.log('Screen focused, resetting slider'); // Debug log
-      this.resetSlider();
-    });
+    // Force a re-initialization if we have initial data
+    if (this.state.box && this.state.itemsTotal) {
+      // Wait for next tick to ensure GL context is ready
+      setTimeout(() => {
+        const packedResult = this.state.box;
+        this.onCarrierChange(packedResult);
+      }, 0);
+    }
   }
 
   forceUpdateWithProps() {
@@ -164,7 +152,7 @@ export default class Display3D extends Component {
 
   _onGLContextCreate = (gl) => {
     this.setState({ gl }, () => {
-      if (this.state.box && this.state.itemsTotal.length > 0) {
+      if (this.state.box) {
         this.initialize3DScene();
       }
     });
@@ -242,23 +230,38 @@ export default class Display3D extends Component {
     );
   };
 
-  initialize3DScene = () => {
-    const { gl, box } = this.state;
-    if (!gl || !box) {
-      console.error("GL context or box data is not available.");
-      return;
+  addBoxToScene = () => {
+    if (!this.state.box || !this.state.itemsTotal) return;
+    
+    if (this.cube) {
+      this.scene.remove(this.cube);
     }
+
+    this.cube = this.createBox(this.state.box, this.state.itemsTotal);
+    if (this.scene) {
+      this.scene.add(this.cube);
+    }
+  };
+
+  initialize3DScene = () => {
+    const { box, gl } = this.state;
+    if (!box || !gl) return;
 
     const scene = new THREE.Scene();
     const isSpecialSize = (
       (box.x === 12 && box.y === 15.5 && box.z === 3) ||
       (box.x === 17 && box.y === 11 && box.z === 8) ||
       (box.x === 17 && box.y === 17 && box.z === 7) ||
-      (box.x === 8 && box.y === 6 && box.z === 4)
+      (box.x === 8 && box.y === 6 && box.z === 4) ||
+      (box.x === 16 && box.y === 13 && box.z === 3) ||
+      (box.x === 9 && box.y === 6 && box.z === 3) ||
+      // General rules for small boxes
+      (Math.max(box.x, box.y) <= 9 && Math.min(box.x, box.y, box.z) <= 4) ||
+      (Math.min(box.x, box.y, box.z) <= 4 && Math.max(box.x, box.y) >= 8)
     );
 
-    let cameraDistance = isSpecialSize ? 4 : 5;
-    let fov = isSpecialSize ? 65 : 75;
+    let cameraDistance = isSpecialSize ? 3.5 : 5;
+    let fov = isSpecialSize ? 60 : 75;
 
     const camera = new THREE.PerspectiveCamera(
       fov,
@@ -271,13 +274,14 @@ export default class Display3D extends Component {
 
     const renderer = new Renderer({ gl });
     renderer.setSize(gl.drawingBufferWidth, gl.drawingBufferHeight);
+    scene.background = new THREE.Color(0xffffff);
 
     this.scene = scene;
     this.camera = camera;
     this.renderer = renderer;
 
-    this.cube = this.createBox(box, this.state.itemsTotal);
-    scene.add(this.cube);
+    // Ensure box and items are added after scene is fully initialized
+    this.addBoxToScene();
 
     this.animate();
   };
@@ -287,10 +291,15 @@ export default class Display3D extends Component {
       (box.x === 12 && box.y === 15.5 && box.z === 3) ||
       (box.x === 17 && box.y === 11 && box.z === 8) ||
       (box.x === 17 && box.y === 17 && box.z === 7) ||
-      (box.x === 8 && box.y === 6 && box.z === 4)
+      (box.x === 8 && box.y === 6 && box.z === 4) ||
+      (box.x === 16 && box.y === 13 && box.z === 3) ||
+      (box.x === 9 && box.y === 6 && box.z === 3) ||
+      // General rules for small boxes
+      (Math.max(box.x, box.y) <= 9 && Math.min(box.x, box.y, box.z) <= 4) ||
+      (Math.min(box.x, box.y, box.z) <= 4 && Math.max(box.x, box.y) >= 8)
     );
 
-    const scale = isSpecialSize ? 15 : (Math.max(box.x, box.y, box.z) > 15 ? 20 : 10);
+    const scale = isSpecialSize ? 12 : (Math.max(box.x, box.y, box.z) > 15 ? 20 : 10);
     const geometry = new THREE.BoxGeometry(
       box.x / scale,
       box.y / scale,
@@ -320,10 +329,15 @@ export default class Display3D extends Component {
       (packedResult.x === 12 && packedResult.y === 15.5 && packedResult.z === 3) ||
       (packedResult.x === 17 && packedResult.y === 11 && packedResult.z === 8) ||
       (packedResult.x === 17 && packedResult.y === 17 && packedResult.z === 7) ||
-      (packedResult.x === 8 && packedResult.y === 6 && packedResult.z === 4)
+      (packedResult.x === 8 && packedResult.y === 6 && packedResult.z === 4) ||
+      (packedResult.x === 16 && packedResult.y === 13 && packedResult.z === 3) ||
+      (packedResult.x === 9 && packedResult.y === 6 && packedResult.z === 3) ||
+      // General rules for small boxes
+      (Math.max(packedResult.x, packedResult.y) <= 9 && Math.min(packedResult.x, packedResult.y, packedResult.z) <= 4) ||
+      (Math.min(packedResult.x, packedResult.y, packedResult.z) <= 4 && Math.max(packedResult.x, packedResult.y) >= 8)
     );
 
-    const scale = isSpecialSize ? 15 : (Math.max(packedResult.x, packedResult.y, packedResult.z) > 15 ? 20 : 10);
+    const scale = isSpecialSize ? 12 : (Math.max(packedResult.x, packedResult.y, packedResult.z) > 15 ? 20 : 10);
     const itemsDisplay = createDisplay(packedResult, scale);
 
     this.setState(
@@ -347,8 +361,7 @@ export default class Display3D extends Component {
   animate = () => {
     requestAnimationFrame(this.animate);
     const { gl, userInteracted } = this.state;
-
-    if (!gl) return;
+    if (!gl || !this.renderer || !this.scene || !this.camera) return;
 
     if (userInteracted) {
       // Use gesture-based rotation when user is interacting
