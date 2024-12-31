@@ -396,7 +396,7 @@ export default class PackagesPage extends Component {
                 <Text style={styles.packageName}>{packageName}</Text>
               </View>
               <Text style={styles.itemCount}>
-                {packages[packageName].length} items
+                {packages[packageName].length} unique {packages[packageName].length === 1 ? 'item' : 'items'}
               </Text>
             </TouchableOpacity>
           </Animated.View>

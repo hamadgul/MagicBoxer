@@ -688,6 +688,7 @@ const styles = StyleSheet.create({
   },
   topContainer: {
     paddingHorizontal: 10,
+    paddingTop: 12,
     width: '100%',
     alignItems: 'center',
   },
@@ -712,7 +713,7 @@ const styles = StyleSheet.create({
     transform: Platform.OS === 'android' ? [{ scale: 1.2 }] : [],
   },
   boxDimensionsContainer: {
-    padding: 6,
+    padding: 4,
     backgroundColor: "#fff",
     borderRadius: 8,
     marginBottom: 8,
@@ -730,7 +731,7 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
-    marginBottom: 2,
+    marginBottom: 0,
     paddingHorizontal: 5,
     width: "100%",
   },
@@ -738,7 +739,7 @@ const styles = StyleSheet.create({
     width: 30,
   },
   boxTitle: {
-    fontSize: 15,
+    fontSize: 18,
     fontWeight: "600",
     color: "#333",
     flex: 1,
@@ -764,7 +765,7 @@ const styles = StyleSheet.create({
   boxSubtitle: {
     fontSize: 14,
     color: "#555",
-    marginBottom: 6,
+    marginBottom: 4,
     textAlign: "center",
   },
   boxDetails: {
@@ -772,7 +773,7 @@ const styles = StyleSheet.create({
     fontWeight: "600",
     color: "#007bff",
     textAlign: "center",
-    marginBottom: 6,
+    marginBottom: 4,
   },
   text: {
     fontSize: 13,

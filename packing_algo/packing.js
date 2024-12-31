@@ -197,6 +197,7 @@ function carrierBoxes(carrier) {
         [7.25, 7.25, 6.5, "Priority Mail Medium Cube-Shaped Box", "Priority Mail from: $11.00+"],
         [11.75, 8.75, 5.75, "Priority Mail Express Medium Box", "Priority Mail Express: $31.55+"],
         [13.4375, 11.625, 2.5, "Priority Mail Medium Box 2", "Priority Mail from: $11.00+"],
+        [15,12,3.125,"Priority Mail Flat Rate Side-Loading Large Box","Priority Mail from: $11.00+"],
       ];
     case "FedEx":
       return [
