@@ -626,6 +626,7 @@ const styles = StyleSheet.create({
   },
   scrollViewContainer: {
     padding: 10,
+    paddingBottom: 96, // Reduced padding since buttons are side by side
   },
   packageRow: {
     flexDirection: "row",
@@ -785,15 +786,16 @@ const styles = StyleSheet.create({
     backgroundColor: '#3B82F6',
     justifyContent: 'center',
     alignItems: 'center',
-    elevation: 8,
+    elevation: 4,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.25,
-    shadowRadius: 3.84,
+    shadowRadius: 4,
+    zIndex: 1,
   },
   infoFab: {
     position: 'absolute',
-    left: 20,
+    left: 20, // Position on the left side
     bottom: 20,
     width: 56,
     height: 56,
@@ -801,11 +803,12 @@ const styles = StyleSheet.create({
     backgroundColor: '#3B82F6',
     justifyContent: 'center',
     alignItems: 'center',
-    elevation: 8,
+    elevation: 4,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.25,
-    shadowRadius: 3.84,
+    shadowRadius: 4,
+    zIndex: 1,
   },
   noPackagesText: {
     fontSize: 16,

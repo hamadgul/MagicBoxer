@@ -72,7 +72,7 @@ export default class Display3D extends Component {
       userInteracted: false,
       selectedCarrier: props.route.params.selectedCarrier || "No Carrier",
       items: props.route.params.items || [],
-      itemsTotal: props.route.params.itemsTotal || [],
+      itemsTotal: Array.isArray(props.route.params.itemsTotal) ? props.route.params.itemsTotal : [],
       box: props.route.params.box || null,
       selectedBox: props.route.params.selectedBox || null,
       gl: null,
@@ -80,7 +80,7 @@ export default class Display3D extends Component {
       isBoxCollapsed: false,
       boxContentHeight: new Animated.Value(1),
       glViewHeight: new Animated.Value(420),
-      sliderValue: 0, // Directly set slider value in state
+      sliderValue: 0,
     };
 
     this.panResponder = PanResponder.create({
@@ -94,11 +94,13 @@ export default class Display3D extends Component {
       if (this.cube && !this.state.userInteracted) {
         this.cube.rotation.y = value;
         const maxMovement = this.state.box ? (this.state.box.y / 10) * 1.5 : 0;
-        this.state.itemsTotal.forEach((item) => {
-          if (item.dis) {
-            item.dis.position.y = Math.sin(value) * maxMovement + item.pos[1];
-          }
-        });
+        if (Array.isArray(this.state.itemsTotal)) {
+          this.state.itemsTotal.forEach((item) => {
+            if (item && item.dis) {
+              item.dis.position.y = Math.sin(value) * maxMovement + item.pos[1];
+            }
+          });
+        }
       }
     });
   }
@@ -126,7 +128,7 @@ export default class Display3D extends Component {
     this.setState(
       {
         items: route.params.items || [],
-        itemsTotal: route.params.itemsTotal || [],
+        itemsTotal: Array.isArray(route.params.itemsTotal) ? route.params.itemsTotal : [],
         box: route.params.box || null,
         selectedBox: route.params.selectedBox || null,
       },
@@ -161,33 +163,43 @@ export default class Display3D extends Component {
   renderLegendModal = () => {
     const { itemsTotal, isLegendVisible } = this.state;
 
+    // Initialize empty objects/arrays
     const groupedItems = {};
-    itemsTotal.forEach(item => {
-      const name = item.itemName || "Unnamed Item";
-      if (!groupedItems[name]) {
-        groupedItems[name] = [];
-      }
-      groupedItems[name].push(item);
-    });
-
     const finalItems = [];
-    Object.keys(groupedItems).sort().forEach(name => {
-      const items = groupedItems[name];
-      const padLength = items.length > 1 ? String(items.length).length : 0;
-      
-      items.forEach((item, index) => {
-        const number = index + 1;
-        const paddedNumber = String(number).padStart(padLength, '0');
-        finalItems.push({
-          ...item,
-          displayName: items.length > 1 ? `${name}${paddedNumber}` : name,
-          sortKey: items.length > 1 ? `${name}${paddedNumber}` : name,
-          dimensions: `${item.x}L × ${item.y}W × ${item.z}H`
+
+    // Only process items if itemsTotal is a valid array and not empty
+    if (Array.isArray(itemsTotal) && itemsTotal.length > 0) {
+      // Group items by name
+      itemsTotal.forEach(item => {
+        if (!item) return; // Skip invalid items
+        const name = item.itemName || "Unnamed Item";
+        if (!groupedItems[name]) {
+          groupedItems[name] = [];
+        }
+        groupedItems[name].push(item);
+      });
+
+      // Create final items array with proper formatting
+      Object.keys(groupedItems).sort().forEach(name => {
+        const items = groupedItems[name];
+        const padLength = items.length > 1 ? String(items.length).length : 0;
+        
+        items.forEach((item, index) => {
+          if (!item) return; // Skip invalid items
+          const number = index + 1;
+          const paddedNumber = String(number).padStart(padLength, '0');
+          finalItems.push({
+            ...item,
+            displayName: items.length > 1 ? `${name}${paddedNumber}` : name,
+            sortKey: items.length > 1 ? `${name}${paddedNumber}` : name,
+            dimensions: `${item.x}L × ${item.y}W × ${item.z}H`
+          });
         });
       });
-    });
 
-    finalItems.sort((a, b) => a.sortKey.localeCompare(b.sortKey));
+      // Sort final items
+      finalItems.sort((a, b) => a.sortKey.localeCompare(b.sortKey));
+    }
 
     return (
       <Modal
@@ -200,23 +212,27 @@ export default class Display3D extends Component {
           <View style={styles.modalContent}>
             <Text style={styles.legendTitle}>Legend</Text>
             <ScrollView style={styles.legendScrollView}>
-              {finalItems.map((item, index) => (
-                <View key={index} style={styles.legendItem}>
-                  <View style={styles.legendItemLeft}>
-                    <View
-                      style={[styles.colorBox, { backgroundColor: item.color }]}
-                    />
-                    <Text style={styles.legendText}>
-                      {item.displayName}
-                    </Text>
+              {finalItems.length > 0 ? (
+                finalItems.map((item, index) => (
+                  <View key={index} style={styles.legendItem}>
+                    <View style={styles.legendItemLeft}>
+                      <View
+                        style={[styles.colorBox, { backgroundColor: item.color }]}
+                      />
+                      <Text style={styles.legendText}>
+                        {item.displayName}
+                      </Text>
+                    </View>
+                    <View style={styles.dimensionsContainer}>
+                      <Text style={styles.dimensionsText}>
+                        {item.dimensions}
+                      </Text>
+                    </View>
                   </View>
-                  <View style={styles.dimensionsContainer}>
-                    <Text style={styles.dimensionsText}>
-                      {item.dimensions}
-                    </Text>
-                  </View>
-                </View>
-              ))}
+                ))
+              ) : (
+                <Text style={styles.noItemsText}>No items to display</Text>
+              )}
             </ScrollView>
             <TouchableOpacity
               style={styles.closeButton}
@@ -382,11 +398,13 @@ export default class Display3D extends Component {
       this.cube.rotation.y = value;
       if (this.state.box) {
         const maxMovement = (this.state.box.y / 10) * 1.5;
-        this.state.itemsTotal.forEach((item) => {
-          if (item.dis) {
-            item.dis.position.y = Math.sin(value) * maxMovement + item.pos[1];
-          }
-        });
+        if (Array.isArray(this.state.itemsTotal)) {
+          this.state.itemsTotal.forEach((item) => {
+            if (item && item.dis) {
+              item.dis.position.y = Math.sin(value) * maxMovement + item.pos[1];
+            }
+          });
+        }
       }
       this.camera.position.set(-1.2, 0.5, 5);
     }
@@ -431,11 +449,13 @@ export default class Display3D extends Component {
       if (this.cube && !this.state.userInteracted) {
         this.cube.rotation.y = value;
         const maxMovement = this.state.box ? (this.state.box.y / 10) * 1.5 : 0;
-        this.state.itemsTotal.forEach((item) => {
-          if (item.dis) {
-            item.dis.position.y = Math.sin(value) * maxMovement + item.pos[1];
-          }
-        });
+        if (Array.isArray(this.state.itemsTotal)) {
+          this.state.itemsTotal.forEach((item) => {
+            if (item && item.dis) {
+              item.dis.position.y = Math.sin(value) * maxMovement + item.pos[1];
+            }
+          });
+        }
       }
     });
     
@@ -495,30 +515,53 @@ export default class Display3D extends Component {
   handleVisualize = () => {
     const { items, selectedCarrier } = this.state;
 
-    if (items.length === 0) {
+    // Validate items array
+    if (!Array.isArray(items) || items.length === 0) {
       Alert.alert("No Items", "Please add at least one item before packing.");
       return;
     }
 
-    const itemsTotal = items.flatMap((item) =>
-      item.replicatedNames.map((name) => [
-        item.itemLength,
-        item.itemWidth,
-        item.itemHeight,
-        item.id,
-        selectedCarrier,
-        name,
-      ])
-    );
+    try {
+      // Ensure each item has replicatedNames
+      const validatedItems = items.map(item => {
+        if (!item.replicatedNames) {
+          const quantity = item.quantity || 1;
+          item.replicatedNames = Array.from({ length: quantity }, (_, i) =>
+            i === 0 ? item.itemName : `${item.itemName} ${i + 1}`
+          );
+        }
+        return item;
+      });
 
-    const packedResult = pack(itemsTotal, selectedCarrier, 0);
+      // Create itemsTotal from validated items
+      const itemsTotal = validatedItems.flatMap((item) =>
+        item.replicatedNames.map((name) => [
+          item.itemLength,
+          item.itemWidth,
+          item.itemHeight,
+          item.id,
+          selectedCarrier,
+          name,
+        ])
+      );
 
-    if (!packedResult || packedResult.length === 0) {
-      Alert.alert("Error", "Failed to pack items.");
-      return;
+      if (!Array.isArray(itemsTotal) || itemsTotal.length === 0) {
+        Alert.alert("Error", "Failed to process items for packing.");
+        return;
+      }
+
+      const packedResult = pack(itemsTotal, selectedCarrier, 0);
+
+      if (!packedResult || !packedResult.x || !packedResult.y || !packedResult.z) {
+        Alert.alert("Error", "Failed to pack items.");
+        return;
+      }
+
+      this.onCarrierChange(packedResult);
+    } catch (error) {
+      console.error("Error in handleVisualize:", error);
+      Alert.alert("Error", "An error occurred while processing the items.");
     }
-
-    this.onCarrierChange(packedResult);
   };
 
   toggleBoxCollapse = () => {
@@ -965,5 +1008,11 @@ const styles = StyleSheet.create({
   linkText: {
     color: '#007AFF',
     textDecorationLine: 'underline'
+  },
+  noItemsText: {
+    fontSize: 16,
+    color: '#666',
+    textAlign: 'center',
+    paddingVertical: 20,
   },
 });

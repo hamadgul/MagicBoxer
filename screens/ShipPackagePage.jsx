@@ -174,7 +174,6 @@ export default function ShipPackagePage({ route, navigation }) {
                 <Text style={styles.label}>Weight (lbs) *</Text>
                 <TextInput
                   style={styles.input}
-                  value={packageDetails.weight}
                   onChangeText={(text) => 
                     setPackageDetails(prev => ({ ...prev, weight: text }))
                   }

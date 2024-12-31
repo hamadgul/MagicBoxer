@@ -430,9 +430,22 @@ export default class FormPage extends Component {
         const deserializedItems = JSON.parse(
           Buffer.from(itemListString, "base64").toString("utf8")
         );
-        this.setState({ items: deserializedItems });
+        
+        // Ensure each item has replicatedNames
+        const validatedItems = deserializedItems.map(item => {
+          if (!item.replicatedNames) {
+            const quantity = item.quantity || 1;
+            item.replicatedNames = Array.from({ length: quantity }, (_, i) =>
+              i === 0 ? item.itemName : `${item.itemName} ${i + 1}`
+            );
+          }
+          return item;
+        });
+
+        this.setState({ items: validatedItems });
       }
     } catch (error) {
+      console.error("Error loading items:", error);
       Alert.alert("Error", "Failed to load items.");
     }
   };
@@ -627,7 +640,18 @@ export default class FormPage extends Component {
 
       this.setState({ items: itemList }, () => {
         let itemsTotal = [];
+        // Add null checks and validation
+        if (!this.state.items || !Array.isArray(this.state.items)) {
+          Alert.alert("Error", "No valid items found.");
+          return;
+        }
+        
         this.state.items.forEach((item) => {
+          if (!item || !Array.isArray(item.replicatedNames)) {
+            console.warn("Invalid item or missing replicatedNames:", item);
+            return; // Skip this item
+          }
+          
           item.replicatedNames.forEach((name) => {
             itemsTotal.push([
               item.itemLength,
@@ -640,6 +664,11 @@ export default class FormPage extends Component {
           });
         });
 
+        if (itemsTotal.length === 0) {
+          Alert.alert("Error", "No valid items to pack.");
+          return;
+        }
+
         const packedResult = pack(itemsTotal, "No Carrier", 0);
         if (!packedResult || packedResult.length === 0) {
           Alert.alert("Error", "Failed to pack items.");
@@ -651,6 +680,12 @@ export default class FormPage extends Component {
             ? 20
             : 10;
         const itemsDisplay = createDisplay(packedResult, scale);
+        
+        // Validate itemsDisplay before navigation
+        if (!itemsDisplay || !Array.isArray(itemsDisplay)) {
+          Alert.alert("Error", "Failed to create display items.");
+          return;
+        }
 
         const selectedBox = {
           dimensions: [packedResult.x, packedResult.y, packedResult.z],
