@@ -250,12 +250,24 @@ export default class Display3D extends Component {
     }
 
     const scene = new THREE.Scene();
+    const isSpecialSize = (
+      (box.x === 12 && box.y === 15.5 && box.z === 3) ||
+      (box.x === 17 && box.y === 11 && box.z === 8) ||
+      (box.x === 17 && box.y === 17 && box.z === 7) ||
+      (box.x === 8 && box.y === 6 && box.z === 4)
+    );
+
+    let cameraDistance = isSpecialSize ? 4 : 5;
+    let fov = isSpecialSize ? 65 : 75;
+
     const camera = new THREE.PerspectiveCamera(
-      75,
+      fov,
       gl.drawingBufferWidth / gl.drawingBufferHeight,
       0.1,
       1000
     );
+    camera.position.set(0, cameraDistance * 0.5, cameraDistance);
+    camera.lookAt(0, 0, 0);
 
     const renderer = new Renderer({ gl });
     renderer.setSize(gl.drawingBufferWidth, gl.drawingBufferHeight);
@@ -267,16 +279,18 @@ export default class Display3D extends Component {
     this.cube = this.createBox(box, this.state.itemsTotal);
     scene.add(this.cube);
 
-    const maxDimension = Math.max(box.x, box.y, box.z);
-    const distance = Math.max(5, maxDimension * 1.5);
-    camera.position.set(0, distance * 0.5, distance);
-    camera.lookAt(0, 0, 0);
-
     this.animate();
   };
 
   createBox = (box, itemsTotal) => {
-    const scale = Math.max(box.x, box.y, box.z) > 15 ? 20 : 10;
+    const isSpecialSize = (
+      (box.x === 12 && box.y === 15.5 && box.z === 3) ||
+      (box.x === 17 && box.y === 11 && box.z === 8) ||
+      (box.x === 17 && box.y === 17 && box.z === 7) ||
+      (box.x === 8 && box.y === 6 && box.z === 4)
+    );
+
+    const scale = isSpecialSize ? 15 : (Math.max(box.x, box.y, box.z) > 15 ? 20 : 10);
     const geometry = new THREE.BoxGeometry(
       box.x / scale,
       box.y / scale,
@@ -294,6 +308,40 @@ export default class Display3D extends Component {
     });
 
     return cube;
+  };
+
+  onCarrierChange = (packedResult) => {
+    if (!packedResult) {
+      console.error("No packing result received");
+      return;
+    }
+
+    const isSpecialSize = (
+      (packedResult.x === 12 && packedResult.y === 15.5 && packedResult.z === 3) ||
+      (packedResult.x === 17 && packedResult.y === 11 && packedResult.z === 8) ||
+      (packedResult.x === 17 && packedResult.y === 17 && packedResult.z === 7) ||
+      (packedResult.x === 8 && packedResult.y === 6 && packedResult.z === 4)
+    );
+
+    const scale = isSpecialSize ? 15 : (Math.max(packedResult.x, packedResult.y, packedResult.z) > 15 ? 20 : 10);
+    const itemsDisplay = createDisplay(packedResult, scale);
+
+    this.setState(
+      {
+        box: packedResult,
+        itemsTotal: itemsDisplay,
+        selectedBox: {
+          dimensions: [packedResult.x, packedResult.y, packedResult.z],
+          finalBoxType: packedResult.type,
+          priceText: packedResult.priceText
+        },
+      },
+      () => {
+        if (this.state.gl) {
+          this.initialize3DScene();
+        }
+      }
+    );
   };
 
   animate = () => {
@@ -457,26 +505,7 @@ export default class Display3D extends Component {
       return;
     }
 
-    const scale =
-      Math.max(packedResult.x, packedResult.y, packedResult.z) > 15 ? 20 : 10;
-    const itemsDisplay = createDisplay(packedResult, scale);
-
-    this.setState(
-      {
-        box: packedResult,
-        itemsTotal: itemsDisplay,
-        selectedBox: {
-          dimensions: [packedResult.x, packedResult.y, packedResult.z],
-          finalBoxType: packedResult.type,
-          priceText: packedResult.priceText
-        },
-      },
-      () => {
-        if (this.state.gl) {
-          this.initialize3DScene();
-        }
-      }
-    );
+    this.onCarrierChange(packedResult);
   };
 
   toggleBoxCollapse = () => {

@@ -476,12 +476,21 @@ export function createDisplay(box, scale) {
   ];
 
   for (let i = 0; i < boxes.length; i++) {
-    const item = boxes[i].items[0]; // Ensure items are being accessed correctly
+    const item = boxes[i].items[0];
     if (item) {
+      const isSpecialSize = (
+        (box.x === 12 && box.y === 15.5 && box.z === 3) ||
+        (box.x === 17 && box.y === 11 && box.z === 8) ||
+        (box.x === 17 && box.y === 17 && box.z === 7) ||
+        (box.x === 8 && box.y === 6 && box.z === 4)
+      );
+
+      const itemScale = isSpecialSize ? 15 : scale;
+
       const geo = new THREE.BoxGeometry(
-        item.xx / scale - 0.001,
-        item.yy / scale - 0.001,
-        item.zz / scale - 0.001
+        item.xx / itemScale - 0.001,
+        item.yy / itemScale - 0.001,
+        item.zz / itemScale - 0.001
       );
       const mat = new THREE.MeshBasicMaterial({
         color: difcolors[i % difcolors.length],
@@ -505,7 +514,7 @@ export function createDisplay(box, scale) {
 
       items.push({
         ...item,
-        itemName: item.itemName || "Unnamed Item", // This should now carry the correct itemName
+        itemName: item.itemName || "Unnamed Item",
       });
     } else {
       console.warn("No item found in box:", boxes[i]);
