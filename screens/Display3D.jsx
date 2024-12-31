@@ -105,13 +105,32 @@ export default class Display3D extends Component {
 
   componentWillUnmount() {
     this.rotationAnim.removeAllListeners();
+    if (this.focusListener) {
+      this.focusListener();
+    }
   }
 
   componentDidMount() {
-    this.unsubscribeFocus = this.props.navigation.addListener("focus", () => {
-      this.forceUpdateWithProps();
+    const { route } = this.props;
+    this.setState(
+      {
+        items: route.params.items || [],
+        itemsTotal: route.params.itemsTotal || [],
+        box: route.params.box || null,
+        selectedBox: route.params.selectedBox || null,
+      },
+      () => {
+        if (this.state.gl) {
+          this.initialize3DScene();
+        }
+      }
+    );
+
+    // Add navigation focus listener
+    this.focusListener = this.props.navigation.addListener('focus', () => {
+      console.log('Screen focused, resetting slider'); // Debug log
+      this.resetSlider();
     });
-    this.handleVisualize();
   }
 
   forceUpdateWithProps() {
@@ -132,11 +151,14 @@ export default class Display3D extends Component {
   }
 
   componentDidUpdate(prevProps) {
+    // Check for navigation state changes
     if (
       JSON.stringify(prevProps.route.params.items) !==
       JSON.stringify(this.props.route.params.items)
     ) {
+      console.log('Route params changed, resetting state and slider'); // Debug log
       this.forceUpdateWithProps();
+      this.resetSlider();
     }
   }
 
@@ -336,24 +358,51 @@ export default class Display3D extends Component {
 
   resetSlider = () => {
     console.log('Resetting slider animation value to 0'); // Debug log
-    this.rotationAnim.setValue(0); // Reset animation value
+    
+    // Remove any existing listeners
+    this.rotationAnim.removeAllListeners();
+    
+    // Create a new animation value
+    this.rotationAnim = new Animated.Value(0);
+    
+    // Re-add the listener
+    this.rotationAnim.addListener(({ value }) => {
+      if (this.cube && !this.state.userInteracted) {
+        this.cube.rotation.y = value;
+        const maxMovement = this.state.box ? (this.state.box.y / 10) * 1.5 : 0;
+        this.state.itemsTotal.forEach((item) => {
+          if (item.dis) {
+            item.dis.position.y = Math.sin(value) * maxMovement + item.pos[1];
+          }
+        });
+      }
+    });
+    
+    // Force update to ensure the new animation value is used
+    this.forceUpdate();
     console.log('Animation value after reset:', this.rotationAnim._value); // Debug log
-    this.setState({ sliderValue: 0 }); // Ensure slider value is set
   }
 
   updateVisualsBasedOnCarrier = (carrier) => {
     console.log(`Switching to carrier: ${carrier}`); // Debug log
+    
+    // First update the state
     this.setState(
       {
         selectedCarrier: carrier,
         theta: 0,
         phi: Math.PI / 2,
+        userInteracted: false,
       },
       () => {
         console.log('State updated.'); // Debug log
         this.handleVisualize();
-        this.resetSlider(); // Call reset function
-        console.log('Animation value after calling resetSlider:', this.rotationAnim._value); // Debug log
+        
+        // Reset the slider after a short delay to ensure state is updated
+        setTimeout(() => {
+          this.resetSlider();
+          console.log('Animation value after delayed reset:', this.rotationAnim._value); // Debug log
+        }, 50);
       }
     );
   };
@@ -366,11 +415,13 @@ export default class Display3D extends Component {
           style={styles.slider}
           minimumValue={0}
           maximumValue={Math.PI}
-          step={Platform.OS === 'android' ? 0.02 : 0.01} // Adjust step for Android
-          value={this.rotationAnim._value} // Use original animation value
+          step={Platform.OS === 'android' ? 0.02 : 0.01}
+          value={this.rotationAnim._value}
           onValueChange={(value) => {
-            this.rotationAnim.setValue(value); // Update animation value
-            this.handleRotationChange(value);
+            requestAnimationFrame(() => {
+              this.rotationAnim.setValue(value);
+              this.handleRotationChange(value);
+            });
           }}
           minimumTrackTintColor="#007AFF"
           maximumTrackTintColor="#B4B4B4"
