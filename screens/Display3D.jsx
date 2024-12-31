@@ -562,7 +562,7 @@ export default class Display3D extends Component {
       <View style={[styles.boxDimensionsContainer, isBoxCollapsed && styles.collapsedBox]}>
         <View style={styles.boxHeaderContainer}>
           <View style={styles.headerPlaceholder} />
-          <Text style={styles.boxTitle}>Optimal Box Size</Text>
+          <Text style={styles.boxSubtitle}>For {this.props.route.params.packageName || "This Package"}:</Text>
           <TouchableOpacity
             style={styles.collapseButton}
             onPress={this.toggleBoxCollapse}
@@ -586,7 +586,7 @@ export default class Display3D extends Component {
             },
           ]}
         >
-          <Text style={styles.boxSubtitle}>For {this.props.route.params.packageName || "This Package"}:</Text>
+          
           <Text style={styles.boxDetails}>
             {selectedBox.dimensions[0]}L x {selectedBox.dimensions[1]}W x{" "}
             {selectedBox.dimensions[2]}H
@@ -665,6 +665,7 @@ export default class Display3D extends Component {
             {
               height: this.state.glViewHeight,
               marginTop: isBoxCollapsed ? 40 : 2,
+              marginBottom: 10,
             }
           ]}
         >
@@ -675,7 +676,24 @@ export default class Display3D extends Component {
           />
         </Animated.View>
         {this.renderLegendModal()}
-        {this.renderCustomSlider()}
+        <View style={styles.sliderContainer}>
+          <Slider
+            style={styles.slider}
+            minimumValue={0}
+            maximumValue={Math.PI}
+            step={Platform.OS === 'android' ? 0.02 : 0.01}
+            value={this.rotationAnim._value}
+            onValueChange={(value) => {
+              requestAnimationFrame(() => {
+                this.rotationAnim.setValue(value);
+                this.handleRotationChange(value);
+              });
+            }}
+            minimumTrackTintColor="#007AFF"
+            maximumTrackTintColor="#B4B4B4"
+            thumbTintColor="#007AFF"
+          />
+        </View>
       </View>
     );
   }
@@ -695,6 +713,7 @@ const styles = StyleSheet.create({
   glViewContainer: {
     height: 460,
     marginTop: 2,
+    marginBottom: 10,
   },
   glView: {
     flex: 1,
@@ -704,7 +723,8 @@ const styles = StyleSheet.create({
   sliderContainer: {
     height: 40,
     paddingHorizontal: 30,
-    marginBottom: 30,
+    marginBottom: 10,
+    marginTop: 10,
     justifyContent: 'center',
   },
   slider: {

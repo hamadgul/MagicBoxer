@@ -95,7 +95,7 @@ function AppNavigator() {
             name="Display3D"
             component={Display3D}
             options={{
-              title: "Pack my Items!",
+              title: "Optimal Box Size",
               headerShown: true, // Show stack header with back button
               gestureEnabled: true, // Enable gestures for back navigation
             }}
