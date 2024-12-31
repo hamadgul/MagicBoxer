@@ -14,6 +14,7 @@ import PrivacyPolicyPage from "../screens/PrivacyPolicyPage";
 import PackagesPage from "../screens/PackagesPage";
 import FAQsPage from "../screens/FAQsPage";
 import ShipPackagePage from "../screens/ShipPackagePage";
+import RequestFormPage from "../screens/RequestFormPage";
 
 const Stack = createNativeStackNavigator();
 const Drawer = createDrawerNavigator();
@@ -111,6 +112,16 @@ function AppNavigator() {
           <Stack.Screen
             name="Privacy Policy"
             component={PrivacyPolicyPage}
+            options={{
+              headerShown: true, // Show stack header with back button
+              gestureEnabled: true, // Enable gestures for back navigation
+              headerBackTitle: "Help",
+            }}
+            // Enable gestures for back navigation
+          />
+          <Stack.Screen
+            name="RequestFormPage"
+            component={RequestFormPage}
             options={{
               headerShown: true, // Show stack header with back button
               gestureEnabled: true, // Enable gestures for back navigation

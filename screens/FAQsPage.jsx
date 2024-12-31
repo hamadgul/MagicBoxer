@@ -59,7 +59,8 @@ const FAQsPage = ({ navigation }) => {
     },
     {
       question: "Are the displayed prices for shipping or the box?",
-      answer: "Prices are for the box only. Free boxes are only free with shipping from the respective carrier. Use the 'no carrier' option to view box prices without shipping.",
+      answer: "Prices are for box only for the 'No Carrier' option. For other carriers, the price is for shipping with the box included. The only exception is FedEx, where the price is for shipping without the box & for UPS 'Ground' estimates. UPS Ground Advantage includes the box in the estimate.",
+      redirectText: "See shipping estimates here.",
       icon: "pricetag"
     },
     {
@@ -78,6 +79,13 @@ const FAQsPage = ({ navigation }) => {
       question: "How do I delete or rename a package?",
       answer: "Long press the package on the Saved Packages page to get options to rename or delete it.",
       icon: "create"
+    },
+    {
+      question: "Where can I report a bug or request a feature?",
+      answer: "Please visit our request form to submit any bugs or feature requests. Your feedback is valuable to us!",
+      redirectText: "Go to the request form.",
+      redirectPage: "RequestFormPage",
+      icon: "bug"
     },
   ];
 

@@ -80,6 +80,7 @@ export default class Display3D extends Component {
       isBoxCollapsed: false,
       boxContentHeight: new Animated.Value(1),
       glViewHeight: new Animated.Value(420),
+      sliderValue: 0, // Directly set slider value in state
     };
 
     this.panResponder = PanResponder.create({
@@ -333,15 +334,49 @@ export default class Display3D extends Component {
     this.rotationAnim.setValue(value);
   };
 
+  resetSlider = () => {
+    console.log('Resetting slider animation value to 0'); // Debug log
+    this.rotationAnim.setValue(0); // Reset animation value
+    console.log('Animation value after reset:', this.rotationAnim._value); // Debug log
+    this.setState({ sliderValue: 0 }); // Ensure slider value is set
+  }
+
   updateVisualsBasedOnCarrier = (carrier) => {
+    console.log(`Switching to carrier: ${carrier}`); // Debug log
     this.setState(
       {
         selectedCarrier: carrier,
+        theta: 0,
+        phi: Math.PI / 2,
       },
       () => {
+        console.log('State updated.'); // Debug log
         this.handleVisualize();
-        this.rotationAnim.setValue(0);
+        this.resetSlider(); // Call reset function
+        console.log('Animation value after calling resetSlider:', this.rotationAnim._value); // Debug log
       }
+    );
+  };
+
+  renderCustomSlider = () => {
+    console.log('Rendering slider with animation value:', this.rotationAnim._value); // Debug log
+    return (
+      <View style={styles.sliderContainer}>
+        <Slider
+          style={styles.slider}
+          minimumValue={0}
+          maximumValue={Math.PI}
+          step={Platform.OS === 'android' ? 0.02 : 0.01} // Adjust step for Android
+          value={this.rotationAnim._value} // Use original animation value
+          onValueChange={(value) => {
+            this.rotationAnim.setValue(value); // Update animation value
+            this.handleRotationChange(value);
+          }}
+          minimumTrackTintColor="#007AFF"
+          maximumTrackTintColor="#B4B4B4"
+          thumbTintColor="#007AFF"
+        />
+      </View>
     );
   };
 
@@ -421,24 +456,6 @@ export default class Display3D extends Component {
     });
 
     this.setState({ isBoxCollapsed: newState });
-  };
-
-  renderCustomSlider = () => {
-    return (
-      <View style={styles.sliderContainer}>
-        <Slider
-          style={styles.slider}
-          minimumValue={0}
-          maximumValue={Math.PI}
-          step={Platform.OS === 'android' ? 0.02 : 0.01}
-          value={this.rotationAnim._value}
-          onValueChange={this.handleRotationChange}
-          minimumTrackTintColor="#007AFF"
-          maximumTrackTintColor="#B4B4B4"
-          thumbTintColor="#007AFF"
-        />
-      </View>
-    );
   };
 
   render() {
