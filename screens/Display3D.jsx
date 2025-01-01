@@ -330,45 +330,42 @@ export default class Display3D extends Component {
   };
 
   createBox = (box, itemsTotal) => {
-    const isSpecialSize = (
-      // Original special sizes
-      (box.x === 12 && box.y === 15.5 && box.z === 3) ||
-      (box.x === 17 && box.y === 11 && box.z === 8) ||
-      (box.x === 17 && box.y === 17 && box.z === 7) ||
-      (box.x === 8 && box.y === 6 && box.z === 4) ||
-      (box.x === 16 && box.y === 13 && box.z === 3) ||
-      (box.x === 9 && box.y === 6 && box.z === 3) ||
-      
-      // New special sizes that need magnification
-      (Math.abs(box.x - 6.25) < 0.01 && Math.abs(box.y - 3.125) < 0.01 && Math.abs(box.z - 0.5) < 0.01) ||
-      (Math.abs(box.x - 6) < 0.01 && Math.abs(box.y - 4) < 0.01 && Math.abs(box.z - 2) < 0.01) ||
-      (Math.abs(box.x - 16) < 0.01 && Math.abs(box.y - 12) < 0.01 && Math.abs(box.z - 12) < 0.01) ||
-      (Math.abs(box.x - 20) < 0.01 && Math.abs(box.y - 12) < 0.01 && Math.abs(box.z - 12) < 0.01) ||
-      (Math.abs(box.x - 8) < 0.01 && Math.abs(box.y - 6) < 0.01 && Math.abs(box.z - 4) < 0.01) ||
-      (Math.abs(box.x - 8.75) < 0.01 && Math.abs(box.y - 5.5625) < 0.01 && Math.abs(box.z - 0.875) < 0.01) ||
-      (Math.abs(box.x - 9) < 0.01 && Math.abs(box.y - 6) < 0.01 && Math.abs(box.z - 3) < 0.01) ||
-      (Math.abs(box.x - 10.875) < 0.01 && Math.abs(box.y - 1.5) < 0.01 && Math.abs(box.z - 12.375) < 0.01) ||
-      (Math.abs(box.x - 8.75) < 0.01 && Math.abs(box.y - 4.375) < 0.01 && Math.abs(box.z - 11.25) < 0.01) ||
-      (Math.abs(box.x - 8.6875) < 0.01 && Math.abs(box.y - 5.4375) < 0.01 && Math.abs(box.z - 1.75) < 0.01) ||
-      
-      // Additional box sizes
-      (Math.abs(box.x - 18) < 0.01 && Math.abs(box.y - 12) < 0.01 && Math.abs(box.z - 4) < 0.01) ||
-      (Math.abs(box.x - 16) < 0.01 && Math.abs(box.y - 16) < 0.01 && Math.abs(box.z - 4) < 0.01) ||
-      (Math.abs(box.x - 12) < 0.01 && Math.abs(box.y - 3) < 0.01 && Math.abs(box.z - 17.5) < 0.01) ||
-      
-      // More box sizes that need magnification
-      (Math.abs(box.x - 8) < 0.01 && Math.abs(box.y - 6) < 0.01 && Math.abs(box.z - 4) < 0.01) ||
-      (Math.abs(box.x - 9.4375) < 0.01 && Math.abs(box.y - 6.4375) < 0.01 && Math.abs(box.z - 2.1875) < 0.01) ||
-      (Math.abs(box.x - 10.875) < 0.01 && Math.abs(box.y - 1.5) < 0.01 && Math.abs(box.z - 12.37) < 0.01) ||
-      (Math.abs(box.x - 10) < 0.01 && Math.abs(box.y - 7) < 0.01 && Math.abs(box.z - 3) < 0.01) ||
-      (Math.abs(box.x - 7.25) < 0.01 && Math.abs(box.y - 7.25) < 0.01 && Math.abs(box.z - 6.5) < 0.01) ||
-      (Math.abs(box.x - 8.75) < 0.01 && Math.abs(box.y - 2.625) < 0.01 && Math.abs(box.z - 11.25) < 0.01) ||
-      (Math.abs(box.x - 8.75) < 0.01 && Math.abs(box.y - 4.375) < 0.01 && Math.abs(box.z - 11.25) < 0.01) ||
-      (Math.abs(box.x - 18) < 0.01 && Math.abs(box.y - 13) < 0.01 && Math.abs(box.z - 16) < 0.01) ||
-      (Math.abs(box.x - 16) < 0.01 && Math.abs(box.y - 16) < 0.01 && Math.abs(box.z - 16) < 0.01)
-    );
+    // Helper function to check dimensions with tolerance
+    const matchDims = (x, y, z) => 
+      Math.abs(box.x - x) < 0.01 && 
+      Math.abs(box.y - y) < 0.01 && 
+      Math.abs(box.z - z) < 0.01;
 
-    const scale = isSpecialSize ? 12 : (Math.max(box.x, box.y, box.z) > 15 ? 20 : 10);
+    // Get appropriate scale based on box dimensions
+    const getScale = () => {
+      // Very small boxes need more magnification
+      if (matchDims(6.25, 3.125, 0.5)) return 6;
+      if (matchDims(8.75, 5.5625, 0.875)) return 8;
+      if (matchDims(6, 4, 2)) return 6; // Increased magnification for 6x4x2
+      if (matchDims(9, 6, 3)) return 6; // Added 9x6x3 as a very small box
+      
+      // Medium-small boxes
+      if (matchDims(8, 6, 4)) return 8;
+      
+      // Special flat boxes need custom scaling
+      if (matchDims(9.5, 15.5, 1)) return 15;
+
+      // Original special sizes
+      if (
+        (box.x === 12 && box.y === 15.5 && box.z === 3) ||
+        (box.x === 17 && box.y === 11 && box.z === 8) ||
+        (box.x === 17 && box.y === 17 && box.z === 7) ||
+        (box.x === 16 && box.y === 13 && box.z === 3) ||
+        (box.x === 9 && box.y === 6 && box.z === 3)
+      ) return 12;
+
+      // Default scaling based on max dimension
+      return Math.max(box.x, box.y, box.z) > 15 ? 20 : 10;
+    };
+
+    const scale = getScale();
+    console.log('Using scale for box:', { dimensions: [box.x, box.y, box.z], scale });
+
     const geometry = new THREE.BoxGeometry(
       box.x / scale,
       box.y / scale,
@@ -387,9 +384,16 @@ export default class Display3D extends Component {
     const wireframe = new THREE.LineSegments(wireframeGeometry, wireframeMaterial);
     cube.add(wireframe);
 
-    itemsTotal.forEach((item) => {
-      if (item.dis) cube.add(item.dis);
-    });
+    // Create items with the same scale as the box
+    if (itemsTotal && itemsTotal.length > 0) {
+      const displayItems = createDisplay(box, scale);
+      displayItems.forEach(item => {
+        if (item.dis) {
+          cube.add(item.dis);
+        }
+      });
+      this.setState({ itemsTotal: displayItems });
+    }
 
     return cube;
   };
@@ -460,43 +464,56 @@ export default class Display3D extends Component {
   };
 
   animate = () => {
-    requestAnimationFrame(this.animate);
-    const { gl, userInteracted } = this.state;
-    if (!gl || !this.renderer || !this.scene || !this.camera) return;
+    if (!this.renderer || !this.scene || !this.camera) {
+      console.error('Missing required render components');
+      requestAnimationFrame(this.animate);
+      return;
+    }
 
-    if (userInteracted) {
-      // Use gesture-based rotation when user is interacting
-      const boxRotationY = this.state.theta;
-      this.cube.rotation.y = boxRotationY;
-      this.camera.position.x =
-        5 *
-        Math.sin(this.state.phi) *
-        Math.cos(this.state.theta + boxRotationY);
-      this.camera.position.y = 5 * Math.cos(this.state.phi);
-      this.camera.position.z =
-        5 *
-        Math.sin(this.state.phi) *
-        Math.sin(this.state.theta + boxRotationY);
-    } else {
+    requestAnimationFrame(this.animate);
+
+    if (!this.state.userInteracted) {
       // Use slider animation when not interacting
       const value = this.rotationAnim._value;
       this.cube.rotation.y = value;
       if (this.state.box) {
-        const maxMovement = (this.state.box.y / 10) * 1.5;
+        // Get current box scale
+        const scale = this.getScale(this.state.box);
+        
+        // Only apply special scaling for very small boxes
+        const isVerySmall = scale <= 6;
+        const baseMovement = this.state.box ? (this.state.box.y / 10) : 0;
+        
+        // Use enhanced movement only for very small boxes
+        const maxMovement = isVerySmall ? 
+          baseMovement * 4 * Math.pow(15, (6 - scale) / 6) : // Enhanced movement for small boxes
+          baseMovement * 1.5; // Original movement for normal boxes
+        
         if (Array.isArray(this.state.itemsTotal)) {
           this.state.itemsTotal.forEach((item) => {
             if (item && item.dis) {
-              item.dis.position.y = Math.sin(value) * maxMovement + item.pos[1];
+              // Map slider value to sine wave that peaks at slider midpoint
+              const normalizedValue = (value / Math.PI) * Math.PI;
+              item.dis.position.y = Math.sin(normalizedValue) * maxMovement + item.pos[1];
             }
           });
         }
       }
       this.camera.position.set(-1.2, 0.5, 5);
+    } else {
+      // Use gesture-based rotation when user is interacting
+      const boxRotationY = this.state.theta;
+      if (this.cube) {
+        this.cube.rotation.y = boxRotationY;
+      }
+      this.camera.position.x = 5 * Math.sin(this.state.phi) * Math.cos(this.state.theta + boxRotationY);
+      this.camera.position.y = 5 * Math.cos(this.state.phi);
+      this.camera.position.z = 5 * Math.sin(this.state.phi) * Math.sin(this.state.theta + boxRotationY);
     }
-    
+
     this.camera.lookAt(0, 0, 0);
     this.renderer.render(this.scene, this.camera);
-    gl.endFrameEXP();
+    this.state.gl.endFrameEXP();
   };
 
   handlePanResponderMove = (event, gestureState) => {
@@ -517,37 +534,77 @@ export default class Display3D extends Component {
         phi: Math.PI / 2
       });
     }
+    
+    // Update rotation value
     this.rotationAnim.setValue(value);
+    this.setState({ sliderValue: value });
+
+    // Update cube and items
+    if (this.cube) {
+      this.cube.rotation.y = value;
+      
+      // Get current box scale
+      const scale = this.getScale(this.state.box);
+      
+      // Only apply special scaling for very small boxes
+      const isVerySmall = scale <= 6;
+      const baseMovement = this.state.box ? (this.state.box.y / 10) : 0;
+      
+      // Use enhanced movement only for very small boxes
+      const maxMovement = isVerySmall ? 
+        baseMovement * 4 * Math.pow(15, (6 - scale) / 6) : // Enhanced movement for small boxes
+        baseMovement * 1.5; // Original movement for normal boxes
+      
+      if (Array.isArray(this.state.itemsTotal)) {
+        this.state.itemsTotal.forEach((item) => {
+          if (item && item.dis) {
+            // Map slider value to sine wave that peaks at slider midpoint
+            const normalizedValue = (value / Math.PI) * Math.PI;
+            item.dis.position.y = Math.sin(normalizedValue) * maxMovement + item.pos[1];
+          }
+        });
+      }
+    }
+  };
+
+  // Helper function to get scale based on box dimensions
+  getScale = (box) => {
+    if (!box) return 10;
+    
+    const matchDims = (x, y, z) => 
+      Math.abs(box.x - x) < 0.01 && 
+      Math.abs(box.y - y) < 0.01 && 
+      Math.abs(box.z - z) < 0.01;
+
+    // Very small boxes need more magnification
+    if (matchDims(6.25, 3.125, 0.5)) return 6;
+    if (matchDims(8.75, 5.5625, 0.875)) return 8;
+    if (matchDims(6, 4, 2)) return 6;
+    if (matchDims(9, 6, 3)) return 6; // Added 9x6x3 as a very small box
+    
+    // Medium-small boxes
+    if (matchDims(8, 6, 4)) return 8;
+    
+    // Special flat boxes need custom scaling
+    if (matchDims(9.5, 15.5, 1)) return 15;
+
+    // Original special sizes
+    if (
+      (box.x === 12 && box.y === 15.5 && box.z === 3) ||
+      (box.x === 17 && box.y === 11 && box.z === 8) ||
+      (box.x === 17 && box.y === 17 && box.z === 7) ||
+      (box.x === 16 && box.y === 13 && box.z === 3) ||
+      (box.x === 9 && box.y === 6 && box.z === 3)
+    ) return 12;
+
+    // Default scaling based on max dimension
+    return Math.max(box.x, box.y, box.z) > 15 ? 20 : 10;
   };
 
   resetSlider = () => {
-    console.log('Resetting slider animation value to 0'); // Debug log
-    
-    // Remove any existing listeners
-    this.rotationAnim.removeAllListeners();
-    
-    // Create a new animation value
-    this.rotationAnim = new Animated.Value(0);
-    
-    // Re-add the listener
-    this.rotationAnim.addListener(({ value }) => {
-      if (this.cube && !this.state.userInteracted) {
-        this.cube.rotation.y = value;
-        const maxMovement = this.state.box ? (this.state.box.y / 10) * 1.5 : 0;
-        if (Array.isArray(this.state.itemsTotal)) {
-          this.state.itemsTotal.forEach((item) => {
-            if (item && item.dis) {
-              item.dis.position.y = Math.sin(value) * maxMovement + item.pos[1];
-            }
-          });
-        }
-      }
-    });
-    
-    // Force update to ensure the new animation value is used
-    this.forceUpdate();
-    console.log('Animation value after reset:', this.rotationAnim._value); // Debug log
-  }
+    this.rotationAnim.setValue(0);
+    this.handleRotationChange(0);
+  };
 
   updateVisualsBasedOnCarrier = (carrier) => {
     console.log(`Switching to carrier: ${carrier}`); // Debug log

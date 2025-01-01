@@ -137,7 +137,19 @@ export default class TestDisplay3D extends Component {
     // Update cube and items
     if (this.cube) {
       this.cube.rotation.y = value;
-      const maxMovement = this.state.box ? (this.state.box.y / 10) * 1.5 : 0;
+      
+      // Get current box scale
+      const scale = this.getScale(this.state.box);
+      
+      // Only apply special scaling for very small boxes
+      const isVerySmall = scale <= 6;
+      const baseMovement = this.state.box ? (this.state.box.y / 10) : 0;
+      
+      // Use enhanced movement only for very small boxes
+      const maxMovement = isVerySmall ? 
+        baseMovement * 4 * Math.pow(15, (6 - scale) / 6) : // Enhanced movement for small boxes
+        baseMovement * 1.5; // Original movement for normal boxes
+      
       if (Array.isArray(this.state.itemsTotal)) {
         this.state.itemsTotal.forEach((item) => {
           if (item && item.dis) {
@@ -184,7 +196,18 @@ export default class TestDisplay3D extends Component {
         this.cube.rotation.y = value;
       }
       if (this.state.box) {
-        const maxMovement = (this.state.box.y / 10) * 1.5;
+        // Get current box scale
+        const scale = this.getScale(this.state.box);
+        
+        // Only apply special scaling for very small boxes
+        const isVerySmall = scale <= 6;
+        const baseMovement = this.state.box ? (this.state.box.y / 10) : 0;
+        
+        // Use enhanced movement only for very small boxes
+        const maxMovement = isVerySmall ? 
+          baseMovement * 4 * Math.pow(15, (6 - scale) / 6) : // Enhanced movement for small boxes
+          baseMovement * 1.5; // Original movement for normal boxes
+        
         if (Array.isArray(this.state.itemsTotal)) {
           this.state.itemsTotal.forEach((item) => {
             if (item && item.dis) {
@@ -222,22 +245,42 @@ export default class TestDisplay3D extends Component {
 
   createBox = (box, itemsTotal) => {
     console.log('Creating box with:', { box, itemsTotal });
-    const isSpecialSize = (
-      // Original special sizes
-      (box.x === 12 && box.y === 15.5 && box.z === 3) ||
-      (box.x === 17 && box.y === 11 && box.z === 8) ||
-      (box.x === 17 && box.y === 17 && box.z === 7) ||
-      (box.x === 8 && box.y === 6 && box.z === 4) ||
-      (box.x === 16 && box.y === 13 && box.z === 3) ||
-      (box.x === 9 && box.y === 6 && box.z === 3) ||
-      
-      // New special sizes that need magnification
-      (Math.abs(box.x - 6.25) < 0.01 && Math.abs(box.y - 3.125) < 0.01 && Math.abs(box.z - 0.5) < 0.01) ||
-      (Math.abs(box.x - 6) < 0.01 && Math.abs(box.y - 4) < 0.01 && Math.abs(box.z - 2) < 0.01)
-    );
+    
+    // Helper function to check dimensions with tolerance
+    const matchDims = (x, y, z) => 
+      Math.abs(box.x - x) < 0.01 && 
+      Math.abs(box.y - y) < 0.01 && 
+      Math.abs(box.z - z) < 0.01;
 
-    const scale = isSpecialSize ? 12 : (Math.max(box.x, box.y, box.z) > 15 ? 20 : 10);
-    console.log('Using scale:', scale);
+    // Get appropriate scale based on box dimensions
+    const getScale = () => {
+      // Very small boxes need more magnification
+      if (matchDims(6.25, 3.125, 0.5)) return 6;
+      if (matchDims(8.75, 5.5625, 0.875)) return 8;
+      if (matchDims(6, 4, 2)) return 6; // Increased magnification for 6x4x2
+      if (matchDims(9, 6, 3)) return 6; // Added 9x6x3 as a very small box
+      
+      // Medium-small boxes
+      if (matchDims(8, 6, 4)) return 8;
+      
+      // Special flat boxes need custom scaling
+      if (matchDims(9.5, 15.5, 1)) return 15;
+
+      // Original special sizes
+      if (
+        (box.x === 12 && box.y === 15.5 && box.z === 3) ||
+        (box.x === 17 && box.y === 11 && box.z === 8) ||
+        (box.x === 17 && box.y === 17 && box.z === 7) ||
+        (box.x === 16 && box.y === 13 && box.z === 3) ||
+        (box.x === 9 && box.y === 6 && box.z === 3)
+      ) return 12;
+
+      // Default scaling based on max dimension
+      return Math.max(box.x, box.y, box.z) > 15 ? 20 : 10;
+    };
+
+    const scale = getScale();
+    console.log('Using scale for box:', { dimensions: [box.x, box.y, box.z], scale });
     
     const geometry = new THREE.BoxGeometry(
       box.x / scale,
@@ -377,6 +420,39 @@ export default class TestDisplay3D extends Component {
       this.scene.add(this.cube);
       console.log('Added cube to scene');
     }
+  };
+
+  getScale = (box) => {
+    if (!box) return 10;
+    
+    const matchDims = (x, y, z) => 
+      Math.abs(box.x - x) < 0.01 && 
+      Math.abs(box.y - y) < 0.01 && 
+      Math.abs(box.z - z) < 0.01;
+
+    // Very small boxes need more magnification
+    if (matchDims(6.25, 3.125, 0.5)) return 6;
+    if (matchDims(8.75, 5.5625, 0.875)) return 8;
+    if (matchDims(6, 4, 2)) return 6;
+    if (matchDims(9, 6, 3)) return 6; // Added 9x6x3 as a very small box
+    
+    // Medium-small boxes
+    if (matchDims(8, 6, 4)) return 8;
+    
+    // Special flat boxes need custom scaling
+    if (matchDims(9.5, 15.5, 1)) return 15;
+
+    // Original special sizes
+    if (
+      (box.x === 12 && box.y === 15.5 && box.z === 3) ||
+      (box.x === 17 && box.y === 11 && box.z === 8) ||
+      (box.x === 17 && box.y === 17 && box.z === 7) ||
+      (box.x === 16 && box.y === 13 && box.z === 3) ||
+      (box.x === 9 && box.y === 6 && box.z === 3)
+    ) return 12;
+
+    // Default scaling based on max dimension
+    return Math.max(box.x, box.y, box.z) > 15 ? 20 : 10;
   };
 
   render() {
