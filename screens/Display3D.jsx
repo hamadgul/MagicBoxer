@@ -381,6 +381,12 @@ export default class Display3D extends Component {
     });
     const cube = new THREE.Mesh(geometry, material);
 
+    // Create wireframe
+    const wireframeGeometry = new THREE.EdgesGeometry(geometry);
+    const wireframeMaterial = new THREE.LineBasicMaterial({ color: 0x000000 });
+    const wireframe = new THREE.LineSegments(wireframeGeometry, wireframeMaterial);
+    cube.add(wireframe);
+
     itemsTotal.forEach((item) => {
       if (item.dis) cube.add(item.dis);
     });
