@@ -479,19 +479,7 @@ export function createDisplay(box, scale) {
   for (let i = 0; i < boxes.length; i++) {
     const item = boxes[i].items[0];
     if (item) {
-      const isSpecialSize = (
-        (box.x === 12 && box.y === 15.5 && box.z === 3) ||
-        (box.x === 17 && box.y === 11 && box.z === 8) ||
-        (box.x === 17 && box.y === 17 && box.z === 7) ||
-        (box.x === 8 && box.y === 6 && box.z === 4) ||
-        (box.x === 16 && box.y === 13 && box.z === 3) ||
-        (box.x === 9 && box.y === 6 && box.z === 3) ||
-        // General rules for small boxes
-        (Math.max(box.x, box.y) <= 9 && Math.min(box.x, box.y, box.z) <= 4) ||
-        (Math.min(box.x, box.y, box.z) <= 4 && Math.max(box.x, box.y) >= 8)
-      );
-
-      const itemScale = isSpecialSize ? 12 : scale;
+      const itemScale = scale;
       
       // Ensure item dimensions are set before creating geometry
       if (!item.xx || !item.yy || !item.zz) {

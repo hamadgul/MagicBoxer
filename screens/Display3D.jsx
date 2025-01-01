@@ -265,15 +265,41 @@ export default class Display3D extends Component {
 
     const scene = new THREE.Scene();
     const isSpecialSize = (
+      // Original special sizes
       (box.x === 12 && box.y === 15.5 && box.z === 3) ||
       (box.x === 17 && box.y === 11 && box.z === 8) ||
       (box.x === 17 && box.y === 17 && box.z === 7) ||
       (box.x === 8 && box.y === 6 && box.z === 4) ||
       (box.x === 16 && box.y === 13 && box.z === 3) ||
       (box.x === 9 && box.y === 6 && box.z === 3) ||
-      // General rules for small boxes
-      (Math.max(box.x, box.y) <= 9 && Math.min(box.x, box.y, box.z) <= 4) ||
-      (Math.min(box.x, box.y, box.z) <= 4 && Math.max(box.x, box.y) >= 8)
+      
+      // New special sizes that need magnification
+      (Math.abs(box.x - 6.25) < 0.01 && Math.abs(box.y - 3.125) < 0.01 && Math.abs(box.z - 0.5) < 0.01) ||
+      (Math.abs(box.x - 6) < 0.01 && Math.abs(box.y - 4) < 0.01 && Math.abs(box.z - 2) < 0.01) ||
+      (Math.abs(box.x - 16) < 0.01 && Math.abs(box.y - 12) < 0.01 && Math.abs(box.z - 12) < 0.01) ||
+      (Math.abs(box.x - 20) < 0.01 && Math.abs(box.y - 12) < 0.01 && Math.abs(box.z - 12) < 0.01) ||
+      (Math.abs(box.x - 8) < 0.01 && Math.abs(box.y - 6) < 0.01 && Math.abs(box.z - 4) < 0.01) ||
+      (Math.abs(box.x - 8.75) < 0.01 && Math.abs(box.y - 5.5625) < 0.01 && Math.abs(box.z - 0.875) < 0.01) ||
+      (Math.abs(box.x - 9) < 0.01 && Math.abs(box.y - 6) < 0.01 && Math.abs(box.z - 3) < 0.01) ||
+      (Math.abs(box.x - 10.875) < 0.01 && Math.abs(box.y - 1.5) < 0.01 && Math.abs(box.z - 12.375) < 0.01) ||
+      (Math.abs(box.x - 8.75) < 0.01 && Math.abs(box.y - 4.375) < 0.01 && Math.abs(box.z - 11.25) < 0.01) ||
+      (Math.abs(box.x - 8.6875) < 0.01 && Math.abs(box.y - 5.4375) < 0.01 && Math.abs(box.z - 1.75) < 0.01) ||
+      
+      // Additional box sizes
+      (Math.abs(box.x - 18) < 0.01 && Math.abs(box.y - 12) < 0.01 && Math.abs(box.z - 4) < 0.01) ||
+      (Math.abs(box.x - 16) < 0.01 && Math.abs(box.y - 16) < 0.01 && Math.abs(box.z - 4) < 0.01) ||
+      (Math.abs(box.x - 12) < 0.01 && Math.abs(box.y - 3) < 0.01 && Math.abs(box.z - 17.5) < 0.01) ||
+      
+      // More box sizes that need magnification
+      (Math.abs(box.x - 8) < 0.01 && Math.abs(box.y - 6) < 0.01 && Math.abs(box.z - 4) < 0.01) ||
+      (Math.abs(box.x - 9.4375) < 0.01 && Math.abs(box.y - 6.4375) < 0.01 && Math.abs(box.z - 2.1875) < 0.01) ||
+      (Math.abs(box.x - 10.875) < 0.01 && Math.abs(box.y - 1.5) < 0.01 && Math.abs(box.z - 12.37) < 0.01) ||
+      (Math.abs(box.x - 10) < 0.01 && Math.abs(box.y - 7) < 0.01 && Math.abs(box.z - 3) < 0.01) ||
+      (Math.abs(box.x - 7.25) < 0.01 && Math.abs(box.y - 7.25) < 0.01 && Math.abs(box.z - 6.5) < 0.01) ||
+      (Math.abs(box.x - 8.75) < 0.01 && Math.abs(box.y - 2.625) < 0.01 && Math.abs(box.z - 11.25) < 0.01) ||
+      (Math.abs(box.x - 8.75) < 0.01 && Math.abs(box.y - 4.375) < 0.01 && Math.abs(box.z - 11.25) < 0.01) ||
+      (Math.abs(box.x - 18) < 0.01 && Math.abs(box.y - 13) < 0.01 && Math.abs(box.z - 16) < 0.01) ||
+      (Math.abs(box.x - 16) < 0.01 && Math.abs(box.y - 16) < 0.01 && Math.abs(box.z - 16) < 0.01)
     );
 
     let cameraDistance = isSpecialSize ? 3.5 : 5;
@@ -304,15 +330,41 @@ export default class Display3D extends Component {
 
   createBox = (box, itemsTotal) => {
     const isSpecialSize = (
+      // Original special sizes
       (box.x === 12 && box.y === 15.5 && box.z === 3) ||
       (box.x === 17 && box.y === 11 && box.z === 8) ||
       (box.x === 17 && box.y === 17 && box.z === 7) ||
       (box.x === 8 && box.y === 6 && box.z === 4) ||
       (box.x === 16 && box.y === 13 && box.z === 3) ||
       (box.x === 9 && box.y === 6 && box.z === 3) ||
-      // General rules for small boxes
-      (Math.max(box.x, box.y) <= 9 && Math.min(box.x, box.y, box.z) <= 4) ||
-      (Math.min(box.x, box.y, box.z) <= 4 && Math.max(box.x, box.y) >= 8)
+      
+      // New special sizes that need magnification
+      (Math.abs(box.x - 6.25) < 0.01 && Math.abs(box.y - 3.125) < 0.01 && Math.abs(box.z - 0.5) < 0.01) ||
+      (Math.abs(box.x - 6) < 0.01 && Math.abs(box.y - 4) < 0.01 && Math.abs(box.z - 2) < 0.01) ||
+      (Math.abs(box.x - 16) < 0.01 && Math.abs(box.y - 12) < 0.01 && Math.abs(box.z - 12) < 0.01) ||
+      (Math.abs(box.x - 20) < 0.01 && Math.abs(box.y - 12) < 0.01 && Math.abs(box.z - 12) < 0.01) ||
+      (Math.abs(box.x - 8) < 0.01 && Math.abs(box.y - 6) < 0.01 && Math.abs(box.z - 4) < 0.01) ||
+      (Math.abs(box.x - 8.75) < 0.01 && Math.abs(box.y - 5.5625) < 0.01 && Math.abs(box.z - 0.875) < 0.01) ||
+      (Math.abs(box.x - 9) < 0.01 && Math.abs(box.y - 6) < 0.01 && Math.abs(box.z - 3) < 0.01) ||
+      (Math.abs(box.x - 10.875) < 0.01 && Math.abs(box.y - 1.5) < 0.01 && Math.abs(box.z - 12.375) < 0.01) ||
+      (Math.abs(box.x - 8.75) < 0.01 && Math.abs(box.y - 4.375) < 0.01 && Math.abs(box.z - 11.25) < 0.01) ||
+      (Math.abs(box.x - 8.6875) < 0.01 && Math.abs(box.y - 5.4375) < 0.01 && Math.abs(box.z - 1.75) < 0.01) ||
+      
+      // Additional box sizes
+      (Math.abs(box.x - 18) < 0.01 && Math.abs(box.y - 12) < 0.01 && Math.abs(box.z - 4) < 0.01) ||
+      (Math.abs(box.x - 16) < 0.01 && Math.abs(box.y - 16) < 0.01 && Math.abs(box.z - 4) < 0.01) ||
+      (Math.abs(box.x - 12) < 0.01 && Math.abs(box.y - 3) < 0.01 && Math.abs(box.z - 17.5) < 0.01) ||
+      
+      // More box sizes that need magnification
+      (Math.abs(box.x - 8) < 0.01 && Math.abs(box.y - 6) < 0.01 && Math.abs(box.z - 4) < 0.01) ||
+      (Math.abs(box.x - 9.4375) < 0.01 && Math.abs(box.y - 6.4375) < 0.01 && Math.abs(box.z - 2.1875) < 0.01) ||
+      (Math.abs(box.x - 10.875) < 0.01 && Math.abs(box.y - 1.5) < 0.01 && Math.abs(box.z - 12.37) < 0.01) ||
+      (Math.abs(box.x - 10) < 0.01 && Math.abs(box.y - 7) < 0.01 && Math.abs(box.z - 3) < 0.01) ||
+      (Math.abs(box.x - 7.25) < 0.01 && Math.abs(box.y - 7.25) < 0.01 && Math.abs(box.z - 6.5) < 0.01) ||
+      (Math.abs(box.x - 8.75) < 0.01 && Math.abs(box.y - 2.625) < 0.01 && Math.abs(box.z - 11.25) < 0.01) ||
+      (Math.abs(box.x - 8.75) < 0.01 && Math.abs(box.y - 4.375) < 0.01 && Math.abs(box.z - 11.25) < 0.01) ||
+      (Math.abs(box.x - 18) < 0.01 && Math.abs(box.y - 13) < 0.01 && Math.abs(box.z - 16) < 0.01) ||
+      (Math.abs(box.x - 16) < 0.01 && Math.abs(box.y - 16) < 0.01 && Math.abs(box.z - 16) < 0.01)
     );
 
     const scale = isSpecialSize ? 12 : (Math.max(box.x, box.y, box.z) > 15 ? 20 : 10);
@@ -342,15 +394,41 @@ export default class Display3D extends Component {
     }
 
     const isSpecialSize = (
+      // Original special sizes
       (packedResult.x === 12 && packedResult.y === 15.5 && packedResult.z === 3) ||
       (packedResult.x === 17 && packedResult.y === 11 && packedResult.z === 8) ||
       (packedResult.x === 17 && packedResult.y === 17 && packedResult.z === 7) ||
       (packedResult.x === 8 && packedResult.y === 6 && packedResult.z === 4) ||
       (packedResult.x === 16 && packedResult.y === 13 && packedResult.z === 3) ||
       (packedResult.x === 9 && packedResult.y === 6 && packedResult.z === 3) ||
-      // General rules for small boxes
-      (Math.max(packedResult.x, packedResult.y) <= 9 && Math.min(packedResult.x, packedResult.y, packedResult.z) <= 4) ||
-      (Math.min(packedResult.x, packedResult.y, packedResult.z) <= 4 && Math.max(packedResult.x, packedResult.y) >= 8)
+      
+      // New special sizes that need magnification
+      (Math.abs(packedResult.x - 6.25) < 0.01 && Math.abs(packedResult.y - 3.125) < 0.01 && Math.abs(packedResult.z - 0.5) < 0.01) ||
+      (Math.abs(packedResult.x - 6) < 0.01 && Math.abs(packedResult.y - 4) < 0.01 && Math.abs(packedResult.z - 2) < 0.01) ||
+      (Math.abs(packedResult.x - 16) < 0.01 && Math.abs(packedResult.y - 12) < 0.01 && Math.abs(packedResult.z - 12) < 0.01) ||
+      (Math.abs(packedResult.x - 20) < 0.01 && Math.abs(packedResult.y - 12) < 0.01 && Math.abs(packedResult.z - 12) < 0.01) ||
+      (Math.abs(packedResult.x - 8) < 0.01 && Math.abs(packedResult.y - 6) < 0.01 && Math.abs(packedResult.z - 4) < 0.01) ||
+      (Math.abs(packedResult.x - 8.75) < 0.01 && Math.abs(packedResult.y - 5.5625) < 0.01 && Math.abs(packedResult.z - 0.875) < 0.01) ||
+      (Math.abs(packedResult.x - 9) < 0.01 && Math.abs(packedResult.y - 6) < 0.01 && Math.abs(packedResult.z - 3) < 0.01) ||
+      (Math.abs(packedResult.x - 10.875) < 0.01 && Math.abs(packedResult.y - 1.5) < 0.01 && Math.abs(packedResult.z - 12.375) < 0.01) ||
+      (Math.abs(packedResult.x - 8.75) < 0.01 && Math.abs(packedResult.y - 4.375) < 0.01 && Math.abs(packedResult.z - 11.25) < 0.01) ||
+      (Math.abs(packedResult.x - 8.6875) < 0.01 && Math.abs(packedResult.y - 5.4375) < 0.01 && Math.abs(packedResult.z - 1.75) < 0.01) ||
+      
+      // Additional box sizes
+      (Math.abs(packedResult.x - 18) < 0.01 && Math.abs(packedResult.y - 12) < 0.01 && Math.abs(packedResult.z - 4) < 0.01) ||
+      (Math.abs(packedResult.x - 16) < 0.01 && Math.abs(packedResult.y - 16) < 0.01 && Math.abs(packedResult.z - 4) < 0.01) ||
+      (Math.abs(packedResult.x - 12) < 0.01 && Math.abs(packedResult.y - 3) < 0.01 && Math.abs(packedResult.z - 17.5) < 0.01) ||
+      
+      // More box sizes that need magnification
+      (Math.abs(packedResult.x - 8) < 0.01 && Math.abs(packedResult.y - 6) < 0.01 && Math.abs(packedResult.z - 4) < 0.01) ||
+      (Math.abs(packedResult.x - 9.4375) < 0.01 && Math.abs(packedResult.y - 6.4375) < 0.01 && Math.abs(packedResult.z - 2.1875) < 0.01) ||
+      (Math.abs(packedResult.x - 10.875) < 0.01 && Math.abs(packedResult.y - 1.5) < 0.01 && Math.abs(packedResult.z - 12.37) < 0.01) ||
+      (Math.abs(packedResult.x - 10) < 0.01 && Math.abs(packedResult.y - 7) < 0.01 && Math.abs(packedResult.z - 3) < 0.01) ||
+      (Math.abs(packedResult.x - 7.25) < 0.01 && Math.abs(packedResult.y - 7.25) < 0.01 && Math.abs(packedResult.z - 6.5) < 0.01) ||
+      (Math.abs(packedResult.x - 8.75) < 0.01 && Math.abs(packedResult.y - 2.625) < 0.01 && Math.abs(packedResult.z - 11.25) < 0.01) ||
+      (Math.abs(packedResult.x - 8.75) < 0.01 && Math.abs(packedResult.y - 4.375) < 0.01 && Math.abs(packedResult.z - 11.25) < 0.01) ||
+      (Math.abs(packedResult.x - 18) < 0.01 && Math.abs(packedResult.y - 13) < 0.01 && Math.abs(packedResult.z - 16) < 0.01) ||
+      (Math.abs(packedResult.x - 16) < 0.01 && Math.abs(packedResult.y - 16) < 0.01 && Math.abs(packedResult.z - 16) < 0.01)
     );
 
     const scale = isSpecialSize ? 12 : (Math.max(packedResult.x, packedResult.y, packedResult.z) > 15 ? 20 : 10);
