@@ -20,6 +20,7 @@ import { Renderer } from "expo-three";
 import { Dropdown } from "react-native-element-dropdown";
 import AntDesign from "@expo/vector-icons/AntDesign";
 import { pack, createDisplay } from "../packing_algo/packing";
+import { isSpecialSize, getScale } from "../utils/boxSizes";
 import Slider from "@react-native-community/slider";
 import { Picker } from '@react-native-picker/picker';
 
@@ -153,98 +154,42 @@ export default class Display3D extends Component {
     }
   }
 
-  _onGLContextCreate = (gl) => {
-    this.setState({ gl }, () => {
-      if (this.state.box) {
-        this.initialize3DScene();
-      }
-    });
-  };
+  _onGLContextCreate = async (gl) => {
+    const { box } = this.state;
+    
+    this.scene = new THREE.Scene();
+    this.scene.background = new THREE.Color(0xffffff);
 
-  renderLegendModal = () => {
-    const { itemsTotal, isLegendVisible } = this.state;
+    // Check if this is a special size box that needs adjusted camera settings
+    const specialSize = isSpecialSize(box);
+    let cameraDistance = specialSize ? 3.5 : 5;
+    let fov = specialSize ? 60 : 75;
 
-    // Initialize empty objects/arrays
-    const groupedItems = {};
-    const finalItems = [];
-
-    // Only process items if itemsTotal is a valid array and not empty
-    if (Array.isArray(itemsTotal) && itemsTotal.length > 0) {
-      // Group items by name
-      itemsTotal.forEach(item => {
-        if (!item) return; // Skip invalid items
-        const name = item.itemName || "Unnamed Item";
-        if (!groupedItems[name]) {
-          groupedItems[name] = [];
-        }
-        groupedItems[name].push(item);
-      });
-
-      // Create final items array with proper formatting
-      Object.keys(groupedItems).sort().forEach(name => {
-        const items = groupedItems[name];
-        const padLength = items.length > 1 ? String(items.length).length : 0;
-        
-        items.forEach((item, index) => {
-          if (!item) return; // Skip invalid items
-          const number = index + 1;
-          const paddedNumber = String(number).padStart(padLength, '0');
-          finalItems.push({
-            ...item,
-            displayName: items.length > 1 ? `${name}${paddedNumber}` : name,
-            sortKey: items.length > 1 ? `${name}${paddedNumber}` : name,
-            dimensions: `${item.x}L × ${item.y}W × ${item.z}H`
-          });
-        });
-      });
-
-      // Sort final items
-      finalItems.sort((a, b) => a.sortKey.localeCompare(b.sortKey));
-    }
-
-    return (
-      <Modal
-        visible={isLegendVisible}
-        transparent={true}
-        animationType="slide"
-        onRequestClose={() => this.setState({ isLegendVisible: false })}
-      >
-        <View style={styles.modalOverlay}>
-          <View style={styles.modalContent}>
-            <Text style={styles.legendTitle}>Legend</Text>
-            <ScrollView style={styles.legendScrollView}>
-              {finalItems.length > 0 ? (
-                finalItems.map((item, index) => (
-                  <View key={index} style={styles.legendItem}>
-                    <View style={styles.legendItemLeft}>
-                      <View
-                        style={[styles.colorBox, { backgroundColor: item.color }]}
-                      />
-                      <Text style={styles.legendText}>
-                        {item.displayName}
-                      </Text>
-                    </View>
-                    <View style={styles.dimensionsContainer}>
-                      <Text style={styles.dimensionsText}>
-                        {item.dimensions}
-                      </Text>
-                    </View>
-                  </View>
-                ))
-              ) : (
-                <Text style={styles.noItemsText}>No items to display</Text>
-              )}
-            </ScrollView>
-            <TouchableOpacity
-              style={styles.closeButton}
-              onPress={() => this.setState({ isLegendVisible: false })}
-            >
-              <Text style={styles.closeButtonText}>Close</Text>
-            </TouchableOpacity>
-          </View>
-        </View>
-      </Modal>
+    this.camera = new THREE.PerspectiveCamera(
+      fov,
+      gl.drawingBufferWidth / gl.drawingBufferHeight,
+      0.1,
+      1000
     );
+    
+    this.camera.position.set(0, cameraDistance * 0.5, cameraDistance);
+    this.camera.lookAt(0, 0, 0);
+
+    this.renderer = new Renderer({ gl });
+    this.renderer.setSize(gl.drawingBufferWidth, gl.drawingBufferHeight);
+    
+    // Add lights
+    const ambientLight = new THREE.AmbientLight(0xffffff, 0.8);
+    this.scene.add(ambientLight);
+    
+    const directionalLight = new THREE.DirectionalLight(0xffffff, 0.5);
+    directionalLight.position.set(5, 5, 5);
+    this.scene.add(directionalLight);
+
+    this.setState({ gl }, () => {
+      this.addBoxToScene();
+      this.animate();
+    });
   };
 
   addBoxToScene = () => {
@@ -264,65 +209,6 @@ export default class Display3D extends Component {
     const { box, gl } = this.state;
     if (!box || !gl) return;
 
-    const scene = new THREE.Scene();
-    const isSpecialSize = (
-      // Original special sizes
-      (box.x === 12 && box.y === 15.5 && box.z === 3) ||
-      (box.x === 17 && box.y === 11 && box.z === 8) ||
-      (box.x === 17 && box.y === 17 && box.z === 7) ||
-      (box.x === 8 && box.y === 6 && box.z === 4) ||
-      (box.x === 16 && box.y === 13 && box.z === 3) ||
-      (box.x === 9 && box.y === 6 && box.z === 3) ||
-      
-      // New special sizes that need magnification
-      (Math.abs(box.x - 6.25) < 0.01 && Math.abs(box.y - 3.125) < 0.01 && Math.abs(box.z - 0.5) < 0.01) ||
-      (Math.abs(box.x - 6) < 0.01 && Math.abs(box.y - 4) < 0.01 && Math.abs(box.z - 2) < 0.01) ||
-      (Math.abs(box.x - 16) < 0.01 && Math.abs(box.y - 12) < 0.01 && Math.abs(box.z - 12) < 0.01) ||
-      (Math.abs(box.x - 20) < 0.01 && Math.abs(box.y - 12) < 0.01 && Math.abs(box.z - 12) < 0.01) ||
-      (Math.abs(box.x - 8) < 0.01 && Math.abs(box.y - 6) < 0.01 && Math.abs(box.z - 4) < 0.01) ||
-      (Math.abs(box.x - 8.75) < 0.01 && Math.abs(box.y - 5.5625) < 0.01 && Math.abs(box.z - 0.875) < 0.01) ||
-      (Math.abs(box.x - 9) < 0.01 && Math.abs(box.y - 6) < 0.01 && Math.abs(box.z - 3) < 0.01) ||
-      (Math.abs(box.x - 10.875) < 0.01 && Math.abs(box.y - 1.5) < 0.01 && Math.abs(box.z - 12.375) < 0.01) ||
-      (Math.abs(box.x - 8.75) < 0.01 && Math.abs(box.y - 4.375) < 0.01 && Math.abs(box.z - 11.25) < 0.01) ||
-      (Math.abs(box.x - 8.6875) < 0.01 && Math.abs(box.y - 5.4375) < 0.01 && Math.abs(box.z - 1.75) < 0.01) ||
-      
-      // Additional box sizes
-      (Math.abs(box.x - 18) < 0.01 && Math.abs(box.y - 12) < 0.01 && Math.abs(box.z - 4) < 0.01) ||
-      (Math.abs(box.x - 16) < 0.01 && Math.abs(box.y - 16) < 0.01 && Math.abs(box.z - 4) < 0.01) ||
-      (Math.abs(box.x - 12) < 0.01 && Math.abs(box.y - 3) < 0.01 && Math.abs(box.z - 17.5) < 0.01) ||
-      
-      // More box sizes that need magnification
-      (Math.abs(box.x - 8) < 0.01 && Math.abs(box.y - 6) < 0.01 && Math.abs(box.z - 4) < 0.01) ||
-      (Math.abs(box.x - 9.4375) < 0.01 && Math.abs(box.y - 6.4375) < 0.01 && Math.abs(box.z - 2.1875) < 0.01) ||
-      (Math.abs(box.x - 10.875) < 0.01 && Math.abs(box.y - 1.5) < 0.01 && Math.abs(box.z - 12.37) < 0.01) ||
-      (Math.abs(box.x - 10) < 0.01 && Math.abs(box.y - 7) < 0.01 && Math.abs(box.z - 3) < 0.01) ||
-      (Math.abs(box.x - 7.25) < 0.01 && Math.abs(box.y - 7.25) < 0.01 && Math.abs(box.z - 6.5) < 0.01) ||
-      (Math.abs(box.x - 8.75) < 0.01 && Math.abs(box.y - 2.625) < 0.01 && Math.abs(box.z - 11.25) < 0.01) ||
-      (Math.abs(box.x - 8.75) < 0.01 && Math.abs(box.y - 4.375) < 0.01 && Math.abs(box.z - 11.25) < 0.01) ||
-      (Math.abs(box.x - 18) < 0.01 && Math.abs(box.y - 13) < 0.01 && Math.abs(box.z - 16) < 0.01) ||
-      (Math.abs(box.x - 16) < 0.01 && Math.abs(box.y - 16) < 0.01 && Math.abs(box.z - 16) < 0.01)
-    );
-
-    let cameraDistance = isSpecialSize ? 3.5 : 5;
-    let fov = isSpecialSize ? 60 : 75;
-
-    const camera = new THREE.PerspectiveCamera(
-      fov,
-      gl.drawingBufferWidth / gl.drawingBufferHeight,
-      0.1,
-      1000
-    );
-    camera.position.set(0, cameraDistance * 0.5, cameraDistance);
-    camera.lookAt(0, 0, 0);
-
-    const renderer = new Renderer({ gl });
-    renderer.setSize(gl.drawingBufferWidth, gl.drawingBufferHeight);
-    scene.background = new THREE.Color(0xffffff);
-
-    this.scene = scene;
-    this.camera = camera;
-    this.renderer = renderer;
-
     // Ensure box and items are added after scene is fully initialized
     this.addBoxToScene();
 
@@ -330,40 +216,7 @@ export default class Display3D extends Component {
   };
 
   createBox = (box, itemsTotal) => {
-    // Helper function to check dimensions with tolerance
-    const matchDims = (x, y, z) => 
-      Math.abs(box.x - x) < 0.01 && 
-      Math.abs(box.y - y) < 0.01 && 
-      Math.abs(box.z - z) < 0.01;
-
-    // Get appropriate scale based on box dimensions
-    const getScale = () => {
-      // Very small boxes need more magnification
-      if (matchDims(6.25, 3.125, 0.5)) return 6;
-      if (matchDims(8.75, 5.5625, 0.875)) return 8;
-      if (matchDims(6, 4, 2)) return 6; // Increased magnification for 6x4x2
-      if (matchDims(9, 6, 3)) return 6; // Added 9x6x3 as a very small box
-      
-      // Medium-small boxes
-      if (matchDims(8, 6, 4)) return 8;
-      
-      // Special flat boxes need custom scaling
-      if (matchDims(9.5, 15.5, 1)) return 15;
-
-      // Original special sizes
-      if (
-        (box.x === 12 && box.y === 15.5 && box.z === 3) ||
-        (box.x === 17 && box.y === 11 && box.z === 8) ||
-        (box.x === 17 && box.y === 17 && box.z === 7) ||
-        (box.x === 16 && box.y === 13 && box.z === 3) ||
-        (box.x === 9 && box.y === 6 && box.z === 3)
-      ) return 12;
-
-      // Default scaling based on max dimension
-      return Math.max(box.x, box.y, box.z) > 15 ? 20 : 10;
-    };
-
-    const scale = getScale();
+    const scale = getScale(box);
     console.log('Using scale for box:', { dimensions: [box.x, box.y, box.z], scale });
 
     const geometry = new THREE.BoxGeometry(
@@ -404,45 +257,7 @@ export default class Display3D extends Component {
       return;
     }
 
-    const isSpecialSize = (
-      // Original special sizes
-      (packedResult.x === 12 && packedResult.y === 15.5 && packedResult.z === 3) ||
-      (packedResult.x === 17 && packedResult.y === 11 && packedResult.z === 8) ||
-      (packedResult.x === 17 && packedResult.y === 17 && packedResult.z === 7) ||
-      (packedResult.x === 8 && packedResult.y === 6 && packedResult.z === 4) ||
-      (packedResult.x === 16 && packedResult.y === 13 && packedResult.z === 3) ||
-      (packedResult.x === 9 && packedResult.y === 6 && packedResult.z === 3) ||
-      
-      // New special sizes that need magnification
-      (Math.abs(packedResult.x - 6.25) < 0.01 && Math.abs(packedResult.y - 3.125) < 0.01 && Math.abs(packedResult.z - 0.5) < 0.01) ||
-      (Math.abs(packedResult.x - 6) < 0.01 && Math.abs(packedResult.y - 4) < 0.01 && Math.abs(packedResult.z - 2) < 0.01) ||
-      (Math.abs(packedResult.x - 16) < 0.01 && Math.abs(packedResult.y - 12) < 0.01 && Math.abs(packedResult.z - 12) < 0.01) ||
-      (Math.abs(packedResult.x - 20) < 0.01 && Math.abs(packedResult.y - 12) < 0.01 && Math.abs(packedResult.z - 12) < 0.01) ||
-      (Math.abs(packedResult.x - 8) < 0.01 && Math.abs(packedResult.y - 6) < 0.01 && Math.abs(packedResult.z - 4) < 0.01) ||
-      (Math.abs(packedResult.x - 8.75) < 0.01 && Math.abs(packedResult.y - 5.5625) < 0.01 && Math.abs(packedResult.z - 0.875) < 0.01) ||
-      (Math.abs(packedResult.x - 9) < 0.01 && Math.abs(packedResult.y - 6) < 0.01 && Math.abs(packedResult.z - 3) < 0.01) ||
-      (Math.abs(packedResult.x - 10.875) < 0.01 && Math.abs(packedResult.y - 1.5) < 0.01 && Math.abs(packedResult.z - 12.375) < 0.01) ||
-      (Math.abs(packedResult.x - 8.75) < 0.01 && Math.abs(packedResult.y - 4.375) < 0.01 && Math.abs(packedResult.z - 11.25) < 0.01) ||
-      (Math.abs(packedResult.x - 8.6875) < 0.01 && Math.abs(packedResult.y - 5.4375) < 0.01 && Math.abs(packedResult.z - 1.75) < 0.01) ||
-      
-      // Additional box sizes
-      (Math.abs(packedResult.x - 18) < 0.01 && Math.abs(packedResult.y - 12) < 0.01 && Math.abs(packedResult.z - 4) < 0.01) ||
-      (Math.abs(packedResult.x - 16) < 0.01 && Math.abs(packedResult.y - 16) < 0.01 && Math.abs(packedResult.z - 4) < 0.01) ||
-      (Math.abs(packedResult.x - 12) < 0.01 && Math.abs(packedResult.y - 3) < 0.01 && Math.abs(packedResult.z - 17.5) < 0.01) ||
-      
-      // More box sizes that need magnification
-      (Math.abs(packedResult.x - 8) < 0.01 && Math.abs(packedResult.y - 6) < 0.01 && Math.abs(packedResult.z - 4) < 0.01) ||
-      (Math.abs(packedResult.x - 9.4375) < 0.01 && Math.abs(packedResult.y - 6.4375) < 0.01 && Math.abs(packedResult.z - 2.1875) < 0.01) ||
-      (Math.abs(packedResult.x - 10.875) < 0.01 && Math.abs(packedResult.y - 1.5) < 0.01 && Math.abs(packedResult.z - 12.37) < 0.01) ||
-      (Math.abs(packedResult.x - 10) < 0.01 && Math.abs(packedResult.y - 7) < 0.01 && Math.abs(packedResult.z - 3) < 0.01) ||
-      (Math.abs(packedResult.x - 7.25) < 0.01 && Math.abs(packedResult.y - 7.25) < 0.01 && Math.abs(packedResult.z - 6.5) < 0.01) ||
-      (Math.abs(packedResult.x - 8.75) < 0.01 && Math.abs(packedResult.y - 2.625) < 0.01 && Math.abs(packedResult.z - 11.25) < 0.01) ||
-      (Math.abs(packedResult.x - 8.75) < 0.01 && Math.abs(packedResult.y - 4.375) < 0.01 && Math.abs(packedResult.z - 11.25) < 0.01) ||
-      (Math.abs(packedResult.x - 18) < 0.01 && Math.abs(packedResult.y - 13) < 0.01 && Math.abs(packedResult.z - 16) < 0.01) ||
-      (Math.abs(packedResult.x - 16) < 0.01 && Math.abs(packedResult.y - 16) < 0.01 && Math.abs(packedResult.z - 16) < 0.01)
-    );
-
-    const scale = isSpecialSize ? 12 : (Math.max(packedResult.x, packedResult.y, packedResult.z) > 15 ? 20 : 10);
+    const scale = getScale(packedResult);
     const itemsDisplay = createDisplay(packedResult, scale);
 
     this.setState(
@@ -465,7 +280,6 @@ export default class Display3D extends Component {
 
   animate = () => {
     if (!this.renderer || !this.scene || !this.camera) {
-      console.error('Missing required render components');
       requestAnimationFrame(this.animate);
       return;
     }
@@ -475,10 +289,12 @@ export default class Display3D extends Component {
     if (!this.state.userInteracted) {
       // Use slider animation when not interacting
       const value = this.rotationAnim._value;
-      this.cube.rotation.y = value;
+      if (this.cube) {
+        this.cube.rotation.y = value;
+      }
       if (this.state.box) {
         // Get current box scale
-        const scale = this.getScale(this.state.box);
+        const scale = getScale(this.state.box);
         
         // Only apply special scaling for very small boxes
         const isVerySmall = scale <= 6;
@@ -544,7 +360,7 @@ export default class Display3D extends Component {
       this.cube.rotation.y = value;
       
       // Get current box scale
-      const scale = this.getScale(this.state.box);
+      const scale = getScale(this.state.box);
       
       // Only apply special scaling for very small boxes
       const isVerySmall = scale <= 6;
@@ -565,40 +381,6 @@ export default class Display3D extends Component {
         });
       }
     }
-  };
-
-  // Helper function to get scale based on box dimensions
-  getScale = (box) => {
-    if (!box) return 10;
-    
-    const matchDims = (x, y, z) => 
-      Math.abs(box.x - x) < 0.01 && 
-      Math.abs(box.y - y) < 0.01 && 
-      Math.abs(box.z - z) < 0.01;
-
-    // Very small boxes need more magnification
-    if (matchDims(6.25, 3.125, 0.5)) return 6;
-    if (matchDims(8.75, 5.5625, 0.875)) return 8;
-    if (matchDims(6, 4, 2)) return 6;
-    if (matchDims(9, 6, 3)) return 6; // Added 9x6x3 as a very small box
-    
-    // Medium-small boxes
-    if (matchDims(8, 6, 4)) return 8;
-    
-    // Special flat boxes need custom scaling
-    if (matchDims(9.5, 15.5, 1)) return 15;
-
-    // Original special sizes
-    if (
-      (box.x === 12 && box.y === 15.5 && box.z === 3) ||
-      (box.x === 17 && box.y === 11 && box.z === 8) ||
-      (box.x === 17 && box.y === 17 && box.z === 7) ||
-      (box.x === 16 && box.y === 13 && box.z === 3) ||
-      (box.x === 9 && box.y === 6 && box.z === 3)
-    ) return 12;
-
-    // Default scaling based on max dimension
-    return Math.max(box.x, box.y, box.z) > 15 ? 20 : 10;
   };
 
   resetSlider = () => {
@@ -734,6 +516,92 @@ export default class Display3D extends Component {
     });
 
     this.setState({ isBoxCollapsed: newState });
+  };
+
+  renderLegendModal = () => {
+    const { itemsTotal, isLegendVisible } = this.state;
+
+    // Initialize empty objects/arrays
+    const groupedItems = {};
+    const finalItems = [];
+
+    // Only process items if itemsTotal is a valid array and not empty
+    if (Array.isArray(itemsTotal) && itemsTotal.length > 0) {
+      // Group items by name
+      itemsTotal.forEach(item => {
+        if (!item) return; // Skip invalid items
+        const name = item.itemName || "Unnamed Item";
+        if (!groupedItems[name]) {
+          groupedItems[name] = [];
+        }
+        groupedItems[name].push(item);
+      });
+
+      // Create final items array with proper formatting
+      Object.keys(groupedItems).sort().forEach(name => {
+        const items = groupedItems[name];
+        const padLength = items.length > 1 ? String(items.length).length : 0;
+        
+        items.forEach((item, index) => {
+          if (!item) return; // Skip invalid items
+          const number = index + 1;
+          const paddedNumber = String(number).padStart(padLength, '0');
+          finalItems.push({
+            ...item,
+            displayName: items.length > 1 ? `${name}${paddedNumber}` : name,
+            sortKey: items.length > 1 ? `${name}${paddedNumber}` : name,
+            dimensions: `${item.x}L × ${item.y}W × ${item.z}H`
+          });
+        });
+      });
+
+      // Sort final items
+      finalItems.sort((a, b) => a.sortKey.localeCompare(b.sortKey));
+    }
+
+    return (
+      <Modal
+        visible={isLegendVisible}
+        transparent={true}
+        animationType="slide"
+        onRequestClose={() => this.setState({ isLegendVisible: false })}
+      >
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalContent}>
+            <Text style={styles.legendTitle}>Legend</Text>
+            <ScrollView style={styles.legendScrollView}>
+              {finalItems.length > 0 ? (
+                finalItems.map((item, index) => (
+                  <View key={index} style={styles.legendItem}>
+                    <View style={styles.legendItemLeft}>
+                      <View
+                        style={[styles.colorBox, { backgroundColor: item.color }]}
+                      />
+                      <Text style={styles.legendText}>
+                        {item.displayName}
+                      </Text>
+                    </View>
+                    <View style={styles.dimensionsContainer}>
+                      <Text style={styles.dimensionsText}>
+                        {item.dimensions}
+                      </Text>
+                    </View>
+                  </View>
+                ))
+              ) : (
+                <Text style={styles.noItemsText}>No items to display</Text>
+              )}
+            </ScrollView>
+            <TouchableOpacity
+              style={styles.closeButton}
+              onPress={() => this.setState({ isLegendVisible: false })}
+            >
+              <Text style={styles.closeButtonText}>Close</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </Modal>
+    );
   };
 
   render() {

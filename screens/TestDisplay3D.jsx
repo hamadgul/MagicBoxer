@@ -13,6 +13,7 @@ import * as THREE from "three";
 import { Renderer } from "expo-three";
 import Slider from "@react-native-community/slider";
 import { createDisplay } from "../packing_algo/packing";
+import { isSpecialSize, getScale } from "../utils/boxSizes";
 
 const PriceText = ({ carrier, priceText }) => {
   if (!priceText) return null;
@@ -32,9 +33,22 @@ export default class TestDisplay3D extends Component {
     this.renderer = null;
     this.cube = null;
 
+    // Get items from props
+    const rawItems = props.route.params?.itemsTotal || [];
+    console.log('Raw items:', rawItems);
+
     // Transform items into the format expected by createDisplay
-    const transformedItems = props.route.params?.itemsTotal || [];
-    console.log('Using transformed items:', transformedItems);
+    const transformedItems = rawItems.map(item => ({
+      x: item[0],
+      y: item[1],
+      z: item[2],
+      SKU: item[3],
+      itemName: item[5],
+      xx: item[0],
+      yy: item[1],
+      zz: item[2]
+    }));
+    console.log('Transformed items:', transformedItems);
 
     this.state = {
       theta: 0,
@@ -105,7 +119,21 @@ export default class TestDisplay3D extends Component {
       JSON.stringify(prevProps.route.params?.items) !==
       JSON.stringify(this.props.route.params?.items)
     ) {
-      const transformedItems = this.props.route.params?.itemsTotal || [];
+      const rawItems = this.props.route.params?.itemsTotal || [];
+      console.log('Raw items:', rawItems);
+
+      // Transform items into the format expected by createDisplay
+      const transformedItems = rawItems.map(item => ({
+        x: item[0],
+        y: item[1],
+        z: item[2],
+        SKU: item[3],
+        itemName: item[5],
+        xx: item[0],
+        yy: item[1],
+        zz: item[2]
+      }));
+      console.log('Transformed items:', transformedItems);
 
       this.setState({
         items: this.props.route.params?.items || [],
@@ -139,7 +167,7 @@ export default class TestDisplay3D extends Component {
       this.cube.rotation.y = value;
       
       // Get current box scale
-      const scale = this.getScale(this.state.box);
+      const scale = getScale(this.state.box);
       
       // Only apply special scaling for very small boxes
       const isVerySmall = scale <= 6;
@@ -182,7 +210,6 @@ export default class TestDisplay3D extends Component {
 
   animate = () => {
     if (!this.renderer || !this.scene || !this.camera) {
-      console.error('Missing required render components');
       requestAnimationFrame(this.animate);
       return;
     }
@@ -197,7 +224,7 @@ export default class TestDisplay3D extends Component {
       }
       if (this.state.box) {
         // Get current box scale
-        const scale = this.getScale(this.state.box);
+        const scale = getScale(this.state.box);
         
         // Only apply special scaling for very small boxes
         const isVerySmall = scale <= 6;
@@ -246,42 +273,9 @@ export default class TestDisplay3D extends Component {
   createBox = (box, itemsTotal) => {
     console.log('Creating box with:', { box, itemsTotal });
     
-    // Helper function to check dimensions with tolerance
-    const matchDims = (x, y, z) => 
-      Math.abs(box.x - x) < 0.01 && 
-      Math.abs(box.y - y) < 0.01 && 
-      Math.abs(box.z - z) < 0.01;
-
-    // Get appropriate scale based on box dimensions
-    const getScale = () => {
-      // Very small boxes need more magnification
-      if (matchDims(6.25, 3.125, 0.5)) return 6;
-      if (matchDims(8.75, 5.5625, 0.875)) return 8;
-      if (matchDims(6, 4, 2)) return 6; // Increased magnification for 6x4x2
-      if (matchDims(9, 6, 3)) return 6; // Added 9x6x3 as a very small box
-      
-      // Medium-small boxes
-      if (matchDims(8, 6, 4)) return 8;
-      
-      // Special flat boxes need custom scaling
-      if (matchDims(9.5, 15.5, 1)) return 15;
-
-      // Original special sizes
-      if (
-        (box.x === 12 && box.y === 15.5 && box.z === 3) ||
-        (box.x === 17 && box.y === 11 && box.z === 8) ||
-        (box.x === 17 && box.y === 17 && box.z === 7) ||
-        (box.x === 16 && box.y === 13 && box.z === 3) ||
-        (box.x === 9 && box.y === 6 && box.z === 3)
-      ) return 12;
-
-      // Default scaling based on max dimension
-      return Math.max(box.x, box.y, box.z) > 15 ? 20 : 10;
-    };
-
-    const scale = getScale();
+    const scale = getScale(box);
     console.log('Using scale for box:', { dimensions: [box.x, box.y, box.z], scale });
-    
+
     const geometry = new THREE.BoxGeometry(
       box.x / scale,
       box.y / scale,
@@ -314,16 +308,7 @@ export default class TestDisplay3D extends Component {
         cx: box.x / 2,
         cy: -box.y / 2,
         cz: box.z / 2,
-        items: itemsTotal.map(item => ({
-          x: item[0],
-          y: item[1],
-          z: item[2],
-          SKU: item[3],
-          itemName: item[5],
-          xx: item[0],
-          yy: item[1],
-          zz: item[2]
-        }))
+        items: itemsTotal
       };
 
       console.log('Created box with items:', boxWithItems);
@@ -351,55 +336,15 @@ export default class TestDisplay3D extends Component {
   };
 
   _onGLContextCreate = async (gl) => {
-    console.log('GL Context Created');
+    const { box } = this.state;
     
     this.scene = new THREE.Scene();
     this.scene.background = new THREE.Color(0xffffff);
 
-    // Helper function to check dimensions with tolerance
-    const matchDims = (x, y, z) => 
-      Math.abs(this.state.box.x - x) < 0.01 && 
-      Math.abs(this.state.box.y - y) < 0.01 && 
-      Math.abs(this.state.box.z - z) < 0.01;
-
-    const isSpecialSize = (
-      // Original special sizes
-      (this.state.box.x === 12 && this.state.box.y === 15.5 && this.state.box.z === 3) ||
-      (this.state.box.x === 17 && this.state.box.y === 11 && this.state.box.z === 8) ||
-      (this.state.box.x === 17 && this.state.box.y === 17 && this.state.box.z === 7) ||
-      (this.state.box.x === 16 && this.state.box.y === 13 && this.state.box.z === 3) ||
-      (this.state.box.x === 9 && this.state.box.y === 6 && this.state.box.z === 3) ||
-      
-      // Very small boxes
-      matchDims(6.25, 3.125, 0.5) ||
-      matchDims(8.75, 5.5625, 0.875) ||
-      matchDims(6, 4, 2) ||
-      matchDims(9, 6, 3) ||
-      matchDims(8.6875, 5.4375, 1.75) ||
-      matchDims(9.4375, 6.4375, 2.1875) ||
-      matchDims(10, 7, 3) ||
-      matchDims(7.25, 7.25, 6.5) ||
-      matchDims(8.75, 2.625, 11.25) ||
-      matchDims(8.75, 4.375, 11.25) ||
-      
-      // Medium-small boxes
-      matchDims(8, 6, 4) ||
-      matchDims(10.875, 1.5, 12.375) ||
-      matchDims(10.875, 1.5, 12.37) ||
-      
-      // Special flat boxes and large boxes
-      matchDims(9.5, 15.5, 1) ||
-      matchDims(12, 3, 17.5) ||
-      matchDims(18, 12, 4) ||
-      matchDims(16, 16, 4) ||
-      matchDims(20, 12, 12) ||
-      matchDims(16, 12, 12) ||
-      matchDims(18, 13, 16) ||
-      matchDims(16, 16, 16)
-    );
-
-    let cameraDistance = isSpecialSize ? 3.5 : 5;
-    let fov = isSpecialSize ? 60 : 75;
+    // Check if this is a special size box that needs adjusted camera settings
+    const isSpecialSizeBox = isSpecialSize(box);
+    let cameraDistance = isSpecialSizeBox ? 3.5 : 5;
+    let fov = isSpecialSizeBox ? 60 : 75;
 
     this.camera = new THREE.PerspectiveCamera(
       fov,
@@ -423,8 +368,10 @@ export default class TestDisplay3D extends Component {
     this.scene.add(directionalLight);
 
     this.setState({ gl }, () => {
-      console.log('GL context set');
-      this.addBoxToScene();
+      if (box) {
+        this.cube = this.createBox(box, this.state.itemsTotal);
+        this.scene.add(this.cube);
+      }
       this.animate();
     });
   };
@@ -448,54 +395,6 @@ export default class TestDisplay3D extends Component {
       this.scene.add(this.cube);
       console.log('Added cube to scene');
     }
-  };
-
-  getScale = (box) => {
-    if (!box) return 10;
-    
-    const matchDims = (x, y, z) => 
-      Math.abs(box.x - x) < 0.01 && 
-      Math.abs(box.y - y) < 0.01 && 
-      Math.abs(box.z - z) < 0.01;
-
-    // Very small boxes need more magnification
-    if (matchDims(6.25, 3.125, 0.5)) return 6;
-    if (matchDims(8.75, 5.5625, 0.875)) return 8;
-    if (matchDims(6, 4, 2)) return 6;
-    if (matchDims(9, 6, 3)) return 6;
-    if (matchDims(8.6875, 5.4375, 1.75)) return 6;
-    if (matchDims(9.4375, 6.4375, 2.1875)) return 6;
-    if (matchDims(10, 7, 3)) return 6;
-    if (matchDims(7.25, 7.25, 6.5)) return 6;
-    if (matchDims(8.75, 2.625, 11.25)) return 6;
-    if (matchDims(8.75, 4.375, 11.25)) return 6;
-    
-    // Medium-small boxes
-    if (matchDims(8, 6, 4)) return 8;
-    if (matchDims(10.875, 1.5, 12.375)) return 8;
-    if (matchDims(10.875, 1.5, 12.37)) return 8;
-    
-    // Special flat boxes need custom scaling
-    if (matchDims(9.5, 15.5, 1)) return 15;
-    if (matchDims(12, 3, 17.5)) return 15;
-    if (matchDims(18, 12, 4)) return 15;
-    if (matchDims(16, 16, 4)) return 15;
-    if (matchDims(20, 12, 12)) return 15;
-    if (matchDims(16, 12, 12)) return 15;
-    if (matchDims(18, 13, 16)) return 15;
-    if (matchDims(16, 16, 16)) return 15;
-
-    // Original special sizes
-    if (
-      (box.x === 12 && box.y === 15.5 && box.z === 3) ||
-      (box.x === 17 && box.y === 11 && box.z === 8) ||
-      (box.x === 17 && box.y === 17 && box.z === 7) ||
-      (box.x === 16 && box.y === 13 && box.z === 3) ||
-      (box.x === 9 && box.y === 6 && box.z === 3)
-    ) return 12;
-
-    // Default scaling based on max dimension
-    return Math.max(box.x, box.y, box.z) > 15 ? 20 : 10;
   };
 
   render() {
