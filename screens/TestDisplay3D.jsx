@@ -356,18 +356,46 @@ export default class TestDisplay3D extends Component {
     this.scene = new THREE.Scene();
     this.scene.background = new THREE.Color(0xffffff);
 
+    // Helper function to check dimensions with tolerance
+    const matchDims = (x, y, z) => 
+      Math.abs(this.state.box.x - x) < 0.01 && 
+      Math.abs(this.state.box.y - y) < 0.01 && 
+      Math.abs(this.state.box.z - z) < 0.01;
+
     const isSpecialSize = (
       // Original special sizes
       (this.state.box.x === 12 && this.state.box.y === 15.5 && this.state.box.z === 3) ||
       (this.state.box.x === 17 && this.state.box.y === 11 && this.state.box.z === 8) ||
       (this.state.box.x === 17 && this.state.box.y === 17 && this.state.box.z === 7) ||
-      (this.state.box.x === 8 && this.state.box.y === 6 && this.state.box.z === 4) ||
       (this.state.box.x === 16 && this.state.box.y === 13 && this.state.box.z === 3) ||
       (this.state.box.x === 9 && this.state.box.y === 6 && this.state.box.z === 3) ||
       
-      // New special sizes that need magnification
-      (Math.abs(this.state.box.x - 6.25) < 0.01 && Math.abs(this.state.box.y - 3.125) < 0.01 && Math.abs(this.state.box.z - 0.5) < 0.01) ||
-      (Math.abs(this.state.box.x - 6) < 0.01 && Math.abs(this.state.box.y - 4) < 0.01 && Math.abs(this.state.box.z - 2) < 0.01)
+      // Very small boxes
+      matchDims(6.25, 3.125, 0.5) ||
+      matchDims(8.75, 5.5625, 0.875) ||
+      matchDims(6, 4, 2) ||
+      matchDims(9, 6, 3) ||
+      matchDims(8.6875, 5.4375, 1.75) ||
+      matchDims(9.4375, 6.4375, 2.1875) ||
+      matchDims(10, 7, 3) ||
+      matchDims(7.25, 7.25, 6.5) ||
+      matchDims(8.75, 2.625, 11.25) ||
+      matchDims(8.75, 4.375, 11.25) ||
+      
+      // Medium-small boxes
+      matchDims(8, 6, 4) ||
+      matchDims(10.875, 1.5, 12.375) ||
+      matchDims(10.875, 1.5, 12.37) ||
+      
+      // Special flat boxes and large boxes
+      matchDims(9.5, 15.5, 1) ||
+      matchDims(12, 3, 17.5) ||
+      matchDims(18, 12, 4) ||
+      matchDims(16, 16, 4) ||
+      matchDims(20, 12, 12) ||
+      matchDims(16, 12, 12) ||
+      matchDims(18, 13, 16) ||
+      matchDims(16, 16, 16)
     );
 
     let cameraDistance = isSpecialSize ? 3.5 : 5;
@@ -434,13 +462,28 @@ export default class TestDisplay3D extends Component {
     if (matchDims(6.25, 3.125, 0.5)) return 6;
     if (matchDims(8.75, 5.5625, 0.875)) return 8;
     if (matchDims(6, 4, 2)) return 6;
-    if (matchDims(9, 6, 3)) return 6; // Added 9x6x3 as a very small box
+    if (matchDims(9, 6, 3)) return 6;
+    if (matchDims(8.6875, 5.4375, 1.75)) return 6;
+    if (matchDims(9.4375, 6.4375, 2.1875)) return 6;
+    if (matchDims(10, 7, 3)) return 6;
+    if (matchDims(7.25, 7.25, 6.5)) return 6;
+    if (matchDims(8.75, 2.625, 11.25)) return 6;
+    if (matchDims(8.75, 4.375, 11.25)) return 6;
     
     // Medium-small boxes
     if (matchDims(8, 6, 4)) return 8;
+    if (matchDims(10.875, 1.5, 12.375)) return 8;
+    if (matchDims(10.875, 1.5, 12.37)) return 8;
     
     // Special flat boxes need custom scaling
     if (matchDims(9.5, 15.5, 1)) return 15;
+    if (matchDims(12, 3, 17.5)) return 15;
+    if (matchDims(18, 12, 4)) return 15;
+    if (matchDims(16, 16, 4)) return 15;
+    if (matchDims(20, 12, 12)) return 15;
+    if (matchDims(16, 12, 12)) return 15;
+    if (matchDims(18, 13, 16)) return 15;
+    if (matchDims(16, 16, 16)) return 15;
 
     // Original special sizes
     if (
