@@ -21,6 +21,7 @@ import { Dropdown } from "react-native-element-dropdown";
 import AntDesign from "@expo/vector-icons/AntDesign";
 import { pack, createDisplay } from "../packing_algo/packing";
 import Slider from "@react-native-community/slider";
+import { Picker } from '@react-native-picker/picker';
 
 const carrierData = [
   { label: "No Carrier", value: "No Carrier" },
@@ -674,6 +675,13 @@ export default class Display3D extends Component {
 
   render() {
     const { selectedBox, selectedCarrier, isBoxCollapsed } = this.state;
+    const { route } = this.props;
+    const isFromTestPage = route.params?.isFromTestPage;
+    const testPageCarrier = route.params?.testPageCarrier;
+
+    const carriers = isFromTestPage ? 
+      [testPageCarrier] : 
+      ['No Carrier', 'USPS', 'FedEx', 'UPS'];
 
     if (!selectedBox || !selectedBox.dimensions) {
       return <Text style={styles.noBoxText}>No box selected</Text>;
@@ -929,12 +937,12 @@ const styles = StyleSheet.create({
   },
   input: {
     width: 160,
+    height: 32,
     borderWidth: 1,
     borderColor: "#ddd",
     borderRadius: 8,
     backgroundColor: "#fff",
     paddingHorizontal: 10,
-    height: 32,
   },
   icon: {
     marginRight: 5,

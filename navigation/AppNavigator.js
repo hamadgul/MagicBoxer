@@ -10,6 +10,7 @@ import GettingStartedPage from "../screens/GettingStartedPage";
 import FormPage from "../screens/FormPage";
 import CarrierBoxListPage from "../screens/CarrierBoxListPage";
 import Display3D from "../screens/Display3D";
+import TestDisplay3D from "../screens/TestDisplay3D";
 import PrivacyPolicyPage from "../screens/PrivacyPolicyPage";
 import PackagesPage from "../screens/PackagesPage";
 import FAQsPage from "../screens/FAQsPage";
@@ -109,6 +110,15 @@ function AppNavigator() {
               title: "Optimal Box Size",
               headerShown: true, // Show stack header with back button
               gestureEnabled: true, // Enable gestures for back navigation
+            }}
+          />
+          <Stack.Screen
+            name="TestDisplay3D"
+            component={TestDisplay3D}
+            options={{
+              title: "Box Visualization",
+              headerShown: true,
+              gestureEnabled: true,
             }}
           />
           <Stack.Screen
