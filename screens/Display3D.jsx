@@ -68,59 +68,11 @@ const PriceText = ({ carrier, priceText }) => {
 export default class Display3D extends Component {
   constructor(props) {
     super(props);
-    this.rotationAnim = new Animated.Value(0);
-    this.lastSliderUpdate = 0;
-    this.pendingUpdate = null;
     
     this.panResponder = PanResponder.create({
       onStartShouldSetPanResponder: () => true,
       onMoveShouldSetPanResponder: () => true,
       onPanResponderMove: this.handlePanResponderMove,
-    });
-
-    // Add listener for rotation animation
-    this.rotationAnim.addListener(({ value }) => {
-      if (this.cube && this.scene) {
-        this.cube.rotation.y = value;
-        
-        if (this.state.box && Array.isArray(this.state.itemsTotal)) {
-          // Get the scale for the current box
-          const scale = getScale(this.state.box);
-          
-          // Calculate base movement
-          const baseMovement = this.state.box.y / 10;
-          
-          // Adjust movement multiplier based on scale
-          let movementMultiplier;
-          if (scale === 6) {
-            // For small boxes (scale 6), use a larger multiplier
-            const boxHeight = this.state.box.y;
-            if (boxHeight <= 6) {
-              movementMultiplier = 3.0; // Extra boost for very small boxes
-            } else if (boxHeight <= 8) {
-              movementMultiplier = 2.5; // Boost for small boxes
-            } else {
-              movementMultiplier = 2.0; // Standard boost for scale 6
-            }
-          } else {
-            // For larger boxes, use the original multiplier
-            movementMultiplier = 1.5;
-          }
-          
-          const maxMovement = baseMovement * movementMultiplier;
-          
-          // Update item positions directly
-          this.state.itemsTotal.forEach((item) => {
-            if (item && item.dis && item.dis.position && item.pos) {
-              try {
-                item.dis.position.y = Math.sin(value) * maxMovement + item.pos[1];
-              } catch (error) {
-                console.log('Error updating item position:', error);
-              }
-            }
-          });
-        }
-      }
     });
 
     this.state = {
@@ -143,21 +95,117 @@ export default class Display3D extends Component {
         width: 0,
         height: 0,
       },
-      isSliding: false,
+      currentRotation: 0,
+      cameraPosition: { x: -1.2, y: 0.5, z: 5 }
     };
   }
+
+  updateRotation = (value) => {
+    if (!this.cube || !this.scene) return;
+    
+    this.cube.rotation.y = value;
+    
+    if (this.state.box && Array.isArray(this.state.itemsTotal)) {
+      const scale = getScale(this.state.box);
+      const baseMovement = this.state.box.y / 10;
+      
+      let movementMultiplier;
+      if (scale === 6) {
+        const boxHeight = this.state.box.y;
+        if (boxHeight <= 6) {
+          movementMultiplier = 3.0;
+        } else if (boxHeight <= 8) {
+          movementMultiplier = 2.5;
+        } else {
+          movementMultiplier = 2.0;
+        }
+      } else {
+        movementMultiplier = 1.5;
+      }
+      
+      const maxMovement = baseMovement * movementMultiplier;
+      
+      this.state.itemsTotal.forEach((item) => {
+        if (item?.dis?.position && item.pos) {
+          item.dis.position.y = Math.sin(value) * maxMovement + item.pos[1];
+        }
+      });
+    }
+
+    // Force a render update
+    if (this.renderer) {
+      this.renderer.render(this.scene, this.camera);
+    }
+  }
+
+  handleRotationChange = (value) => {
+    if (Platform.OS === 'ios') {
+      this.setState({ 
+        sliderValue: value,
+        currentRotation: value 
+      }, () => {
+        this.updateRotation(value);
+      });
+    } else {
+      this.updateRotation(value);
+    }
+  };
+
+  animate = () => {
+    if (!this.state.gl) return;
+
+    const animate = () => {
+      if (this.state.gl && this.camera && this.scene) {
+        if (this.state.userInteracted) {
+          const boxRotationY = this.state.currentRotation;
+          const { theta, phi } = this.state;
+          
+          this.camera.position.x = 5 * Math.sin(phi) * Math.cos(theta + boxRotationY);
+          this.camera.position.y = 5 * Math.cos(phi);
+          this.camera.position.z = 5 * Math.sin(phi) * Math.sin(theta + boxRotationY);
+          this.camera.lookAt(0, 0, 0);
+        } else {
+          const { x, y, z } = this.state.cameraPosition;
+          this.camera.position.set(x, y, z);
+          this.camera.lookAt(0, 0, 0);
+        }
+
+        if (this.renderer) {
+          this.renderer.render(this.scene, this.camera);
+        }
+        this.state.gl.endFrameEXP();
+      }
+      this.animationFrameId = requestAnimationFrame(animate);
+    };
+    animate();
+  };
+
+  handlePanResponderMove = (event, gestureState) => {
+    const { dx, dy } = gestureState;
+    this.setState(prevState => {
+      return {
+        theta: prevState.theta - dx * 0.001,
+        phi: Math.max(0.1, Math.min(Math.PI - 0.1, prevState.phi - dy * 0.001)),
+        userInteracted: true
+      };
+    });
+  };
 
   componentWillUnmount() {
     if (this.pendingUpdate) {
       clearTimeout(this.pendingUpdate);
     }
-    this.rotationAnim.removeAllListeners();
     if (this.focusListener) {
       this.focusListener();
     }
   }
 
   componentDidMount() {
+    // Wait for everything to be ready before enabling animations
+    setTimeout(() => {
+      this.setState({ isInitialized: true });
+    }, 500);
+
     // Force a re-initialization if we have initial data
     if (this.state.box && this.state.itemsTotal) {
       // Wait for next tick to ensure GL context is ready
@@ -321,69 +369,14 @@ export default class Display3D extends Component {
     );
   };
 
-  animate = () => {
-    requestAnimationFrame(this.animate);
-
-    const { gl } = this.state;
-    if (!gl) return;
-
-    if (this.state.userInteracted) {
-      const boxRotationY = this.rotationAnim._value;
-      this.camera.position.x = 5 * Math.sin(this.state.phi) * Math.cos(this.state.theta + boxRotationY);
-      this.camera.position.y = 5 * Math.cos(this.state.phi);
-      this.camera.position.z = 5 * Math.sin(this.state.phi) * Math.sin(this.state.theta + boxRotationY);
-    } else {
-      this.camera.position.set(-1.2, 0.5, 5);
-    }
-
-    this.camera.lookAt(0, 0, 0);
-    this.renderer.render(this.scene, this.camera);
-    gl.endFrameEXP();
-  };
-
-  handleRotationChange = (value) => {
-    if (Platform.OS === 'ios') {
-      const now = Date.now();
-      if (now - this.lastSliderUpdate < 32) { // Limit to ~30fps for smoother animation
-        return;
-      }
-      this.lastSliderUpdate = now;
-
-      // Clear any pending updates
-      if (this.pendingUpdate) {
-        clearTimeout(this.pendingUpdate);
-      }
-
-      // Update state and animation with slight delay to prevent jitter
-      this.setState({ sliderValue: value }, () => {
-        this.pendingUpdate = setTimeout(() => {
-          this.rotationAnim.setValue(value);
-          this.pendingUpdate = null;
-        }, 16);
-      });
-    } else {
-      this.rotationAnim.setValue(value);
-    }
-  };
-
-  handlePanResponderMove = (event, gestureState) => {
-    const { dx, dy } = gestureState;
-    this.setState((prevState) => ({
-      theta: prevState.theta - dx * 0.001,
-      phi: Math.max(0.1, Math.min(Math.PI - 0.1, prevState.phi - dy * 0.001)),
-      userInteracted: true,
-    }));
-  };
-
   resetSlider = () => {
     // Reset both animation value and user interaction state
-    this.rotationAnim.setValue(0);
-    this.setState({ userInteracted: false });
+    this.setState({ userInteracted: false, currentRotation: 0 });
   };
 
   updateVisualsBasedOnCarrier = (carrier) => {
     // Reset animation value
-    this.rotationAnim.setValue(0);
+    this.resetSlider();
     
     this.setState(
       {
@@ -401,8 +394,7 @@ export default class Display3D extends Component {
         // For iOS, use a slight delay to ensure the reset takes effect
         if (Platform.OS === 'ios') {
           setTimeout(() => {
-            this.rotationAnim.setValue(0);
-            this.setState({ sliderValue: 0 });
+            this.setState({ sliderValue: 0, currentRotation: 0 });
           }, 50);
         }
       }
@@ -465,7 +457,7 @@ export default class Display3D extends Component {
           minimumValue={0}
           maximumValue={Math.PI}
           step={Platform.OS === 'android' ? 0.05 : 0.01}
-          value={Platform.OS === 'ios' ? this.state.sliderValue : this.rotationAnim._value}
+          value={this.state.currentRotation}
           onValueChange={this.handleRotationChange}
           minimumTrackTintColor="#007AFF"
           maximumTrackTintColor="#B4B4B4"
@@ -749,7 +741,7 @@ export default class Display3D extends Component {
             minimumValue={0}
             maximumValue={Math.PI}
             step={Platform.OS === 'android' ? 0.05 : 0.01}
-            value={Platform.OS === 'ios' ? this.state.sliderValue : this.rotationAnim._value}
+            value={this.state.currentRotation}
             onValueChange={this.handleRotationChange}
             minimumTrackTintColor="#007AFF"
             maximumTrackTintColor="#B4B4B4"
