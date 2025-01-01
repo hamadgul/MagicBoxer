@@ -69,29 +69,9 @@ export default class Display3D extends Component {
   constructor(props) {
     super(props);
     this.rotationAnim = new Animated.Value(0);
-    this.state = {
-      theta: 0,
-      phi: Math.PI / 2,
-      userInteracted: false,
-      selectedCarrier: props.route.params.selectedCarrier || "No Carrier",
-      items: props.route.params.items || [],
-      itemsTotal: props.route.params.itemsTotal || [],
-      box: props.route.params.box || null,
-      selectedBox: props.route.params.selectedBox || null,
-      gl: null,
-      isLegendVisible: false,
-      isBoxCollapsed: false,
-      boxContentHeight: new Animated.Value(1),
-      glViewHeight: new Animated.Value(420),
-      sliderKey: 0,
-      sliderValue: 0,
-      dimensions: {
-        width: 0,
-        height: 0,
-      },
-      isSliding: false,
-    };
-
+    this.lastSliderUpdate = 0;
+    this.pendingUpdate = null;
+    
     this.panResponder = PanResponder.create({
       onStartShouldSetPanResponder: () => true,
       onMoveShouldSetPanResponder: () => true,
@@ -129,6 +109,7 @@ export default class Display3D extends Component {
           
           const maxMovement = baseMovement * movementMultiplier;
           
+          // Update item positions directly
           this.state.itemsTotal.forEach((item) => {
             if (item && item.dis && item.dis.position && item.pos) {
               try {
@@ -142,21 +123,34 @@ export default class Display3D extends Component {
       }
     });
 
-    // Helper method to update item positions
-    this.updateItemPositions = (value, maxMovement) => {
-      this.state.itemsTotal.forEach((item) => {
-        if (item?.dis?.position && item?.pos) {
-          try {
-            item.dis.position.y = Math.sin(value) * maxMovement + item.pos[1];
-          } catch (error) {
-            console.log('Error updating item position:', error);
-          }
-        }
-      });
+    this.state = {
+      theta: 0,
+      phi: Math.PI / 2,
+      userInteracted: false,
+      selectedCarrier: props.route.params.selectedCarrier || "No Carrier",
+      items: props.route.params.items || [],
+      itemsTotal: props.route.params.itemsTotal || [],
+      box: props.route.params.box || null,
+      selectedBox: props.route.params.selectedBox || null,
+      gl: null,
+      isLegendVisible: false,
+      isBoxCollapsed: false,
+      boxContentHeight: new Animated.Value(1),
+      glViewHeight: new Animated.Value(420),
+      sliderKey: 0,
+      sliderValue: 0,
+      dimensions: {
+        width: 0,
+        height: 0,
+      },
+      isSliding: false,
     };
   }
 
   componentWillUnmount() {
+    if (this.pendingUpdate) {
+      clearTimeout(this.pendingUpdate);
+    }
     this.rotationAnim.removeAllListeners();
     if (this.focusListener) {
       this.focusListener();
@@ -348,9 +342,27 @@ export default class Display3D extends Component {
   };
 
   handleRotationChange = (value) => {
-    this.rotationAnim.setValue(value);
     if (Platform.OS === 'ios') {
-      this.setState({ sliderValue: value });
+      const now = Date.now();
+      if (now - this.lastSliderUpdate < 32) { // Limit to ~30fps for smoother animation
+        return;
+      }
+      this.lastSliderUpdate = now;
+
+      // Clear any pending updates
+      if (this.pendingUpdate) {
+        clearTimeout(this.pendingUpdate);
+      }
+
+      // Update state and animation with slight delay to prevent jitter
+      this.setState({ sliderValue: value }, () => {
+        this.pendingUpdate = setTimeout(() => {
+          this.rotationAnim.setValue(value);
+          this.pendingUpdate = null;
+        }, 16);
+      });
+    } else {
+      this.rotationAnim.setValue(value);
     }
   };
 
