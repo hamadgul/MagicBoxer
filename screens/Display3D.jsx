@@ -95,11 +95,17 @@ export default class Display3D extends Component {
     this.rotationAnim.addListener(({ value }) => {
       if (this.cube && !this.state.userInteracted) {
         this.cube.rotation.y = value;
-        const maxMovement = this.state.box ? (this.state.box.y / 10) * 1.5 : 0;
+        const scale = getScale(this.state.box);
+        // Adjust maxMovement based on scale to prevent extreme movements for small boxes
+        const baseMovement = this.state.box ? (this.state.box.y / 10) : 0;
+        const maxMovement = scale <= 6 ? baseMovement * 0.5 : baseMovement * 1.5;
+        
         if (Array.isArray(this.state.itemsTotal)) {
           this.state.itemsTotal.forEach((item) => {
             if (item && item.dis) {
-              item.dis.position.y = Math.sin(value) * maxMovement + item.pos[1];
+              // Map slider value to sine wave that peaks at slider midpoint
+              const normalizedValue = (value / Math.PI) * Math.PI;
+              item.dis.position.y = Math.sin(normalizedValue) * maxMovement + item.pos[1];
             }
           });
         }
@@ -389,7 +395,7 @@ export default class Display3D extends Component {
   };
 
   updateVisualsBasedOnCarrier = (carrier) => {
-    console.log(`Switching to carrier: ${carrier}`); // Debug log
+    console.log('Updating visuals based on carrier:', carrier);
     
     // First update the state
     this.setState(

@@ -20,7 +20,7 @@ export const getScale = (box) => {
   if (matchDims(box, 8.75, 2.625, 11.25)) return 6;
   if (matchDims(box, 8.75, 4.375, 11.25)) return 6;
   if (matchDims(box, 6, 6, 38)) return 15; // Very tall box
-  
+  if (matchDims(box, 6, 6, 6)) return 6; // Small cube box - adjusted from 4 to 6 for better slider movement
   // Medium-small boxes
   if (matchDims(box, 8, 6, 4)) return 8;
   if (matchDims(box, 10.875, 1.5, 12.375)) return 8;
