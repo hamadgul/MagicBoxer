@@ -74,7 +74,7 @@ export default class Display3D extends Component {
       userInteracted: false,
       selectedCarrier: props.route.params.selectedCarrier || "No Carrier",
       items: props.route.params.items || [],
-      itemsTotal: Array.isArray(props.route.params.itemsTotal) ? props.route.params.itemsTotal : [],
+      itemsTotal: props.route.params.itemsTotal || [],
       box: props.route.params.box || null,
       selectedBox: props.route.params.selectedBox || null,
       gl: null,
@@ -82,6 +82,7 @@ export default class Display3D extends Component {
       isBoxCollapsed: false,
       boxContentHeight: new Animated.Value(1),
       glViewHeight: new Animated.Value(420),
+      sliderKey: 0,
       sliderValue: 0,
     };
 
@@ -91,21 +92,40 @@ export default class Display3D extends Component {
       onPanResponderMove: this.handlePanResponderMove,
     });
 
-    // Add listener for slider animation
+    // Add listener for rotation animation
     this.rotationAnim.addListener(({ value }) => {
-      if (this.cube && !this.state.userInteracted) {
+      if (this.cube) {
         this.cube.rotation.y = value;
-        const scale = getScale(this.state.box);
-        // Adjust maxMovement based on scale to prevent extreme movements for small boxes
-        const baseMovement = this.state.box ? (this.state.box.y / 10) : 0;
-        const maxMovement = scale <= 6 ? baseMovement * 0.5 : baseMovement * 1.5;
         
-        if (Array.isArray(this.state.itemsTotal)) {
+        if (this.state.box && Array.isArray(this.state.itemsTotal)) {
+          // Get the scale for the current box
+          const scale = getScale(this.state.box);
+          
+          // Calculate base movement
+          const baseMovement = this.state.box.y / 10;
+          
+          // Adjust movement multiplier based on scale
+          let movementMultiplier;
+          if (scale === 6) {
+            // For small boxes (scale 6), use a larger multiplier
+            const boxHeight = this.state.box.y;
+            if (boxHeight <= 6) {
+              movementMultiplier = 3.0; // Extra boost for very small boxes
+            } else if (boxHeight <= 8) {
+              movementMultiplier = 2.5; // Boost for small boxes
+            } else {
+              movementMultiplier = 2.0; // Standard boost for scale 6
+            }
+          } else {
+            // For larger boxes, use the original multiplier
+            movementMultiplier = 1.5;
+          }
+          
+          const maxMovement = baseMovement * movementMultiplier;
+          
           this.state.itemsTotal.forEach((item) => {
             if (item && item.dis) {
-              // Map slider value to sine wave that peaks at slider midpoint
-              const normalizedValue = (value / Math.PI) * Math.PI;
-              item.dis.position.y = Math.sin(normalizedValue) * maxMovement + item.pos[1];
+              item.dis.position.y = Math.sin(value) * maxMovement + item.pos[1];
             }
           });
         }
@@ -136,7 +156,7 @@ export default class Display3D extends Component {
     this.setState(
       {
         items: route.params.items || [],
-        itemsTotal: Array.isArray(route.params.itemsTotal) ? route.params.itemsTotal : [],
+        itemsTotal: route.params.itemsTotal || [],
         box: route.params.box || null,
         selectedBox: route.params.selectedBox || null,
       },
@@ -285,57 +305,30 @@ export default class Display3D extends Component {
   };
 
   animate = () => {
-    if (!this.renderer || !this.scene || !this.camera) {
-      requestAnimationFrame(this.animate);
-      return;
-    }
-
     requestAnimationFrame(this.animate);
 
-    if (!this.state.userInteracted) {
-      // Use slider animation when not interacting
-      const value = this.rotationAnim._value;
-      if (this.cube) {
-        this.cube.rotation.y = value;
-      }
-      if (this.state.box) {
-        // Get current box scale
-        const scale = getScale(this.state.box);
-        
-        // Only apply special scaling for very small boxes
-        const isVerySmall = scale <= 6;
-        const baseMovement = this.state.box ? (this.state.box.y / 10) : 0;
-        
-        // Use enhanced movement only for very small boxes
-        const maxMovement = isVerySmall ? 
-          baseMovement * 4 * Math.pow(15, (6 - scale) / 6) : // Enhanced movement for small boxes
-          baseMovement * 1.5; // Original movement for normal boxes
-        
-        if (Array.isArray(this.state.itemsTotal)) {
-          this.state.itemsTotal.forEach((item) => {
-            if (item && item.dis) {
-              // Map slider value to sine wave that peaks at slider midpoint
-              const normalizedValue = (value / Math.PI) * Math.PI;
-              item.dis.position.y = Math.sin(normalizedValue) * maxMovement + item.pos[1];
-            }
-          });
-        }
-      }
-      this.camera.position.set(-1.2, 0.5, 5);
-    } else {
-      // Use gesture-based rotation when user is interacting
-      const boxRotationY = this.state.theta;
-      if (this.cube) {
-        this.cube.rotation.y = boxRotationY;
-      }
+    const { gl } = this.state;
+    if (!gl) return;
+
+    if (this.state.userInteracted) {
+      const boxRotationY = this.rotationAnim._value;
       this.camera.position.x = 5 * Math.sin(this.state.phi) * Math.cos(this.state.theta + boxRotationY);
       this.camera.position.y = 5 * Math.cos(this.state.phi);
       this.camera.position.z = 5 * Math.sin(this.state.phi) * Math.sin(this.state.theta + boxRotationY);
+    } else {
+      this.camera.position.set(-1.2, 0.5, 5);
     }
 
     this.camera.lookAt(0, 0, 0);
     this.renderer.render(this.scene, this.camera);
-    this.state.gl.endFrameEXP();
+    gl.endFrameEXP();
+  };
+
+  handleRotationChange = (value) => {
+    this.rotationAnim.setValue(value);
+    if (Platform.OS === 'ios') {
+      this.setState({ sliderValue: value });
+    }
   };
 
   handlePanResponderMove = (event, gestureState) => {
@@ -343,155 +336,108 @@ export default class Display3D extends Component {
     this.setState((prevState) => ({
       theta: prevState.theta - dx * 0.001,
       phi: Math.max(0.1, Math.min(Math.PI - 0.1, prevState.phi - dy * 0.001)),
-      userInteracted: true
+      userInteracted: true,
     }));
   };
 
-  handleRotationChange = (value) => {
-    // When user touches slider, reset to slider mode
-    if (this.state.userInteracted) {
-      this.setState({
-        userInteracted: false,
-        theta: 0,
-        phi: Math.PI / 2
-      });
-    }
-    
-    // Update rotation value
-    this.rotationAnim.setValue(value);
-    this.setState({ sliderValue: value });
-
-    // Update cube and items
-    if (this.cube) {
-      this.cube.rotation.y = value;
-      
-      // Get current box scale
-      const scale = getScale(this.state.box);
-      
-      // Only apply special scaling for very small boxes
-      const isVerySmall = scale <= 6;
-      const baseMovement = this.state.box ? (this.state.box.y / 10) : 0;
-      
-      // Use enhanced movement only for very small boxes
-      const maxMovement = isVerySmall ? 
-        baseMovement * 4 * Math.pow(15, (6 - scale) / 6) : // Enhanced movement for small boxes
-        baseMovement * 1.5; // Original movement for normal boxes
-      
-      if (Array.isArray(this.state.itemsTotal)) {
-        this.state.itemsTotal.forEach((item) => {
-          if (item && item.dis) {
-            // Map slider value to sine wave that peaks at slider midpoint
-            const normalizedValue = (value / Math.PI) * Math.PI;
-            item.dis.position.y = Math.sin(normalizedValue) * maxMovement + item.pos[1];
-          }
-        });
-      }
-    }
-  };
-
   resetSlider = () => {
+    // Reset both animation value and user interaction state
     this.rotationAnim.setValue(0);
-    this.handleRotationChange(0);
+    this.setState({ userInteracted: false });
   };
 
   updateVisualsBasedOnCarrier = (carrier) => {
-    console.log('Updating visuals based on carrier:', carrier);
+    // Reset animation value
+    this.rotationAnim.setValue(0);
     
-    // First update the state
     this.setState(
       {
         selectedCarrier: carrier,
-        theta: 0,
-        phi: Math.PI / 2,
         userInteracted: false,
+        sliderKey: Platform.OS === 'android' ? this.state.sliderKey + 1 : this.state.sliderKey,
+        sliderValue: 0,
       },
       () => {
-        console.log('State updated.'); // Debug log
         this.handleVisualize();
+        if (this.state.gl) {
+          this.initialize3DScene();
+        }
         
-        // Reset the slider after a short delay to ensure state is updated
-        setTimeout(() => {
-          this.resetSlider();
-          console.log('Animation value after delayed reset:', this.rotationAnim._value); // Debug log
-        }, 50);
+        // For iOS, use a slight delay to ensure the reset takes effect
+        if (Platform.OS === 'ios') {
+          setTimeout(() => {
+            this.rotationAnim.setValue(0);
+            this.setState({ sliderValue: 0 });
+          }, 50);
+        }
       }
-    );
-  };
-
-  renderCustomSlider = () => {
-    console.log('Rendering slider with animation value:', this.rotationAnim._value); // Debug log
-    return (
-      <View style={styles.sliderContainer}>
-        <Slider
-          style={styles.slider}
-          minimumValue={0}
-          maximumValue={Math.PI}
-          step={Platform.OS === 'android' ? 0.02 : 0.01}
-          value={this.rotationAnim._value}
-          onValueChange={(value) => {
-            requestAnimationFrame(() => {
-              this.rotationAnim.setValue(value);
-              this.handleRotationChange(value);
-            });
-          }}
-          minimumTrackTintColor="#007AFF"
-          maximumTrackTintColor="#B4B4B4"
-          thumbTintColor="#007AFF"
-        />
-      </View>
     );
   };
 
   handleVisualize = () => {
     const { items, selectedCarrier } = this.state;
 
-    // Validate items array
-    if (!Array.isArray(items) || items.length === 0) {
+    if (items.length === 0) {
       Alert.alert("No Items", "Please add at least one item before packing.");
       return;
     }
 
-    try {
-      // Ensure each item has replicatedNames
-      const validatedItems = items.map(item => {
-        if (!item.replicatedNames) {
-          const quantity = item.quantity || 1;
-          item.replicatedNames = Array.from({ length: quantity }, (_, i) =>
-            i === 0 ? item.itemName : `${item.itemName} ${i + 1}`
-          );
-        }
-        return item;
-      });
+    const itemsTotal = items.flatMap((item) =>
+      item.replicatedNames.map((name) => [
+        item.itemLength,
+        item.itemWidth,
+        item.itemHeight,
+        item.id,
+        selectedCarrier,
+        name,
+      ])
+    );
 
-      // Create itemsTotal from validated items
-      const itemsTotal = validatedItems.flatMap((item) =>
-        item.replicatedNames.map((name) => [
-          item.itemLength,
-          item.itemWidth,
-          item.itemHeight,
-          item.id,
-          selectedCarrier,
-          name,
-        ])
-      );
+    const packedResult = pack(itemsTotal, selectedCarrier, 0);
 
-      if (!Array.isArray(itemsTotal) || itemsTotal.length === 0) {
-        Alert.alert("Error", "Failed to process items for packing.");
-        return;
-      }
-
-      const packedResult = pack(itemsTotal, selectedCarrier, 0);
-
-      if (!packedResult || !packedResult.x || !packedResult.y || !packedResult.z) {
-        Alert.alert("Error", "Failed to pack items.");
-        return;
-      }
-
-      this.onCarrierChange(packedResult);
-    } catch (error) {
-      console.error("Error in handleVisualize:", error);
-      Alert.alert("Error", "An error occurred while processing the items.");
+    if (!packedResult || packedResult.length === 0) {
+      Alert.alert("Error", "Failed to pack items.");
+      return;
     }
+
+    // Reset rotation when visualizing new box
+    this.resetSlider();
+
+    this.setState(
+      {
+        box: packedResult,
+        itemsTotal: createDisplay(packedResult, getScale(packedResult)),
+        selectedBox: {
+          dimensions: [packedResult.x, packedResult.y, packedResult.z],
+          priceText: packedResult.priceText,
+          finalBoxType: packedResult.type,
+        },
+      },
+      () => {
+        if (this.state.gl) {
+          this.initialize3DScene();
+        }
+      }
+    );
+  };
+
+  renderCustomSlider = () => {
+    return (
+      <View style={styles.sliderContainer}>
+        <Slider
+          key={Platform.OS === 'android' ? this.state.sliderKey : undefined}
+          style={{ width: "100%", height: 40 }}
+          minimumValue={0}
+          maximumValue={Math.PI}
+          step={Platform.OS === 'android' ? 0.05 : 0.01}
+          value={Platform.OS === 'ios' ? this.state.sliderValue : this.rotationAnim._value}
+          onValueChange={this.handleRotationChange}
+          minimumTrackTintColor="#007AFF"
+          maximumTrackTintColor="#B4B4B4"
+          thumbTintColor="#007AFF"
+        />
+      </View>
+    );
   };
 
   toggleBoxCollapse = () => {
@@ -624,105 +570,101 @@ export default class Display3D extends Component {
       return <Text style={styles.noBoxText}>No box selected</Text>;
     }
 
-    const boxDimensions = (
-      <View style={[styles.boxDimensionsContainer, isBoxCollapsed && styles.collapsedBox]}>
-        <View style={styles.boxHeaderContainer}>
-          <View style={styles.headerPlaceholder} />
-          <Text style={styles.boxSubtitle}>For {this.props.route.params.packageName || "This Package"}:</Text>
-          <TouchableOpacity
-            style={styles.collapseButton}
-            onPress={this.toggleBoxCollapse}
-          >
-            <AntDesign
-              name={isBoxCollapsed ? "plus" : "minus"}
-              size={20}
-              color="#666"
-            />
-          </TouchableOpacity>
-        </View>
-        <Animated.View
-          style={[
-            styles.boxContent,
-            {
-              opacity: this.state.boxContentHeight,
-              maxHeight: this.state.boxContentHeight.interpolate({
-                inputRange: [0, 1],
-                outputRange: [0, 500],
-              }),
-            },
-          ]}
-        >
-          
-          <Text style={styles.boxDetails}>
-            {selectedBox.dimensions[0]}L x {selectedBox.dimensions[1]}W x{" "}
-            {selectedBox.dimensions[2]}H
-          </Text>
-          <Text style={styles.text}>{selectedBox.finalBoxType}</Text>
-          <PriceText carrier={selectedCarrier} priceText={selectedBox.priceText} />
-          <View style={styles.carrierDropdownContainer}>
-            <Dropdown
-              style={styles.input}
-              data={carrierData}
-              labelField="label"
-              valueField="value"
-              placeholder="Select Carrier"
-              value={selectedCarrier}
-              onChange={(item) => this.updateVisualsBasedOnCarrier(item.value)}
-              renderLeftIcon={() => (
-                <AntDesign
-                  style={styles.icon}
-                  color="black"
-                  name="Safety"
-                  size={20}
-                />
-              )}
-              renderRightIcon={() => (
-                <AntDesign
-                  style={styles.icon}
-                  color="black"
-                  name="down"
-                  size={16}
-                />
-              )}
-            />
-          </View>
-          {!isBoxCollapsed && (
-            <TouchableOpacity
-              style={styles.legendButton}
-              onPress={() => this.setState({ isLegendVisible: true })}
-            >
-              <AntDesign 
-                name="infocirlceo" 
-                size={14} 
-                color="#666" 
-                style={styles.legendIcon}
-              />
-              <Text style={styles.legendButtonText}>Legend</Text>
-            </TouchableOpacity>
-          )}
-        </Animated.View>
-        {isBoxCollapsed && (
-          <TouchableOpacity
-            style={[styles.legendButton, styles.legendButtonCollapsed]}
-            onPress={() => this.setState({ isLegendVisible: true })}
-          >
-            <AntDesign 
-              name="infocirlceo" 
-              size={14} 
-              color="#666" 
-              style={styles.legendIcon}
-            />
-            <Text style={styles.legendButtonText}>Legend</Text>
-          </TouchableOpacity>
-        )}
-      </View>
-    );
-
     return (
       <View style={styles.container}>
         <View style={[styles.topContainer, isBoxCollapsed && styles.collapsedTopContainer]}>
           <View style={styles.boxWrapper}>
-            {boxDimensions}
+            <View style={[styles.boxDimensionsContainer, isBoxCollapsed && styles.collapsedBox]}>
+              <View style={styles.boxHeaderContainer}>
+                <View style={styles.headerPlaceholder} />
+                <Text style={styles.boxSubtitle}>For {this.props.route.params.packageName || "This Package"}:</Text>
+                <TouchableOpacity
+                  style={styles.collapseButton}
+                  onPress={this.toggleBoxCollapse}
+                >
+                  <AntDesign
+                    name={isBoxCollapsed ? "plus" : "minus"}
+                    size={20}
+                    color="#666"
+                  />
+                </TouchableOpacity>
+              </View>
+              <Animated.View
+                style={[
+                  styles.boxContent,
+                  {
+                    opacity: this.state.boxContentHeight,
+                    maxHeight: this.state.boxContentHeight.interpolate({
+                      inputRange: [0, 1],
+                      outputRange: [0, 500],
+                    }),
+                  },
+                ]}
+              >
+                
+                <Text style={styles.boxDetails}>
+                  {selectedBox.dimensions[0]}L x {selectedBox.dimensions[1]}W x{" "}
+                  {selectedBox.dimensions[2]}H
+                </Text>
+                <Text style={styles.text}>{selectedBox.finalBoxType}</Text>
+                <PriceText carrier={selectedCarrier} priceText={selectedBox.priceText} />
+                <View style={styles.carrierDropdownContainer}>
+                  <Dropdown
+                    style={styles.input}
+                    data={carrierData}
+                    labelField="label"
+                    valueField="value"
+                    placeholder="Select Carrier"
+                    value={selectedCarrier}
+                    onChange={(item) => this.updateVisualsBasedOnCarrier(item.value)}
+                    renderLeftIcon={() => (
+                      <AntDesign
+                        style={styles.icon}
+                        color="black"
+                        name="Safety"
+                        size={20}
+                      />
+                    )}
+                    renderRightIcon={() => (
+                      <AntDesign
+                        style={styles.icon}
+                        color="black"
+                        name="down"
+                        size={16}
+                      />
+                    )}
+                  />
+                </View>
+                {!isBoxCollapsed && (
+                  <TouchableOpacity
+                    style={styles.legendButton}
+                    onPress={() => this.setState({ isLegendVisible: true })}
+                  >
+                    <AntDesign 
+                      name="infocirlceo" 
+                      size={14} 
+                      color="#666" 
+                      style={styles.legendIcon}
+                    />
+                    <Text style={styles.legendButtonText}>Legend</Text>
+                  </TouchableOpacity>
+                )}
+              </Animated.View>
+              {isBoxCollapsed && (
+                <TouchableOpacity
+                  style={[styles.legendButton, styles.legendButtonCollapsed]}
+                  onPress={() => this.setState({ isLegendVisible: true })}
+                >
+                  <AntDesign 
+                    name="infocirlceo" 
+                    size={14} 
+                    color="#666" 
+                    style={styles.legendIcon}
+                  />
+                  <Text style={styles.legendButtonText}>Legend</Text>
+                </TouchableOpacity>
+              )}
+            </View>
           </View>
         </View>
         <Animated.View 
@@ -731,7 +673,6 @@ export default class Display3D extends Component {
             {
               height: this.state.glViewHeight,
               marginTop: isBoxCollapsed ? 40 : 2,
-              marginBottom: 10,
             }
           ]}
         >
@@ -744,17 +685,13 @@ export default class Display3D extends Component {
         {this.renderLegendModal()}
         <View style={styles.sliderContainer}>
           <Slider
-            style={styles.slider}
+            key={Platform.OS === 'android' ? this.state.sliderKey : undefined}
+            style={{ width: "100%", height: 40 }}
             minimumValue={0}
             maximumValue={Math.PI}
-            step={Platform.OS === 'android' ? 0.02 : 0.01}
-            value={this.rotationAnim._value}
-            onValueChange={(value) => {
-              requestAnimationFrame(() => {
-                this.rotationAnim.setValue(value);
-                this.handleRotationChange(value);
-              });
-            }}
+            step={Platform.OS === 'android' ? 0.05 : 0.01}
+            value={Platform.OS === 'ios' ? this.state.sliderValue : this.rotationAnim._value}
+            onValueChange={this.handleRotationChange}
             minimumTrackTintColor="#007AFF"
             maximumTrackTintColor="#B4B4B4"
             thumbTintColor="#007AFF"
@@ -792,11 +729,6 @@ const styles = StyleSheet.create({
     marginBottom: 10,
     marginTop: 10,
     justifyContent: 'center',
-  },
-  slider: {
-    width: '100%',
-    height: 40,
-    transform: Platform.OS === 'android' ? [{ scale: 1.2 }] : [],
   },
   boxDimensionsContainer: {
     padding: 4,
