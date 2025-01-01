@@ -10,7 +10,8 @@ import {
   ScrollView,
   Animated,
   Linking,
-  Platform
+  Platform,
+  Dimensions
 } from "react-native";
 import {
   GLView
@@ -84,6 +85,11 @@ export default class Display3D extends Component {
       glViewHeight: new Animated.Value(420),
       sliderKey: 0,
       sliderValue: 0,
+      dimensions: {
+        width: 0,
+        height: 0,
+      },
+      isSliding: false,
     };
 
     this.panResponder = PanResponder.create({
@@ -94,7 +100,7 @@ export default class Display3D extends Component {
 
     // Add listener for rotation animation
     this.rotationAnim.addListener(({ value }) => {
-      if (this.cube) {
+      if (this.cube && this.scene) {
         this.cube.rotation.y = value;
         
         if (this.state.box && Array.isArray(this.state.itemsTotal)) {
@@ -124,13 +130,30 @@ export default class Display3D extends Component {
           const maxMovement = baseMovement * movementMultiplier;
           
           this.state.itemsTotal.forEach((item) => {
-            if (item && item.dis) {
-              item.dis.position.y = Math.sin(value) * maxMovement + item.pos[1];
+            if (item && item.dis && item.dis.position && item.pos) {
+              try {
+                item.dis.position.y = Math.sin(value) * maxMovement + item.pos[1];
+              } catch (error) {
+                console.log('Error updating item position:', error);
+              }
             }
           });
         }
       }
     });
+
+    // Helper method to update item positions
+    this.updateItemPositions = (value, maxMovement) => {
+      this.state.itemsTotal.forEach((item) => {
+        if (item?.dis?.position && item?.pos) {
+          try {
+            item.dis.position.y = Math.sin(value) * maxMovement + item.pos[1];
+          } catch (error) {
+            console.log('Error updating item position:', error);
+          }
+        }
+      });
+    };
   }
 
   componentWillUnmount() {
@@ -557,6 +580,8 @@ export default class Display3D extends Component {
   };
 
   render() {
+    const { width, height } = this.state.dimensions;
+    const glViewHeight = height * 0.6; // 60% of screen height
     const { selectedBox, selectedCarrier, isBoxCollapsed } = this.state;
     const { route } = this.props;
     const isFromTestPage = route.params?.isFromTestPage;
@@ -571,7 +596,13 @@ export default class Display3D extends Component {
     }
 
     return (
-      <View style={styles.container}>
+      <View 
+        style={[styles.container]} 
+        onLayout={(event) => {
+          const { width, height } = event.nativeEvent.layout;
+          this.setState({ dimensions: { width, height } });
+        }}
+      >
         <View style={[styles.topContainer, isBoxCollapsed && styles.collapsedTopContainer]}>
           <View style={styles.boxWrapper}>
             <View style={[styles.boxDimensionsContainer, isBoxCollapsed && styles.collapsedBox]}>
@@ -671,19 +702,35 @@ export default class Display3D extends Component {
           style={[
             styles.glViewContainer,
             {
-              height: this.state.glViewHeight,
+              flex: 1,
+              height: glViewHeight,
+              minHeight: 300,
               marginTop: isBoxCollapsed ? 40 : 2,
+              marginBottom: 40,
             }
           ]}
         >
           <GLView
             {...this.panResponder.panHandlers}
-            style={styles.glView}
+            style={{
+              width: '100%',
+              height: '100%',
+            }}
             onContextCreate={this._onGLContextCreate}
           />
         </Animated.View>
-        {this.renderLegendModal()}
-        <View style={styles.sliderContainer}>
+
+        <View style={{
+          position: 'absolute',
+          bottom: height * 0.18,
+          left: 0,
+          right: 0,
+          paddingHorizontal: 20,
+          backgroundColor: 'transparent',
+          height: 40,
+          zIndex: 999,
+          ...(Platform.OS === 'android' ? { elevation: 1 } : { })
+        }}>
           <Slider
             key={Platform.OS === 'android' ? this.state.sliderKey : undefined}
             style={{ width: "100%", height: 40 }}
@@ -697,6 +744,7 @@ export default class Display3D extends Component {
             thumbTintColor="#007AFF"
           />
         </View>
+        {this.renderLegendModal()}
       </View>
     );
   }
