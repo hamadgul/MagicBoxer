@@ -15,6 +15,7 @@ import PackagesPage from "../screens/PackagesPage";
 import FAQsPage from "../screens/FAQsPage";
 import ShipPackagePage from "../screens/ShipPackagePage";
 import RequestFormPage from "../screens/RequestFormPage";
+import TestPage from "../screens/TestPage";
 
 const Stack = createNativeStackNavigator();
 const Drawer = createDrawerNavigator();
@@ -63,6 +64,16 @@ function DrawerNavigator() {
           drawerLabel: "Saved Packages",
           drawerIcon: ({ focused, color, size }) => (
             <Ionicons name="archive-outline" size={size} color={color} />
+          )
+        }}
+      />
+      <Drawer.Screen
+        name="Test Boxes"
+        component={TestPage}
+        options={{ 
+          drawerLabel: "Test Boxes",
+          drawerIcon: ({ focused, color, size }) => (
+            <Ionicons name="cube-outline" size={size} color={color} />
           )
         }}
       />
