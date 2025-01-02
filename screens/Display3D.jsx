@@ -97,8 +97,11 @@ export default class Display3D extends Component {
         height: 0,
       },
       currentRotation: 0,
-      cameraPosition: { x: -1.2, y: 0.5, z: 5 }
+      cameraPosition: { x: -1.2, y: 0.5, z: 5 },
+      expandedItems: {},
     };
+    // Initialize animations object outside of state
+    this.animations = {};
   }
 
   updateRotation = (value) => {
@@ -474,74 +477,115 @@ export default class Display3D extends Component {
     this.setState({ isBoxCollapsed: newState });
   };
 
+  toggleItemExpansion = (itemName) => {
+    console.log('Toggling item:', itemName);
+    
+    // Initialize animation if it doesn't exist
+    if (!this.animations[itemName]) {
+      this.animations[itemName] = new Animated.Value(0);
+    }
+
+    const willExpand = !this.state.expandedItems[itemName];
+    
+    this.setState(prevState => ({
+      expandedItems: {
+        ...prevState.expandedItems,
+        [itemName]: willExpand
+      }
+    }));
+
+    Animated.timing(this.animations[itemName], {
+      toValue: willExpand ? 1 : 0,
+      duration: 200,
+      useNativeDriver: false
+    }).start();
+  };
+
+  initializeAnimations = (items) => {
+    // Reset animations
+    this.animations = {};
+    
+    // Initialize animation for each parent item
+    items.forEach(item => {
+      if (item.isParent) {
+        this.animations[item.displayName] = new Animated.Value(0);
+      }
+    });
+  };
+
+  toggleLegend = () => {
+    this.setState(prevState => ({
+      isLegendVisible: !prevState.isLegendVisible,
+      expandedItems: {} // Reset expanded state when closing
+    }));
+  };
+
   renderLegendModal = () => {
-    const { itemsTotal, isLegendVisible } = this.state;
+    const { itemsTotal, isLegendVisible, expandedItems } = this.state;
 
     // Initialize empty objects/arrays
     const groupedItems = {};
     const finalItems = [];
 
-    // Only process items if itemsTotal is a valid array and not empty
-    if (Array.isArray(itemsTotal) && itemsTotal.length > 0) {
-      // Group items by name
-      itemsTotal.forEach(item => {
-        if (!item) return; // Skip invalid items
-        const name = item.itemName || "Unnamed Item";
-        if (!groupedItems[name]) {
-          groupedItems[name] = [];
-        }
-        groupedItems[name].push(item);
+    // Group items by base name (remove numbers from the end)
+    itemsTotal.forEach(item => {
+      if (!item) return;
+      const name = item.itemName || "Unnamed Item";
+      const baseName = name.replace(/\d+$/, '').trim();
+      if (!groupedItems[baseName]) {
+        groupedItems[baseName] = [];
+      }
+      groupedItems[baseName].push({
+        ...item,
+        displayName: name,
+        sortKey: baseName
       });
+    });
 
-      // Create final items array with proper formatting
-      Object.keys(groupedItems).sort().forEach(name => {
-        const items = groupedItems[name];
-        const padLength = items.length > 1 ? String(items.length).length : 0;
-        
-        items.forEach((item, index) => {
-          if (!item) return; // Skip invalid items
-          const number = index + 1;
-          const paddedNumber = String(number).padStart(padLength, '0');
-          finalItems.push({
-            ...item,
-            displayName: items.length > 1 ? `${name}${paddedNumber}` : name,
-            sortKey: items.length > 1 ? `${name}_${number}` : name, 
-            dimensions: `${item.x}L × ${item.y}W × ${item.z}H`
-          });
+    // Create final items with proper grouping
+    Object.entries(groupedItems).forEach(([baseName, items]) => {
+      if (items.length === 1) {
+        const item = items[0];
+        finalItems.push({
+          ...item,
+          displayName: item.displayName || item.itemName || "Unnamed Item",
+          sortKey: baseName,
+          dimensions: `${item.x}L × ${item.y}W × ${item.z}H` // Ensure dimensions are set for single items
         });
-      });
+      } else {
+        // For multiple items, create a parent item
+        finalItems.push({
+          displayName: baseName,
+          isParent: true,
+          childItems: items.map((item, index) => ({
+            ...item,
+            displayName: `${baseName} ${index + 1}`,
+            sortKey: `${baseName}_${index + 1}`,
+          })),
+          dimensions: `${items[0].x}L × ${items[0].y}W × ${items[0].z}H`,
+          colors: items.map(item => item.color),
+          sortKey: baseName
+        });
+      }
+    });
 
-      // Sort final items with custom sorting function
-      finalItems.sort((a, b) => {
-        // Split the sortKey by underscore to separate name and number
-        const [aName, aNum] = a.sortKey.split('_');
-        const [bName, bNum] = b.sortKey.split('_');
-        
-        // If names are different, sort by name
-        if (aName !== bName) {
-          return aName.localeCompare(bName);
-        }
-        
-        // If names are same and both have numbers, sort numerically
-        if (aNum && bNum) {
-          return parseInt(aNum) - parseInt(bNum);
-        }
-        
-        // If one has number and other doesn't, one with number comes after
-        if (aNum) return 1;
-        if (bNum) return -1;
-        
-        // If neither has number, they're equal
-        return 0;
-      });
+    // Sort items alphabetically
+    finalItems.sort((a, b) => {
+      const aKey = a?.sortKey || '';
+      const bKey = b?.sortKey || '';
+      return aKey.localeCompare(bKey);
+    });
+
+    // Initialize animations for all items when modal opens
+    if (isLegendVisible) {
+      this.initializeAnimations(finalItems);
     }
 
     return (
       <Modal
-        visible={isLegendVisible}
         transparent={true}
-        animationType="slide"
-        onRequestClose={() => this.setState({ isLegendVisible: false })}
+        visible={isLegendVisible}
+        onRequestClose={this.toggleLegend}
       >
         <View style={styles.modalOverlay}>
           <View style={styles.modalContent}>
@@ -549,20 +593,80 @@ export default class Display3D extends Component {
             <ScrollView style={styles.legendScrollView}>
               {finalItems.length > 0 ? (
                 finalItems.map((item, index) => (
-                  <View key={index} style={styles.legendItem}>
-                    <View style={styles.legendItemLeft}>
-                      <View
-                        style={[styles.colorBox, { backgroundColor: item.color }]}
-                      />
-                      <Text style={styles.legendText}>
-                        {item.displayName}
-                      </Text>
-                    </View>
-                    <View style={styles.dimensionsContainer}>
-                      <Text style={styles.dimensionsText}>
-                        {item.dimensions}
-                      </Text>
-                    </View>
+                  <View key={index}>
+                    <TouchableOpacity
+                      style={[
+                        styles.legendItem,
+                        item.isParent && styles.legendItemParent
+                      ]}
+                      onPress={() => {
+                        console.log('Item pressed:', item.displayName); // Debug log
+                        if (item.isParent) {
+                          this.toggleItemExpansion(item.displayName);
+                        }
+                      }}
+                      activeOpacity={item.isParent ? 0.6 : 1}
+                    >
+                      <View style={styles.legendItemLeft}>
+                        {item.isParent ? (
+                          <View style={styles.multiColorBoxContainer}>
+                            {this.renderMultiColorBox(item.colors)}
+                            <View style={styles.quantityBadge}>
+                              <Text style={styles.quantityText}>{item.childItems.length}</Text>
+                            </View>
+                          </View>
+                        ) : (
+                          <View
+                            style={[styles.colorBox, { backgroundColor: item.color }]}
+                          />
+                        )}
+                        <Text style={styles.legendText}>
+                          {item.displayName}
+                        </Text>
+                      </View>
+                      <View style={styles.dimensionsContainer}>
+                        <Text style={styles.dimensionsText}>
+                          {item.dimensions}
+                        </Text>
+                      </View>
+                    </TouchableOpacity>
+                    {item.isParent && (
+                      <Animated.View 
+                        style={[
+                          styles.childItemsContainer,
+                          {
+                            maxHeight: this.animations[item.displayName]?.interpolate({
+                              inputRange: [0, 1],
+                              outputRange: [0, 500] // Adjust based on your content
+                            }) || 0,
+                            opacity: this.animations[item.displayName] || 0
+                          }
+                        ]}
+                      >
+                        {item.childItems.map((childItem, childIndex) => (
+                          <View key={childIndex} style={styles.childItem}>
+                            <View style={styles.childItemLeft}>
+                              <View style={styles.childColorBox}>
+                                <View 
+                                  style={[
+                                    styles.childColorInner,
+                                    { backgroundColor: childItem.color }
+                                  ]}
+                                />
+                              </View>
+                              <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                                <Text style={styles.childItemText}>
+                                  {childItem.displayName.replace(/\s\d+$/, '')}
+                                </Text>
+                                <Text style={styles.childItemNumber}>
+                                  #{(childIndex + 1).toString().padStart(2, '0')}
+                                </Text>
+                              </View>
+                            </View>
+                          </View>
+                        ))}
+                      </Animated.View>
+                    )}
                   </View>
                 ))
               ) : (
@@ -571,7 +675,7 @@ export default class Display3D extends Component {
             </ScrollView>
             <TouchableOpacity
               style={styles.closeButton}
-              onPress={() => this.setState({ isLegendVisible: false })}
+              onPress={this.toggleLegend}
             >
               <Text style={styles.closeButtonText}>Close</Text>
             </TouchableOpacity>
@@ -580,6 +684,26 @@ export default class Display3D extends Component {
       </Modal>
     );
   };
+
+  renderMultiColorBox = (colors) => {
+    return (
+      <View style={styles.multiColorBox}>
+        {colors.slice(0, 3).map((color, index) => (
+          <View
+            key={index}
+            style={[
+              styles.colorStrip,
+              {
+                backgroundColor: color,
+                transform: [{ rotate: `${-30 + (index * 30)}deg` }],
+                zIndex: index
+              }
+            ]}
+          />
+        ))}
+      </View>
+    );
+  }
 
   getMemoizedCarrierData = () => {
     if (this.props.route.params?.isFromTestPage) {
@@ -696,7 +820,7 @@ export default class Display3D extends Component {
                 {!isBoxCollapsed && (
                   <TouchableOpacity
                     style={styles.legendButton}
-                    onPress={() => this.setState({ isLegendVisible: true })}
+                    onPress={() => this.toggleLegend()}
                   >
                     <AntDesign 
                       name="infocirlceo" 
@@ -711,7 +835,7 @@ export default class Display3D extends Component {
               {isBoxCollapsed && (
                 <TouchableOpacity
                   style={[styles.legendButton, styles.legendButtonCollapsed]}
-                  onPress={() => this.setState({ isLegendVisible: true })}
+                  onPress={() => this.toggleLegend()}
                 >
                   <AntDesign 
                     name="infocirlceo" 
@@ -946,9 +1070,23 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
-    paddingVertical: 8,
+    paddingVertical: 12,
+    paddingHorizontal: 16,
     borderBottomWidth: 1,
     borderBottomColor: "#f0f0f0",
+  },
+  legendItemParent: {
+    backgroundColor: "#f8f9fa",
+    borderRadius: 8,
+    marginVertical: 2,
+    shadowColor: "#000",
+    shadowOffset: {
+      width: 0,
+      height: 1,
+    },
+    shadowOpacity: 0.1,
+    shadowRadius: 1,
+    elevation: 1,
   },
   legendItemLeft: {
     flexDirection: "row",
@@ -1026,5 +1164,104 @@ const styles = StyleSheet.create({
     color: '#666',
     textAlign: 'center',
     paddingVertical: 20,
+  },
+  multiColorBoxContainer: {
+    position: 'relative',
+    width: 24,
+    height: 24,
+    marginRight: 12,
+  },
+  multiColorBox: {
+    width: 24,
+    height: 24,
+    position: 'relative',
+    borderRadius: 6,
+    overflow: 'hidden',
+    borderWidth: 1,
+    borderColor: "rgba(0,0,0,0.1)",
+  },
+  colorStrip: {
+    position: 'absolute',
+    width: '140%',
+    height: '33%',
+    left: '-20%',
+    backgroundColor: 'red',
+  },
+  quantityBadge: {
+    position: 'absolute',
+    top: -6,
+    right: -6,
+    backgroundColor: '#3B82F6',
+    borderRadius: 10,
+    width: 20,
+    height: 20,
+    justifyContent: 'center',
+    alignItems: 'center',
+    borderWidth: 1.5,
+    borderColor: 'white',
+  },
+  quantityText: {
+    color: 'white',
+    fontSize: 11,
+    fontWeight: 'bold',
+  },
+  childItemsContainer: {
+    marginLeft: 20,
+    borderLeftWidth: 1,
+    borderLeftColor: '#e0e0e0',
+    marginVertical: 4,
+    overflow: 'hidden',
+    backgroundColor: '#ffffff',
+    borderRadius: 8,
+    marginRight: 4,
+  },
+  childItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: 10,
+    paddingHorizontal: 16,
+    backgroundColor: '#ffffff',
+    marginVertical: 2,
+    borderRadius: 6,
+  },
+  childItemLeft: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    flex: 1,
+  },
+  childColorBox: {
+    width: 28,
+    height: 28,
+    borderRadius: 8,
+    marginRight: 14,
+    shadowColor: "#000",
+    shadowOffset: {
+      width: 0,
+      height: 1,
+    },
+    shadowOpacity: 0.1,
+    shadowRadius: 1,
+    elevation: 1,
+    backgroundColor: '#ffffff',
+    padding: 3, // Add padding for the inner color
+  },
+  childColorInner: {
+    flex: 1,
+    borderRadius: 6,
+  },
+  childItemText: {
+    fontSize: 14,
+    color: '#4a5568',
+    fontWeight: '500',
+  },
+  childItemNumber: {
+    fontSize: 12,
+    color: '#718096',
+    marginLeft: 6,
+    backgroundColor: '#f7fafc',
+    paddingHorizontal: 8,
+    paddingVertical: 2,
+    borderRadius: 12,
+    overflow: 'hidden',
   },
 });
