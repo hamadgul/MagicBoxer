@@ -505,14 +505,35 @@ export default class Display3D extends Component {
           finalItems.push({
             ...item,
             displayName: items.length > 1 ? `${name}${paddedNumber}` : name,
-            sortKey: items.length > 1 ? `${name}${paddedNumber}` : name,
+            sortKey: items.length > 1 ? `${name}_${number}` : name, 
             dimensions: `${item.x}L × ${item.y}W × ${item.z}H`
           });
         });
       });
 
-      // Sort final items
-      finalItems.sort((a, b) => a.sortKey.localeCompare(b.sortKey));
+      // Sort final items with custom sorting function
+      finalItems.sort((a, b) => {
+        // Split the sortKey by underscore to separate name and number
+        const [aName, aNum] = a.sortKey.split('_');
+        const [bName, bNum] = b.sortKey.split('_');
+        
+        // If names are different, sort by name
+        if (aName !== bName) {
+          return aName.localeCompare(bName);
+        }
+        
+        // If names are same and both have numbers, sort numerically
+        if (aNum && bNum) {
+          return parseInt(aNum) - parseInt(bNum);
+        }
+        
+        // If one has number and other doesn't, one with number comes after
+        if (aNum) return 1;
+        if (bNum) return -1;
+        
+        // If neither has number, they're equal
+        return 0;
+      });
     }
 
     return (
