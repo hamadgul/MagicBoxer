@@ -9,7 +9,7 @@ import {
   Modal,
   Pressable,
 } from 'react-native';
-import { carrierBoxes } from '../packing_algo/packing';
+import { carrierBoxes } from '../packing_algo/carrierBoxes';
 
 const TestPage = ({ navigation, route }) => {
   // Get all carrier boxes

@@ -1,6 +1,6 @@
 import React from "react";
 import { View, Text, StyleSheet, ScrollView } from "react-native";
-import { carrierBoxes } from "../packing_algo/packing";
+import { carrierBoxes } from "../packing_algo/carrierBoxes";
 
 const CarrierBoxListPage = () => {
   // List of carriers
