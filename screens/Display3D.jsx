@@ -89,6 +89,7 @@ export default class Display3D extends Component {
       isBoxCollapsed: false,
       boxContentHeight: new Animated.Value(1),
       glViewHeight: new Animated.Value(420),
+      mainContentMargin: new Animated.Value(220),
       sliderKey: 0,
       sliderValue: 0,
       dimensions: {
@@ -472,10 +473,9 @@ export default class Display3D extends Component {
     const newState = !isBoxCollapsed;
     
     const expandedHeight = 420;
-    const optimalBoxHeight = 220; 
-    const headerHeight = 40;
-
-    const collapsedHeight = expandedHeight + (optimalBoxHeight - headerHeight);
+    const collapsedHeight = 600; 
+    const expandedMargin = 220;
+    const collapsedMargin = 40;
 
     Animated.parallel([
       Animated.timing(this.state.boxContentHeight, {
@@ -485,6 +485,11 @@ export default class Display3D extends Component {
       }),
       Animated.timing(this.state.glViewHeight, {
         toValue: newState ? collapsedHeight : expandedHeight,
+        duration: 300,
+        useNativeDriver: false,
+      }),
+      Animated.timing(this.state.mainContentMargin, {
+        toValue: newState ? collapsedMargin : expandedMargin,
         duration: 300,
         useNativeDriver: false,
       }),
@@ -585,7 +590,6 @@ export default class Display3D extends Component {
 
   render() {
     const { width, height } = this.state.dimensions;
-    const glViewHeight = height * 0.6; // 60% of screen height
     const { selectedBox, selectedCarrier, isBoxCollapsed } = this.state;
     const { route } = this.props;
     const isFromTestPage = route.params?.isFromTestPage;
@@ -607,6 +611,29 @@ export default class Display3D extends Component {
           this.setState({ dimensions: { width, height } });
         }}
       >
+        <View style={styles.fixedContent}>
+          <View style={styles.glViewWrapper}>
+            <GLView
+              {...this.panResponder.panHandlers}
+              style={styles.glView}
+              onContextCreate={this._onGLContextCreate}
+            />
+          </View>
+          <View style={styles.sliderContainer}>
+            <Slider
+              key={Platform.OS === 'android' ? this.state.sliderKey : undefined}
+              style={styles.slider}
+              minimumValue={0}
+              maximumValue={Math.PI}
+              step={Platform.OS === 'android' ? 0.05 : 0.01}
+              value={this.state.currentRotation}
+              onValueChange={this.handleRotationChange}
+              minimumTrackTintColor="#007AFF"
+              maximumTrackTintColor="#B4B4B4"
+              thumbTintColor="#007AFF"
+            />
+          </View>
+        </View>
         <View style={[styles.topContainer, isBoxCollapsed && styles.collapsedTopContainer]}>
           <View style={styles.boxWrapper}>
             <View style={[styles.boxDimensionsContainer, isBoxCollapsed && styles.collapsedBox]}>
@@ -702,52 +729,6 @@ export default class Display3D extends Component {
             </View>
           </View>
         </View>
-        <Animated.View 
-          style={[
-            styles.glViewContainer,
-            {
-              flex: 1,
-              height: glViewHeight,
-              minHeight: 300,
-              marginTop: isBoxCollapsed ? 40 : 2,
-              marginBottom: 40,
-            }
-          ]}
-        >
-          <GLView
-            {...this.panResponder.panHandlers}
-            style={{
-              width: '100%',
-              height: '100%',
-            }}
-            onContextCreate={this._onGLContextCreate}
-          />
-        </Animated.View>
-
-        <View style={{
-          position: 'absolute',
-          bottom: height * 0.18,
-          left: 0,
-          right: 0,
-          paddingHorizontal: 20,
-          backgroundColor: 'transparent',
-          height: 40,
-          zIndex: 999,
-          ...(Platform.OS === 'android' ? { elevation: 1 } : { })
-        }}>
-          <Slider
-            key={Platform.OS === 'android' ? this.state.sliderKey : undefined}
-            style={{ width: "100%", height: 40 }}
-            minimumValue={0}
-            maximumValue={Math.PI}
-            step={Platform.OS === 'android' ? 0.05 : 0.01}
-            value={this.state.currentRotation}
-            onValueChange={this.handleRotationChange}
-            minimumTrackTintColor="#007AFF"
-            maximumTrackTintColor="#B4B4B4"
-            thumbTintColor="#007AFF"
-          />
-        </View>
         {this.renderLegendModal()}
       </View>
     );
@@ -759,27 +740,54 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: "#fff",
   },
-  topContainer: {
-    paddingHorizontal: 10,
-    paddingTop: 12,
-    width: '100%',
-    alignItems: 'center',
+  fixedContent: {
+    position: 'absolute',
+    top: 220,
+    left: 0,
+    right: 0,
+    zIndex: 0,
   },
-  glViewContainer: {
+  glViewWrapper: {
     height: 460,
-    marginTop: 2,
-    marginBottom: 10,
+    width: '100%',
   },
   glView: {
     flex: 1,
-    borderWidth: 1,
-    borderColor: "#fff",
   },
   sliderContainer: {
     height: 40,
     paddingHorizontal: 30,
     marginBottom: 10,
-    marginTop: 10,
+    marginTop: -10,
+    justifyContent: 'center',
+  },
+  slider: {
+    width: '100%',
+    height: 40,
+    transform: Platform.OS === 'android' ? [{ scale: 1.2 }] : [],
+  },
+  topContainer: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    paddingHorizontal: 10,
+    paddingTop: 12,
+    width: '100%',
+    alignItems: 'center',
+    zIndex: 1,
+    backgroundColor: '#fff',
+  },
+  collapsedTopContainer: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    zIndex: 1,
+    alignItems: 'center',
+  },
+  glViewContainer: {
+    marginBottom: 10,
     justifyContent: 'center',
   },
   boxDimensionsContainer: {

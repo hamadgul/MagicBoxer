@@ -21,6 +21,8 @@ PODS:
     - ReactCommon/turbomodule/core
   - ExpoKeepAwake (14.0.1):
     - ExpoModulesCore
+  - ExpoMailComposer (14.0.1):
+    - ExpoModulesCore
   - ExpoModulesCore (2.1.2):
     - DoubleConversion
     - glog
@@ -1950,6 +1952,7 @@ DEPENDENCIES:
   - ExpoFont (from `../node_modules/expo-font/ios`)
   - ExpoGL (from `../node_modules/expo-gl`)
   - ExpoKeepAwake (from `../node_modules/expo-keep-awake/ios`)
+  - ExpoMailComposer (from `../node_modules/expo-mail-composer/ios`)
   - ExpoModulesCore (from `../node_modules/expo-modules-core`)
   - ExpoSplashScreen (from `../node_modules/expo-splash-screen/ios`)
   - EXStructuredHeaders (from `../node_modules/expo-structured-headers/ios`)
@@ -2058,6 +2061,8 @@ EXTERNAL SOURCES:
     :path: "../node_modules/expo-gl"
   ExpoKeepAwake:
     :path: "../node_modules/expo-keep-awake/ios"
+  ExpoMailComposer:
+    :path: "../node_modules/expo-mail-composer/ios"
   ExpoModulesCore:
     :path: "../node_modules/expo-modules-core"
   ExpoSplashScreen:
@@ -2223,6 +2228,7 @@ SPEC CHECKSUMS:
   ExpoFont: 260fb85279912421894060d9aea453cee4ffc01c
   ExpoGL: 3e7c3b8478a6783d737103b33b9c11235deb6675
   ExpoKeepAwake: 783e68647b969b210a786047c3daa7b753dcac1f
+  ExpoMailComposer: 63589e1cbfa08220b2e650eecac0457be61ddd69
   ExpoModulesCore: 41844ce131433b266261b44012d5b41ac0513999
   ExpoSplashScreen: 5818efe67bdbcc862b97fef589571c5b4d53fa7d
   EXStructuredHeaders: 09c70347b282e3d2507e25fb4c747b1b885f87f6

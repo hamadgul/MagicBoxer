@@ -16,9 +16,20 @@
     "icon": "./assets/images/icon.png",
     "splash": {
       "image": "./assets/images/splash.png",
-      "resizeMode": "cover",
+      "resizeMode": "contain",
       "backgroundColor": "#b1fcfb"
     },
+    "plugins": [
+      [
+        "expo-splash-screen",
+        {
+          "backgroundColor": "#b1fcfb",
+          "image": "./assets/images/icon.png",
+          "resizeMode": "center",
+          "imageWidth": 200
+        }
+      ]
+    ],
     "ios": {
       "supportsTablet": true,
       "bundleIdentifier": "com.anonymous.magicpackagingapp"
@@ -27,7 +38,7 @@
       "package": "com.anonymous.magicpackagingapp",
       "adaptiveIcon": {
         "foregroundImage": "./assets/images/icon.png",
-        "backgroundColor": "#0f2d44"
+        "backgroundColor": "#b1fcfb"
       }
     },
     "updates": {
