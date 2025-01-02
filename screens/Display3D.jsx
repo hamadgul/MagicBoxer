@@ -493,11 +493,7 @@ export default class Display3D extends Component {
         duration: 300,
         useNativeDriver: false,
       }),
-    ]).start(() => {
-      if (this.state.gl) {
-        this.initialize3DScene();
-      }
-    });
+    ]).start();
 
     this.setState({ isBoxCollapsed: newState });
   };
