@@ -23,7 +23,6 @@ const PriceText = ({ carrier, priceText }) => {
 export default class TestDisplay3D extends Component {
   constructor(props) {
     super(props);
-    console.log('TestDisplay3D constructor with props:', props.route.params);
     this.rotationAnim = new Animated.Value(0);
     this.glViewHeight = new Animated.Value(460);
     
@@ -35,7 +34,6 @@ export default class TestDisplay3D extends Component {
 
     // Get items from props
     const rawItems = props.route.params?.itemsTotal || [];
-    console.log('Raw items:', rawItems);
 
     // Transform items into the format expected by createDisplay
     const transformedItems = rawItems.map(item => ({
@@ -48,7 +46,6 @@ export default class TestDisplay3D extends Component {
       yy: item[1],
       zz: item[2]
     }));
-    console.log('Transformed items:', transformedItems);
 
     this.state = {
       theta: 0,
@@ -64,7 +61,6 @@ export default class TestDisplay3D extends Component {
       boxContentHeight: new Animated.Value(1),
       sliderValue: 0,
     };
-    console.log('Initial state:', this.state);
 
     this.panResponder = PanResponder.create({
       onStartShouldSetPanResponder: () => true,
@@ -95,11 +91,9 @@ export default class TestDisplay3D extends Component {
   }
 
   componentDidMount() {
-    console.log('TestDisplay3D mounted with state:', this.state);
     
     // Force a re-initialization if we have initial data
     if (this.state.box && this.state.itemsTotal) {
-      console.log('Has initial data, will initialize scene');
       // Wait for next tick to ensure GL context is ready
       setTimeout(() => {
         if (this.state.gl) {
@@ -115,7 +109,6 @@ export default class TestDisplay3D extends Component {
 
   componentDidUpdate(prevProps, prevState) {
     if (prevState.cube !== this.state.cube) {
-      console.log('Cube changed:', !!this.state.cube);
     }
 
     // Check for navigation state changes
@@ -124,7 +117,6 @@ export default class TestDisplay3D extends Component {
       JSON.stringify(this.props.route.params?.items)
     ) {
       const rawItems = this.props.route.params?.itemsTotal || [];
-      console.log('Raw items:', rawItems);
 
       // Transform items into the format expected by createDisplay
       const transformedItems = rawItems.map(item => ({
@@ -137,7 +129,6 @@ export default class TestDisplay3D extends Component {
         yy: item[1],
         zz: item[2]
       }));
-      console.log('Transformed items:', transformedItems);
 
       this.setState({
         items: this.props.route.params?.items || [],
@@ -275,10 +266,8 @@ export default class TestDisplay3D extends Component {
   };
 
   createBox = (box, itemsTotal) => {
-    console.log('Creating box with:', { box, itemsTotal });
     
     const scale = getScale(box);
-    console.log('Using scale for box:', { dimensions: [box.x, box.y, box.z], scale });
 
     const geometry = new THREE.BoxGeometry(
       box.x / scale,
@@ -300,7 +289,6 @@ export default class TestDisplay3D extends Component {
 
     // Create items
     if (itemsTotal && itemsTotal.length > 0) {
-      console.log('Creating items:', itemsTotal);
       
       // Create box object with items in the format expected by createDisplay
       const boxWithItems = {
@@ -315,25 +303,19 @@ export default class TestDisplay3D extends Component {
         items: itemsTotal
       };
 
-      console.log('Created box with items:', boxWithItems);
       const displayItems = createDisplay(boxWithItems, scale);
-      console.log('Display items created:', displayItems);
       
       if (displayItems && displayItems.length > 0) {
         displayItems.forEach(item => {
           if (item.dis) {
             cube.add(item.dis);
-            console.log('Added item to cube:', item);
           } else {
-            console.warn('Item has no display object:', item);
           }
         });
         this.setState({ itemsTotal: displayItems });
       } else {
-        console.warn('No display items created from:', itemsTotal);
       }
     } else {
-      console.warn('No items to display');
     }
 
     return cube;
@@ -382,10 +364,8 @@ export default class TestDisplay3D extends Component {
 
   addBoxToScene = () => {
     const { box } = this.state;
-    console.log('Adding box to scene:', box);
     
     if (!box || !this.scene) {
-      console.error('Missing box or scene:', { hasBox: !!box, hasScene: !!this.scene });
       return;
     }
 
@@ -397,7 +377,6 @@ export default class TestDisplay3D extends Component {
     this.cube = this.createBox(box, this.state.itemsTotal);
     if (this.scene) {
       this.scene.add(this.cube);
-      console.log('Added cube to scene');
     }
   };
 
