@@ -19,17 +19,6 @@
       "resizeMode": "contain",
       "backgroundColor": "#b1fcfb"
     },
-    "plugins": [
-      [
-        "expo-splash-screen",
-        {
-          "backgroundColor": "#b1fcfb",
-          "image": "./assets/images/icon.png",
-          "resizeMode": "center",
-          "imageWidth": 200
-        }
-      ]
-    ],
     "ios": {
       "supportsTablet": true,
       "bundleIdentifier": "com.anonymous.magicpackagingapp"
