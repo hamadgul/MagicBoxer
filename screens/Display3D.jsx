@@ -199,84 +199,86 @@ export default class Display3D extends Component {
     if (this.focusListener) {
       this.focusListener();
     }
-  }
-
-  componentDidMount() {
-    // Wait for everything to be ready before enabling animations
-    setTimeout(() => {
-      this.setState({ isInitialized: true });
-    }, 500);
-
-    // Force a re-initialization if we have initial data
-    if (this.state.box && this.state.itemsTotal) {
-      // Wait for next tick to ensure GL context is ready
-      setTimeout(() => {
-        const packedResult = this.state.box;
-        this.onCarrierChange(packedResult);
-      }, 0);
+    if (this.animationFrameId) {
+      cancelAnimationFrame(this.animationFrameId);
     }
-  }
 
-  forceUpdateWithProps() {
-    const { route } = this.props;
-    this.setState(
-      {
-        items: route.params.items || [],
-        itemsTotal: route.params.itemsTotal || [],
-        box: route.params.box || null,
-        selectedBox: route.params.selectedBox || null,
-      },
-      () => {
-        if (this.state.gl) {
-          this.initialize3DScene();
+    // Clean up THREE.js resources
+    if (this.scene) {
+      this.scene.traverse((object) => {
+        if (object.geometry) {
+          object.geometry.dispose();
         }
-      }
-    );
+        if (object.material) {
+          if (Array.isArray(object.material)) {
+            object.material.forEach(material => material.dispose());
+          } else {
+            object.material.dispose();
+          }
+        }
+      });
+      this.scene = null;
+    }
+    if (this.renderer) {
+      this.renderer.dispose();
+      this.renderer = null;
+    }
+    if (this.camera) {
+      this.camera = null;
+    }
   }
 
-  componentDidUpdate(prevProps) {
-    // Check for navigation state changes
-    if (
-      JSON.stringify(prevProps.route.params.items) !==
-      JSON.stringify(this.props.route.params.items)
-    ) {
-      console.log('Route params changed, resetting state and slider'); // Debug log
-      this.forceUpdateWithProps();
-      this.resetSlider();
-    }
+  shouldComponentUpdate(nextProps, nextState) {
+    // Only update if these specific states change
+    return (
+      this.state.selectedCarrier !== nextState.selectedCarrier ||
+      this.state.sliderValue !== nextState.sliderValue ||
+      this.state.currentRotation !== nextState.currentRotation ||
+      this.state.isBoxCollapsed !== nextState.isBoxCollapsed ||
+      this.state.isLegendVisible !== nextState.isLegendVisible ||
+      JSON.stringify(this.state.itemsTotal) !== JSON.stringify(nextState.itemsTotal) ||
+      JSON.stringify(this.state.selectedBox) !== JSON.stringify(nextState.selectedBox)
+    );
   }
 
   _onGLContextCreate = async (gl) => {
     const { box } = this.state;
     
-    this.scene = new THREE.Scene();
-    this.scene.background = new THREE.Color(0xffffff);
+    // Create scene only if it doesn't exist
+    if (!this.scene) {
+      this.scene = new THREE.Scene();
+      this.scene.background = new THREE.Color(0xffffff);
+
+      // Add lights only once
+      const ambientLight = new THREE.AmbientLight(0xffffff, 0.8);
+      this.scene.add(ambientLight);
+      
+      const directionalLight = new THREE.DirectionalLight(0xffffff, 0.5);
+      directionalLight.position.set(5, 5, 5);
+      this.scene.add(directionalLight);
+    }
 
     // Check if this is a special size box that needs adjusted camera settings
     const specialSize = isSpecialSize(box);
     let cameraDistance = specialSize ? 3.5 : 5;
     let fov = specialSize ? 60 : 75;
 
-    this.camera = new THREE.PerspectiveCamera(
-      fov,
-      gl.drawingBufferWidth / gl.drawingBufferHeight,
-      0.1,
-      1000
-    );
+    if (!this.camera) {
+      this.camera = new THREE.PerspectiveCamera(
+        fov,
+        gl.drawingBufferWidth / gl.drawingBufferHeight,
+        0.1,
+        1000
+      );
+    }
     
     this.camera.position.set(0, cameraDistance * 0.5, cameraDistance);
     this.camera.lookAt(0, 0, 0);
 
-    this.renderer = new Renderer({ gl });
-    this.renderer.setSize(gl.drawingBufferWidth, gl.drawingBufferHeight);
-    
-    // Add lights
-    const ambientLight = new THREE.AmbientLight(0xffffff, 0.8);
-    this.scene.add(ambientLight);
-    
-    const directionalLight = new THREE.DirectionalLight(0xffffff, 0.5);
-    directionalLight.position.set(5, 5, 5);
-    this.scene.add(directionalLight);
+    if (!this.renderer) {
+      this.renderer = new Renderer({ gl });
+      this.renderer.setSize(gl.drawingBufferWidth, gl.drawingBufferHeight);
+    }
 
     this.setState({ gl }, () => {
       this.addBoxToScene();
@@ -309,8 +311,6 @@ export default class Display3D extends Component {
 
   createBox = (box, itemsTotal) => {
     const scale = getScale(box);
-    console.log('Using scale for box:', { dimensions: [box.x, box.y, box.z], scale });
-
     const geometry = new THREE.BoxGeometry(
       box.x / scale,
       box.y / scale,
@@ -391,13 +391,6 @@ export default class Display3D extends Component {
         if (this.state.gl) {
           this.initialize3DScene();
         }
-        
-        // For iOS, use a slight delay to ensure the reset takes effect
-        if (Platform.OS === 'ios') {
-          setTimeout(() => {
-            this.setState({ sliderValue: 0, currentRotation: 0 });
-          }, 50);
-        }
       }
     );
   };
@@ -471,30 +464,13 @@ export default class Display3D extends Component {
   toggleBoxCollapse = () => {
     const { isBoxCollapsed } = this.state;
     const newState = !isBoxCollapsed;
-    
-    const expandedHeight = 420;
-    const collapsedHeight = 600; 
-    const expandedMargin = 220;
-    const collapsedMargin = 40;
-
-    Animated.parallel([
-      Animated.timing(this.state.boxContentHeight, {
-        toValue: newState ? 0 : 1,
-        duration: 300,
-        useNativeDriver: false,
-      }),
-      Animated.timing(this.state.glViewHeight, {
-        toValue: newState ? collapsedHeight : expandedHeight,
-        duration: 300,
-        useNativeDriver: false,
-      }),
-      Animated.timing(this.state.mainContentMargin, {
-        toValue: newState ? collapsedMargin : expandedMargin,
-        duration: 300,
-        useNativeDriver: false,
-      }),
-    ]).start();
-
+  
+    Animated.timing(this.state.boxContentHeight, {
+      toValue: newState ? 0 : 1,
+      duration: 200,
+      useNativeDriver: false,
+    }).start();
+  
     this.setState({ isBoxCollapsed: newState });
   };
 
@@ -584,16 +560,16 @@ export default class Display3D extends Component {
     );
   };
 
-  render() {
-    const { width, height } = this.state.dimensions;
-    const { selectedBox, selectedCarrier, isBoxCollapsed } = this.state;
-    const { route } = this.props;
-    const isFromTestPage = route.params?.isFromTestPage;
-    const testPageCarrier = route.params?.testPageCarrier;
+  getMemoizedCarrierData = () => {
+    if (this.props.route.params?.isFromTestPage) {
+      return [this.props.route.params?.testPageCarrier];
+    }
+    return ['No Carrier', 'USPS', 'FedEx', 'UPS'];
+  };
 
-    const carriers = isFromTestPage ? 
-      [testPageCarrier] : 
-      ['No Carrier', 'USPS', 'FedEx', 'UPS'];
+  render() {
+    const { selectedBox, selectedCarrier, isBoxCollapsed } = this.state;
+    const carriers = this.getMemoizedCarrierData();
 
     if (!selectedBox || !selectedBox.dimensions) {
       return <Text style={styles.noBoxText}>No box selected</Text>;
@@ -604,7 +580,10 @@ export default class Display3D extends Component {
         style={[styles.container]} 
         onLayout={(event) => {
           const { width, height } = event.nativeEvent.layout;
-          this.setState({ dimensions: { width, height } });
+          if (width !== this.state.dimensions.width || 
+              height !== this.state.dimensions.height) {
+            this.setState({ dimensions: { width, height } });
+          }
         }}
       >
         <View style={styles.fixedContent}>
@@ -652,9 +631,9 @@ export default class Display3D extends Component {
                   styles.boxContent,
                   {
                     opacity: this.state.boxContentHeight,
-                    maxHeight: this.state.boxContentHeight.interpolate({
+                    height: this.state.boxContentHeight.interpolate({
                       inputRange: [0, 1],
-                      outputRange: [0, 500],
+                      outputRange: [0, 140],
                     }),
                   },
                 ]}
@@ -880,13 +859,14 @@ const styles = StyleSheet.create({
   },
   legendButton: {
     backgroundColor: '#f8f9fa',
-    paddingVertical: 6,
+    paddingVertical: 4,
     paddingHorizontal: 10,
     borderRadius: 16,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    marginTop: 6,
+    marginTop: 2,
+    marginBottom: 2,
     alignSelf: 'center',
     width: 85,
     shadowColor: '#000',
