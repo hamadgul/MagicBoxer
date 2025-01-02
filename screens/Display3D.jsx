@@ -526,6 +526,7 @@ export default class Display3D extends Component {
     // Initialize empty objects/arrays
     const groupedItems = {};
     const finalItems = [];
+    let totalItemCount = itemsTotal.filter(item => item).length;
 
     // Group items by base name (remove numbers from the end)
     itemsTotal.forEach(item => {
@@ -550,7 +551,9 @@ export default class Display3D extends Component {
           ...item,
           displayName: item.displayName || item.itemName || "Unnamed Item",
           sortKey: baseName,
-          dimensions: `${item.x}L × ${item.y}W × ${item.z}H` // Ensure dimensions are set for single items
+          x: item.x,
+          y: item.y,
+          z: item.z,
         });
       } else {
         // For multiple items, create a parent item
@@ -562,9 +565,11 @@ export default class Display3D extends Component {
             displayName: `${baseName} ${index + 1}`,
             sortKey: `${baseName}_${index + 1}`,
           })),
-          dimensions: `${items[0].x}L × ${items[0].y}W × ${items[0].z}H`,
           colors: items.map(item => item.color),
-          sortKey: baseName
+          sortKey: baseName,
+          x: items[0].x,
+          y: items[0].y,
+          z: items[0].z,
         });
       }
     });
@@ -589,7 +594,12 @@ export default class Display3D extends Component {
       >
         <View style={styles.modalOverlay}>
           <View style={styles.modalContent}>
-            <Text style={styles.legendTitle}>Legend</Text>
+            <View style={styles.legendHeader}>
+              <Text style={styles.legendTitle}>Legend</Text>
+              <Text style={styles.totalItemsText}>
+                {totalItemCount} {totalItemCount === 1 ? 'item' : 'items'}
+              </Text>
+            </View>
             <ScrollView style={styles.legendScrollView}>
               {finalItems.length > 0 ? (
                 finalItems.map((item, index) => (
@@ -597,7 +607,8 @@ export default class Display3D extends Component {
                     <TouchableOpacity
                       style={[
                         styles.legendItem,
-                        item.isParent && styles.legendItemParent
+                        item.isParent && styles.legendItemParent,
+                        !item.isParent && styles.legendItemSingle
                       ]}
                       onPress={() => {
                         console.log('Item pressed:', item.displayName); // Debug log
@@ -611,23 +622,28 @@ export default class Display3D extends Component {
                         {item.isParent ? (
                           <View style={styles.multiColorBoxContainer}>
                             {this.renderMultiColorBox(item.colors)}
-                            <View style={styles.quantityBadge}>
-                              <Text style={styles.quantityText}>{item.childItems.length}</Text>
-                            </View>
+                            <Text style={styles.itemCount}>
+                              {item.childItems.length}
+                            </Text>
                           </View>
                         ) : (
-                          <View
-                            style={[styles.colorBox, { backgroundColor: item.color }]}
-                          />
+                          <View style={styles.colorBox}>
+                            <View 
+                              style={[
+                                styles.colorBoxInner,
+                                { backgroundColor: item.color }
+                              ]}
+                            />
+                          </View>
                         )}
                         <Text style={styles.legendText}>
                           {item.displayName}
                         </Text>
-                      </View>
-                      <View style={styles.dimensionsContainer}>
-                        <Text style={styles.dimensionsText}>
-                          {item.dimensions}
-                        </Text>
+                        <View style={styles.dimensionsContainer}>
+                          <Text style={styles.dimensionsText}>
+                            {`${item.x}L × ${item.y}W × ${item.z}H`}
+                          </Text>
+                        </View>
                       </View>
                     </TouchableOpacity>
                     {item.isParent && (
@@ -637,32 +653,31 @@ export default class Display3D extends Component {
                           {
                             maxHeight: this.animations[item.displayName]?.interpolate({
                               inputRange: [0, 1],
-                              outputRange: [0, 500] // Adjust based on your content
+                              outputRange: [0, 500]
                             }) || 0,
-                            opacity: this.animations[item.displayName] || 0
+                            opacity: this.animations[item.displayName]?.interpolate({
+                              inputRange: [0, 0.5, 1],
+                              outputRange: [0, 0, 1]
+                            }) || 0
                           }
                         ]}
                       >
                         {item.childItems.map((childItem, childIndex) => (
                           <View key={childIndex} style={styles.childItem}>
-                            <View style={styles.childItemLeft}>
-                              <View style={styles.childColorBox}>
-                                <View 
-                                  style={[
-                                    styles.childColorInner,
-                                    { backgroundColor: childItem.color }
-                                  ]}
-                                />
-                              </View>
-                              <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-                                <Text style={styles.childItemText}>
-                                  {childItem.displayName.replace(/\s\d+$/, '')}
-                                </Text>
-                                <Text style={styles.childItemNumber}>
-                                  #{(childIndex + 1).toString().padStart(2, '0')}
-                                </Text>
-                              </View>
+                            <View style={styles.childColorBox}>
+                              <View 
+                                style={[
+                                  styles.childColorInner,
+                                  { backgroundColor: childItem.color }
+                                ]}
+                              />
                             </View>
+                            <Text style={styles.childItemText}>
+                              {childItem.displayName.replace(/\s\d+$/, '')}
+                              <Text style={styles.childItemNumber}>
+                                {' '}•{' '}{(childIndex + 1).toString().padStart(2, '0')}
+                              </Text>
+                            </Text>
                           </View>
                         ))}
                       </Animated.View>
@@ -686,17 +701,22 @@ export default class Display3D extends Component {
   };
 
   renderMultiColorBox = (colors) => {
+    const uniqueColors = [...new Set(colors)];
+    const numColors = Math.min(uniqueColors.length, colors.length);
+    const displayColors = uniqueColors.slice(0, numColors);
+    
     return (
       <View style={styles.multiColorBox}>
-        {colors.slice(0, 3).map((color, index) => (
+        {displayColors.map((color, index) => (
           <View
             key={index}
             style={[
-              styles.colorStrip,
+              styles.multiColorSection,
               {
                 backgroundColor: color,
-                transform: [{ rotate: `${-30 + (index * 30)}deg` }],
-                zIndex: index
+                left: `${(index / displayColors.length) * 100}%`,
+                width: `${100 / displayColors.length}%`,
+                height: '100%'
               }
             ]}
           />
@@ -1053,27 +1073,42 @@ const styles = StyleSheet.create({
       height: 2,
     },
     shadowOpacity: 0.25,
-    shadowRadius: 4,
+    shadowRadius: 12,
     elevation: 5,
+  },
+  legendHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 16,
+    paddingLeft: 8,
+    paddingRight: 16,
   },
   legendTitle: {
     fontSize: 20,
     fontWeight: "600",
-    marginBottom: 10,
-    textAlign: "center",
-    color: "#333",
+    color: "#2c3e50",
+  },
+  totalItemsText: {
+    fontSize: 16,
+    color: '#666',
+    fontWeight: '500',
   },
   legendScrollView: {
-    marginVertical: 10,
+    width: "100%",
+  },
+  legendItemsContainer: {
+    paddingHorizontal: 16,
   },
   legendItem: {
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
     paddingVertical: 12,
-    paddingHorizontal: 16,
-    borderBottomWidth: 1,
-    borderBottomColor: "#f0f0f0",
+    paddingHorizontal: 12,
+    backgroundColor: "#fff",
+    borderRadius: 8,
+    minHeight: 48,
   },
   legendItemParent: {
     backgroundColor: "#f8f9fa",
@@ -1088,35 +1123,19 @@ const styles = StyleSheet.create({
     shadowRadius: 1,
     elevation: 1,
   },
+  legendItemSingle: {
+    borderWidth: 1,
+    borderColor: '#E2E8F0',
+  },
   legendItemLeft: {
     flexDirection: "row",
     alignItems: "center",
     flex: 1,
   },
-  colorBox: {
-    width: 24,
-    height: 24,
-    borderRadius: 6,
-    marginRight: 12,
-    borderWidth: 1,
-    borderColor: "rgba(0,0,0,0.1)",
-  },
   legendText: {
     fontSize: 16,
     color: "#333",
     flex: 1,
-  },
-  dimensionsContainer: {
-    backgroundColor: "#f5f5f5",
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-    borderRadius: 6,
-    marginLeft: 8,
-  },
-  dimensionsText: {
-    fontSize: 14,
-    color: "#666",
-    fontFamily: Platform.OS === 'ios' ? 'Menlo' : 'monospace',
   },
   closeButton: {
     backgroundColor: "#3B82F6",
@@ -1166,88 +1185,77 @@ const styles = StyleSheet.create({
     paddingVertical: 20,
   },
   multiColorBoxContainer: {
-    position: 'relative',
     width: 24,
     height: 24,
-    marginRight: 12,
+    borderRadius: 6,
+    marginRight: 8,
+    padding: 2,
+    backgroundColor: '#f0f4f8',
+    position: 'relative',
   },
   multiColorBox: {
-    width: 24,
-    height: 24,
-    position: 'relative',
-    borderRadius: 6,
-    overflow: 'hidden',
-    borderWidth: 1,
-    borderColor: "rgba(0,0,0,0.1)",
-  },
-  colorStrip: {
     position: 'absolute',
-    width: '140%',
-    height: '33%',
-    left: '-20%',
-    backgroundColor: 'red',
+    top: 2,
+    left: 2,
+    right: 2,
+    bottom: 2,
+    borderRadius: 4,
+    overflow: 'hidden',
+    flexDirection: 'row',
   },
-  quantityBadge: {
+  multiColorSection: {
+    position: 'absolute',
+    height: '100%',
+  },
+  itemCount: {
     position: 'absolute',
     top: -6,
     right: -6,
     backgroundColor: '#3B82F6',
-    borderRadius: 10,
-    width: 20,
-    height: 20,
-    justifyContent: 'center',
-    alignItems: 'center',
-    borderWidth: 1.5,
+    width: 16,
+    height: 16,
+    borderRadius: 8,
+    textAlign: 'center',
+    lineHeight: 16,
+    overflow: 'hidden',
+    borderWidth: 1,
     borderColor: 'white',
-  },
-  quantityText: {
     color: 'white',
-    fontSize: 11,
+    fontSize: 10,
     fontWeight: 'bold',
   },
+  itemCountText: {
+    fontSize: 10,
+    fontWeight: 'bold',
+    color: 'white',
+  },
   childItemsContainer: {
-    marginLeft: 20,
-    borderLeftWidth: 1,
-    borderLeftColor: '#e0e0e0',
-    marginVertical: 4,
     overflow: 'hidden',
-    backgroundColor: '#ffffff',
-    borderRadius: 8,
-    marginRight: 4,
+    marginLeft: 28,
+    borderLeftWidth: 1,
+    borderLeftColor: '#E2E8F0',
   },
   childItem: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingVertical: 10,
-    paddingHorizontal: 16,
-    backgroundColor: '#ffffff',
+    paddingVertical: 8,
+    paddingHorizontal: 12,
     marginVertical: 2,
+    marginLeft: 12,
+    backgroundColor: '#fff',
     borderRadius: 6,
   },
-  childItemLeft: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    flex: 1,
-  },
   childColorBox: {
-    width: 28,
-    height: 28,
-    borderRadius: 8,
-    marginRight: 14,
-    shadowColor: "#000",
-    shadowOffset: {
-      width: 0,
-      height: 1,
-    },
-    shadowOpacity: 0.1,
-    shadowRadius: 1,
-    elevation: 1,
-    backgroundColor: '#ffffff',
-    padding: 3, // Add padding for the inner color
+    width: 20,
+    height: 20,
+    borderRadius: 6,
+    marginRight: 8,
+    padding: 2,
+    backgroundColor: '#f0f4f8',
   },
   childColorInner: {
     flex: 1,
-    borderRadius: 6,
+    borderRadius: 4,
   },
   childItemText: {
     fontSize: 14,
@@ -1255,13 +1263,32 @@ const styles = StyleSheet.create({
     fontWeight: '500',
   },
   childItemNumber: {
-    fontSize: 12,
-    color: '#718096',
-    marginLeft: 6,
-    backgroundColor: '#f7fafc',
+    fontSize: 13,
+    color: '#94A3B8',
+    fontWeight: '400',
+  },
+  colorBox: {
+    width: 24,
+    height: 24,
+    borderRadius: 6,
+    marginRight: 8,
+    padding: 2,
+    backgroundColor: '#f0f4f8',
+  },
+  colorBoxInner: {
+    flex: 1,
+    borderRadius: 4,
+  },
+  dimensionsContainer: {
+    backgroundColor: '#EDF2F7',
     paddingHorizontal: 8,
-    paddingVertical: 2,
-    borderRadius: 12,
-    overflow: 'hidden',
+    paddingVertical: 4,
+    borderRadius: 6,
+    marginLeft: 8,
+  },
+  dimensionsText: {
+    fontSize: 14,
+    color: '#4A5568',
+    fontFamily: Platform.OS === 'ios' ? 'Menlo' : 'monospace',
   },
 });

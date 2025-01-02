@@ -15,8 +15,8 @@ import {
   Keyboard,
 } from "react-native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import { Ionicons } from "@expo/vector-icons"; // Assuming you're using Expo or replace with appropriate icon library
-import { ItemDetailsModal } from "./FormPage"; // Ensure correct import
+import { Ionicons } from "@expo/vector-icons"; 
+import { ItemDetailsModal } from "./FormPage"; 
 import { pack, createDisplay } from "../packing_algo/packing";
 
 export default class PackagesPage extends Component {
@@ -36,6 +36,22 @@ export default class PackagesPage extends Component {
   constructor(props) {
     super(props);
     this.shakeAnimation = new Animated.Value(0);
+
+    this.props.navigation.setOptions({
+      headerTitle: () => (
+        <View style={styles.headerContainer}>
+          <Ionicons name="cube-outline" size={24} color="white" />
+          <Text style={styles.headerTitle}>Saved Packages</Text>
+        </View>
+      ),
+      headerTitleAlign: 'center',
+      headerStyle: {
+        backgroundColor: '#3B82F6',
+        elevation: 0,
+        shadowOpacity: 0,
+      },
+      headerTintColor: 'white',
+    });
   }
 
   componentDidMount() {
@@ -362,252 +378,245 @@ export default class PackagesPage extends Component {
   render() {
     const {
       packages,
-      selectedPackage,
-      showPackageModal,
-      showDetailsModal,
       showOptionsModal,
+      selectedPackage,
       renamePackageModal,
       newPackageName,
-      isEditMode,
-      editingPackage,
+      showPackageModal,
+      showDetailsModal,
       selectedItem,
+      isEditMode,
     } = this.state;
 
-    const renderPackage = (packageName) => {
-      const isEditing = isEditMode && editingPackage === packageName;
-      const animatedStyle = {
-        transform: [{ translateX: isEditing ? this.shakeAnimation : 0 }],
-      };
-
-      return (
-        <View key={packageName} style={styles.packageRow}>
-          {isEditing && (
-            <TouchableOpacity
-              style={styles.editButton}
-              onPress={() => this.handleDeletePackage(packageName)}
-            >
-              <Ionicons name="remove-circle" size={24} color="#e74c3c" />
-            </TouchableOpacity>
-          )}
-          
-          <Animated.View style={[styles.packageContainer, animatedStyle]}>
-            <TouchableOpacity
-              style={styles.package}
-              onPress={() => !isEditing && this.openPackageDetails(packageName)}
-              onLongPress={() => this.toggleEditMode(packageName)}
-            >
-              <View style={styles.packageLeftContent}>
-                <Ionicons name="cube" size={20} color="#3B82F6" style={styles.packageIcon} />
-                <Text style={styles.packageName}>{packageName}</Text>
-              </View>
-              <Text style={styles.itemCount}>
-                {packages[packageName].length} unique {packages[packageName].length === 1 ? 'item' : 'items'}
-              </Text>
-            </TouchableOpacity>
-          </Animated.View>
-
-          {isEditing && (
-            <TouchableOpacity
-              style={styles.editButton}
-              onPress={() => this.openRenameModal(packageName)}
-            >
-              <Ionicons name="pencil" size={24} color="#3498db" />
-            </TouchableOpacity>
-          )}
-        </View>
-      );
-    };
-
     return (
-      <View style={styles.container}>
-        <TouchableWithoutFeedback 
-          onPress={() => {
-            if (isEditMode) {
-              this.setState({ isEditMode: false, editingPackage: null });
-            }
-          }}
-        >
-          <View style={styles.container}>
-            <View style={styles.header}>
-              <Ionicons name="cube-outline" size={24} color="white" />
-              <Text style={styles.headerText}>Saved Packages</Text>
-            </View>
-            <ScrollView contentContainerStyle={styles.scrollViewContainer}>
-              {Object.keys(packages).map(renderPackage)}
-            </ScrollView>
+      <TouchableWithoutFeedback 
+        onPress={() => {
+          if (isEditMode) {
+            this.setState({ isEditMode: false, editingPackage: null });
+          }
+        }}
+      >
+        <View style={styles.container}>
+          <ScrollView style={styles.scrollView}>
+            {Object.keys(packages).map(this.renderPackage)}
+          </ScrollView>
 
-            {/* Options Modal */}
-            <Modal
-              visible={showOptionsModal}
-              transparent={true}
-              animationType="fade"
-              onRequestClose={() => this.setState({ showOptionsModal: false })}
+          {/* Options Modal */}
+          <Modal
+            visible={showOptionsModal}
+            transparent={true}
+            animationType="fade"
+            onRequestClose={() => this.setState({ showOptionsModal: false })}
+          >
+            {/* Touchable outside the modal content to close it */}
+            <TouchableOpacity
+              style={styles.modalOverlay}
+              activeOpacity={1}
+              onPress={() => this.setState({ showOptionsModal: false })}
             >
-              {/* Touchable outside the modal content to close it */}
-              <TouchableOpacity
-                style={styles.modalOverlay}
-                activeOpacity={1}
-                onPress={() => this.setState({ showOptionsModal: false })}
-              >
-                <View style={styles.modalContent}>
-                  <TouchableOpacity
-                    style={styles.optionButton}
-                    onPress={() =>
-                      this.setState({
-                        showOptionsModal: false,
-                        renamePackageModal: true,
-                      })
-                    }
-                  >
-                    <Text style={styles.optionText}>Rename Package</Text>
-                  </TouchableOpacity>
-                  <TouchableOpacity
-                    style={styles.optionButtonClose}
-                    onPress={() => this.handleDeletePackage(selectedPackage)}
-                  >
-                    <Text style={styles.optionText}>Delete Package</Text>
-                  </TouchableOpacity>
-                </View>
-              </TouchableOpacity>
-            </Modal>
+              <View style={styles.modalContent}>
+                <TouchableOpacity
+                  style={styles.optionButton}
+                  onPress={() =>
+                    this.setState({
+                      showOptionsModal: false,
+                      renamePackageModal: true,
+                    })
+                  }
+                >
+                  <Text style={styles.optionText}>Rename Package</Text>
+                </TouchableOpacity>
+                <TouchableOpacity
+                  style={styles.optionButtonClose}
+                  onPress={() => this.handleDeletePackage(selectedPackage)}
+                >
+                  <Text style={styles.optionText}>Delete Package</Text>
+                </TouchableOpacity>
+              </View>
+            </TouchableOpacity>
+          </Modal>
 
-            {/* Rename Package Modal */}
-            <Modal
-              visible={renamePackageModal}
-              transparent={true}
-              animationType="slide"
-              onRequestClose={() => {
+          {/* Rename Package Modal */}
+          <Modal
+            visible={renamePackageModal}
+            transparent={true}
+            animationType="slide"
+            onRequestClose={() => {
+              Keyboard.dismiss();
+              this.setState({ renamePackageModal: false });
+            }}
+          >
+            <TouchableWithoutFeedback 
+              onPress={() => {
                 Keyboard.dismiss();
                 this.setState({ renamePackageModal: false });
               }}
             >
-              <TouchableWithoutFeedback 
-                onPress={() => {
-                  Keyboard.dismiss();
-                  this.setState({ renamePackageModal: false });
-                }}
-              >
-                <View style={styles.modalOverlay}>
-                  <TouchableWithoutFeedback onPress={() => Keyboard.dismiss()}>
-                    <View style={[styles.modalContent, { alignItems: 'center' }]}>
-                      <Text style={styles.modalTitle}>Edit Package Name:</Text>
-                      <TextInput
-                        style={styles.renameInput}
-                        value={newPackageName}
-                        onChangeText={(text) => this.setState({ newPackageName: text })}
-                        placeholder="Package Name"
-                        autoFocus={true}
-                        selectTextOnFocus={true}
-                      />
+              <View style={styles.modalOverlay}>
+                <TouchableWithoutFeedback onPress={() => Keyboard.dismiss()}>
+                  <View style={[styles.modalContent, { alignItems: 'center' }]}>
+                    <Text style={styles.modalTitle}>Edit Package Name:</Text>
+                    <TextInput
+                      style={styles.renameInput}
+                      value={newPackageName}
+                      onChangeText={(text) => this.setState({ newPackageName: text })}
+                      placeholder="Package Name"
+                      autoFocus={true}
+                      selectTextOnFocus={true}
+                    />
+                    <TouchableOpacity
+                      style={[styles.buttonApply1, { 
+                        width: 100,
+                        height: 40,
+                        alignItems: 'center', 
+                        justifyContent: 'center'
+                      }]}
+                      onPress={() => {
+                        Keyboard.dismiss();
+                        this.handleRenamePackage();
+                      }}
+                    >
+                      <Text style={[styles.buttonText, { textAlign: 'center' }]}>Save</Text>
+                    </TouchableOpacity>
+                  </View>
+                </TouchableWithoutFeedback>
+              </View>
+            </TouchableWithoutFeedback>
+          </Modal>
+
+          {/* Package Details Modal */}
+          <Modal
+            visible={showPackageModal}
+            transparent={true}
+            animationType="slide"
+            onRequestClose={this.closePackageModal}
+          >
+            <TouchableWithoutFeedback onPress={this.closePackageModal}>
+              <View style={styles.modalOverlay}>
+                <TouchableWithoutFeedback onPress={(e) => e.stopPropagation()}>
+                  <View style={styles.modalContent}>
+                    <Text style={styles.modalTitle}>
+                      {selectedPackage}
+                    </Text>
+                    <View style={styles.titleUnderline} />
+                    <FlatList
+                      data={selectedPackage ? packages[selectedPackage] : []}
+                      style={styles.flatListStyle}
+                      contentContainerStyle={styles.flatListContainer}
+                      keyExtractor={(item) => item.id}
+                      renderItem={({ item }) => (
+                        <TouchableOpacity
+                          style={styles.itemContainer}
+                          onPress={() => this.handleEditItem(item)}
+                        >
+                          <View style={{ width: "100%" }}>
+                            <Text style={styles.itemText}>{item.itemName}</Text>
+                            <Text style={styles.itemDimensions}>
+                              Quantity: {item.quantity}
+                            </Text>
+                            <Text style={styles.itemDimensions}>
+                              {item.itemLength}L x {item.itemWidth}W x {item.itemHeight}H
+                            </Text>
+                          </View>
+                        </TouchableOpacity>
+                      )}
+                    />
+                    <View style={styles.modalFooter}>
                       <TouchableOpacity
-                        style={[styles.buttonApply1, { 
-                          width: 100,
-                          height: 40,
-                          alignItems: 'center', 
-                          justifyContent: 'center'
-                        }]}
-                        onPress={() => {
-                          Keyboard.dismiss();
-                          this.handleRenamePackage();
-                        }}
+                        style={[styles.footerButton, styles.packButton]}
+                        onPress={this.handlePackItems}
                       >
-                        <Text style={[styles.buttonText, { textAlign: 'center' }]}>Save</Text>
+                        <Ionicons name="cube" size={20} color="#fff" />
+                        <Text style={styles.footerButtonText}>Pack Items</Text>
+                      </TouchableOpacity>
+
+                      <TouchableOpacity
+                        style={[styles.footerButton, styles.shipButton]}
+                        onPress={() => this.handleShipPackage({ name: selectedPackage, items: packages[selectedPackage] })}
+                      >
+                        <Ionicons name="airplane" size={20} color="#fff" />
+                        <Text style={styles.footerButtonText}>Shipping Estimate</Text>
                       </TouchableOpacity>
                     </View>
-                  </TouchableWithoutFeedback>
-                </View>
-              </TouchableWithoutFeedback>
-            </Modal>
+                  </View>
+                </TouchableWithoutFeedback>
+              </View>
+            </TouchableWithoutFeedback>
+          </Modal>
 
-            {/* Package Details Modal */}
-            <Modal
-              visible={showPackageModal}
-              transparent={true}
-              animationType="slide"
-              onRequestClose={this.closePackageModal}
-            >
-              <TouchableWithoutFeedback onPress={this.closePackageModal}>
-                <View style={styles.modalOverlay}>
-                  <TouchableWithoutFeedback onPress={(e) => e.stopPropagation()}>
-                    <View style={styles.modalContent}>
-                      <Text style={styles.modalTitle}>
-                        {selectedPackage}
-                      </Text>
-                      <View style={styles.titleUnderline} />
-                      <FlatList
-                        data={selectedPackage ? packages[selectedPackage] : []}
-                        style={styles.flatListStyle}
-                        contentContainerStyle={styles.flatListContainer}
-                        keyExtractor={(item) => item.id}
-                        renderItem={({ item }) => (
-                          <TouchableOpacity
-                            style={styles.itemContainer}
-                            onPress={() => this.handleEditItem(item)}
-                          >
-                            <View style={{ width: "100%" }}>
-                              <Text style={styles.itemText}>{item.itemName}</Text>
-                              <Text style={styles.itemDimensions}>
-                                Quantity: {item.quantity}
-                              </Text>
-                              <Text style={styles.itemDimensions}>
-                                {item.itemLength}L x {item.itemWidth}W x {item.itemHeight}H
-                              </Text>
-                            </View>
-                          </TouchableOpacity>
-                        )}
-                      />
-                      <View style={styles.modalFooter}>
-                        <TouchableOpacity
-                          style={[styles.footerButton, styles.packButton]}
-                          onPress={this.handlePackItems}
-                        >
-                          <Ionicons name="cube" size={20} color="#fff" />
-                          <Text style={styles.footerButtonText}>Pack Items</Text>
-                        </TouchableOpacity>
+          {showDetailsModal && selectedItem && (
+            <ItemDetailsModal
+              visible={showDetailsModal}
+              item={selectedItem}
+              closeModal={() => this.setState({ showDetailsModal: false })}
+              handleDeleteAndClose={() => this.handleDeleteItem(selectedItem)}
+              handleUpdateItem={this.handleSaveEditedItem}
+            />
+          )}
 
-                        <TouchableOpacity
-                          style={[styles.footerButton, styles.shipButton]}
-                          onPress={() => this.handleShipPackage({ name: selectedPackage, items: packages[selectedPackage] })}
-                        >
-                          <Ionicons name="airplane" size={20} color="#fff" />
-                          <Text style={styles.footerButtonText}>Shipping Estimate</Text>
-                        </TouchableOpacity>
-                      </View>
-                    </View>
-                  </TouchableWithoutFeedback>
-                </View>
-              </TouchableWithoutFeedback>
-            </Modal>
+          <TouchableOpacity
+            style={styles.fab}
+            onPress={() => this.props.navigation.navigate("FormPage")}
+          >
+            <Ionicons name="add" size={30} color="white" />
+          </TouchableOpacity>
 
-            {showDetailsModal && selectedItem && (
-              <ItemDetailsModal
-                visible={showDetailsModal}
-                item={selectedItem}
-                closeModal={() => this.setState({ showDetailsModal: false })}
-                handleDeleteAndClose={() => this.handleDeleteItem(selectedItem)}
-                handleUpdateItem={this.handleSaveEditedItem}
-              />
+          <TouchableOpacity
+            style={styles.infoFab}
+            onPress={() => Alert.alert(
+              "Package Options",
+              "Long press on any package to rename or delete the entire package.",
+              [{ text: "OK", onPress: () => {} }]
             )}
+          >
+            <Ionicons name="information-circle" size={30} color="white" />
+          </TouchableOpacity>
+        </View>
+      </TouchableWithoutFeedback>
+    );
+  }
 
-            <TouchableOpacity
-              style={styles.fab}
-              onPress={() => this.props.navigation.navigate("FormPage")}
-            >
-              <Ionicons name="add" size={30} color="white" />
-            </TouchableOpacity>
+  renderPackage = (packageName) => {
+    const isEditing = this.state.isEditMode && this.state.editingPackage === packageName;
+    const animatedStyle = {
+      transform: [{ translateX: isEditing ? this.shakeAnimation : 0 }],
+    };
 
-            <TouchableOpacity
-              style={styles.infoFab}
-              onPress={() => Alert.alert(
-                "Package Options",
-                "Long press on any package to rename or delete the entire package.",
-                [{ text: "OK", onPress: () => {} }]
-              )}
-            >
-              <Ionicons name="information-circle" size={30} color="white" />
-            </TouchableOpacity>
-          </View>
-        </TouchableWithoutFeedback>
+    return (
+      <View key={packageName} style={styles.packageRow}>
+        {isEditing && (
+          <TouchableOpacity
+            style={styles.editButton}
+            onPress={() => this.handleDeletePackage(packageName)}
+          >
+            <Ionicons name="remove-circle" size={24} color="#e74c3c" />
+          </TouchableOpacity>
+        )}
+        
+        <Animated.View style={[styles.packageContainer, animatedStyle]}>
+          <TouchableOpacity
+            style={styles.package}
+            onPress={() => !isEditing && this.openPackageDetails(packageName)}
+            onLongPress={() => this.toggleEditMode(packageName)}
+          >
+            <View style={styles.packageLeftContent}>
+              <Ionicons name="cube" size={20} color="#3B82F6" style={styles.packageIcon} />
+              <Text style={styles.packageName}>{packageName}</Text>
+            </View>
+            <Text style={styles.itemCount}>
+              {this.state.packages[packageName].length} unique {this.state.packages[packageName].length === 1 ? 'item' : 'items'}
+            </Text>
+          </TouchableOpacity>
+        </Animated.View>
+
+        {isEditing && (
+          <TouchableOpacity
+            style={styles.editButton}
+            onPress={() => this.openRenameModal(packageName)}
+          >
+            <Ionicons name="pencil" size={24} color="#3498db" />
+          </TouchableOpacity>
+        )}
       </View>
     );
   }
@@ -618,18 +627,8 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: "#f5f5f5",
   },
-  header: {
-    flexDirection: "row",
-    alignItems: "center",
-    backgroundColor: "#3B82F6",
-    padding: 15,
-  },
-  headerText: {
-    color: "white",
-    fontSize: 18,
-    marginLeft: 10,
-  },
-  scrollViewContainer: {
+  scrollView: {
+    flex: 1,
     padding: 10,
     paddingBottom: 96, // Reduced padding since buttons are side by side
   },
@@ -781,23 +780,6 @@ const styles = StyleSheet.create({
     textAlign: "center",
     marginBottom: 10,
   },
-  fab: {
-    position: 'absolute',
-    right: 20,
-    bottom: 20,
-    width: 56,
-    height: 56,
-    borderRadius: 28,
-    backgroundColor: '#3B82F6',
-    justifyContent: 'center',
-    alignItems: 'center',
-    elevation: 4,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.25,
-    shadowRadius: 4,
-    zIndex: 1,
-  },
   infoFab: {
     position: 'absolute',
     left: 20, // Position on the left side
@@ -921,5 +903,33 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: '600',
     marginLeft: 8,
+  },
+  headerContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  headerTitle: {
+    fontSize: 18,
+    fontWeight: '600',
+    color: 'white',
+    marginLeft: 10,
+  },
+  fab: {
+    position: 'absolute',
+    right: 20,
+    bottom: 20,
+    width: 56,
+    height: 56,
+    borderRadius: 28,
+    backgroundColor: '#3B82F6',
+    justifyContent: 'center',
+    alignItems: 'center',
+    elevation: 4,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.25,
+    shadowRadius: 4,
+    zIndex: 1,
   },
 });
