@@ -22,6 +22,8 @@ import { Dropdown } from "react-native-element-dropdown";
 import AntDesign from "@expo/vector-icons/AntDesign";
 import { pack, createDisplay } from "../packing_algo/packing";
 import { isSpecialSize, getScale } from "../utils/boxSizes";
+import { createBoxMesh, setupScene } from "../utils/renderUtils";
+import { RENDER_CONFIG } from "../utils/renderConfig";
 import Slider from "@react-native-community/slider";
 
 const carrierData = [
@@ -74,14 +76,8 @@ export default class Display3D extends Component {
       onPanResponderMove: this.handlePanResponderMove,
     });
 
-    // Pre-create scene and lights
-    this.scene = new THREE.Scene();
-    this.scene.background = new THREE.Color(0xffffff);
-    const ambientLight = new THREE.AmbientLight(0xffffff, 0.8);
-    this.scene.add(ambientLight);
-    const directionalLight = new THREE.DirectionalLight(0xffffff, 0.5);
-    directionalLight.position.set(5, 5, 5);
-    this.scene.add(directionalLight);
+    // Pre-create scene using shared utility
+    this.scene = setupScene();
 
     this.state = {
       theta: 0,
@@ -121,23 +117,29 @@ export default class Display3D extends Component {
       const scale = getScale(this.state.box);
       const baseMovement = this.state.box.y / 10;
       
-      // Cache the movement calculation
-      const movementMultiplier = scale === 6 
-        ? (this.state.box.y <= 6 ? 3.0 : this.state.box.y <= 8 ? 2.5 : 2.0)
-        : 1.5;
+      let movementMultiplier;
+      if (scale === 6) {
+        const boxHeight = this.state.box.y;
+        if (boxHeight <= 6) {
+          movementMultiplier = 3.0;
+        } else if (boxHeight <= 8) {
+          movementMultiplier = 2.5;
+        } else {
+          movementMultiplier = 2.0;
+        }
+      } else {
+        movementMultiplier = 1.5;
+      }
       
       const maxMovement = baseMovement * movementMultiplier;
-      const sinValue = Math.sin(value);
       
-      // Use forEach instead of map for better performance since we're not creating a new array
       this.state.itemsTotal.forEach((item) => {
         if (item?.dis?.position && item.pos) {
-          item.dis.position.y = sinValue * maxMovement + item.pos[1];
+          item.dis.position.y = Math.sin(value) * maxMovement + item.pos[1] / scale;
         }
       });
     }
 
-    // Only render if we have a renderer
     if (this.renderer) {
       this.renderer.render(this.scene, this.camera);
     }
@@ -312,16 +314,12 @@ export default class Display3D extends Component {
       box.y / scale,
       box.z / scale
     );
-    const material = new THREE.MeshBasicMaterial({
-      transparent: true,
-      opacity: 0.25,
-      color: 0x808080,
-    });
+    const material = new THREE.MeshBasicMaterial(RENDER_CONFIG.box.material);
     const cube = new THREE.Mesh(geometry, material);
 
     // Create wireframe
     const wireframeGeometry = new THREE.EdgesGeometry(geometry);
-    const wireframeMaterial = new THREE.LineBasicMaterial({ color: 0x000000 });
+    const wireframeMaterial = new THREE.LineBasicMaterial(RENDER_CONFIG.box.wireframe);
     const wireframe = new THREE.LineSegments(wireframeGeometry, wireframeMaterial);
     cube.add(wireframe);
 

@@ -1,6 +1,8 @@
 // packing.js
 import * as THREE from "three";
 import { carrierBoxes } from './carrierBoxes';
+import { createItemMesh } from '../utils/renderUtils';
+import { RENDER_CONFIG } from '../utils/renderConfig';
 
 //quicksort needed for itemList/boxList
 function quickSort(arr, l, r) {
@@ -335,10 +337,7 @@ export function createDisplay(box, scale) {
 
       // Add edges with light white color
       const edges = new THREE.EdgesGeometry(geo);
-      const edgeMaterial = new THREE.LineBasicMaterial({
-        color: 'white',  
-        opacity: .7,
-      });
+      const edgeMaterial = new THREE.LineBasicMaterial(RENDER_CONFIG.item.wireframe);
       const wireframe = new THREE.LineSegments(edges, edgeMaterial);
       box1.add(wireframe);
 
@@ -354,9 +353,9 @@ export function createDisplay(box, scale) {
       );
       item.dis = box1;
       item.pos = [
-        (boxes[i].cx - item.xx / 2) / scale,
-        (boxes[i].cy + item.yy / 2) / scale,
-        (boxes[i].cz - item.zz / 2) / scale,
+        boxes[i].cx - item.xx / 2,
+        boxes[i].cy + item.yy / 2,
+        boxes[i].cz - item.zz / 2,
       ];
       item.boxType = boxes[i].type;
 
