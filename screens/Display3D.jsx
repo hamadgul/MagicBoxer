@@ -675,7 +675,7 @@ export default class Display3D extends Component {
                             <Text style={styles.childItemText}>
                               {childItem.displayName.replace(/\s\d+$/, '')}
                               <Text style={styles.childItemNumber}>
-                                {' '}•{' '}{(childIndex + 1).toString().padStart(2, '0')}
+                                {' '}#{(childIndex + 1).toString().padStart(2, '0')}
                               </Text>
                             </Text>
                           </View>
@@ -1264,8 +1264,8 @@ const styles = StyleSheet.create({
   },
   childItemNumber: {
     fontSize: 13,
-    color: '#94A3B8',
-    fontWeight: '400',
+    color: '#3B82F6',
+    fontWeight: '500',
   },
   colorBox: {
     width: 24,
