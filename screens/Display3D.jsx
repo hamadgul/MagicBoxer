@@ -597,7 +597,7 @@ export default class Display3D extends Component {
             <View style={styles.legendHeader}>
               <Text style={styles.legendTitle}>Legend</Text>
               <Text style={styles.totalItemsText}>
-                {totalItemCount} {totalItemCount === 1 ? 'item' : 'items'}
+                {totalItemCount} {totalItemCount === 1 ? 'Item' : 'Total Items'}
               </Text>
             </View>
             <ScrollView style={styles.legendScrollView}>
