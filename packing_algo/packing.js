@@ -333,6 +333,15 @@ export function createDisplay(box, scale) {
       item.color = difcolors[i % difcolors.length];
       const box1 = new THREE.Mesh(geo, mat);
 
+      // Add edges with light white color
+      const edges = new THREE.EdgesGeometry(geo);
+      const edgeMaterial = new THREE.LineBasicMaterial({
+        color: '0x444444',  
+        opacity: .7,
+      });
+      const wireframe = new THREE.LineSegments(edges, edgeMaterial);
+      box1.add(wireframe);
+
       // Ensure box center coordinates are set
       if (typeof boxes[i].cx === 'undefined') boxes[i].cx = boxes[i].x / 2;
       if (typeof boxes[i].cy === 'undefined') boxes[i].cy = -boxes[i].y / 2;
