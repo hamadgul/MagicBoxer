@@ -606,9 +606,9 @@ export default class Display3D extends Component {
                   <View key={index}>
                     <TouchableOpacity
                       style={[
-                        styles.legendItem,
+                        styles.legendItem, 
                         item.isParent && styles.legendItemParent,
-                        !item.isParent && styles.legendItemSingle
+                        item.childItems && item.childItems.length > 0 && !item.isParent && styles.legendItemWithBorder
                       ]}
                       onPress={() => {
                         console.log('Item pressed:', item.displayName); // Debug log
@@ -1103,12 +1103,8 @@ const styles = StyleSheet.create({
   legendItem: {
     flexDirection: "row",
     alignItems: "center",
-    justifyContent: "space-between",
-    paddingVertical: 12,
+    paddingVertical: 8,
     paddingHorizontal: 12,
-    backgroundColor: "#fff",
-    borderRadius: 8,
-    minHeight: 48,
   },
   legendItemParent: {
     backgroundColor: "#f8f9fa",
@@ -1123,9 +1119,11 @@ const styles = StyleSheet.create({
     shadowRadius: 1,
     elevation: 1,
   },
-  legendItemSingle: {
+  legendItemWithBorder: {
     borderWidth: 1,
-    borderColor: '#E2E8F0',
+    borderColor: '#e1e1e1',
+    borderRadius: 8,
+    marginBottom: 8,
   },
   legendItemLeft: {
     flexDirection: "row",
@@ -1209,20 +1207,18 @@ const styles = StyleSheet.create({
   },
   itemCount: {
     position: 'absolute',
-    top: -6,
-    right: -6,
-    backgroundColor: '#3B82F6',
-    width: 16,
-    height: 16,
-    borderRadius: 8,
+    top: -8,
+    right: -8,
+    backgroundColor: '#007AFF',
+    width: 18,
+    height: 18,
+    borderRadius: 9,
+    color: '#fff',
+    fontSize: 11,
     textAlign: 'center',
-    lineHeight: 16,
     overflow: 'hidden',
-    borderWidth: 1,
-    borderColor: 'white',
-    color: 'white',
-    fontSize: 10,
-    fontWeight: 'bold',
+    lineHeight: 18,
+    fontWeight: '500',
   },
   itemCountText: {
     fontSize: 10,
