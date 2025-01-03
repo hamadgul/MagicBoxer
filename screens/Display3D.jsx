@@ -653,7 +653,7 @@ export default class Display3D extends Component {
                           {
                             maxHeight: this.animations[item.displayName]?.interpolate({
                               inputRange: [0, 1],
-                              outputRange: [0, 500]
+                              outputRange: [0, 1000]
                             }) || 0,
                             opacity: this.animations[item.displayName]?.interpolate({
                               inputRange: [0, 0.5, 1],
@@ -662,24 +662,26 @@ export default class Display3D extends Component {
                           }
                         ]}
                       >
-                        {item.childItems.map((childItem, childIndex) => (
-                          <View key={childIndex} style={styles.childItem}>
-                            <View style={styles.childColorBox}>
-                              <View 
-                                style={[
-                                  styles.childColorInner,
-                                  { backgroundColor: childItem.color }
-                                ]}
-                              />
-                            </View>
-                            <Text style={styles.childItemText}>
-                              {childItem.displayName.replace(/\s\d+$/, '')}
-                              <Text style={styles.childItemNumber}>
-                                {' '}#{(childIndex + 1).toString().padStart(2, '0')}
+                        <ScrollView style={styles.childItemsScrollView}>
+                          {item.childItems.map((childItem, childIndex) => (
+                            <View key={childIndex} style={styles.childItem}>
+                              <View style={styles.childColorBox}>
+                                <View 
+                                  style={[
+                                    styles.childColorInner,
+                                    { backgroundColor: childItem.color }
+                                  ]}
+                                />
+                              </View>
+                              <Text style={styles.childItemText}>
+                                {childItem.displayName.replace(/\s\d+$/, '')}
+                                <Text style={styles.childItemNumber}>
+                                  {' '}#{(childIndex + 1).toString().padStart(2, '0')}
+                                </Text>
                               </Text>
-                            </Text>
-                          </View>
-                        ))}
+                            </View>
+                          ))}
+                        </ScrollView>
                       </Animated.View>
                     )}
                   </View>
@@ -1062,19 +1064,11 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
   modalContent: {
-    backgroundColor: "white",
-    borderRadius: 20,
+    backgroundColor: 'white',
+    borderRadius: 10,
     padding: 20,
-    width: "90%",
-    maxHeight: "80%",
-    shadowColor: "#000",
-    shadowOffset: {
-      width: 0,
-      height: 2,
-    },
-    shadowOpacity: 0.25,
-    shadowRadius: 12,
-    elevation: 5,
+    width: '90%',
+    maxHeight: '80%',
   },
   legendHeader: {
     flexDirection: 'row',
@@ -1095,7 +1089,7 @@ const styles = StyleSheet.create({
     fontWeight: '500',
   },
   legendScrollView: {
-    width: "100%",
+    maxHeight: '70%',
   },
   legendItemsContainer: {
     paddingHorizontal: 16,
@@ -1227,19 +1221,17 @@ const styles = StyleSheet.create({
   },
   childItemsContainer: {
     overflow: 'hidden',
-    marginLeft: 28,
-    borderLeftWidth: 1,
-    borderLeftColor: '#E2E8F0',
+    paddingLeft: 20,
+  },
+  childItemsScrollView: {
+    maxHeight: 200,
+    paddingRight: 10,
   },
   childItem: {
     flexDirection: 'row',
     alignItems: 'center',
     paddingVertical: 8,
-    paddingHorizontal: 12,
-    marginVertical: 2,
-    marginLeft: 12,
-    backgroundColor: '#fff',
-    borderRadius: 6,
+    paddingRight: 10,
   },
   childColorBox: {
     width: 20,
