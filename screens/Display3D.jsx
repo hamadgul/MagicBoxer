@@ -23,7 +23,6 @@ import AntDesign from "@expo/vector-icons/AntDesign";
 import { pack, createDisplay } from "../packing_algo/packing";
 import { isSpecialSize, getScale } from "../utils/boxSizes";
 import Slider from "@react-native-community/slider";
-import { Picker } from '@react-native-picker/picker';
 
 const carrierData = [
   { label: "No Carrier", value: "No Carrier" },
@@ -75,6 +74,15 @@ export default class Display3D extends Component {
       onPanResponderMove: this.handlePanResponderMove,
     });
 
+    // Pre-create scene and lights
+    this.scene = new THREE.Scene();
+    this.scene.background = new THREE.Color(0xffffff);
+    const ambientLight = new THREE.AmbientLight(0xffffff, 0.8);
+    this.scene.add(ambientLight);
+    const directionalLight = new THREE.DirectionalLight(0xffffff, 0.5);
+    directionalLight.position.set(5, 5, 5);
+    this.scene.add(directionalLight);
+
     this.state = {
       theta: 0,
       phi: Math.PI / 2,
@@ -113,30 +121,23 @@ export default class Display3D extends Component {
       const scale = getScale(this.state.box);
       const baseMovement = this.state.box.y / 10;
       
-      let movementMultiplier;
-      if (scale === 6) {
-        const boxHeight = this.state.box.y;
-        if (boxHeight <= 6) {
-          movementMultiplier = 3.0;
-        } else if (boxHeight <= 8) {
-          movementMultiplier = 2.5;
-        } else {
-          movementMultiplier = 2.0;
-        }
-      } else {
-        movementMultiplier = 1.5;
-      }
+      // Cache the movement calculation
+      const movementMultiplier = scale === 6 
+        ? (this.state.box.y <= 6 ? 3.0 : this.state.box.y <= 8 ? 2.5 : 2.0)
+        : 1.5;
       
       const maxMovement = baseMovement * movementMultiplier;
+      const sinValue = Math.sin(value);
       
+      // Use forEach instead of map for better performance since we're not creating a new array
       this.state.itemsTotal.forEach((item) => {
         if (item?.dis?.position && item.pos) {
-          item.dis.position.y = Math.sin(value) * maxMovement + item.pos[1];
+          item.dis.position.y = sinValue * maxMovement + item.pos[1];
         }
       });
     }
 
-    // Force a render update
+    // Only render if we have a renderer
     if (this.renderer) {
       this.renderer.render(this.scene, this.camera);
     }
@@ -159,26 +160,33 @@ export default class Display3D extends Component {
     if (!this.state.gl) return;
 
     const animate = () => {
-      if (this.state.gl && this.camera && this.scene) {
-        if (this.state.userInteracted) {
-          const boxRotationY = this.state.currentRotation;
-          const { theta, phi } = this.state;
-          
-          this.camera.position.x = 5 * Math.sin(phi) * Math.cos(theta + boxRotationY);
-          this.camera.position.y = 5 * Math.cos(phi);
-          this.camera.position.z = 5 * Math.sin(phi) * Math.sin(theta + boxRotationY);
-          this.camera.lookAt(0, 0, 0);
-        } else {
-          const { x, y, z } = this.state.cameraPosition;
-          this.camera.position.set(x, y, z);
-          this.camera.lookAt(0, 0, 0);
-        }
-
-        if (this.renderer) {
-          this.renderer.render(this.scene, this.camera);
-        }
-        this.state.gl.endFrameEXP();
+      if (!this.state.gl || !this.camera || !this.scene || !this.renderer) {
+        this.animationFrameId = requestAnimationFrame(animate);
+        return;
       }
+
+      if (this.state.userInteracted) {
+        const boxRotationY = this.state.currentRotation;
+        const { theta, phi } = this.state;
+        
+        // Cache calculations to avoid recomputing
+        const sinPhi = Math.sin(phi);
+        const cosPhi = Math.cos(phi);
+        const thetaRotation = theta + boxRotationY;
+        
+        this.camera.position.x = 5 * sinPhi * Math.cos(thetaRotation);
+        this.camera.position.y = 5 * cosPhi;
+        this.camera.position.z = 5 * sinPhi * Math.sin(thetaRotation);
+        this.camera.lookAt(0, 0, 0);
+      } else {
+        const { x, y, z } = this.state.cameraPosition;
+        this.camera.position.set(x, y, z);
+        this.camera.lookAt(0, 0, 0);
+      }
+
+      this.renderer.render(this.scene, this.camera);
+      this.state.gl.endFrameEXP();
+      
       this.animationFrameId = requestAnimationFrame(animate);
     };
     animate();
@@ -247,36 +255,21 @@ export default class Display3D extends Component {
   _onGLContextCreate = async (gl) => {
     const { box } = this.state;
     
-    // Create scene only if it doesn't exist
-    if (!this.scene) {
-      this.scene = new THREE.Scene();
-      this.scene.background = new THREE.Color(0xffffff);
-
-      // Add lights only once
-      const ambientLight = new THREE.AmbientLight(0xffffff, 0.8);
-      this.scene.add(ambientLight);
-      
-      const directionalLight = new THREE.DirectionalLight(0xffffff, 0.5);
-      directionalLight.position.set(5, 5, 5);
-      this.scene.add(directionalLight);
-    }
-
-    // Check if this is a special size box that needs adjusted camera settings
-    const specialSize = isSpecialSize(box);
-    let cameraDistance = specialSize ? 3.5 : 5;
-    let fov = specialSize ? 60 : 75;
-
     if (!this.camera) {
+      // Check if this is a special size box that needs adjusted camera settings
+      const specialSize = isSpecialSize(box);
+      let cameraDistance = specialSize ? 3.5 : 5;
+      let fov = specialSize ? 60 : 75;
+
       this.camera = new THREE.PerspectiveCamera(
         fov,
         gl.drawingBufferWidth / gl.drawingBufferHeight,
         0.1,
         1000
       );
+      this.camera.position.set(0, cameraDistance * 0.5, cameraDistance);
+      this.camera.lookAt(0, 0, 0);
     }
-    
-    this.camera.position.set(0, cameraDistance * 0.5, cameraDistance);
-    this.camera.lookAt(0, 0, 0);
 
     if (!this.renderer) {
       this.renderer = new Renderer({ gl });
@@ -523,16 +516,20 @@ export default class Display3D extends Component {
   renderLegendModal = () => {
     const { itemsTotal, isLegendVisible, expandedItems } = this.state;
 
+    if (!isLegendVisible) return null;
+
     // Initialize empty objects/arrays
     const groupedItems = {};
     const finalItems = [];
-    let totalItemCount = itemsTotal.filter(item => item).length;
+    let totalItemCount = 0;
 
     // Group items by base name (remove numbers from the end)
     itemsTotal.forEach(item => {
       if (!item) return;
+      totalItemCount++;
       const name = item.itemName || "Unnamed Item";
       const baseName = name.replace(/\d+$/, '').trim();
+      
       if (!groupedItems[baseName]) {
         groupedItems[baseName] = [];
       }
@@ -565,7 +562,7 @@ export default class Display3D extends Component {
             displayName: `${baseName} ${index + 1}`,
             sortKey: `${baseName}_${index + 1}`,
           })),
-          colors: items.map(item => item.color),
+          colors: [...new Set(items.map(item => item.color))], // Optimize unique colors calculation
           sortKey: baseName,
           x: items[0].x,
           y: items[0].y,
@@ -575,16 +572,10 @@ export default class Display3D extends Component {
     });
 
     // Sort items alphabetically
-    finalItems.sort((a, b) => {
-      const aKey = a?.sortKey || '';
-      const bKey = b?.sortKey || '';
-      return aKey.localeCompare(bKey);
-    });
+    finalItems.sort((a, b) => (a?.sortKey || '').localeCompare(b?.sortKey || ''));
 
-    // Initialize animations for all items when modal opens
-    if (isLegendVisible) {
-      this.initializeAnimations(finalItems);
-    }
+    // Initialize animations for all items
+    this.initializeAnimations(finalItems);
 
     return (
       <Modal

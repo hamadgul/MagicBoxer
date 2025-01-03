@@ -336,7 +336,7 @@ export function createDisplay(box, scale) {
       // Add edges with light white color
       const edges = new THREE.EdgesGeometry(geo);
       const edgeMaterial = new THREE.LineBasicMaterial({
-        color: '0x444444',  
+        color: 'white',  
         opacity: .7,
       });
       const wireframe = new THREE.LineSegments(edges, edgeMaterial);
