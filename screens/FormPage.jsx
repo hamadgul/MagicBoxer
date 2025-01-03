@@ -1,6 +1,6 @@
 // FormPage.js
 
-import React, { Component, useState } from "react"; 
+import React, { Component } from "react"; 
 import {
   Alert,
   Text,
@@ -14,147 +14,26 @@ import {
   StyleSheet,
   KeyboardAvoidingView,
   Platform,
+  ActivityIndicator,
 } from "react-native";
 import { VStack } from "native-base";  
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { generateUUID } from "three/src/math/MathUtils";
 import { pack, createDisplay } from "../packing_algo/packing";
 import styles from "../components/Styles";
+import { modalStyles } from "../components/ModalStyles";
+import { debounce } from 'lodash';
 var Buffer = require("@craftzdog/react-native-buffer").Buffer;
 
-const modalStyles = StyleSheet.create({
-  centeredView: {
-    flex: 1,
-    justifyContent: "center",
-    alignItems: "center",
-    marginTop: 22
-  },
-  modalContent: {
-    backgroundColor: 'white',
-    borderRadius: 20,
-    padding: 20,
-    width: '90%',
-    maxWidth: 400,
-    shadowColor: '#000',
-    shadowOffset: {
-      width: 0,
-      height: 2,
-    },
-    shadowOpacity: 0.25,
-    shadowRadius: 4,
-    elevation: 5,
-  },
-  modalHeader: {
-    borderBottomWidth: 1,
-    borderBottomColor: '#E5E5E5',
-    paddingBottom: 15,
-    marginBottom: 20,
-  },
-  modalTitle: {
-    fontSize: 20,
-    fontWeight: '600',
-    color: '#1F2937',
-    textAlign: 'center',
-  },
-  fieldContainer: {
-    width: '100%',
-    marginBottom: 15,
-  },
-  bulletText: {
-    fontSize: 16,
-    marginBottom: 5,
-    color: '#4B5563',
-  },
-  boldText: {
-    fontWeight: '600',
-  },
-  fieldRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: 15,
-    paddingHorizontal: 10,
-  },
-  fieldLabel: {
-    flex: 1,
-    fontSize: 16,
-    fontWeight: '500',
-    color: '#4B5563',
-    marginRight: 10,
-  },
-  fieldValue: {
-    flex: 2,
-    fontSize: 16,
-    color: '#1F2937',
-  },
-  fieldInput: {
-    flex: 2,
-    height: 40,
-    borderWidth: 1,
-    borderColor: '#D1D5DB',
-    borderRadius: 8,
-    paddingHorizontal: 12,
-    fontSize: 16,
-    color: '#1F2937',
-    backgroundColor: '#F9FAFB',
-  },
-  modalButtonContainer: {
-    flexDirection: 'row',
-    justifyContent: 'space-around',
-    paddingTop: 20,
-    width: '100%',
-  },
-  button: {
-    paddingVertical: 10,
-    paddingHorizontal: 20,
-    borderRadius: 8,
-    minWidth: 100,
-    marginHorizontal: 5,
-  },
-  buttonText: {
-    fontSize: 16,
-    fontWeight: '500',
-    textAlign: 'center',
-    color: 'white',
-  },
-  editButton: {
-    backgroundColor: '#3B82F6',
-  },
-  deleteButton: {
-    backgroundColor: '#EF4444',
-  },
-  applyButton: {
-    backgroundColor: '#10B981',
-  },
-  cancelButton: {
-    backgroundColor: '#6B7280',
-  },
-  modalTitle: {
-    fontSize: 24,
-    fontWeight: '700',
-    color: '#1F2937',
-    marginBottom: 8,
-    textAlign: 'center',
-  },
-  modalSubtitle: {
-    fontSize: 16,
-    color: '#64748B',
-    marginBottom: 24,
-    textAlign: 'center',
-    paddingHorizontal: 20,
-    lineHeight: 22,
-  },
-  inputContainer: {
-    width: '100%',
-    paddingHorizontal: 20,
-  },
-  inputLabel: {
-    fontSize: 14,
-    fontWeight: '500',
-    color: '#4B5563',
-    marginBottom: 8,
-    textAlign: 'left',
-  },
-});
+const itemButtonColors = [
+  "#3B5998",
+  "#008080",
+  "#556B2F",
+  "#8B0000",
+  "#FF8C00",
+  "#6A0DAD",
+  "#008B8B",
+];
 
 // Make sure ItemDetailsModal is exported correctly
 export const ItemDetailsModal = ({
@@ -164,8 +43,8 @@ export const ItemDetailsModal = ({
   handleUpdateItem,
   handleDeleteAndClose,
 }) => {
-  const [isEditable, setIsEditable] = useState(false);
-  const [editedItem, setEditedItem] = useState({
+  const [isEditable, setIsEditable] = React.useState(false);
+  const [editedItem, setEditedItem] = React.useState({
     itemName: item?.itemName || "",
     itemLength: item?.itemLength?.toString() || "",
     itemWidth: item?.itemWidth?.toString() || "",
@@ -404,18 +283,54 @@ export default class FormPage extends Component {
     super(props);
     this.state = {
       itemName: "",
-      itemWidth: 0,
-      itemHeight: 0,
-      itemLength: 0,
+      itemWidth: "",
+      itemHeight: "",
+      itemLength: "",
+      quantity: 1,
       items: [],
       showDetails: false,
       selectedItem: null,
-      unit: "inches",
-      selectedCarrier: "No Carrier",
-      quantity: 1,
+      isEditable: false,
       showSavePackageModal: false,
       packageName: "",
+      isLoading: false,
     };
+
+    // Only debounce validation/processing, not the actual input updates
+    this.processItemNameChange = debounce(this.processItemNameChange.bind(this), 300);
+  }
+
+  handleInputChange = (field, value) => {
+    this.setState({ [field]: value });
+  }
+
+  handleChange = (text) => {
+    this.setState({ itemName: text });
+    this.processItemNameChange(text);
+  }
+
+  processItemNameChange = (text) => {
+    // Any heavy processing or validation can go here
+    // This is debounced so it won't affect the input responsiveness
+  }
+
+  shouldComponentUpdate(nextProps, nextState) {
+    // Only update if these state values change
+    const relevantStateKeys = [
+      'itemName',
+      'itemLength',
+      'itemWidth',
+      'itemHeight',
+      'quantity',
+      'items',
+      'showDetails',
+      'selectedItem',
+      'showSavePackageModal',
+      'packageName',
+      'isLoading'
+    ];
+
+    return relevantStateKeys.some(key => this.state[key] !== nextState[key]);
   }
 
   componentDidMount() {
@@ -607,10 +522,6 @@ export default class FormPage extends Component {
     }
   };
 
-  handleChange = (itemName) => {
-    this.setState({ itemName });
-  };
-
   _storeData = async () => {
     try {
       const serializedItems = Buffer.from(
@@ -623,11 +534,42 @@ export default class FormPage extends Component {
     }
   };
 
+  prepareItemsForPacking = (items) => {
+    let itemsTotal = [];
+    
+    if (!items || !Array.isArray(items)) {
+      return null;
+    }
+    
+    items.forEach((item) => {
+      if (!item || !Array.isArray(item.replicatedNames)) {
+        console.warn("Invalid item or missing replicatedNames:", item);
+        return;
+      }
+      
+      item.replicatedNames.forEach((name) => {
+        itemsTotal.push([
+          item.itemLength,
+          item.itemWidth,
+          item.itemHeight,
+          item.id,
+          "No Carrier",
+          name,
+        ]);
+      });
+    });
+
+    return itemsTotal;
+  }
+
   handleVisualize = async () => {
     if (this.state.items.length === 0) {
       Alert.alert("No Items", "Please add at least one item before packing.");
       return;
     }
+
+    this.setState({ isLoading: true });
+
     try {
       const itemListString = await AsyncStorage.getItem("itemList");
       let itemList = [];
@@ -638,70 +580,52 @@ export default class FormPage extends Component {
         itemList = deserializedItems;
       }
 
-      this.setState({ items: itemList }, () => {
-        let itemsTotal = [];
-        // Add null checks and validation
-        if (!this.state.items || !Array.isArray(this.state.items)) {
-          Alert.alert("Error", "No valid items found.");
-          return;
-        }
-        
-        this.state.items.forEach((item) => {
-          if (!item || !Array.isArray(item.replicatedNames)) {
-            console.warn("Invalid item or missing replicatedNames:", item);
-            return; // Skip this item
-          }
+      // Use requestAnimationFrame to ensure smooth UI updates
+      requestAnimationFrame(() => {
+        this.setState({ items: itemList }, () => {
+          const itemsTotal = this.prepareItemsForPacking(this.state.items);
           
-          item.replicatedNames.forEach((name) => {
-            itemsTotal.push([
-              item.itemLength,
-              item.itemWidth,
-              item.itemHeight,
-              item.id,
-              "No Carrier", // Always use No Carrier initially
-              name,
-            ]);
+          if (!itemsTotal || itemsTotal.length === 0) {
+            this.setState({ isLoading: false });
+            Alert.alert("Error", "No valid items to pack.");
+            return;
+          }
+
+          const packedResult = pack(itemsTotal, "No Carrier", 0);
+          if (!packedResult || packedResult.length === 0) {
+            this.setState({ isLoading: false });
+            Alert.alert("Error", "Failed to pack items.");
+            return;
+          }
+
+          const scale = Math.max(packedResult.x, packedResult.y, packedResult.z) > 15 ? 20 : 10;
+          const itemsDisplay = createDisplay(packedResult, scale);
+          
+          if (!itemsDisplay || !Array.isArray(itemsDisplay)) {
+            this.setState({ isLoading: false });
+            Alert.alert("Error", "Failed to create display items.");
+            return;
+          }
+
+          const selectedBox = {
+            dimensions: [packedResult.x, packedResult.y, packedResult.z],
+            finalBoxType: packedResult.type,
+            priceText: packedResult.priceText
+          };
+
+          this.setState({ isLoading: false }, () => {
+            this.props.navigation.navigate("Display3D", {
+              box: packedResult,
+              itemsTotal: itemsDisplay,
+              selectedBox: selectedBox,
+              selectedCarrier: "No Carrier",
+              items: this.state.items,
+            });
           });
-        });
-
-        if (itemsTotal.length === 0) {
-          Alert.alert("Error", "No valid items to pack.");
-          return;
-        }
-
-        const packedResult = pack(itemsTotal, "No Carrier", 0);
-        if (!packedResult || packedResult.length === 0) {
-          Alert.alert("Error", "Failed to pack items.");
-          return;
-        }
-
-        const scale =
-          Math.max(packedResult.x, packedResult.y, packedResult.z) > 15
-            ? 20
-            : 10;
-        const itemsDisplay = createDisplay(packedResult, scale);
-        
-        // Validate itemsDisplay before navigation
-        if (!itemsDisplay || !Array.isArray(itemsDisplay)) {
-          Alert.alert("Error", "Failed to create display items.");
-          return;
-        }
-
-        const selectedBox = {
-          dimensions: [packedResult.x, packedResult.y, packedResult.z],
-          finalBoxType: packedResult.type,
-          priceText: packedResult.priceText
-        };
-
-        this.props.navigation.navigate("Display3D", {
-          box: packedResult,
-          itemsTotal: itemsDisplay,
-          selectedBox: selectedBox,
-          selectedCarrier: "No Carrier",
-          items: this.state.items,
         });
       });
     } catch (error) {
+      this.setState({ isLoading: false });
       console.error(error);
       Alert.alert("Error", "An error occurred while retrieving the item list");
     }
@@ -783,17 +707,44 @@ export default class FormPage extends Component {
     this.setState({ showDetails: true, selectedItem: item });
   };
 
-  render() {
-    const itemButtonColors = [
-      "#3B5998",
-      "#008080",
-      "#556B2F",
-      "#8B0000",
-      "#FF8C00",
-      "#6A0DAD",
-      "#008B8B",
-    ];
+  renderItem = (item, index) => {
+    const backgroundColor = itemButtonColors[index % itemButtonColors.length];
+    return (
+      <TouchableOpacity
+        key={item.id}
+        style={[styles.itemButton, { backgroundColor }]}
+        onPress={() => this.openModal(item)}
+      >
+        <Text 
+          style={styles.buttonText}
+          numberOfLines={1}
+          ellipsizeMode="tail"
+        >
+          {item.itemName}
+        </Text>
+      </TouchableOpacity>
+    );
+  }
 
+  renderItemsList = () => {
+    const { items } = this.state;
+    if (items.length === 0) {
+      return (
+        <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center', padding: 20 }}>
+          <Text style={{ color: '#94A3B8', fontSize: 16, textAlign: 'left', marginBottom: 10 }}>
+            No items added yet for this package.
+          </Text>
+          <Text style={{ color: '#94A3B8', fontSize: 16, textAlign: 'center' }}>
+            Add items above and access saved packages on the side menu.
+          </Text>
+        </View>
+      );
+    }
+
+    return items.map((item, index) => this.renderItem(item, index));
+  }
+
+  render() {
     return (
       <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
         <View style={styles.container}>
@@ -816,7 +767,7 @@ export default class FormPage extends Component {
               <TextInput
                 style={[styles.input, styles.condensedInput]}
                 value={this.state.itemLength}
-                onChangeText={(text) => this.setState({ itemLength: text })}
+                onChangeText={(text) => this.handleInputChange('itemLength', text)}
                 keyboardType="numeric"
                 keyboardAppearance="light"
                 placeholder="-- inches"
@@ -827,7 +778,7 @@ export default class FormPage extends Component {
               <TextInput
                 style={[styles.input, styles.condensedInput]}
                 value={this.state.itemWidth}
-                onChangeText={(text) => this.setState({ itemWidth: text })}
+                onChangeText={(text) => this.handleInputChange('itemWidth', text)}
                 keyboardType="numeric"
                 placeholder="-- inches"
                 keyboardAppearance="light"
@@ -838,7 +789,7 @@ export default class FormPage extends Component {
               <TextInput
                 style={[styles.input, styles.condensedInput]}
                 value={this.state.itemHeight}
-                onChangeText={(text) => this.setState({ itemHeight: text })}
+                onChangeText={(text) => this.handleInputChange('itemHeight', text)}
                 keyboardType="numeric"
                 placeholder="-- inches"
                 keyboardAppearance="light"
@@ -852,7 +803,7 @@ export default class FormPage extends Component {
                 onChangeText={(text) => {
                   const newQuantity = text === "" ? "" : parseInt(text);
                   if (!isNaN(newQuantity) || text === "") {
-                    this.setState({ quantity: newQuantity });
+                    this.handleInputChange('quantity', newQuantity);
                   }
                 }}
                 keyboardType="numeric"
@@ -873,39 +824,14 @@ export default class FormPage extends Component {
             <ScrollView
               style={styles.itemsContainer}
               contentContainerStyle={styles.itemsList}
+              removeClippedSubviews={true}
+              initialNumToRender={10}
+              maxToRenderPerBatch={5}
+              windowSize={5}
+              updateCellsBatchingPeriod={50}
+              keyboardShouldPersistTaps="handled"
             >
-              {this.state.items.length === 0 ? (
-                <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center', padding: 20 }}>
-                  <Text style={{ color: '#94A3B8', fontSize: 16, textAlign: 'left', marginBottom: 10 }}>
-                    No items added yet for this package.
-                  </Text>
-                  <Text style={{ color: '#94A3B8', fontSize: 16, textAlign: 'center' }}>
-                    Add items above and access saved packages on the side menu.
-                  </Text>
-                </View>
-              ) : (
-                this.state.items.map((item, index) => (
-                  <TouchableOpacity
-                    key={item.id}
-                    style={[
-                      styles.itemButton,
-                      {
-                        backgroundColor:
-                          itemButtonColors[index % itemButtonColors.length],
-                      },
-                    ]}
-                    onPress={() => this.openModal(item)}
-                  >
-                    <Text 
-                      style={styles.buttonText}
-                      numberOfLines={1}
-                      ellipsizeMode="tail"
-                    >
-                      {item.itemName}
-                    </Text>
-                  </TouchableOpacity>
-                ))
-              )}
+              {this.renderItemsList()}
             </ScrollView>
           </View>
 
@@ -919,8 +845,13 @@ export default class FormPage extends Component {
             <TouchableOpacity
               style={styles.visualizeButton}
               onPress={this.handleVisualize}
+              disabled={this.state.isLoading}
             >
-              <Text style={styles.buttonText}>Pack!</Text>
+              {this.state.isLoading ? (
+                <ActivityIndicator color="white" />
+              ) : (
+                <Text style={styles.buttonText}>Pack!</Text>
+              )}
             </TouchableOpacity>
           </View>
 
@@ -955,7 +886,7 @@ export default class FormPage extends Component {
                           paddingHorizontal: 16,
                         }]}
                         value={this.state.packageName}
-                        onChangeText={(text) => this.setState({ packageName: text })}
+                        onChangeText={(text) => this.handleInputChange('packageName', text)}
                         placeholder="e.g., Holiday Gifts 2024"
                         placeholderTextColor="#94A3B8"
                         autoFocus={true}
