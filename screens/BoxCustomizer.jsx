@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import {
   View,
   Text,
@@ -41,8 +41,10 @@ const BoxCustomizer = ({ navigation }) => {
     width: '',
     height: '',
   });
-  const [boxVolume, setBoxVolume] = useState(0);
-  const [usedVolume, setUsedVolume] = useState(0);
+  const [predefinedItems, setPredefinedItems] = useState([]);
+  const [customItems, setCustomItems] = useState([]);
+  const [predefinedUsedVolume, setPredefinedUsedVolume] = useState(0);
+  const [customUsedVolume, setCustomUsedVolume] = useState(0);
   const [customScene, setCustomScene] = useState(null);
   const [customCamera, setCustomCamera] = useState(null);
   const [customRenderer, setCustomRenderer] = useState(null);
@@ -54,23 +56,33 @@ const BoxCustomizer = ({ navigation }) => {
   const [predefinedCube, setPredefinedCube] = useState(null);
   const [predefinedGl, setPredefinedGl] = useState(null);
 
-  // Separate items state for custom and predefined boxes
-  const [customItems, setCustomItems] = useState([]);
-  const [predefinedItems, setPredefinedItems] = useState([]);
+  // Get current items and volume based on box type
+  const items = boxType === 'predefined' ? predefinedItems : customItems;
+  const usedVolume = boxType === 'predefined' ? predefinedUsedVolume : customUsedVolume;
+  const setItems = boxType === 'predefined' ? setPredefinedItems : setCustomItems;
+  const setUsedVolume = boxType === 'predefined' ? setPredefinedUsedVolume : setCustomUsedVolume;
 
-  // Get current items based on box type
-  const items = boxType === 'custom' ? customItems : predefinedItems;
-  const setItems = (newItems) => {
-    if (boxType === 'custom') {
-      setCustomItems(newItems);
-    } else {
-      setPredefinedItems(newItems);
+  // Get box volume based on type
+  const boxVolume = useMemo(() => {
+    if (boxType === 'predefined' && selectedBox) {
+      return calculateVolume(...selectedBox);
+    } else if (boxType === 'custom' && validateBoxDimensions(customDimensions)) {
+      return calculateVolume(
+        Number(customDimensions.length),
+        Number(customDimensions.width),
+        Number(customDimensions.height)
+      );
     }
-  };
+    return 0;
+  }, [boxType, selectedBox, customDimensions]);
 
   // Get available boxes based on selected carrier
   const availableBoxes = carrierBoxes(selectedCarrier);
 
+  // Helper function to calculate volume
+  const calculateVolume = (l, w, h) => l * w * h;
+
+  // Validate box dimensions
   const validateBoxDimensions = (dimensions) => {
     const { length, width, height } = dimensions;
     return !isNaN(length) && !isNaN(width) && !isNaN(height) &&
@@ -79,33 +91,20 @@ const BoxCustomizer = ({ navigation }) => {
 
   const validateItemDimensions = (item) => {
     const { length, width, height } = item;
-    if (!validateBoxDimensions({ length, width, height })) {
-      Alert.alert('Invalid Dimensions', 'Please enter valid dimensions for the item.');
-      return false;
-    }
     
-    const box = boxType === 'predefined' ? selectedBox : 
-      [Number(customDimensions.length), Number(customDimensions.width), Number(customDimensions.height)];
-    
-    if (!box) {
-      Alert.alert('No Box Selected', 'Please select or create a box first.');
-      return false;
-    }
-
-    // Check if item fits in the box
-    if (length > box[0] || width > box[1] || height > box[2]) {
-      Alert.alert('Item Too Large', 'The item dimensions exceed the box dimensions.');
+    // Basic validation for required fields and numeric values
+    if (!length || !width || !height || 
+        isNaN(Number(length)) || isNaN(Number(width)) || isNaN(Number(height)) ||
+        Number(length) <= 0 || Number(width) <= 0 || Number(height) <= 0) {
+      Alert.alert('Invalid Dimensions', 'Please enter valid positive dimensions for the item.');
       return false;
     }
 
     return true;
   };
 
-  const calculateVolume = (l, w, h) => l * w * h;
-
   const addItem = () => {
     if (!validateItemDimensions(currentItem)) {
-      Alert.alert('Error', 'Please enter valid item dimensions.');
       return;
     }
 
@@ -116,35 +115,43 @@ const BoxCustomizer = ({ navigation }) => {
       return;
     }
 
-    // Calculate volumes
+    // Create item with numeric dimensions
+    const newItem = {
+      ...currentItem,
+      length: Number(currentItem.length),
+      width: Number(currentItem.width),
+      height: Number(currentItem.height)
+    };
+
+    // Calculate volume for capacity check
     const itemVolume = calculateVolume(
-      Number(currentItem.length),
-      Number(currentItem.width),
-      Number(currentItem.height)
+      newItem.length,
+      newItem.width,
+      newItem.height
     );
 
     const newUsedVolume = usedVolume + itemVolume;
     if (newUsedVolume > boxVolume) {
-      Alert.alert('Error', 'Item exceeds remaining box volume.');
+      Alert.alert('Error', 'Not enough space in box.');
       return;
     }
 
     // Add item to the appropriate list
-    const newItems = [...items, { ...currentItem }];
-    setItems(newItems);
+    setItems([...items, newItem]);
     setUsedVolume(newUsedVolume);
     setCurrentItem({ length: '', width: '', height: '', name: '' });
   };
 
   const removeItem = (index) => {
-    const removedItem = items[index];
+    const item = items[index];
     const itemVolume = calculateVolume(
-      Number(removedItem.length),
-      Number(removedItem.width),
-      Number(removedItem.height)
+      Number(item.length),
+      Number(item.width),
+      Number(item.height)
     );
 
-    const newItems = items.filter((_, i) => i !== index);
+    const newItems = [...items];
+    newItems.splice(index, 1);
     setItems(newItems);
     setUsedVolume(usedVolume - itemVolume);
   };
@@ -483,33 +490,27 @@ const BoxCustomizer = ({ navigation }) => {
 
   // Reset items when switching box type
   useEffect(() => {
-    if (boxType === 'custom') {
-      updateCustomBoxDisplay();
-    } else {
-      updatePredefinedBoxDisplay();
-    }
+    setCurrentItem({ length: '', width: '', height: '', name: '' });
   }, [boxType]);
 
-  // Clear items when box dimensions change
+  // Clear items when changing predefined box
+  useEffect(() => {
+    if (boxType === 'predefined') {
+      setCurrentItem({ length: '', width: '', height: '', name: '' });
+    }
+  }, [selectedBox]);
+
+  // Clear items when changing custom box dimensions
   useEffect(() => {
     if (boxType === 'custom') {
-      setCustomItems([]);
-      setUsedVolume(0);
+      setCurrentItem({ length: '', width: '', height: '', name: '' });
     }
   }, [customDimensions]);
 
   useEffect(() => {
-    if (boxType === 'predefined') {
-      setPredefinedItems([]);
-      setUsedVolume(0);
-    }
-  }, [selectedBox]);
-
-  useEffect(() => {
     if (boxType === 'predefined' && selectedBox) {
       const volume = calculateVolume(selectedBox[0], selectedBox[1], selectedBox[2]);
-      setBoxVolume(volume);
-      setUsedVolume(0); // Reset used volume when box changes
+      setPredefinedUsedVolume(0); // Reset used volume when box changes
       setPredefinedItems([]); // Clear items when box changes
     } else if (boxType === 'custom' && validateBoxDimensions(customDimensions)) {
       const volume = calculateVolume(
@@ -517,8 +518,7 @@ const BoxCustomizer = ({ navigation }) => {
         Number(customDimensions.width),
         Number(customDimensions.height)
       );
-      setBoxVolume(volume);
-      setUsedVolume(0); // Reset used volume when box changes
+      setCustomUsedVolume(0); // Reset used volume when box changes
       setCustomItems([]); // Clear items when box changes
     }
   }, [boxType, selectedBox, customDimensions]);
