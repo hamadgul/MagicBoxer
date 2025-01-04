@@ -346,13 +346,15 @@ export default class FormPage extends Component {
           Buffer.from(itemListString, "base64").toString("utf8")
         );
         
-        // Ensure each item has replicatedNames
+        // Ensure each item has replicatedNames with proper structure
         const validatedItems = deserializedItems.map(item => {
-          if (!item.replicatedNames) {
+          if (!item.replicatedNames || !item.replicatedNames[0]?.id) {
             const quantity = item.quantity || 1;
-            item.replicatedNames = Array.from({ length: quantity }, (_, i) =>
-              i === 0 ? item.itemName : `${item.itemName} ${i + 1}`
-            );
+            item.replicatedNames = Array.from({ length: quantity }, (_, i) => ({
+              name: item.itemName,
+              id: generateUUID(),
+              parentId: item.id
+            }));
           }
           return item;
         });
@@ -460,9 +462,7 @@ export default class FormPage extends Component {
 
   handleUpdateItem = (updatedItem) => {
     const quantity = parseInt(updatedItem.quantity) || 1;
-    const replicatedNames = Array.from({ length: quantity }, (_, i) =>
-      i === 0 ? updatedItem.itemName : `${updatedItem.itemName} ${i + 1}`
-    );
+    const replicatedNames = Array.from({ length: quantity }, () => updatedItem.itemName);
 
     const updatedItemWithReplications = {
       ...updatedItem,
@@ -554,7 +554,7 @@ export default class FormPage extends Component {
           item.itemHeight,
           item.id,
           "No Carrier",
-          name,
+          item.itemName,
         ]);
       });
     });
@@ -675,12 +675,11 @@ export default class FormPage extends Component {
       return;
     }
 
-    const replicatedNames = Array.from({ length: quantity }, (_, i) =>
-      i === 0 ? this.state.itemName : `${this.state.itemName} ${i + 1}`
-    );
+    const id = generateUUID();
+    const replicatedNames = Array.from({ length: quantity }, () => this.state.itemName);
 
     const newItem = {
-      id: generateUUID(),
+      id: id,
       itemName: this.state.itemName,
       itemLength: length,
       itemWidth: width,

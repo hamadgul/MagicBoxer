@@ -521,56 +521,67 @@ export default class Display3D extends Component {
     const finalItems = [];
     let totalItemCount = 0;
 
-    // Group items by base name (remove numbers from the end)
+    // Group items by base name and parent ID
     itemsTotal.forEach(item => {
       if (!item) return;
       totalItemCount++;
       const name = item.itemName || "Unnamed Item";
-      const baseName = name.replace(/\d+$/, '').trim();
+      const baseKey = name.replace(/\s+\d+$/, ''); // Remove trailing numbers
       
-      if (!groupedItems[baseName]) {
-        groupedItems[baseName] = [];
+      if (!groupedItems[baseKey]) {
+        groupedItems[baseKey] = {
+          items: [],
+          baseItem: null
+        };
       }
-      groupedItems[baseName].push({
+      
+      // If this is the original item (no number suffix)
+      if (name === baseKey) {
+        groupedItems[baseKey].baseItem = item;
+      }
+      
+      groupedItems[baseKey].items.push({
         ...item,
         displayName: name,
-        sortKey: baseName
+        sortKey: baseKey
       });
     });
 
     // Create final items with proper grouping
-    Object.entries(groupedItems).forEach(([baseName, items]) => {
-      if (items.length === 1) {
-        const item = items[0];
+    Object.entries(groupedItems).forEach(([baseKey, group]) => {
+      if (group.items.length === 1) {
+        // Single item
+        const item = group.items[0];
         finalItems.push({
           ...item,
-          displayName: item.displayName || item.itemName || "Unnamed Item",
-          sortKey: baseName,
+          displayName: baseKey,
+          sortKey: baseKey,
           x: item.x,
           y: item.y,
           z: item.z,
         });
       } else {
-        // For multiple items, create a parent item
+        // Multiple items - create parent item
+        const baseItem = group.baseItem || group.items[0];
         finalItems.push({
-          displayName: baseName,
+          displayName: baseKey,
           isParent: true,
-          childItems: items.map((item, index) => ({
+          childItems: group.items.map((item, index) => ({
             ...item,
-            displayName: `${baseName} ${index + 1}`,
-            sortKey: `${baseName}_${index + 1}`,
+            displayName: baseKey,
+            sortKey: `${baseKey}_${index}`,
           })),
-          colors: [...new Set(items.map(item => item.color))], // Optimize unique colors calculation
-          sortKey: baseName,
-          x: items[0].x,
-          y: items[0].y,
-          z: items[0].z,
+          colors: [...new Set(group.items.map(item => item.color))],
+          sortKey: baseKey,
+          x: baseItem.x,
+          y: baseItem.y,
+          z: baseItem.z,
         });
       }
     });
 
     // Sort items alphabetically
-    finalItems.sort((a, b) => (a?.sortKey || '').localeCompare(b?.sortKey || ''));
+    finalItems.sort((a, b) => a.sortKey.localeCompare(b.sortKey));
 
     // Initialize animations for all items
     this.initializeAnimations(finalItems);
@@ -600,7 +611,6 @@ export default class Display3D extends Component {
                         item.childItems && item.childItems.length > 0 && !item.isParent && styles.legendItemWithBorder
                       ]}
                       onPress={() => {
-                        console.log('Item pressed:', item.displayName); // Debug log
                         if (item.isParent) {
                           this.toggleItemExpansion(item.displayName);
                         }
@@ -663,9 +673,9 @@ export default class Display3D extends Component {
                                 />
                               </View>
                               <Text style={styles.childItemText}>
-                                {childItem.displayName.replace(/\s\d+$/, '')}
+                                {childItem.displayName}
                                 <Text style={styles.childItemNumber}>
-                                  {' '}#{(childIndex + 1).toString().padStart(2, '0')}
+                                  {` #${(childIndex + 1).toString().padStart(2, '0')}`}
                                 </Text>
                               </Text>
                             </View>
@@ -1086,32 +1096,22 @@ const styles = StyleSheet.create({
   legendItem: {
     flexDirection: "row",
     alignItems: "center",
-    paddingVertical: 8,
-    paddingHorizontal: 12,
+    paddingVertical: 12,
+    paddingHorizontal: 16,
+    borderBottomWidth: 1,
+    borderBottomColor: '#E2E8F0',
   },
   legendItemParent: {
-    backgroundColor: "#f8f9fa",
-    borderRadius: 8,
-    marginVertical: 2,
-    shadowColor: "#000",
-    shadowOffset: {
-      width: 0,
-      height: 1,
-    },
-    shadowOpacity: 0.1,
-    shadowRadius: 1,
-    elevation: 1,
+    backgroundColor: '#F7FAFC',
   },
   legendItemWithBorder: {
-    borderWidth: 1,
-    borderColor: '#e1e1e1',
-    borderRadius: 8,
-    marginBottom: 8,
+    borderLeftWidth: 3,
+    borderLeftColor: '#4A5568',
   },
   legendItemLeft: {
-    flexDirection: "row",
-    alignItems: "center",
     flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
   },
   legendText: {
     fontSize: 16,
@@ -1166,42 +1166,35 @@ const styles = StyleSheet.create({
     paddingVertical: 20,
   },
   multiColorBoxContainer: {
+    position: 'relative',
     width: 24,
     height: 24,
-    borderRadius: 6,
-    marginRight: 8,
-    padding: 2,
-    backgroundColor: '#f0f4f8',
-    position: 'relative',
+    marginRight: 12,
   },
   multiColorBox: {
-    position: 'absolute',
-    top: 2,
-    left: 2,
-    right: 2,
-    bottom: 2,
+    width: '100%',
+    height: '100%',
     borderRadius: 4,
     overflow: 'hidden',
-    flexDirection: 'row',
+    position: 'relative',
   },
   multiColorSection: {
     position: 'absolute',
-    height: '100%',
+    top: 0,
   },
   itemCount: {
     position: 'absolute',
-    top: -8,
-    right: -8,
-    backgroundColor: '#007AFF',
-    width: 18,
-    height: 18,
-    borderRadius: 9,
-    color: '#fff',
-    fontSize: 11,
+    right: -6,
+    top: -6,
+    backgroundColor: '#4A5568',
+    color: 'white',
+    borderRadius: 10,
+    width: 20,
+    height: 20,
     textAlign: 'center',
+    lineHeight: 20,
+    fontSize: 12,
     overflow: 'hidden',
-    lineHeight: 18,
-    fontWeight: '500',
   },
   itemCountText: {
     fontSize: 10,
@@ -1210,51 +1203,50 @@ const styles = StyleSheet.create({
   },
   childItemsContainer: {
     overflow: 'hidden',
-    paddingLeft: 20,
   },
   childItemsScrollView: {
-    maxHeight: 200,
-    paddingRight: 10,
+    paddingLeft: 32,
   },
   childItem: {
     flexDirection: 'row',
     alignItems: 'center',
     paddingVertical: 8,
-    paddingRight: 10,
+    paddingHorizontal: 16,
   },
   childColorBox: {
     width: 20,
     height: 20,
-    borderRadius: 6,
-    marginRight: 8,
+    marginRight: 12,
+    borderRadius: 4,
     padding: 2,
-    backgroundColor: '#f0f4f8',
+    backgroundColor: '#E2E8F0',
   },
   childColorInner: {
-    flex: 1,
-    borderRadius: 4,
+    width: '100%',
+    height: '100%',
+    borderRadius: 2,
   },
   childItemText: {
     fontSize: 14,
-    color: '#4a5568',
-    fontWeight: '500',
+    color: '#4A5568',
   },
   childItemNumber: {
     fontSize: 13,
-    color: '#3B82F6',
-    fontWeight: '500',
+    color: '#718096',
+    fontFamily: Platform.OS === 'ios' ? 'Menlo' : 'monospace',
   },
   colorBox: {
     width: 24,
     height: 24,
-    borderRadius: 6,
-    marginRight: 8,
+    marginRight: 12,
+    borderRadius: 4,
     padding: 2,
-    backgroundColor: '#f0f4f8',
+    backgroundColor: '#E2E8F0',
   },
   colorBoxInner: {
-    flex: 1,
-    borderRadius: 4,
+    width: '100%',
+    height: '100%',
+    borderRadius: 2,
   },
   dimensionsContainer: {
     backgroundColor: '#EDF2F7',
