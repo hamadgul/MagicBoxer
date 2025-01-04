@@ -11,10 +11,13 @@ import {
 } from 'react-native';
 import { Dropdown } from 'react-native-element-dropdown';
 import { GLView } from 'expo-gl';
+import * as THREE from 'three';
+import { Renderer } from 'expo-three';
 import { carrierBoxes } from '../packing_algo/carrierBoxes';
-import Box3DRenderer from '../components/Box3DRenderer';
 import { createDisplay } from '../packing_algo/packing';
 import { getScale } from '../utils/boxSizes';
+import Box from '../packing_algo/Box';
+import Item from '../packing_algo/Item';
 
 const carrierData = [
   { label: 'No Carrier', value: 'No Carrier' },
@@ -114,23 +117,138 @@ const BoxCustomizer = ({ navigation }) => {
 
   const getBoxForRendering = () => {
     if (boxType === 'predefined' && selectedBox) {
+      const scale = getScale({
+        x: selectedBox[0],
+        y: selectedBox[1],
+        z: selectedBox[2]
+      });
+      
       return {
         x: selectedBox[0],
         y: selectedBox[1],
         z: selectedBox[2],
         type: selectedBox[3] || 'Custom Box',
         priceText: selectedBox[4] || '',
+        scale: scale
       };
     } else if (boxType === 'custom' && validateBoxDimensions(customDimensions)) {
+      const scale = getScale({
+        x: Number(customDimensions.length),
+        y: Number(customDimensions.width),
+        z: Number(customDimensions.height)
+      });
+      
       return {
         x: Number(customDimensions.length),
         y: Number(customDimensions.width),
         z: Number(customDimensions.height),
         type: 'Custom Box',
         priceText: '',
+        scale: scale
       };
     }
     return null;
+  };
+
+  const setupScene = () => {
+    const scene = new THREE.Scene();
+    scene.background = new THREE.Color(0xf0f0f0);
+
+    // Add ambient light
+    const ambientLight = new THREE.AmbientLight(0xffffff, 0.6);
+    scene.add(ambientLight);
+
+    // Add directional light
+    const directionalLight = new THREE.DirectionalLight(0xffffff, 0.8);
+    directionalLight.position.set(0, 20, 10);
+    scene.add(directionalLight);
+
+    return scene;
+  };
+
+  const createBoxMesh = (box, scale) => {
+    const geometry = new THREE.BoxGeometry(
+      box.x / scale,
+      box.y / scale,
+      box.z / scale
+    );
+    const material = new THREE.MeshBasicMaterial({
+      color: 0xffffff,
+      transparent: true,
+      opacity: 0.25,
+    });
+    const cube = new THREE.Mesh(geometry, material);
+
+    // Add wireframe
+    const wireframeGeometry = new THREE.EdgesGeometry(geometry);
+    const wireframeMaterial = new THREE.LineBasicMaterial({ color: 0x000000 });
+    const wireframe = new THREE.LineSegments(wireframeGeometry, wireframeMaterial);
+    cube.add(wireframe);
+
+    return cube;
+  };
+
+  const renderBox = () => {
+    const box = getBoxForRendering();
+    console.log('Box for rendering:', box);
+    if (!box) {
+      console.log('No box to render');
+      return null;
+    }
+
+    // Create array of item dimensions
+    const itemsTotal = items.map((item, index) => ([
+      Number(item.length),
+      Number(item.width),
+      Number(item.height),
+      item.name || `Item ${index + 1}`,
+      '',
+      item.name || `Item ${index + 1}`
+    ]));
+
+    return (
+      <View style={styles.previewContainer}>
+        <GLView
+          style={{ width: '100%', height: '100%' }}
+          onContextCreate={async (gl) => {
+            const scene = setupScene();
+            const camera = new THREE.PerspectiveCamera(
+              75,
+              gl.drawingBufferWidth / gl.drawingBufferHeight,
+              0.1,
+              1000
+            );
+            camera.position.set(-1.2, 0.5, 5);
+            camera.lookAt(0, 0, 0);
+
+            const renderer = new Renderer({ gl });
+            renderer.setSize(gl.drawingBufferWidth, gl.drawingBufferHeight);
+
+            // Create box mesh
+            const cube = createBoxMesh(box, box.scale);
+
+            // Create and add items
+            const displayItems = createDisplay(box, box.scale);
+            if (displayItems && displayItems.length > 0) {
+              displayItems.forEach(item => {
+                if (item.dis) {
+                  cube.add(item.dis);
+                }
+              });
+            }
+
+            scene.add(cube);
+
+            const animate = () => {
+              requestAnimationFrame(animate);
+              renderer.render(scene, camera);
+              gl.endFrameEXP();
+            };
+            animate();
+          }}
+        />
+      </View>
+    );
   };
 
   const isBoxSelected = (box) => {
@@ -316,20 +434,7 @@ const BoxCustomizer = ({ navigation }) => {
               <Text style={styles.sectionTitle}>Box Preview</Text>
             </View>
             <View style={styles.previewContainer}>
-              {getBoxForRendering() && (
-                <Box3DRenderer
-                  box={getBoxForRendering()}
-                  items={items.map((item, index) => ([
-                    item.length,
-                    item.width,
-                    item.height,
-                    item.name || `Item ${index + 1}`,
-                    '',
-                    item.name || `Item ${index + 1}`
-                  ]))}
-                  style={styles.preview}
-                />
-              )}
+              {renderBox()}
             </View>
             <View style={styles.volumeInfo}>
               <Text style={styles.volumeText}>
@@ -504,13 +609,19 @@ const styles = StyleSheet.create({
   },
   previewContainer: {
     height: 300,
-    backgroundColor: '#f8f8f8',
+    backgroundColor: '#ffffff',
     borderRadius: 8,
     overflow: 'hidden',
     marginBottom: 16,
+    position: 'relative',
   },
   preview: {
     flex: 1,
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
   },
   volumeInfo: {
     padding: 12,
