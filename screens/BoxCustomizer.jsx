@@ -35,7 +35,6 @@ const BoxCustomizer = ({ navigation }) => {
     width: '',
     height: '',
   });
-  const [items, setItems] = useState([]);
   const [currentItem, setCurrentItem] = useState({
     name: '',
     length: '',
@@ -44,11 +43,30 @@ const BoxCustomizer = ({ navigation }) => {
   });
   const [boxVolume, setBoxVolume] = useState(0);
   const [usedVolume, setUsedVolume] = useState(0);
-  const [scene, setScene] = useState(null);
-  const [cube, setCube] = useState(null);
-  const [camera, setCamera] = useState(null);
-  const [renderer, setRenderer] = useState(null);
-  const [gl, setGl] = useState(null);
+  const [customScene, setCustomScene] = useState(null);
+  const [customCamera, setCustomCamera] = useState(null);
+  const [customRenderer, setCustomRenderer] = useState(null);
+  const [customCube, setCustomCube] = useState(null);
+  const [customGl, setCustomGl] = useState(null);
+  const [predefinedScene, setPredefinedScene] = useState(null);
+  const [predefinedCamera, setPredefinedCamera] = useState(null);
+  const [predefinedRenderer, setPredefinedRenderer] = useState(null);
+  const [predefinedCube, setPredefinedCube] = useState(null);
+  const [predefinedGl, setPredefinedGl] = useState(null);
+
+  // Separate items state for custom and predefined boxes
+  const [customItems, setCustomItems] = useState([]);
+  const [predefinedItems, setPredefinedItems] = useState([]);
+
+  // Get current items based on box type
+  const items = boxType === 'custom' ? customItems : predefinedItems;
+  const setItems = (newItems) => {
+    if (boxType === 'custom') {
+      setCustomItems(newItems);
+    } else {
+      setPredefinedItems(newItems);
+    }
+  };
 
   // Get available boxes based on selected carrier
   const availableBoxes = carrierBoxes(selectedCarrier);
@@ -86,91 +104,102 @@ const BoxCustomizer = ({ navigation }) => {
   const calculateVolume = (l, w, h) => l * w * h;
 
   const addItem = () => {
-    if (!currentItem.length || !currentItem.width || !currentItem.height) {
-      Alert.alert('Error', 'Please enter all dimensions for the item.');
-      return;
-    }
-
-    // Validate that dimensions are numbers
-    const length = Number(currentItem.length);
-    const width = Number(currentItem.width);
-    const height = Number(currentItem.height);
-
-    if (isNaN(length) || isNaN(width) || isNaN(height)) {
-      Alert.alert('Error', 'Dimensions must be valid numbers.');
+    if (!validateItemDimensions(currentItem)) {
+      Alert.alert('Error', 'Please enter valid item dimensions.');
       return;
     }
 
     // Get current box
-    const box = getBoxForRendering();
+    const box = getCustomBoxForRendering() || getPredefinedBoxForRendering();
     if (!box) {
       Alert.alert('Error', 'Please select a box first.');
       return;
     }
 
-    // Create test array with current items plus new item
-    const testItems = [
-      ...items.map((item, index) => ({
-        itemLength: Number(item.length),
-        itemWidth: Number(item.width),
-        itemHeight: Number(item.height),
-        id: item.name || `Item ${index + 1}`,
-        replicatedNames: [item.name || `Item ${index + 1}`]
-      })),
-      {
-        itemLength: length,
-        itemWidth: width,
-        itemHeight: height,
-        id: currentItem.name || `Item ${items.length + 1}`,
-        replicatedNames: [currentItem.name || `Item ${items.length + 1}`]
-      }
-    ];
-
-    // Convert to format expected by pack function
-    const itemsForPacking = testItems.flatMap(item => 
-      item.replicatedNames.map(name => [
-        item.itemLength,
-        item.itemWidth,
-        item.itemHeight,
-        item.id,
-        '',
-        name
-      ])
+    // Calculate volumes
+    const itemVolume = calculateVolume(
+      Number(currentItem.length),
+      Number(currentItem.width),
+      Number(currentItem.height)
     );
 
-    // Try to pack all items including new one
-    const boxDimensions = [[box.x, box.y, box.z, box.type, box.priceText]];
-    const packedBox = pack(itemsForPacking, 'No Carrier', boxDimensions);
-    
-    if (!packedBox) {
-      Alert.alert('Box Full', 'This item would not fit in the box. Please select a larger box.');
+    const newUsedVolume = usedVolume + itemVolume;
+    if (newUsedVolume > boxVolume) {
+      Alert.alert('Error', 'Item exceeds remaining box volume.');
       return;
     }
 
-    // Calculate new item volume for tracking
-    const itemVolume = calculateVolume(length, width, height);
-    const newUsedVolume = usedVolume + itemVolume;
-
-    // If packing succeeded, add the item
-    setItems([...items, {
-      length: length,
-      width: width,
-      height: height,
-      name: currentItem.name || `Item ${items.length + 1}`
-    }]);
+    // Add item to the appropriate list
+    const newItems = [...items, { ...currentItem }];
+    setItems(newItems);
     setUsedVolume(newUsedVolume);
     setCurrentItem({ length: '', width: '', height: '', name: '' });
   };
 
-  const updateBoxDisplay = () => {
-    if (!scene || !gl) return;
+  const removeItem = (index) => {
+    const removedItem = items[index];
+    const itemVolume = calculateVolume(
+      Number(removedItem.length),
+      Number(removedItem.width),
+      Number(removedItem.height)
+    );
 
-    const box = getBoxForRendering();
+    const newItems = items.filter((_, i) => i !== index);
+    setItems(newItems);
+    setUsedVolume(usedVolume - itemVolume);
+  };
+
+  const getCustomBoxForRendering = () => {
+    if (boxType !== 'custom' || !validateBoxDimensions(customDimensions)) {
+      return null;
+    }
+
+    const scale = getScale({
+      x: Number(customDimensions.length),
+      y: Number(customDimensions.width),
+      z: Number(customDimensions.height)
+    });
+
+    return {
+      x: Number(customDimensions.length),
+      y: Number(customDimensions.width),
+      z: Number(customDimensions.height),
+      type: 'Custom Box',
+      scale: scale,
+      priceText: 'Custom Box'
+    };
+  };
+
+  const getPredefinedBoxForRendering = () => {
+    if (boxType !== 'predefined' || !selectedBox) {
+      return null;
+    }
+
+    const scale = getScale({
+      x: selectedBox[0],
+      y: selectedBox[1],
+      z: selectedBox[2]
+    });
+
+    return {
+      x: selectedBox[0],
+      y: selectedBox[1],
+      z: selectedBox[2],
+      type: selectedBox[3],
+      scale: scale,
+      priceText: selectedBox[4]
+    };
+  };
+
+  const updateCustomBoxDisplay = () => {
+    if (!customScene || !customGl || boxType !== 'custom') return;
+
+    const box = getCustomBoxForRendering();
     if (!box) return;
 
     // Remove old cube from scene if it exists
-    if (cube) {
-      scene.remove(cube);
+    if (customCube) {
+      customScene.remove(customCube);
     }
 
     try {
@@ -204,80 +233,72 @@ const BoxCustomizer = ({ navigation }) => {
         }
       }
 
-      scene.add(newCube);
-      setCube(newCube);
+      customScene.add(newCube);
+      setCustomCube(newCube);
 
       // Render the scene
-      if (renderer && camera) {
-        renderer.render(scene, camera);
-        gl.endFrameEXP();
+      if (customRenderer && customCamera) {
+        customRenderer.render(customScene, customCamera);
+        customGl.endFrameEXP();
       }
     } catch (error) {
-      console.error('Error updating box display:', error);
+      console.error('Error updating custom box display:', error);
     }
   };
 
-  useEffect(() => {
-    updateBoxDisplay();
-  }, [items, boxType, selectedBox, customDimensions]);
+  const updatePredefinedBoxDisplay = () => {
+    if (!predefinedScene || !predefinedGl || boxType !== 'predefined') return;
 
-  useEffect(() => {
-    if (boxType === 'predefined' && selectedBox) {
-      const volume = calculateVolume(selectedBox[0], selectedBox[1], selectedBox[2]);
-      setBoxVolume(volume);
-      setUsedVolume(0); // Reset used volume when box changes
-      setItems([]); // Clear items when box changes
-    } else if (boxType === 'custom' && validateBoxDimensions(customDimensions)) {
-      const volume = calculateVolume(
-        Number(customDimensions.length),
-        Number(customDimensions.width),
-        Number(customDimensions.height)
-      );
-      setBoxVolume(volume);
-      setUsedVolume(0); // Reset used volume when box changes
-      setItems([]); // Clear items when box changes
+    const box = getPredefinedBoxForRendering();
+    if (!box) return;
+
+    // Remove old cube from scene if it exists
+    if (predefinedCube) {
+      predefinedScene.remove(predefinedCube);
     }
-  }, [boxType, selectedBox, customDimensions]);
 
-  useEffect(() => {
-    if (items.length > 0 && scene && gl) {
-      updateBoxDisplay();
+    try {
+      // Create new cube with box dimensions
+      const newCube = createBoxMesh(box, box.scale);
+
+      // Convert items to format expected by pack function
+      const itemsForPacking = items.flatMap(item => ([
+        [Number(item.length),
+        Number(item.width),
+        Number(item.height),
+        item.name || 'Unnamed Item',
+        '',
+        item.name || 'Unnamed Item']
+      ]));
+
+      // Pack the items into the box
+      const boxDimensions = [[box.x, box.y, box.z, box.type, box.priceText]];
+      const packedBox = pack(itemsForPacking, 'No Carrier', boxDimensions);
+      
+      if (packedBox) {
+        const displayItems = createDisplay(packedBox, box.scale);
+        console.log('Display items:', displayItems);
+
+        if (displayItems && displayItems.length > 0) {
+          displayItems.forEach(item => {
+            if (item.dis) {
+              newCube.add(item.dis);
+            }
+          });
+        }
+      }
+
+      predefinedScene.add(newCube);
+      setPredefinedCube(newCube);
+
+      // Render the scene
+      if (predefinedRenderer && predefinedCamera) {
+        predefinedRenderer.render(predefinedScene, predefinedCamera);
+        predefinedGl.endFrameEXP();
+      }
+    } catch (error) {
+      console.error('Error updating predefined box display:', error);
     }
-  }, [items, scene, gl, selectedBox]);
-
-  const getBoxForRendering = () => {
-    if (boxType === 'predefined' && selectedBox) {
-      const scale = getScale({
-        x: selectedBox[0],
-        y: selectedBox[1],
-        z: selectedBox[2]
-      });
-
-      return {
-        x: Number(selectedBox[0]),
-        y: Number(selectedBox[1]),
-        z: Number(selectedBox[2]),
-        type: selectedBox[3] || 'Custom Box',
-        priceText: selectedBox[4] || '',
-        scale: scale
-      };
-    } else if (boxType === 'custom' && validateBoxDimensions(customDimensions)) {
-      const scale = getScale({
-        x: Number(customDimensions.length),
-        y: Number(customDimensions.width),
-        z: Number(customDimensions.height)
-      });
-
-      return {
-        x: Number(customDimensions.length),
-        y: Number(customDimensions.width),
-        z: Number(customDimensions.height),
-        type: 'Custom Box',
-        priceText: '',
-        scale: scale
-      };
-    }
-    return null;
   };
 
   const setupScene = () => {
@@ -319,58 +340,263 @@ const BoxCustomizer = ({ navigation }) => {
   };
 
   const renderBox = () => {
-    const box = getBoxForRendering();
-    console.log('Box for rendering:', box);
-    if (!box) {
-      console.log('No box to render');
-      return null;
-    }
+    if (boxType === 'custom') {
+      const box = getCustomBoxForRendering();
+      if (!box) return null;
 
-    return (
-      <View style={styles.previewContainer}>
-        <GLView
-          style={{ width: '100%', height: '100%' }}
-          onContextCreate={async (gl) => {
-            const newScene = setupScene();
-            const newCamera = new THREE.PerspectiveCamera(
-              75,
-              gl.drawingBufferWidth / gl.drawingBufferHeight,
-              0.1,
-              1000
-            );
-            newCamera.position.set(-1.2, 0.5, 5);
-            newCamera.lookAt(0, 0, 0);
+      const customKey = `custom-gl-view-${customDimensions.length}-${customDimensions.width}-${customDimensions.height}`;
 
-            const newRenderer = new Renderer({ gl });
-            newRenderer.setSize(gl.drawingBufferWidth, gl.drawingBufferHeight);
-
-            // Create initial box mesh
-            const newCube = createBoxMesh(box, box.scale);
-            newScene.add(newCube);
-
-            // Store references
-            setScene(newScene);
-            setCube(newCube);
-            setCamera(newCamera);
-            setRenderer(newRenderer);
-            setGl(gl);
-
-            const animate = () => {
-              requestAnimationFrame(animate);
-              if (newRenderer && newCamera && newScene) {
-                newRenderer.render(newScene, newCamera);
-                gl.endFrameEXP();
+      return (
+        <View style={styles.previewContainer}>
+          <GLView
+            key={customKey}
+            style={{ width: '100%', height: '100%' }}
+            onContextCreate={async (gl) => {
+              // Clear any existing scenes
+              if (customScene) {
+                customScene.clear();
+                setCustomScene(null);
               }
-            };
-            animate();
+              if (customRenderer) {
+                customRenderer.dispose();
+                setCustomRenderer(null);
+              }
 
-            // Initial display update
-            updateBoxDisplay();
-          }}
-        />
-      </View>
-    );
+              const newScene = setupScene();
+              const newCamera = new THREE.PerspectiveCamera(
+                75,
+                gl.drawingBufferWidth / gl.drawingBufferHeight,
+                0.1,
+                1000
+              );
+              newCamera.position.set(-1.2, 0.5, 5);
+              newCamera.lookAt(0, 0, 0);
+
+              const newRenderer = new Renderer({ gl });
+              newRenderer.setSize(gl.drawingBufferWidth, gl.drawingBufferHeight);
+
+              // Create initial box mesh
+              const newCube = createBoxMesh(box, box.scale);
+              newScene.add(newCube);
+
+              // Store references in custom state
+              setCustomScene(newScene);
+              setCustomCube(newCube);
+              setCustomCamera(newCamera);
+              setCustomRenderer(newRenderer);
+              setCustomGl(gl);
+
+              const animate = () => {
+                requestAnimationFrame(animate);
+                if (newRenderer && newCamera && newScene) {
+                  newRenderer.render(newScene, newCamera);
+                  gl.endFrameEXP();
+                }
+              };
+              animate();
+
+              // Initial display update
+              if (customItems.length > 0) {
+                updateCustomBoxDisplay();
+              }
+            }}
+          />
+        </View>
+      );
+    } else {
+      const box = getPredefinedBoxForRendering();
+      if (!box) return null;
+
+      // Create unique key based on selected box dimensions
+      const predefinedKey = selectedBox ? `predefined-gl-view-${selectedBox[0]}-${selectedBox[1]}-${selectedBox[2]}` : 'predefined-gl-view';
+
+      return (
+        <View style={styles.previewContainer}>
+          <GLView
+            key={predefinedKey}
+            style={{ width: '100%', height: '100%' }}
+            onContextCreate={async (gl) => {
+              // Clear any existing scenes
+              if (predefinedScene) {
+                predefinedScene.clear();
+                setPredefinedScene(null);
+              }
+              if (predefinedRenderer) {
+                predefinedRenderer.dispose();
+                setPredefinedRenderer(null);
+              }
+
+              const newScene = setupScene();
+              const newCamera = new THREE.PerspectiveCamera(
+                75,
+                gl.drawingBufferWidth / gl.drawingBufferHeight,
+                0.1,
+                1000
+              );
+              newCamera.position.set(-1.2, 0.5, 5);
+              newCamera.lookAt(0, 0, 0);
+
+              const newRenderer = new Renderer({ gl });
+              newRenderer.setSize(gl.drawingBufferWidth, gl.drawingBufferHeight);
+
+              // Create initial box mesh
+              const newCube = createBoxMesh(box, box.scale);
+              newScene.add(newCube);
+
+              // Store references in predefined state
+              setPredefinedScene(newScene);
+              setPredefinedCube(newCube);
+              setPredefinedCamera(newCamera);
+              setPredefinedRenderer(newRenderer);
+              setPredefinedGl(gl);
+
+              const animate = () => {
+                requestAnimationFrame(animate);
+                if (newRenderer && newCamera && newScene) {
+                  newRenderer.render(newScene, newCamera);
+                  gl.endFrameEXP();
+                }
+              };
+              animate();
+
+              // Initial display update
+              if (predefinedItems.length > 0) {
+                updatePredefinedBoxDisplay();
+              }
+            }}
+          />
+        </View>
+      );
+    }
   };
+
+  // Update display when items or box changes
+  useEffect(() => {
+    if (items.length > 0) {
+      if (boxType === 'custom' && customScene && customGl) {
+        updateCustomBoxDisplay();
+      } else if (boxType === 'predefined' && predefinedScene && predefinedGl) {
+        updatePredefinedBoxDisplay();
+      }
+    }
+  }, [items, boxType, selectedBox, customDimensions]);
+
+  // Reset items when switching box type
+  useEffect(() => {
+    if (boxType === 'custom') {
+      updateCustomBoxDisplay();
+    } else {
+      updatePredefinedBoxDisplay();
+    }
+  }, [boxType]);
+
+  // Clear items when box dimensions change
+  useEffect(() => {
+    if (boxType === 'custom') {
+      setCustomItems([]);
+      setUsedVolume(0);
+    }
+  }, [customDimensions]);
+
+  useEffect(() => {
+    if (boxType === 'predefined') {
+      setPredefinedItems([]);
+      setUsedVolume(0);
+    }
+  }, [selectedBox]);
+
+  useEffect(() => {
+    if (boxType === 'predefined' && selectedBox) {
+      const volume = calculateVolume(selectedBox[0], selectedBox[1], selectedBox[2]);
+      setBoxVolume(volume);
+      setUsedVolume(0); // Reset used volume when box changes
+      setPredefinedItems([]); // Clear items when box changes
+    } else if (boxType === 'custom' && validateBoxDimensions(customDimensions)) {
+      const volume = calculateVolume(
+        Number(customDimensions.length),
+        Number(customDimensions.width),
+        Number(customDimensions.height)
+      );
+      setBoxVolume(volume);
+      setUsedVolume(0); // Reset used volume when box changes
+      setCustomItems([]); // Clear items when box changes
+    }
+  }, [boxType, selectedBox, customDimensions]);
+
+  // Clear scenes when switching box types
+  useEffect(() => {
+    if (boxType === 'custom') {
+      if (predefinedScene) {
+        predefinedScene.clear();
+        setPredefinedScene(null);
+      }
+      if (predefinedRenderer) {
+        predefinedRenderer.dispose();
+        setPredefinedRenderer(null);
+      }
+      setPredefinedCube(null);
+      setPredefinedGl(null);
+      setPredefinedCamera(null);
+    } else {
+      if (customScene) {
+        customScene.clear();
+        setCustomScene(null);
+      }
+      if (customRenderer) {
+        customRenderer.dispose();
+        setCustomRenderer(null);
+      }
+      setCustomCube(null);
+      setCustomGl(null);
+      setCustomCamera(null);
+    }
+  }, [boxType]);
+
+  // Cleanup effect
+  useEffect(() => {
+    return () => {
+      if (customScene) {
+        customScene.clear();
+      }
+      if (predefinedScene) {
+        predefinedScene.clear();
+      }
+      if (customRenderer) {
+        customRenderer.dispose();
+      }
+      if (predefinedRenderer) {
+        predefinedRenderer.dispose();
+      }
+    };
+  }, []);
+
+  useEffect(() => {
+    if (boxType === 'predefined' && predefinedScene) {
+      predefinedScene.clear();
+      setPredefinedScene(null);
+      if (predefinedRenderer) {
+        predefinedRenderer.dispose();
+        setPredefinedRenderer(null);
+      }
+      setPredefinedCube(null);
+      setPredefinedGl(null);
+      setPredefinedCamera(null);
+    }
+  }, [selectedBox]);
+
+  useEffect(() => {
+    if (boxType === 'custom' && customScene) {
+      customScene.clear();
+      setCustomScene(null);
+      if (customRenderer) {
+        customRenderer.dispose();
+        setCustomRenderer(null);
+      }
+      setCustomCube(null);
+      setCustomGl(null);
+      setCustomCamera(null);
+    }
+  }, [customDimensions]);
 
   const isBoxSelected = (box) => {
     if (!selectedBox || !box) return false;
