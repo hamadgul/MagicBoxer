@@ -14,10 +14,10 @@ import { GLView } from 'expo-gl';
 import * as THREE from 'three';
 import { Renderer } from 'expo-three';
 import { carrierBoxes } from '../packing_algo/carrierBoxes';
-import { createDisplay } from '../packing_algo/packing';
 import { getScale } from '../utils/boxSizes';
 import Box from '../packing_algo/Box';
 import Item from '../packing_algo/Item';
+import { createDisplay, fitItem, checkDimensions, pack } from '../packing_algo/packing';
 
 const carrierData = [
   { label: 'No Carrier', value: 'No Carrier' },
@@ -44,6 +44,11 @@ const BoxCustomizer = ({ navigation }) => {
   });
   const [boxVolume, setBoxVolume] = useState(0);
   const [usedVolume, setUsedVolume] = useState(0);
+  const [scene, setScene] = useState(null);
+  const [cube, setCube] = useState(null);
+  const [camera, setCamera] = useState(null);
+  const [renderer, setRenderer] = useState(null);
+  const [gl, setGl] = useState(null);
 
   // Get available boxes based on selected carrier
   const availableBoxes = carrierBoxes(selectedCarrier);
@@ -81,39 +86,164 @@ const BoxCustomizer = ({ navigation }) => {
   const calculateVolume = (l, w, h) => l * w * h;
 
   const addItem = () => {
-    if (!validateItemDimensions(currentItem)) return;
-
-    const newItem = {
-      ...currentItem,
-      length: Number(currentItem.length),
-      width: Number(currentItem.width),
-      height: Number(currentItem.height),
-    };
-
-    const itemVolume = calculateVolume(newItem.length, newItem.width, newItem.height);
-    const newUsedVolume = usedVolume + itemVolume;
-
-    if (newUsedVolume > boxVolume) {
-      Alert.alert('Box Full', 'This item would exceed the box volume. Please select a larger box.');
+    if (!currentItem.length || !currentItem.width || !currentItem.height) {
+      Alert.alert('Error', 'Please enter all dimensions for the item.');
       return;
     }
 
-    setItems([...items, newItem]);
+    // Validate that dimensions are numbers
+    const length = Number(currentItem.length);
+    const width = Number(currentItem.width);
+    const height = Number(currentItem.height);
+
+    if (isNaN(length) || isNaN(width) || isNaN(height)) {
+      Alert.alert('Error', 'Dimensions must be valid numbers.');
+      return;
+    }
+
+    // Get current box
+    const box = getBoxForRendering();
+    if (!box) {
+      Alert.alert('Error', 'Please select a box first.');
+      return;
+    }
+
+    // Create test array with current items plus new item
+    const testItems = [
+      ...items.map((item, index) => ({
+        itemLength: Number(item.length),
+        itemWidth: Number(item.width),
+        itemHeight: Number(item.height),
+        id: item.name || `Item ${index + 1}`,
+        replicatedNames: [item.name || `Item ${index + 1}`]
+      })),
+      {
+        itemLength: length,
+        itemWidth: width,
+        itemHeight: height,
+        id: currentItem.name || `Item ${items.length + 1}`,
+        replicatedNames: [currentItem.name || `Item ${items.length + 1}`]
+      }
+    ];
+
+    // Convert to format expected by pack function
+    const itemsForPacking = testItems.flatMap(item => 
+      item.replicatedNames.map(name => [
+        item.itemLength,
+        item.itemWidth,
+        item.itemHeight,
+        item.id,
+        '',
+        name
+      ])
+    );
+
+    // Try to pack all items including new one
+    const boxDimensions = [[box.x, box.y, box.z, box.type, box.priceText]];
+    const packedBox = pack(itemsForPacking, 'No Carrier', boxDimensions);
+    
+    if (!packedBox) {
+      Alert.alert('Box Full', 'This item would not fit in the box. Please select a larger box.');
+      return;
+    }
+
+    // Calculate new item volume for tracking
+    const itemVolume = calculateVolume(length, width, height);
+    const newUsedVolume = usedVolume + itemVolume;
+
+    // If packing succeeded, add the item
+    setItems([...items, {
+      length: length,
+      width: width,
+      height: height,
+      name: currentItem.name || `Item ${items.length + 1}`
+    }]);
     setUsedVolume(newUsedVolume);
-    setCurrentItem({ name: '', length: '', width: '', height: '' });
+    setCurrentItem({ length: '', width: '', height: '', name: '' });
+  };
+
+  const updateBoxDisplay = () => {
+    if (!scene || !gl) return;
+
+    const box = getBoxForRendering();
+    if (!box) return;
+
+    // Remove old cube from scene if it exists
+    if (cube) {
+      scene.remove(cube);
+    }
+
+    try {
+      // Create new cube with box dimensions
+      const newCube = createBoxMesh(box, box.scale);
+
+      // Convert items to format expected by pack function
+      const itemsForPacking = items.flatMap(item => ([
+        [Number(item.length),
+        Number(item.width),
+        Number(item.height),
+        item.name || 'Unnamed Item',
+        '',
+        item.name || 'Unnamed Item']
+      ]));
+
+      // Pack the items into the box
+      const boxDimensions = [[box.x, box.y, box.z, box.type, box.priceText]];
+      const packedBox = pack(itemsForPacking, 'No Carrier', boxDimensions);
+      
+      if (packedBox) {
+        const displayItems = createDisplay(packedBox, box.scale);
+        console.log('Display items:', displayItems);
+
+        if (displayItems && displayItems.length > 0) {
+          displayItems.forEach(item => {
+            if (item.dis) {
+              newCube.add(item.dis);
+            }
+          });
+        }
+      }
+
+      scene.add(newCube);
+      setCube(newCube);
+
+      // Render the scene
+      if (renderer && camera) {
+        renderer.render(scene, camera);
+        gl.endFrameEXP();
+      }
+    } catch (error) {
+      console.error('Error updating box display:', error);
+    }
   };
 
   useEffect(() => {
+    updateBoxDisplay();
+  }, [items, boxType, selectedBox, customDimensions]);
+
+  useEffect(() => {
     if (boxType === 'predefined' && selectedBox) {
-      setBoxVolume(calculateVolume(selectedBox[0], selectedBox[1], selectedBox[2]));
+      const volume = calculateVolume(selectedBox[0], selectedBox[1], selectedBox[2]);
+      setBoxVolume(volume);
+      setUsedVolume(0); // Reset used volume when box changes
+      setItems([]); // Clear items when box changes
     } else if (boxType === 'custom' && validateBoxDimensions(customDimensions)) {
-      setBoxVolume(calculateVolume(
+      const volume = calculateVolume(
         Number(customDimensions.length),
         Number(customDimensions.width),
         Number(customDimensions.height)
-      ));
+      );
+      setBoxVolume(volume);
+      setUsedVolume(0); // Reset used volume when box changes
+      setItems([]); // Clear items when box changes
     }
   }, [boxType, selectedBox, customDimensions]);
+
+  useEffect(() => {
+    if (items.length > 0 && scene && gl) {
+      updateBoxDisplay();
+    }
+  }, [items, scene, gl, selectedBox]);
 
   const getBoxForRendering = () => {
     if (boxType === 'predefined' && selectedBox) {
@@ -122,11 +252,11 @@ const BoxCustomizer = ({ navigation }) => {
         y: selectedBox[1],
         z: selectedBox[2]
       });
-      
+
       return {
-        x: selectedBox[0],
-        y: selectedBox[1],
-        z: selectedBox[2],
+        x: Number(selectedBox[0]),
+        y: Number(selectedBox[1]),
+        z: Number(selectedBox[2]),
         type: selectedBox[3] || 'Custom Box',
         priceText: selectedBox[4] || '',
         scale: scale
@@ -137,7 +267,7 @@ const BoxCustomizer = ({ navigation }) => {
         y: Number(customDimensions.width),
         z: Number(customDimensions.height)
       });
-      
+
       return {
         x: Number(customDimensions.length),
         y: Number(customDimensions.width),
@@ -196,55 +326,46 @@ const BoxCustomizer = ({ navigation }) => {
       return null;
     }
 
-    // Create array of item dimensions
-    const itemsTotal = items.map((item, index) => ([
-      Number(item.length),
-      Number(item.width),
-      Number(item.height),
-      item.name || `Item ${index + 1}`,
-      '',
-      item.name || `Item ${index + 1}`
-    ]));
-
     return (
       <View style={styles.previewContainer}>
         <GLView
           style={{ width: '100%', height: '100%' }}
           onContextCreate={async (gl) => {
-            const scene = setupScene();
-            const camera = new THREE.PerspectiveCamera(
+            const newScene = setupScene();
+            const newCamera = new THREE.PerspectiveCamera(
               75,
               gl.drawingBufferWidth / gl.drawingBufferHeight,
               0.1,
               1000
             );
-            camera.position.set(-1.2, 0.5, 5);
-            camera.lookAt(0, 0, 0);
+            newCamera.position.set(-1.2, 0.5, 5);
+            newCamera.lookAt(0, 0, 0);
 
-            const renderer = new Renderer({ gl });
-            renderer.setSize(gl.drawingBufferWidth, gl.drawingBufferHeight);
+            const newRenderer = new Renderer({ gl });
+            newRenderer.setSize(gl.drawingBufferWidth, gl.drawingBufferHeight);
 
-            // Create box mesh
-            const cube = createBoxMesh(box, box.scale);
+            // Create initial box mesh
+            const newCube = createBoxMesh(box, box.scale);
+            newScene.add(newCube);
 
-            // Create and add items
-            const displayItems = createDisplay(box, box.scale);
-            if (displayItems && displayItems.length > 0) {
-              displayItems.forEach(item => {
-                if (item.dis) {
-                  cube.add(item.dis);
-                }
-              });
-            }
-
-            scene.add(cube);
+            // Store references
+            setScene(newScene);
+            setCube(newCube);
+            setCamera(newCamera);
+            setRenderer(newRenderer);
+            setGl(gl);
 
             const animate = () => {
               requestAnimationFrame(animate);
-              renderer.render(scene, camera);
-              gl.endFrameEXP();
+              if (newRenderer && newCamera && newScene) {
+                newRenderer.render(newScene, newCamera);
+                gl.endFrameEXP();
+              }
             };
             animate();
+
+            // Initial display update
+            updateBoxDisplay();
           }}
         />
       </View>
