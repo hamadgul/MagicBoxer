@@ -62,9 +62,19 @@ const BoxCustomizer = ({ navigation }) => {
   const setItems = boxType === 'predefined' ? setPredefinedItems : setCustomItems;
   const setUsedVolume = boxType === 'predefined' ? setPredefinedUsedVolume : setCustomUsedVolume;
 
+  // Helper function to calculate volume
+  const calculateVolume = (l, w, h) => l * w * h;
+
+  // Validate box dimensions
+  const validateBoxDimensions = (dimensions) => {
+    const { length, width, height } = dimensions;
+    return !isNaN(length) && !isNaN(width) && !isNaN(height) &&
+           length > 0 && width > 0 && height > 0;
+  };
+
   // Get box volume based on type
   const boxVolume = useMemo(() => {
-    if (boxType === 'predefined' && selectedBox) {
+    if (boxType === 'predefined' && selectedBox && Array.isArray(selectedBox)) {
       return calculateVolume(...selectedBox);
     } else if (boxType === 'custom' && validateBoxDimensions(customDimensions)) {
       return calculateVolume(
@@ -79,16 +89,7 @@ const BoxCustomizer = ({ navigation }) => {
   // Get available boxes based on selected carrier
   const availableBoxes = carrierBoxes(selectedCarrier);
 
-  // Helper function to calculate volume
-  const calculateVolume = (l, w, h) => l * w * h;
-
-  // Validate box dimensions
-  const validateBoxDimensions = (dimensions) => {
-    const { length, width, height } = dimensions;
-    return !isNaN(length) && !isNaN(width) && !isNaN(height) &&
-           length > 0 && width > 0 && height > 0;
-  };
-
+  // Validate item dimensions
   const validateItemDimensions = (item) => {
     const { length, width, height } = item;
     
@@ -551,24 +552,6 @@ const BoxCustomizer = ({ navigation }) => {
       setCustomCamera(null);
     }
   }, [boxType]);
-
-  // Cleanup effect
-  useEffect(() => {
-    return () => {
-      if (customScene) {
-        customScene.clear();
-      }
-      if (predefinedScene) {
-        predefinedScene.clear();
-      }
-      if (customRenderer) {
-        customRenderer.dispose();
-      }
-      if (predefinedRenderer) {
-        predefinedRenderer.dispose();
-      }
-    };
-  }, []);
 
   useEffect(() => {
     if (boxType === 'predefined' && predefinedScene) {
