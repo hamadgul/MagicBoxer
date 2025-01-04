@@ -511,6 +511,43 @@ export default class Display3D extends Component {
     }));
   };
 
+  calculateModalHeight = (items) => {
+    // Base height for header and close button
+    const baseHeight = 150;
+    // Height per item and child item
+    const heightPerItem = 60;
+    const heightPerChildItem = 40;
+    const maxHeight = '70%';
+    const minHeight = '25%';
+    
+    let totalHeight = baseHeight;
+    
+    // Calculate total height including expanded items
+    items.forEach(item => {
+      totalHeight += heightPerItem; // Add height for the main item
+      
+      // If item has children (quantity > 1), add their heights
+      if (item.childItems && item.childItems.length > 0) {
+        // Only add child heights if the item is expanded
+        if (this.state.expandedItems[item.displayName]) {
+          // Add height for each child item, capped at a reasonable amount
+          const childrenHeight = Math.min(item.childItems.length * heightPerChildItem, 200);
+          totalHeight += childrenHeight;
+        }
+      }
+    });
+    
+    const viewportHeight = Dimensions.get('window').height;
+    const maxHeightPixels = (parseInt(maxHeight) / 100) * viewportHeight;
+    const minHeightPixels = (parseInt(minHeight) / 100) * viewportHeight;
+    
+    // Clamp the height between min and max
+    const clampedHeight = Math.max(minHeightPixels, Math.min(totalHeight, maxHeightPixels));
+    
+    // Convert back to percentage
+    return `${Math.round((clampedHeight / viewportHeight) * 100)}%`;
+  }
+
   renderLegendModal = () => {
     const { itemsTotal, isLegendVisible, expandedItems } = this.state;
 
@@ -593,7 +630,7 @@ export default class Display3D extends Component {
         onRequestClose={this.toggleLegend}
       >
         <View style={styles.modalOverlay}>
-          <View style={styles.modalContent}>
+          <View style={[styles.modalContent, { height: this.calculateModalHeight(finalItems) }]}>
             <View style={styles.legendHeader}>
               <Text style={styles.legendTitle}>Legend</Text>
               <Text style={styles.totalItemsText}>
@@ -1067,7 +1104,6 @@ const styles = StyleSheet.create({
     borderRadius: 10,
     padding: 20,
     width: '90%',
-    maxHeight: '80%',
   },
   legendHeader: {
     flexDirection: 'row',
