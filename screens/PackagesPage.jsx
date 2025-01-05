@@ -397,7 +397,10 @@ export default class PackagesPage extends Component {
         }}
       >
         <View style={styles.container}>
-          <ScrollView style={styles.scrollView}>
+          <ScrollView 
+            style={styles.scrollView}
+            contentContainerStyle={styles.scrollViewContent}
+          >
             {Object.keys(packages).map(this.renderPackage)}
           </ScrollView>
 
@@ -631,6 +634,9 @@ const styles = StyleSheet.create({
     flex: 1,
     padding: 10,
     paddingBottom: 96, // Reduced padding since buttons are side by side
+  },
+  scrollViewContent: {
+    paddingBottom: 96, // Add padding at the bottom of the ScrollView
   },
   packageRow: {
     flexDirection: "row",
