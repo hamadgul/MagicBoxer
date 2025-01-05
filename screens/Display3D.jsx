@@ -23,7 +23,7 @@ import { Dropdown } from "react-native-element-dropdown";
 import AntDesign from "@expo/vector-icons/AntDesign";
 import { pack, createDisplay } from "../packing_algo/packing";
 import { isSpecialSize, getScale } from "../utils/boxSizes";
-import { createBoxMesh, setupScene } from "../utils/renderUtils";
+import { setupScene } from "../utils/renderUtils";
 import { RENDER_CONFIG } from "../utils/renderConfig";
 import Slider from "@react-native-community/slider";
 
@@ -632,110 +632,113 @@ export default class Display3D extends Component {
         onRequestClose={this.toggleLegend}
       >
         <View style={styles.modalOverlay}>
-          <View style={[styles.modalContent, { height: this.calculateModalHeight(finalItems) }]}>
-            <View style={styles.modalInnerContent}>
-              <View style={styles.legendHeader}>
+          <View style={styles.modalContent}>
+            <View style={styles.legendHeader}>
+              <View style={styles.legendTitleContainer}>
                 <Text style={styles.legendTitle}>Legend</Text>
+              </View>
+              <View style={styles.legendDivider} />
+              <View style={styles.totalItemsContainer}>
                 <Text style={styles.totalItemsText}>
                   {totalItemCount} {totalItemCount === 1 ? 'Item' : 'Total Items'}
                 </Text>
               </View>
-              <ScrollView style={styles.legendScrollView}>
-                {finalItems.length > 0 ? (
-                  finalItems.map((item, index) => (
-                    <View key={index}>
-                      <TouchableOpacity
-                        style={[
-                          styles.legendItem, 
-                          item.isParent && styles.legendItemParent,
-                          item.childItems && item.childItems.length > 0 && !item.isParent && styles.legendItemWithBorder
-                        ]}
-                        onPress={() => {
-                          if (item.isParent) {
-                            this.toggleItemExpansion(item.displayName);
-                          }
-                        }}
-                        activeOpacity={item.isParent ? 0.6 : 1}
-                      >
-                        <View style={styles.legendItemLeft}>
-                          {item.isParent ? (
-                            <View style={styles.multiColorBoxContainer}>
-                              {this.renderMultiColorBox(item.colors)}
-                              <Text style={styles.itemCount}>
-                                {item.childItems.length}
-                              </Text>
-                            </View>
-                          ) : (
-                            <View style={styles.colorBox}>
-                              <View 
-                                style={[
-                                  styles.colorBoxInner,
-                                  { backgroundColor: item.color }
-                                ]}
-                              />
-                            </View>
-                          )}
-                          <Text style={styles.legendText}>
-                            {item.displayName}
-                          </Text>
-                          <View style={styles.dimensionsContainer}>
-                            <Text style={styles.dimensionsText}>
-                              {`${item.x}L × ${item.y}W × ${item.z}H`}
+            </View>
+            <ScrollView style={styles.legendScrollView}>
+              {finalItems.length > 0 ? (
+                finalItems.map((item, index) => (
+                  <View key={index}>
+                    <TouchableOpacity
+                      style={[
+                        styles.legendItem, 
+                        item.isParent && styles.legendItemParent,
+                        item.childItems && item.childItems.length > 0 && !item.isParent && styles.legendItemWithBorder
+                      ]}
+                      onPress={() => {
+                        if (item.isParent) {
+                          this.toggleItemExpansion(item.displayName);
+                        }
+                      }}
+                      activeOpacity={item.isParent ? 0.6 : 1}
+                    >
+                      <View style={styles.legendItemLeft}>
+                        {item.isParent ? (
+                          <View style={styles.multiColorBoxContainer}>
+                            {this.renderMultiColorBox(item.colors)}
+                            <Text style={styles.itemCount}>
+                              {item.childItems.length}
                             </Text>
                           </View>
+                        ) : (
+                          <View style={styles.colorBox}>
+                            <View 
+                              style={[
+                                styles.colorBoxInner,
+                                { backgroundColor: item.color }
+                              ]}
+                            />
+                          </View>
+                        )}
+                        <Text style={styles.legendText}>
+                          {item.displayName}
+                        </Text>
+                        <View style={styles.dimensionsContainer}>
+                          <Text style={styles.dimensionsText}>
+                            {`${item.x}L × ${item.y}W × ${item.z}H`}
+                          </Text>
                         </View>
-                      </TouchableOpacity>
-                      {item.isParent && (
-                        <Animated.View 
-                          style={[
-                            styles.childItemsContainer,
-                            {
-                              maxHeight: this.animations[item.displayName]?.interpolate({
-                                inputRange: [0, 1],
-                                outputRange: [0, 1000]
-                              }) || 0,
-                              opacity: this.animations[item.displayName]?.interpolate({
-                                inputRange: [0, 0.5, 1],
-                                outputRange: [0, 0, 1]
-                              }) || 0
-                            }
-                          ]}
-                        >
-                          <ScrollView style={styles.childItemsScrollView}>
-                            {item.childItems.map((childItem, childIndex) => (
-                              <View key={childIndex} style={styles.childItem}>
-                                <View style={styles.childColorBox}>
-                                  <View 
-                                    style={[
-                                      styles.childColorInner,
-                                      { backgroundColor: childItem.color }
-                                    ]}
-                                  />
-                                </View>
-                                <Text style={styles.childItemText}>
-                                  {childItem.displayName}
-                                  <Text style={styles.childItemNumber}>
-                                    {` #${(childIndex + 1).toString().padStart(2, '0')}`}
-                                  </Text>
-                                </Text>
+                      </View>
+                    </TouchableOpacity>
+                    {item.isParent && (
+                      <Animated.View 
+                        style={[
+                          styles.childItemsContainer,
+                          {
+                            maxHeight: this.animations[item.displayName]?.interpolate({
+                              inputRange: [0, 1],
+                              outputRange: [0, 1000]
+                            }) || 0,
+                            opacity: this.animations[item.displayName]?.interpolate({
+                              inputRange: [0, 0.5, 1],
+                              outputRange: [0, 0, 1]
+                            }) || 0
+                          }
+                        ]}
+                      >
+                        <ScrollView style={styles.childItemsScrollView}>
+                          {item.childItems.map((childItem, childIndex) => (
+                            <View key={childIndex} style={styles.childItem}>
+                              <View style={styles.childColorBox}>
+                                <View 
+                                  style={[
+                                    styles.childColorInner,
+                                    { backgroundColor: childItem.color }
+                                  ]}
+                                />
                               </View>
-                            ))}
-                          </ScrollView>
-                        </Animated.View>
-                      )}
-                    </View>
-                  ))
-                ) : (
-                  <Text style={styles.noItemsText}>No items to display</Text>
-                )}
-              </ScrollView>
-              <TouchableOpacity
-                style={styles.closeButton}
-                onPress={this.toggleLegend}
-              >
-                <Text style={styles.closeButtonText}>Close</Text>
-              </TouchableOpacity>
-            </View>
+                              <Text style={styles.childItemText}>
+                                {childItem.displayName}
+                                <Text style={styles.childItemNumber}>
+                                  {` #${(childIndex + 1).toString().padStart(2, '0')}`}
+                                </Text>
+                              </Text>
+                            </View>
+                          ))}
+                        </ScrollView>
+                      </Animated.View>
+                    )}
+                  </View>
+                ))
+              ) : (
+                <Text style={styles.noItemsText}>No items to display</Text>
+              )}
+            </ScrollView>
+            <TouchableOpacity
+              style={styles.closeButton}
+              onPress={this.toggleLegend}
+            >
+              <Text style={styles.closeButtonText}>Close</Text>
+            </TouchableOpacity>
           </View>
         </View>
       </Modal>
@@ -1108,43 +1111,50 @@ const styles = StyleSheet.create({
     borderRadius: 10,
     elevation: 5,
     marginHorizontal: 20,
-    padding: 20,
     width: '90%',
     maxHeight: '80%',
-  },
-  modalInnerContent: {
-    flex: 1,
+    overflow: 'hidden',
     display: 'flex',
     flexDirection: 'column',
-    minHeight: 0,
+  },
+  modalInnerContent: {
+    flexShrink: 1,
+    flexDirection: 'column',
   },
   legendHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: 15,
-    paddingHorizontal: 5,
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    borderBottomWidth: 1,
+    borderBottomColor: "#E2E8F0",
   },
-  legendScrollView: {
+  legendTitleContainer: {
     flex: 1,
-    marginBottom: 15,
-  },
-  closeButton: {
-    backgroundColor: '#007AFF',
-    borderRadius: 8,
-    padding: 12,
-    alignItems: 'center',
-    marginTop: 0,
   },
   legendTitle: {
-    fontSize: 20,
+    fontSize: 18,
     fontWeight: "600",
     color: "#2c3e50",
   },
+  legendDivider: {
+    width: 1,
+    height: 20,
+    backgroundColor: '#E2E8F0',
+    marginHorizontal: 12,
+  },
+  totalItemsContainer: {
+    flex: 1,
+    alignItems: 'flex-end',
+  },
   totalItemsText: {
-    fontSize: 16,
+    fontSize: 15,
     color: '#666',
     fontWeight: '500',
+  },
+  legendScrollView: {
+    flexGrow: 1,
   },
   legendItemsContainer: {
     paddingHorizontal: 16,
@@ -1152,10 +1162,11 @@ const styles = StyleSheet.create({
   legendItem: {
     flexDirection: "row",
     alignItems: "center",
-    paddingVertical: 12,
+    padding: 12,
     paddingHorizontal: 16,
     borderBottomWidth: 1,
     borderBottomColor: '#E2E8F0',
+    backgroundColor: 'white',
   },
   legendItemParent: {
     backgroundColor: '#F7FAFC',
@@ -1178,6 +1189,12 @@ const styles = StyleSheet.create({
     color: "#fff",
     fontSize: 16,
     fontWeight: "600",
+  },
+  closeButton: {
+    backgroundColor: '#007AFF',
+    alignItems: 'center',
+    justifyContent: 'center',
+    height: 48,
   },
   collapsedBox: {
     position: 'absolute',
