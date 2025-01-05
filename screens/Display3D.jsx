@@ -517,12 +517,12 @@ export default class Display3D extends Component {
   };
 
   calculateModalHeight = (items) => {
-    // Base height for header and close button
-    const baseHeight = 150;
+    // Base height for header and close button (reduced from 150)
+    const baseHeight = 120;
     // Height per item and child item
     const heightPerItem = 60;
     const heightPerChildItem = 40;
-    const maxHeight = '80%';  
+    const maxHeight = '80%';
     const minHeight = '25%';
     
     let totalHeight = baseHeight;
@@ -534,8 +534,8 @@ export default class Display3D extends Component {
       // If item has children (quantity > 1) and is expanded, add their heights
       if (item.childItems && item.childItems.length > 0 && this.state.expandedItems[item.displayName]) {
         // Calculate child items height with padding
-        const childrenHeight = Math.min(item.childItems.length * heightPerChildItem, 300); 
-        totalHeight += childrenHeight + 20; // Added padding
+        const childrenHeight = Math.min(item.childItems.length * heightPerChildItem, 300);
+        totalHeight += childrenHeight + 10; // Reduced padding from 20 to 10
       }
     });
     
@@ -1127,14 +1127,14 @@ const styles = StyleSheet.create({
   },
   legendScrollView: {
     flex: 1,
-    marginBottom: 10,
+    marginBottom: 15,
   },
   closeButton: {
     backgroundColor: '#007AFF',
     borderRadius: 8,
     padding: 12,
     alignItems: 'center',
-    marginTop: 'auto',
+    marginTop: 0,
   },
   legendTitle: {
     fontSize: 20,
@@ -1244,6 +1244,7 @@ const styles = StyleSheet.create({
   },
   childItemsContainer: {
     overflow: 'hidden',
+    marginBottom: 10,
   },
   childItemsScrollView: {
     paddingLeft: 20,
