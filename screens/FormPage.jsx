@@ -124,115 +124,91 @@ export const ItemDetailsModal = ({
                 showsVerticalScrollIndicator={false}
                 keyboardShouldPersistTaps="handled"
               >
-                {isEditable ? (
-                  <View style={{ width: '100%', paddingBottom: 16 }}>
-                    <View style={modalStyles.fieldContainer}>
-                      <Text style={modalStyles.bulletText}>
-                        <Text style={modalStyles.boldText}>Name</Text>
-                      </Text>
+                <View style={{ width: '100%' }}>
+                  <View style={modalStyles.fieldRow}>
+                    <Text style={modalStyles.fieldLabel}>Name:</Text>
+                    {isEditable ? (
                       <TextInput
-                        style={modalStyles.fieldInput}
+                        style={modalStyles.fieldValue}
                         value={editedItem.itemName}
                         onChangeText={(text) =>
                           setEditedItem({ ...editedItem, itemName: text })
                         }
-                        placeholder="Enter Name"
                         maxLength={20}
                       />
-                    </View>
-                    
-                    <View style={modalStyles.fieldContainer}>
-                      <Text style={modalStyles.bulletText}>
-                        <Text style={modalStyles.boldText}>Length (inches)</Text>
-                      </Text>
+                    ) : (
+                      <Text style={modalStyles.fieldValue}>{item?.itemName}</Text>
+                    )}
+                  </View>
+                  
+                  <View style={modalStyles.fieldRow}>
+                    <Text style={modalStyles.fieldLabel}>Length:</Text>
+                    {isEditable ? (
                       <TextInput
-                        style={modalStyles.fieldInput}
+                        style={modalStyles.fieldValue}
                         value={editedItem.itemLength}
                         onChangeText={(text) =>
                           setEditedItem({ ...editedItem, itemLength: text })
                         }
                         keyboardType="numeric"
-                        placeholder="Enter Length"
                         maxLength={3}
                       />
-                    </View>
-                    
-                    <View style={modalStyles.fieldContainer}>
-                      <Text style={modalStyles.bulletText}>
-                        <Text style={modalStyles.boldText}>Width (inches)</Text>
-                      </Text>
+                    ) : (
+                      <Text style={modalStyles.fieldValue}>{item?.itemLength} inches</Text>
+                    )}
+                  </View>
+                  
+                  <View style={modalStyles.fieldRow}>
+                    <Text style={modalStyles.fieldLabel}>Width:</Text>
+                    {isEditable ? (
                       <TextInput
-                        style={modalStyles.fieldInput}
+                        style={modalStyles.fieldValue}
                         value={editedItem.itemWidth}
                         onChangeText={(text) =>
                           setEditedItem({ ...editedItem, itemWidth: text })
                         }
                         keyboardType="numeric"
-                        placeholder="Enter Width"
                         maxLength={3}
                       />
-                    </View>
-                    
-                    <View style={modalStyles.fieldContainer}>
-                      <Text style={modalStyles.bulletText}>
-                        <Text style={modalStyles.boldText}>Height (inches)</Text>
-                      </Text>
+                    ) : (
+                      <Text style={modalStyles.fieldValue}>{item?.itemWidth} inches</Text>
+                    )}
+                  </View>
+                  
+                  <View style={modalStyles.fieldRow}>
+                    <Text style={modalStyles.fieldLabel}>Height:</Text>
+                    {isEditable ? (
                       <TextInput
-                        style={modalStyles.fieldInput}
+                        style={modalStyles.fieldValue}
                         value={editedItem.itemHeight}
                         onChangeText={(text) =>
                           setEditedItem({ ...editedItem, itemHeight: text })
                         }
                         keyboardType="numeric"
-                        placeholder="Enter Height"
                         maxLength={3}
                       />
-                    </View>
-                    
-                    <View style={modalStyles.fieldContainer}>
-                      <Text style={modalStyles.bulletText}>
-                        <Text style={modalStyles.boldText}>Quantity</Text>
-                      </Text>
+                    ) : (
+                      <Text style={modalStyles.fieldValue}>{item?.itemHeight} inches</Text>
+                    )}
+                  </View>
+                  
+                  <View style={modalStyles.fieldRow}>
+                    <Text style={modalStyles.fieldLabel}>Quantity:</Text>
+                    {isEditable ? (
                       <TextInput
-                        style={modalStyles.fieldInput}
+                        style={modalStyles.fieldValue}
                         value={editedItem.quantity}
                         onChangeText={(text) =>
                           setEditedItem({ ...editedItem, quantity: text })
                         }
                         keyboardType="numeric"
-                        placeholder="Enter Quantity"
                         maxLength={2}
                       />
-                    </View>
-                  </View>
-                ) : (
-                  <View style={{ width: '100%' }}>
-                    <View style={modalStyles.fieldRow}>
-                      <Text style={modalStyles.fieldLabel}>Name:</Text>
-                      <Text style={modalStyles.fieldValue}>{item?.itemName}</Text>
-                    </View>
-                    
-                    <View style={modalStyles.fieldRow}>
-                      <Text style={modalStyles.fieldLabel}>Length:</Text>
-                      <Text style={modalStyles.fieldValue}>{item?.itemLength} inches</Text>
-                    </View>
-                    
-                    <View style={modalStyles.fieldRow}>
-                      <Text style={modalStyles.fieldLabel}>Width:</Text>
-                      <Text style={modalStyles.fieldValue}>{item?.itemWidth} inches</Text>
-                    </View>
-                    
-                    <View style={modalStyles.fieldRow}>
-                      <Text style={modalStyles.fieldLabel}>Height:</Text>
-                      <Text style={modalStyles.fieldValue}>{item?.itemHeight} inches</Text>
-                    </View>
-                    
-                    <View style={modalStyles.fieldRow}>
-                      <Text style={modalStyles.fieldLabel}>Quantity:</Text>
+                    ) : (
                       <Text style={modalStyles.fieldValue}>{item?.quantity || 1}</Text>
-                    </View>
+                    )}
                   </View>
-                )}
+                </View>
               </ScrollView>
 
               <View style={{ flex: 1 }} />
