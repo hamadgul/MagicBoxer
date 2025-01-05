@@ -17,6 +17,7 @@ import { Ionicons } from '@expo/vector-icons';
 
 export default function ShipPackagePage({ route, navigation }) {
   const scrollViewRef = useRef(null);
+  const estimatesSectionRef = useRef(null);
   const [selectedPackage, setSelectedPackage] = useState(null);
   const [shippingEstimates, setShippingEstimates] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
@@ -85,9 +86,16 @@ export default function ShipPackagePage({ route, navigation }) {
 
       if (result.success) {
         setShippingEstimates(result.estimates);
-        // Scroll to estimates
+        // Scroll to estimates section
         setTimeout(() => {
-          scrollViewRef.current?.scrollToEnd({ animated: true });
+          if (estimatesSectionRef.current) {
+            estimatesSectionRef.current.measureLayout(
+              scrollViewRef.current,
+              (x, y) => {
+                scrollViewRef.current?.scrollTo({ y: y, animated: true });
+              }
+            );
+          }
         }, 100);
       } else {
         Alert.alert('Error', result.error || 'Failed to get shipping estimates');
@@ -130,7 +138,7 @@ export default function ShipPackagePage({ route, navigation }) {
 
     if (shippingEstimates.length > 0) {
       return (
-        <View style={styles.estimatesContainer}>
+        <View style={styles.estimatesContainer} ref={estimatesSectionRef}>
           <Text style={styles.sectionTitle}>Shipping Estimates</Text>
           <View style={styles.estimatesList}>
             {shippingEstimates.map((estimate, index) => (
