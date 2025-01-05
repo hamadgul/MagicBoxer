@@ -112,9 +112,9 @@ export const ItemDetailsModal = ({
           if (!isEditable) closeModal();
         }}>
           <View style={modalStyles.centeredView}>
-            <View style={modalStyles.modalContent}>
-              <View style={modalStyles.modalHeader}>
-                <Text style={modalStyles.modalTitle}>
+            <View style={[modalStyles.modalContent]}>
+              <View style={[modalStyles.modalHeader]}>
+                <Text style={[modalStyles.modalTitle, { color: 'black' }]}>
                   {isEditable ? "Edit Item" : "Item Details"}
                 </Text>
               </View>
@@ -129,7 +129,17 @@ export const ItemDetailsModal = ({
                     <Text style={modalStyles.fieldLabel}>Name:</Text>
                     {isEditable ? (
                       <TextInput
-                        style={modalStyles.fieldValue}
+                        style={[
+                          modalStyles.fieldValue,
+                          {
+                            backgroundColor: '#F3F4F6',
+                            borderRadius: 4,
+                            paddingHorizontal: 8,
+                            paddingVertical: 2,
+                            borderWidth: 1,
+                            borderColor: '#E5E7EB'
+                          }
+                        ]}
                         value={editedItem.itemName}
                         onChangeText={(text) =>
                           setEditedItem({ ...editedItem, itemName: text })
@@ -145,7 +155,17 @@ export const ItemDetailsModal = ({
                     <Text style={modalStyles.fieldLabel}>Length:</Text>
                     {isEditable ? (
                       <TextInput
-                        style={modalStyles.fieldValue}
+                        style={[
+                          modalStyles.fieldValue,
+                          {
+                            backgroundColor: '#F3F4F6',
+                            borderRadius: 4,
+                            paddingHorizontal: 8,
+                            paddingVertical: 2,
+                            borderWidth: 1,
+                            borderColor: '#E5E7EB'
+                          }
+                        ]}
                         value={editedItem.itemLength}
                         onChangeText={(text) =>
                           setEditedItem({ ...editedItem, itemLength: text })
@@ -162,7 +182,17 @@ export const ItemDetailsModal = ({
                     <Text style={modalStyles.fieldLabel}>Width:</Text>
                     {isEditable ? (
                       <TextInput
-                        style={modalStyles.fieldValue}
+                        style={[
+                          modalStyles.fieldValue,
+                          {
+                            backgroundColor: '#F3F4F6',
+                            borderRadius: 4,
+                            paddingHorizontal: 8,
+                            paddingVertical: 2,
+                            borderWidth: 1,
+                            borderColor: '#E5E7EB'
+                          }
+                        ]}
                         value={editedItem.itemWidth}
                         onChangeText={(text) =>
                           setEditedItem({ ...editedItem, itemWidth: text })
@@ -179,7 +209,17 @@ export const ItemDetailsModal = ({
                     <Text style={modalStyles.fieldLabel}>Height:</Text>
                     {isEditable ? (
                       <TextInput
-                        style={modalStyles.fieldValue}
+                        style={[
+                          modalStyles.fieldValue,
+                          {
+                            backgroundColor: '#F3F4F6',
+                            borderRadius: 4,
+                            paddingHorizontal: 8,
+                            paddingVertical: 2,
+                            borderWidth: 1,
+                            borderColor: '#E5E7EB'
+                          }
+                        ]}
                         value={editedItem.itemHeight}
                         onChangeText={(text) =>
                           setEditedItem({ ...editedItem, itemHeight: text })
@@ -196,7 +236,17 @@ export const ItemDetailsModal = ({
                     <Text style={modalStyles.fieldLabel}>Quantity:</Text>
                     {isEditable ? (
                       <TextInput
-                        style={modalStyles.fieldValue}
+                        style={[
+                          modalStyles.fieldValue,
+                          {
+                            backgroundColor: '#F3F4F6',
+                            borderRadius: 4,
+                            paddingHorizontal: 8,
+                            paddingVertical: 2,
+                            borderWidth: 1,
+                            borderColor: '#E5E7EB'
+                          }
+                        ]}
                         value={editedItem.quantity}
                         onChangeText={(text) =>
                           setEditedItem({ ...editedItem, quantity: text })
