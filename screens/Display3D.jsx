@@ -11,7 +11,8 @@ import {
   Animated,
   Linking,
   Platform,
-  Dimensions
+  Dimensions,
+  Easing
 } from "react-native";
 import {
   GLView
@@ -487,9 +488,13 @@ export default class Display3D extends Component {
 
     Animated.timing(this.animations[itemName], {
       toValue: willExpand ? 1 : 0,
-      duration: 200,
-      useNativeDriver: false
-    }).start();
+      duration: 300,
+      useNativeDriver: false,
+      easing: Easing.inOut(Easing.ease)
+    }).start(() => {
+      // Force modal height recalculation after animation
+      this.forceUpdate();
+    });
   };
 
   initializeAnimations = (items) => {
@@ -517,7 +522,7 @@ export default class Display3D extends Component {
     // Height per item and child item
     const heightPerItem = 60;
     const heightPerChildItem = 40;
-    const maxHeight = '70%';
+    const maxHeight = '80%';  
     const minHeight = '25%';
     
     let totalHeight = baseHeight;
@@ -526,20 +531,17 @@ export default class Display3D extends Component {
     items.forEach(item => {
       totalHeight += heightPerItem; // Add height for the main item
       
-      // If item has children (quantity > 1), add their heights
-      if (item.childItems && item.childItems.length > 0) {
-        // Only add child heights if the item is expanded
-        if (this.state.expandedItems[item.displayName]) {
-          // Add height for each child item, capped at a reasonable amount
-          const childrenHeight = Math.min(item.childItems.length * heightPerChildItem, 200);
-          totalHeight += childrenHeight;
-        }
+      // If item has children (quantity > 1) and is expanded, add their heights
+      if (item.childItems && item.childItems.length > 0 && this.state.expandedItems[item.displayName]) {
+        // Calculate child items height with padding
+        const childrenHeight = Math.min(item.childItems.length * heightPerChildItem, 300); 
+        totalHeight += childrenHeight + 20; // Added padding
       }
     });
     
     const viewportHeight = Dimensions.get('window').height;
-    const maxHeightPixels = (parseInt(maxHeight) / 100) * viewportHeight;
-    const minHeightPixels = (parseInt(minHeight) / 100) * viewportHeight;
+    const maxHeightPixels = Math.floor((parseInt(maxHeight) / 100) * viewportHeight);
+    const minHeightPixels = Math.floor((parseInt(minHeight) / 100) * viewportHeight);
     
     // Clamp the height between min and max
     const clampedHeight = Math.max(minHeightPixels, Math.min(totalHeight, maxHeightPixels));
@@ -631,107 +633,109 @@ export default class Display3D extends Component {
       >
         <View style={styles.modalOverlay}>
           <View style={[styles.modalContent, { height: this.calculateModalHeight(finalItems) }]}>
-            <View style={styles.legendHeader}>
-              <Text style={styles.legendTitle}>Legend</Text>
-              <Text style={styles.totalItemsText}>
-                {totalItemCount} {totalItemCount === 1 ? 'Item' : 'Total Items'}
-              </Text>
-            </View>
-            <ScrollView style={styles.legendScrollView}>
-              {finalItems.length > 0 ? (
-                finalItems.map((item, index) => (
-                  <View key={index}>
-                    <TouchableOpacity
-                      style={[
-                        styles.legendItem, 
-                        item.isParent && styles.legendItemParent,
-                        item.childItems && item.childItems.length > 0 && !item.isParent && styles.legendItemWithBorder
-                      ]}
-                      onPress={() => {
-                        if (item.isParent) {
-                          this.toggleItemExpansion(item.displayName);
-                        }
-                      }}
-                      activeOpacity={item.isParent ? 0.6 : 1}
-                    >
-                      <View style={styles.legendItemLeft}>
-                        {item.isParent ? (
-                          <View style={styles.multiColorBoxContainer}>
-                            {this.renderMultiColorBox(item.colors)}
-                            <Text style={styles.itemCount}>
-                              {item.childItems.length}
-                            </Text>
-                          </View>
-                        ) : (
-                          <View style={styles.colorBox}>
-                            <View 
-                              style={[
-                                styles.colorBoxInner,
-                                { backgroundColor: item.color }
-                              ]}
-                            />
-                          </View>
-                        )}
-                        <Text style={styles.legendText}>
-                          {item.displayName}
-                        </Text>
-                        <View style={styles.dimensionsContainer}>
-                          <Text style={styles.dimensionsText}>
-                            {`${item.x}L × ${item.y}W × ${item.z}H`}
-                          </Text>
-                        </View>
-                      </View>
-                    </TouchableOpacity>
-                    {item.isParent && (
-                      <Animated.View 
+            <View style={styles.modalInnerContent}>
+              <View style={styles.legendHeader}>
+                <Text style={styles.legendTitle}>Legend</Text>
+                <Text style={styles.totalItemsText}>
+                  {totalItemCount} {totalItemCount === 1 ? 'Item' : 'Total Items'}
+                </Text>
+              </View>
+              <ScrollView style={styles.legendScrollView}>
+                {finalItems.length > 0 ? (
+                  finalItems.map((item, index) => (
+                    <View key={index}>
+                      <TouchableOpacity
                         style={[
-                          styles.childItemsContainer,
-                          {
-                            maxHeight: this.animations[item.displayName]?.interpolate({
-                              inputRange: [0, 1],
-                              outputRange: [0, 1000]
-                            }) || 0,
-                            opacity: this.animations[item.displayName]?.interpolate({
-                              inputRange: [0, 0.5, 1],
-                              outputRange: [0, 0, 1]
-                            }) || 0
-                          }
+                          styles.legendItem, 
+                          item.isParent && styles.legendItemParent,
+                          item.childItems && item.childItems.length > 0 && !item.isParent && styles.legendItemWithBorder
                         ]}
+                        onPress={() => {
+                          if (item.isParent) {
+                            this.toggleItemExpansion(item.displayName);
+                          }
+                        }}
+                        activeOpacity={item.isParent ? 0.6 : 1}
                       >
-                        <ScrollView style={styles.childItemsScrollView}>
-                          {item.childItems.map((childItem, childIndex) => (
-                            <View key={childIndex} style={styles.childItem}>
-                              <View style={styles.childColorBox}>
-                                <View 
-                                  style={[
-                                    styles.childColorInner,
-                                    { backgroundColor: childItem.color }
-                                  ]}
-                                />
-                              </View>
-                              <Text style={styles.childItemText}>
-                                {childItem.displayName}
-                                <Text style={styles.childItemNumber}>
-                                  {` #${(childIndex + 1).toString().padStart(2, '0')}`}
-                                </Text>
+                        <View style={styles.legendItemLeft}>
+                          {item.isParent ? (
+                            <View style={styles.multiColorBoxContainer}>
+                              {this.renderMultiColorBox(item.colors)}
+                              <Text style={styles.itemCount}>
+                                {item.childItems.length}
                               </Text>
                             </View>
-                          ))}
-                        </ScrollView>
-                      </Animated.View>
-                    )}
-                  </View>
-                ))
-              ) : (
-                <Text style={styles.noItemsText}>No items to display</Text>
-              )}
-            </ScrollView>
-            <TouchableOpacity
-              style={styles.closeButton}
-              onPress={this.toggleLegend}
-            >
-              <Text style={styles.closeButtonText}>Close</Text>
-            </TouchableOpacity>
+                          ) : (
+                            <View style={styles.colorBox}>
+                              <View 
+                                style={[
+                                  styles.colorBoxInner,
+                                  { backgroundColor: item.color }
+                                ]}
+                              />
+                            </View>
+                          )}
+                          <Text style={styles.legendText}>
+                            {item.displayName}
+                          </Text>
+                          <View style={styles.dimensionsContainer}>
+                            <Text style={styles.dimensionsText}>
+                              {`${item.x}L × ${item.y}W × ${item.z}H`}
+                            </Text>
+                          </View>
+                        </View>
+                      </TouchableOpacity>
+                      {item.isParent && (
+                        <Animated.View 
+                          style={[
+                            styles.childItemsContainer,
+                            {
+                              maxHeight: this.animations[item.displayName]?.interpolate({
+                                inputRange: [0, 1],
+                                outputRange: [0, 1000]
+                              }) || 0,
+                              opacity: this.animations[item.displayName]?.interpolate({
+                                inputRange: [0, 0.5, 1],
+                                outputRange: [0, 0, 1]
+                              }) || 0
+                            }
+                          ]}
+                        >
+                          <ScrollView style={styles.childItemsScrollView}>
+                            {item.childItems.map((childItem, childIndex) => (
+                              <View key={childIndex} style={styles.childItem}>
+                                <View style={styles.childColorBox}>
+                                  <View 
+                                    style={[
+                                      styles.childColorInner,
+                                      { backgroundColor: childItem.color }
+                                    ]}
+                                  />
+                                </View>
+                                <Text style={styles.childItemText}>
+                                  {childItem.displayName}
+                                  <Text style={styles.childItemNumber}>
+                                    {` #${(childIndex + 1).toString().padStart(2, '0')}`}
+                                  </Text>
+                                </Text>
+                              </View>
+                            ))}
+                          </ScrollView>
+                        </Animated.View>
+                      )}
+                    </View>
+                  ))
+                ) : (
+                  <Text style={styles.noItemsText}>No items to display</Text>
+                )}
+              </ScrollView>
+              <TouchableOpacity
+                style={styles.closeButton}
+                onPress={this.toggleLegend}
+              >
+                <Text style={styles.closeButtonText}>Close</Text>
+              </TouchableOpacity>
+            </View>
           </View>
         </View>
       </Modal>
@@ -1095,23 +1099,42 @@ const styles = StyleSheet.create({
   },
   modalOverlay: {
     flex: 1,
-    backgroundColor: "rgba(0, 0, 0, 0.5)",
-    justifyContent: "center",
-    alignItems: "center",
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   modalContent: {
     backgroundColor: 'white',
     borderRadius: 10,
+    elevation: 5,
+    marginHorizontal: 20,
     padding: 20,
     width: '90%',
+    maxHeight: '80%',
+  },
+  modalInnerContent: {
+    flex: 1,
+    display: 'flex',
+    flexDirection: 'column',
+    minHeight: 0,
   },
   legendHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: 16,
-    paddingLeft: 8,
-    paddingRight: 16,
+    marginBottom: 15,
+    paddingHorizontal: 5,
+  },
+  legendScrollView: {
+    flex: 1,
+    marginBottom: 10,
+  },
+  closeButton: {
+    backgroundColor: '#007AFF',
+    borderRadius: 8,
+    padding: 12,
+    alignItems: 'center',
+    marginTop: 'auto',
   },
   legendTitle: {
     fontSize: 20,
@@ -1122,9 +1145,6 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: '#666',
     fontWeight: '500',
-  },
-  legendScrollView: {
-    maxHeight: '70%',
   },
   legendItemsContainer: {
     paddingHorizontal: 16,
@@ -1153,21 +1173,6 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: "#333",
     flex: 1,
-  },
-  closeButton: {
-    backgroundColor: "#3B82F6",
-    width: 120,
-    height: 40,
-    borderRadius: 8,
-    marginTop: 15,
-    alignItems: "center",
-    justifyContent: "center",
-    alignSelf: "center",
-    shadowColor: "#3B82F6",
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.2,
-    shadowRadius: 8,
-    elevation: 4,
   },
   closeButtonText: {
     color: "#fff",
@@ -1241,7 +1246,7 @@ const styles = StyleSheet.create({
     overflow: 'hidden',
   },
   childItemsScrollView: {
-    paddingLeft: 32,
+    paddingLeft: 20,
   },
   childItem: {
     flexDirection: 'row',
