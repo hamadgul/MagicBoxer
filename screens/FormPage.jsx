@@ -506,7 +506,7 @@ export default class FormPage extends Component {
           JSON.stringify(this.state.items)
         ).toString("base64");
         await AsyncStorage.setItem("itemList", serializedItems);
-        Alert.alert("Item Updated");
+        Alert.alert("Success", `${updatedItem.itemName} was successfully updated`);
         this.closeModal();
       } catch (error) {
         Alert.alert("Error updating item", error.message);

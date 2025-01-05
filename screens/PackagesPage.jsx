@@ -192,7 +192,7 @@ export default class PackagesPage extends Component {
             "packages",
             JSON.stringify(updatedPackages)
           );
-          Alert.alert("Success", "Item updated.", [
+          Alert.alert("Success", `${updatedItem.itemName} was successfully updated`, [
             {
               text: "OK",
               onPress: () => this.setState({ showPackageModal: true })
