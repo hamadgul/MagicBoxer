@@ -580,7 +580,7 @@ export default class FormPage extends Component {
           item.itemHeight,
           item.id,
           "No Carrier",
-          item.itemName,
+          typeof item.itemName === 'object' ? item.itemName.toString() : item.itemName || "Unnamed Item",
         ]);
       });
     });

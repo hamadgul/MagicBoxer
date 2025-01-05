@@ -405,7 +405,7 @@ export default class Display3D extends Component {
         item.itemHeight,
         item.id,
         selectedCarrier,
-        name,
+        typeof item.itemName === 'object' ? item.itemName.toString() : item.itemName || "Unnamed Item",
       ])
     );
 
@@ -564,8 +564,8 @@ export default class Display3D extends Component {
     itemsTotal.forEach(item => {
       if (!item) return;
       totalItemCount++;
-      const name = item.itemName || "Unnamed Item";
-      const baseKey = typeof name === 'string' ? name.replace(/\s+\d+$/, '') : name; // Remove trailing numbers only if name is a string
+      const name = typeof item.itemName === 'object' ? item.itemName.toString() : item.itemName || "Unnamed Item";
+      const baseKey = typeof name === 'string' ? name.replace(/\s+\d+$/, '') : name.toString(); // Remove trailing numbers only if name is a string
       
       if (!groupedItems[baseKey]) {
         groupedItems[baseKey] = {
