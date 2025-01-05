@@ -565,7 +565,7 @@ export default class Display3D extends Component {
       if (!item) return;
       totalItemCount++;
       const name = item.itemName || "Unnamed Item";
-      const baseKey = name.replace(/\s+\d+$/, ''); // Remove trailing numbers
+      const baseKey = typeof name === 'string' ? name.replace(/\s+\d+$/, '') : name; // Remove trailing numbers only if name is a string
       
       if (!groupedItems[baseKey]) {
         groupedItems[baseKey] = {
