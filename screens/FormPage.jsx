@@ -15,6 +15,7 @@ import {
   KeyboardAvoidingView,
   Platform,
   ActivityIndicator,
+  FlatList,
 } from "react-native";
 import { VStack } from "native-base";  
 import AsyncStorage from "@react-native-async-storage/async-storage";
@@ -24,6 +25,7 @@ import styles from "../components/Styles";
 import { modalStyles } from "../components/ModalStyles";
 import { debounce } from 'lodash';
 var Buffer = require("@craftzdog/react-native-buffer").Buffer;
+const products = require('../products.json');
 
 const itemButtonColors = [
   "#3B5998",
@@ -314,16 +316,15 @@ export default class FormPage extends Component {
       itemLength: "",
       quantity: 1,
       items: [],
-      showDetails: false,
       selectedItem: null,
-      isEditable: false,
       showSavePackageModal: false,
-      packageName: "",
+      packageName: '',
       isLoading: false,
+      filteredProducts: [],
+      showProductSuggestions: false,
+      flashScrollbar: false,
     };
-
-    // Only debounce validation/processing, not the actual input updates
-    this.processItemNameChange = debounce(this.processItemNameChange.bind(this), 300);
+    this.scrollViewRef = React.createRef();
   }
 
   handleInputChange = (field, value) => {
@@ -332,12 +333,53 @@ export default class FormPage extends Component {
 
   handleChange = (text) => {
     this.setState({ itemName: text });
-    this.processItemNameChange(text);
+    
+    // Filter products as user types
+    if (!text.trim()) {
+      this.setState({ 
+        filteredProducts: [],
+        showProductSuggestions: false 
+      });
+      return;
+    }
+
+    const results = products.filter((product) =>
+      product.name.toLowerCase().includes(text.toLowerCase())
+    );
+    this.setState({ 
+      filteredProducts: results,
+      showProductSuggestions: true 
+    }, () => {
+      if (results.length > 4) { // Show indicator if there are more than 4 items
+        this.showTemporaryScrollIndicator();
+      }
+    });
   }
 
-  processItemNameChange = (text) => {
-    // Any heavy processing or validation can go here
-    // This is debounced so it won't affect the input responsiveness
+  showTemporaryScrollIndicator = () => {
+    this.setState({ showScrollIndicator: true }, () => {
+      // Hide the indicator after 1 second
+      setTimeout(() => {
+        this.setState({ showScrollIndicator: false });
+      }, 1000);
+    });
+  };
+
+  handleProductSelect = (product) => {
+    // Extract numeric values from dimension strings
+    const extractDimension = (dim) => {
+      const match = dim.match(/(\d+\.?\d*)/);
+      return match ? match[1] : "";
+    };
+
+    this.setState({
+      itemName: product.name,
+      itemLength: extractDimension(product.dimensions.length),
+      itemWidth: extractDimension(product.dimensions.width),
+      itemHeight: extractDimension(product.dimensions.height),
+      filteredProducts: [],
+      showProductSuggestions: false
+    });
   }
 
   shouldComponentUpdate(nextProps, nextState) {
@@ -776,18 +818,64 @@ export default class FormPage extends Component {
           <View style={styles.formContainer}>
             <VStack space={2} width="100%">
               <Text style={[styles.label, styles.condensedLabel]}>Item Name:</Text>
-              <TextInput
-                style={[styles.input, styles.condensedInput]}
-                value={this.state.itemName}
-                onChangeText={this.handleChange}
-                maxLength={10}
-                returnKeyType={"next"}
-                keyboardAppearance="light"
-                placeholder="MacBook, Xbox etc"
-                placeholderTextColor={"#d3d3d3"}
-                autoCorrect={false}
-                spellCheck={false}
-              />
+              <View style={{ position: 'relative' }}>
+                <TextInput
+                  style={[styles.input, styles.condensedInput]}
+                  value={this.state.itemName}
+                  onChangeText={this.handleChange}
+                  maxLength={10}
+                  returnKeyType={"next"}
+                  keyboardAppearance="light"
+                  placeholder="MacBook, Xbox etc"
+                  placeholderTextColor={"#d3d3d3"}
+                  autoCorrect={false}
+                  spellCheck={false}
+                />
+                {this.state.showProductSuggestions && this.state.filteredProducts.length > 0 && (
+                  <View style={{
+                    position: 'absolute',
+                    top: '100%',
+                    left: 0,
+                    right: 0,
+                    height: 200,
+                    backgroundColor: 'white',
+                    borderWidth: 1,
+                    borderColor: '#ddd',
+                    borderRadius: 4,
+                    zIndex: 1000,
+                    elevation: 5,
+                    shadowColor: '#000',
+                    shadowOffset: { width: 0, height: 2 },
+                    shadowOpacity: 0.25,
+                    shadowRadius: 3.84,
+                  }}>
+                    <View style={{ height: 200 }}>
+                      <ScrollView 
+                        ref={this.scrollViewRef}
+                        style={{ flex: 1 }}
+                        showsVerticalScrollIndicator={true}
+                        persistentScrollbar={true}
+                        indicatorStyle="black"
+                        scrollEventThrottle={16}
+                      >
+                        {this.state.filteredProducts.map((item) => (
+                          <TouchableOpacity
+                            key={item.id}
+                            style={{
+                              padding: 15,
+                              borderBottomWidth: 1,
+                              borderBottomColor: '#eee',
+                            }}
+                            onPress={() => this.handleProductSelect(item)}
+                          >
+                            <Text style={{ fontSize: 16 }}>{item.name}</Text>
+                          </TouchableOpacity>
+                        ))}
+                      </ScrollView>
+                    </View>
+                  </View>
+                )}
+              </View>
               <Text style={[styles.label, styles.condensedLabel]}>Length:</Text>
               <TextInput
                 style={[styles.input, styles.condensedInput]}
@@ -959,5 +1047,25 @@ export default class FormPage extends Component {
         </View>
       </TouchableWithoutFeedback>
     );
+  }
+
+  componentDidUpdate(prevProps, prevState) {
+    if (
+      this.state.filteredProducts.length > 0 &&
+      prevState.filteredProducts.length === 0
+    ) {
+      // Flash the scrollbar when suggestions appear
+      this.setState({ flashScrollbar: true }, () => {
+        if (this.scrollViewRef.current) {
+          // Scroll slightly to trigger the scrollbar
+          this.scrollViewRef.current.scrollTo({ y: 1, animated: true });
+          setTimeout(() => {
+            // Scroll back
+            this.scrollViewRef.current.scrollTo({ y: 0, animated: true });
+            this.setState({ flashScrollbar: false });
+          }, 500);
+        }
+      });
+    }
   }
 }

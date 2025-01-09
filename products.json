@@ -1,0 +1,299 @@
+[
+  {
+    "id": "1",
+    "name": "iPhone 14 Pro Max",
+    "dimensions": {
+      "length": "6.33 inches",
+      "width": "3.05 inches",
+      "height": "0.31 inches"
+    }
+  },
+  {
+    "id": "2",
+    "name": "iPhone 14 Pro",
+    "dimensions": {
+      "length": "5.81 inches",
+      "width": "2.81 inches",
+      "height": "0.31 inches"
+    }
+  },
+  {
+    "id": "3",
+    "name": "iPhone 14 Plus",
+    "dimensions": {
+      "length": "6.33 inches",
+      "width": "3.07 inches",
+      "height": "0.31 inches"
+    }
+  },
+  {
+    "id": "4",
+    "name": "iPhone 14",
+    "dimensions": {
+      "length": "5.78 inches",
+      "width": "2.82 inches",
+      "height": "0.31 inches"
+    }
+  },
+  {
+    "id": "5",
+    "name": "iPhone 13 Pro Max",
+    "dimensions": {
+      "length": "6.33 inches",
+      "width": "3.07 inches",
+      "height": "0.30 inches"
+    }
+  },
+  {
+    "id": "6",
+    "name": "iPhone 13 Pro",
+    "dimensions": {
+      "length": "5.78 inches",
+      "width": "2.82 inches",
+      "height": "0.30 inches"
+    }
+  },
+  {
+    "id": "7",
+    "name": "iPhone 13",
+    "dimensions": {
+      "length": "5.78 inches",
+      "width": "2.82 inches",
+      "height": "0.30 inches"
+    }
+  },
+  {
+    "id": "8",
+    "name": "iPhone 13 Mini",
+    "dimensions": {
+      "length": "5.18 inches",
+      "width": "2.53 inches",
+      "height": "0.30 inches"
+    }
+  },
+  {
+    "id": "9",
+    "name": "iPhone 12 Pro Max",
+    "dimensions": {
+      "length": "6.33 inches",
+      "width": "3.07 inches",
+      "height": "0.29 inches"
+    }
+  },
+  {
+    "id": "10",
+    "name": "iPhone 12 Pro",
+    "dimensions": {
+      "length": "5.78 inches",
+      "width": "2.82 inches",
+      "height": "0.29 inches"
+    }
+  },
+  {
+    "id": "11",
+    "name": "iPhone 12",
+    "dimensions": {
+      "length": "5.78 inches",
+      "width": "2.82 inches",
+      "height": "0.29 inches"
+    }
+  },
+  {
+    "id": "12",
+    "name": "iPhone 12 Mini",
+    "dimensions": {
+      "length": "5.18 inches",
+      "width": "2.53 inches",
+      "height": "0.29 inches"
+    }
+  },
+  {
+    "id": "13",
+    "name": "MacBook Pro 16-inch (2023)",
+    "dimensions": {
+      "length": "14.01 inches",
+      "width": "9.77 inches",
+      "height": "0.66 inches"
+    }
+  },
+  {
+    "id": "14",
+    "name": "MacBook Pro 14-inch (2023)",
+    "dimensions": {
+      "length": "12.31 inches",
+      "width": "8.71 inches",
+      "height": "0.61 inches"
+    }
+  },
+  {
+    "id": "15",
+    "name": "MacBook Air 15-inch (2023)",
+    "dimensions": {
+      "length": "13.40 inches",
+      "width": "9.35 inches",
+      "height": "0.45 inches"
+    }
+  },
+  {
+    "id": "16",
+    "name": "MacBook Air 13-inch M2",
+    "dimensions": {
+      "length": "11.97 inches",
+      "width": "8.46 inches",
+      "height": "0.44 inches"
+    }
+  },
+  {
+    "id": "17",
+    "name": "MacBook Air 13-inch M1",
+    "dimensions": {
+      "length": "11.97 inches",
+      "width": "8.36 inches",
+      "height": "0.63 inches"
+    }
+  },
+  {
+    "id": "18",
+    "name": "iPad Pro 12.9-inch (6th gen)",
+    "dimensions": {
+      "length": "11.04 inches",
+      "width": "8.46 inches",
+      "height": "0.23 inches"
+    }
+  },
+  {
+    "id": "19",
+    "name": "iPad Pro 11-inch (4th gen)",
+    "dimensions": {
+      "length": "9.74 inches",
+      "width": "7.02 inches",
+      "height": "0.23 inches"
+    }
+  },
+  {
+    "id": "20",
+    "name": "iPad Air (5th gen)",
+    "dimensions": {
+      "length": "9.74 inches",
+      "width": "7.02 inches",
+      "height": "0.24 inches"
+    }
+  },
+  {
+    "id": "21",
+    "name": "iPad (10th gen)",
+    "dimensions": {
+      "length": "9.79 inches",
+      "width": "7.07 inches",
+      "height": "0.28 inches"
+    }
+  },
+  {
+    "id": "22",
+    "name": "iPad mini (6th gen)",
+    "dimensions": {
+      "length": "7.69 inches",
+      "width": "5.3 inches",
+      "height": "0.25 inches"
+    }
+  },
+  {
+    "id": "23",
+    "name": "Apple Watch Ultra",
+    "dimensions": {
+      "length": "1.93 inches",
+      "width": "1.73 inches",
+      "height": "0.57 inches"
+    }
+  },
+  {
+    "id": "24",
+    "name": "Apple Watch Series 8 (45mm)",
+    "dimensions": {
+      "length": "1.77 inches",
+      "width": "1.50 inches",
+      "height": "0.42 inches"
+    }
+  },
+  {
+    "id": "25",
+    "name": "Apple Watch SE 2nd gen (44mm)",
+    "dimensions": {
+      "length": "1.73 inches",
+      "width": "1.48 inches",
+      "height": "0.41 inches"
+    }
+  },
+  {
+    "id": "26",
+    "name": "AirPods Pro (2nd gen)",
+    "dimensions": {
+      "length": "2.39 inches",
+      "width": "1.78 inches",
+      "height": "0.85 inches"
+    }
+  },
+  {
+    "id": "27",
+    "name": "AirPods (3rd gen)",
+    "dimensions": {
+      "length": "2.14 inches",
+      "width": "1.83 inches",
+      "height": "0.84 inches"
+    }
+  },
+  {
+    "id": "28",
+    "name": "AirPods Max",
+    "dimensions": {
+      "length": "7.37 inches",
+      "width": "6.64 inches",
+      "height": "3.28 inches"
+    }
+  },
+  {
+    "id": "29",
+    "name": "Mac Pro (2023)",
+    "dimensions": {
+      "length": "20.8 inches",
+      "width": "17.7 inches",
+      "height": "8.58 inches"
+    }
+  },
+  {
+    "id": "30",
+    "name": "Mac mini (2023)",
+    "dimensions": {
+      "length": "7.7 inches",
+      "width": "7.7 inches",
+      "height": "1.41 inches"
+    }
+  },
+  {
+    "id": "31",
+    "name": "iMac 24-inch (2021)",
+    "dimensions": {
+      "length": "21.5 inches",
+      "width": "18.1 inches",
+      "height": "5.8 inches"
+    }
+  },
+  {
+    "id": "32",
+    "name": "Studio Display",
+    "dimensions": {
+      "length": "24.5 inches",
+      "width": "18.8 inches",
+      "height": "6.6 inches"
+    }
+  },
+  {
+    "id": "33",
+    "name": "Pro Display XDR",
+    "dimensions": {
+      "length": "28.3 inches",
+      "width": "16.2 inches",
+      "height": "1.1 inches"
+    }
+  }
+]

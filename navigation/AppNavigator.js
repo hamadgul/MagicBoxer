@@ -18,7 +18,8 @@ import FAQsPage from "../screens/FAQsPage";
 import ShipPackagePage from "../screens/ShipPackagePage";
 import RequestFormPage from "../screens/RequestFormPage";
 import TestPage from "../screens/TestPage";
-import BoxCustomizer from "../screens/BoxCustomizer";
+import BoxCustomizer from "../screens/BoxCustomizer"; 
+import TestProduct from "../screens/TestProduct";
 
 const Stack = createNativeStackNavigator();
 const Drawer = createDrawerNavigator();
@@ -91,6 +92,17 @@ function DrawerNavigator() {
         options={{ 
           ...headerWithIcon('construct-outline', 'Test Boxes'),
           drawerLabel: "Test Boxes",
+          drawerIcon: ({ focused, color, size }) => (
+            <Ionicons name="cube-outline" size={size} color={color} />
+          )
+        }}
+      />
+      <Drawer.Screen
+        name="Test products"
+        component={TestProduct}
+        options={{ 
+          ...headerWithIcon('construct-outline', 'Test Boxes'),
+          drawerLabel: "Test Products",
           drawerIcon: ({ focused, color, size }) => (
             <Ionicons name="cube-outline" size={size} color={color} />
           )

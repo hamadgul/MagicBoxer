@@ -785,6 +785,7 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: '#f5f5f5',
+    paddingBottom: 40,
   },
   section: {
     padding: 16,
@@ -957,6 +958,7 @@ const styles = StyleSheet.create({
     padding: 12,
     backgroundColor: '#f0f0f0',
     borderRadius: 8,
+    marginBottom: 40,
   },
   volumeText: {
     fontSize: 14,
