@@ -513,7 +513,11 @@ export default class FormPage extends Component {
 
   handleUpdateItem = (updatedItem) => {
     const quantity = parseInt(updatedItem.quantity) || 1;
-    const replicatedNames = Array.from({ length: quantity }, () => updatedItem.itemName);
+    const replicatedNames = Array.from({ length: quantity }, (_, i) => ({
+      name: updatedItem.itemName,
+      id: generateUUID(),
+      parentId: updatedItem.id
+    }));
 
     const updatedItemWithReplications = {
       ...updatedItem,
@@ -598,14 +602,14 @@ export default class FormPage extends Component {
         return;
       }
       
-      item.replicatedNames.forEach((name) => {
+      item.replicatedNames.forEach((replicatedName) => {
         itemsTotal.push([
           item.itemLength,
           item.itemWidth,
           item.itemHeight,
           item.id,
           "No Carrier",
-          typeof item.itemName === 'object' ? item.itemName.toString() : item.itemName || "Unnamed Item",
+          replicatedName.name || item.itemName || "Unnamed Item",
         ]);
       });
     });
@@ -727,7 +731,11 @@ export default class FormPage extends Component {
     }
 
     const id = generateUUID();
-    const replicatedNames = Array.from({ length: quantity }, () => this.state.itemName);
+    const replicatedNames = Array.from({ length: quantity }, (_, i) => ({
+      name: this.state.itemName,
+      id: generateUUID(),
+      parentId: id
+    }));
 
     const newItem = {
       id: id,

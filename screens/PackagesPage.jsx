@@ -18,6 +18,7 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import { Ionicons } from "@expo/vector-icons"; 
 import { ItemDetailsModal } from "./FormPage"; 
 import { pack, createDisplay } from "../packing_algo/packing";
+import { v4 as uuidv4 } from 'uuid';
 
 export default class PackagesPage extends Component {
   state = {
@@ -169,9 +170,11 @@ export default class PackagesPage extends Component {
       return;
     }
 
-    const replicatedNames = Array.from({ length: updatedItem.quantity }, (_, i) =>
-      i === 0 ? updatedItem.itemName : `${updatedItem.itemName} ${i + 1}`
-    );
+    const replicatedNames = Array.from({ length: updatedItem.quantity }, (_, i) => ({
+      name: updatedItem.itemName,
+      id: uuidv4(),
+      parentId: updatedItem.id
+    }));
 
     const updatedItemWithReplications = {
       ...updatedItem,
@@ -262,14 +265,19 @@ export default class PackagesPage extends Component {
 
       let itemsTotal = [];
       updatedPackage.forEach((item) => {
-        item.replicatedNames.forEach((name) => {
+        if (!item || !Array.isArray(item.replicatedNames)) {
+          console.warn("Invalid item or missing replicatedNames:", item);
+          return;
+        }
+        
+        item.replicatedNames.forEach((replicatedName) => {
           itemsTotal.push([
             item.itemLength,
             item.itemWidth,
             item.itemHeight,
             item.id,
-            "No Carrier", // Always use No Carrier when packing from PackagesPage
-            name,
+            "No Carrier",
+            replicatedName.name || item.itemName || "Unnamed Item",
           ]);
         });
       });
@@ -285,11 +293,10 @@ export default class PackagesPage extends Component {
 
       const selectedBox = {
         dimensions: [packedResult.x, packedResult.y, packedResult.z],
-        priceText: packedResult.priceText, // Include priceText in selectedBox
+        priceText: packedResult.priceText,
         finalBoxType: packedResult.type,
       };
 
-      // Navigate to Display3D screen with necessary parameters
       this.props.navigation.navigate("Display3D", {
         box: packedResult,
         itemsTotal: itemsDisplay,
@@ -299,9 +306,9 @@ export default class PackagesPage extends Component {
         packageName: selectedPackage
       });
 
-      // Close the package modal
       this.closePackageModal();
     } catch (error) {
+      console.error("Packing error:", error);
       Alert.alert("Error", "An error occurred while preparing the package.");
     }
   };

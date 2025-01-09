@@ -399,13 +399,13 @@ export default class Display3D extends Component {
     }
 
     const itemsTotal = items.flatMap((item) =>
-      item.replicatedNames.map((name) => [
+      item.replicatedNames.map((replicatedName) => [
         item.itemLength,
         item.itemWidth,
         item.itemHeight,
         item.id,
         selectedCarrier,
-        typeof item.itemName === 'object' ? item.itemName.toString() : item.itemName || "Unnamed Item",
+        replicatedName.name || item.itemName || "Unnamed Item",
       ])
     );
 
@@ -564,19 +564,16 @@ export default class Display3D extends Component {
     itemsTotal.forEach(item => {
       if (!item) return;
       totalItemCount++;
-      const name = typeof item.itemName === 'object' ? item.itemName.toString() : item.itemName || "Unnamed Item";
-      const baseKey = typeof name === 'string' ? name.replace(/\s+\d+$/, '') : name.toString(); // Remove trailing numbers only if name is a string
+      
+      // Get the full name from the item
+      const name = item.itemName;
+      const baseKey = name;
       
       if (!groupedItems[baseKey]) {
         groupedItems[baseKey] = {
           items: [],
           baseItem: null
         };
-      }
-      
-      // If this is the original item (no number suffix)
-      if (name === baseKey) {
-        groupedItems[baseKey].baseItem = item;
       }
       
       groupedItems[baseKey].items.push({
@@ -586,28 +583,25 @@ export default class Display3D extends Component {
       });
     });
 
-    // Create final items with proper grouping
+    // Convert grouped items to final format
     Object.entries(groupedItems).forEach(([baseKey, group]) => {
       if (group.items.length === 1) {
-        // Single item
+        // Single item - no need for grouping
         const item = group.items[0];
         finalItems.push({
           ...item,
-          displayName: baseKey,
-          sortKey: baseKey,
-          x: item.x,
-          y: item.y,
-          z: item.z,
+          displayName: item.displayName,
+          sortKey: item.sortKey
         });
       } else {
         // Multiple items - create parent item
         const baseItem = group.baseItem || group.items[0];
         finalItems.push({
-          displayName: baseKey,
+          displayName: baseItem.displayName,
           isParent: true,
           childItems: group.items.map((item, index) => ({
             ...item,
-            displayName: baseKey,
+            displayName: item.displayName,
             sortKey: `${baseKey}_${index}`,
           })),
           colors: [...new Set(group.items.map(item => item.color))],
