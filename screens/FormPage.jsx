@@ -24,8 +24,9 @@ import { pack, createDisplay } from "../packing_algo/packing";
 import styles from "../components/Styles";
 import { modalStyles } from "../components/ModalStyles";
 import { debounce } from 'lodash';
+import DropDownPicker from 'react-native-dropdown-picker';
 var Buffer = require("@craftzdog/react-native-buffer").Buffer;
-const products = require('../products.json');
+const productList = require('../products.json') || [];
 
 const itemButtonColors = [
   "#3B5998",
@@ -321,49 +322,31 @@ export default class FormPage extends Component {
       packageName: '',
       isLoading: false,
       filteredProducts: [],
-      showProductSuggestions: false,
-      flashScrollbar: false,
+      showSuggestions: false
     };
-    this.scrollViewRef = React.createRef();
-  }
-
-  handleInputChange = (field, value) => {
-    this.setState({ [field]: value });
+    this.inputRef = React.createRef();
   }
 
   handleChange = (text) => {
     this.setState({ itemName: text });
     
-    // Filter products as user types
     if (!text.trim()) {
       this.setState({ 
         filteredProducts: [],
-        showProductSuggestions: false 
+        showSuggestions: false 
       });
       return;
     }
 
-    const results = products.filter((product) =>
+    const results = productList.filter(product =>
       product.name.toLowerCase().includes(text.toLowerCase())
-    );
+    ).slice(0, 5); // Limit to 5 suggestions
+
     this.setState({ 
       filteredProducts: results,
-      showProductSuggestions: true 
-    }, () => {
-      if (results.length > 4) { // Show indicator if there are more than 4 items
-        this.showTemporaryScrollIndicator();
-      }
+      showSuggestions: results.length > 0
     });
   }
-
-  showTemporaryScrollIndicator = () => {
-    this.setState({ showScrollIndicator: true }, () => {
-      // Hide the indicator after 1 second
-      setTimeout(() => {
-        this.setState({ showScrollIndicator: false });
-      }, 1000);
-    });
-  };
 
   handleProductSelect = (product) => {
     // Extract numeric values from dimension strings
@@ -377,8 +360,8 @@ export default class FormPage extends Component {
       itemLength: extractDimension(product.dimensions.length),
       itemWidth: extractDimension(product.dimensions.width),
       itemHeight: extractDimension(product.dimensions.height),
-      filteredProducts: [],
-      showProductSuggestions: false
+      showSuggestions: false,
+      filteredProducts: []
     });
   }
 
@@ -813,35 +796,37 @@ export default class FormPage extends Component {
 
   render() {
     return (
-      <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
+      <TouchableWithoutFeedback onPress={() => {
+        Keyboard.dismiss();
+        this.setState({ showSuggestions: false });
+      }}>
         <View style={styles.container}>
           <View style={styles.formContainer}>
             <VStack space={2} width="100%">
               <Text style={[styles.label, styles.condensedLabel]}>Item Name:</Text>
-              <View style={{ position: 'relative' }}>
+              <View style={{ position: 'relative', zIndex: 1 }}>
                 <TextInput
+                  ref={this.inputRef}
                   style={[styles.input, styles.condensedInput]}
                   value={this.state.itemName}
                   onChangeText={this.handleChange}
-                  maxLength={10}
-                  returnKeyType={"next"}
-                  keyboardAppearance="light"
+                  maxLength={50}
                   placeholder="MacBook, Xbox etc"
                   placeholderTextColor={"#d3d3d3"}
                   autoCorrect={false}
                   spellCheck={false}
                 />
-                {this.state.showProductSuggestions && this.state.filteredProducts.length > 0 && (
+                {this.state.showSuggestions && (
                   <View style={{
                     position: 'absolute',
                     top: '100%',
                     left: 0,
                     right: 0,
-                    height: 200,
                     backgroundColor: 'white',
                     borderWidth: 1,
                     borderColor: '#ddd',
                     borderRadius: 4,
+                    maxHeight: 200,
                     zIndex: 1000,
                     elevation: 5,
                     shadowColor: '#000',
@@ -849,30 +834,21 @@ export default class FormPage extends Component {
                     shadowOpacity: 0.25,
                     shadowRadius: 3.84,
                   }}>
-                    <View style={{ height: 200 }}>
-                      <ScrollView 
-                        ref={this.scrollViewRef}
-                        style={{ flex: 1 }}
-                        showsVerticalScrollIndicator={true}
-                        persistentScrollbar={true}
-                        indicatorStyle="black"
-                        scrollEventThrottle={16}
-                      >
-                        {this.state.filteredProducts.map((item) => (
-                          <TouchableOpacity
-                            key={item.id}
-                            style={{
-                              padding: 15,
-                              borderBottomWidth: 1,
-                              borderBottomColor: '#eee',
-                            }}
-                            onPress={() => this.handleProductSelect(item)}
-                          >
-                            <Text style={{ fontSize: 16 }}>{item.name}</Text>
-                          </TouchableOpacity>
-                        ))}
-                      </ScrollView>
-                    </View>
+                    <ScrollView>
+                      {this.state.filteredProducts.map((product) => (
+                        <TouchableOpacity
+                          key={product.id}
+                          style={{
+                            padding: 15,
+                            borderBottomWidth: 1,
+                            borderBottomColor: '#eee',
+                          }}
+                          onPress={() => this.handleProductSelect(product)}
+                        >
+                          <Text style={{ fontSize: 16 }}>{product.name}</Text>
+                        </TouchableOpacity>
+                      ))}
+                    </ScrollView>
                   </View>
                 )}
               </View>
@@ -880,7 +856,7 @@ export default class FormPage extends Component {
               <TextInput
                 style={[styles.input, styles.condensedInput]}
                 value={this.state.itemLength}
-                onChangeText={(text) => this.handleInputChange('itemLength', text)}
+                onChangeText={(text) => this.setState({ itemLength: text })}
                 keyboardType="numeric"
                 keyboardAppearance="light"
                 placeholder="-- inches"
@@ -891,7 +867,7 @@ export default class FormPage extends Component {
               <TextInput
                 style={[styles.input, styles.condensedInput]}
                 value={this.state.itemWidth}
-                onChangeText={(text) => this.handleInputChange('itemWidth', text)}
+                onChangeText={(text) => this.setState({ itemWidth: text })}
                 keyboardType="numeric"
                 placeholder="-- inches"
                 keyboardAppearance="light"
@@ -902,7 +878,7 @@ export default class FormPage extends Component {
               <TextInput
                 style={[styles.input, styles.condensedInput]}
                 value={this.state.itemHeight}
-                onChangeText={(text) => this.handleInputChange('itemHeight', text)}
+                onChangeText={(text) => this.setState({ itemHeight: text })}
                 keyboardType="numeric"
                 placeholder="-- inches"
                 keyboardAppearance="light"
@@ -916,7 +892,7 @@ export default class FormPage extends Component {
                 onChangeText={(text) => {
                   const newQuantity = text === "" ? "" : parseInt(text);
                   if (!isNaN(newQuantity) || text === "") {
-                    this.handleInputChange('quantity', newQuantity);
+                    this.setState({ quantity: newQuantity });
                   }
                 }}
                 keyboardType="numeric"
@@ -999,7 +975,7 @@ export default class FormPage extends Component {
                           paddingHorizontal: 16,
                         }]}
                         value={this.state.packageName}
-                        onChangeText={(text) => this.handleInputChange('packageName', text)}
+                        onChangeText={(text) => this.setState({ packageName: text })}
                         placeholder="e.g., Holiday Gifts 2024"
                         placeholderTextColor="#94A3B8"
                         autoFocus={true}
@@ -1051,10 +1027,10 @@ export default class FormPage extends Component {
 
   componentDidUpdate(prevProps, prevState) {
     if (
-      this.state.filteredProducts.length > 0 &&
-      prevState.filteredProducts.length === 0
+      this.state.dropdownOpen &&
+      !prevState.dropdownOpen
     ) {
-      // Flash the scrollbar when suggestions appear
+      // Flash the scrollbar when dropdown opens
       this.setState({ flashScrollbar: true }, () => {
         if (this.scrollViewRef.current) {
           // Scroll slightly to trigger the scrollbar
