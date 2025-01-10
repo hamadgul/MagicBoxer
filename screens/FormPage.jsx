@@ -804,232 +804,243 @@ export default class FormPage extends Component {
 
   render() {
     return (
-      <TouchableWithoutFeedback onPress={() => {
-        Keyboard.dismiss();
-        this.setState({ showSuggestions: false });
-      }}>
-        <View style={styles.container}>
-          <View style={styles.formContainer}>
-            <VStack space={2} width="100%">
-              <Text style={[styles.label, styles.condensedLabel]}>Item Name:</Text>
-              <View style={{ position: 'relative', zIndex: 1 }}>
-                <TextInput
-                  ref={this.inputRef}
-                  style={[styles.input, styles.condensedInput]}
-                  value={this.state.itemName}
-                  onChangeText={this.handleChange}
-                  maxLength={50}
-                  placeholder="MacBook, Xbox etc"
-                  placeholderTextColor={"#d3d3d3"}
-                  autoCorrect={false}
-                  spellCheck={false}
-                />
-                {this.state.showSuggestions && (
-                  <View style={{
-                    position: 'absolute',
-                    top: '100%',
-                    left: 0,
-                    right: 0,
-                    backgroundColor: 'white',
-                    borderWidth: 1,
-                    borderColor: '#ddd',
-                    borderRadius: 4,
-                    maxHeight: 200,
-                    zIndex: 1000,
-                    elevation: 5,
-                    shadowColor: '#000',
-                    shadowOffset: { width: 0, height: 2 },
-                    shadowOpacity: 0.25,
-                    shadowRadius: 3.84,
-                  }}>
-                    <ScrollView>
-                      {this.state.filteredProducts.map((product) => (
-                        <TouchableOpacity
-                          key={product.id}
-                          style={{
-                            padding: 15,
-                            borderBottomWidth: 1,
-                            borderBottomColor: '#eee',
-                          }}
-                          onPress={() => this.handleProductSelect(product)}
-                        >
-                          <Text style={{ fontSize: 16 }}>{product.name}</Text>
-                        </TouchableOpacity>
-                      ))}
-                    </ScrollView>
+      <KeyboardAvoidingView
+        behavior={Platform.OS === "ios" ? "padding" : "height"}
+        style={{ flex: 1 }}
+      >
+        <ScrollView 
+          style={{ flex: 1 }}
+          contentContainerStyle={{ flexGrow: 1 }}
+          keyboardShouldPersistTaps="handled"
+        >
+          <TouchableWithoutFeedback onPress={() => {
+            Keyboard.dismiss();
+            this.setState({ showSuggestions: false });
+          }}>
+            <View style={styles.container}>
+              <View style={styles.formContainer}>
+                <VStack space={2} width="100%">
+                  <Text style={[styles.label, styles.condensedLabel]}>Item Name:</Text>
+                  <View style={{ position: 'relative', zIndex: 1 }}>
+                    <TextInput
+                      ref={this.inputRef}
+                      style={[styles.input, styles.condensedInput]}
+                      value={this.state.itemName}
+                      onChangeText={this.handleChange}
+                      maxLength={50}
+                      placeholder="MacBook, Xbox etc"
+                      placeholderTextColor={"#d3d3d3"}
+                      autoCorrect={false}
+                      spellCheck={false}
+                    />
+                    {this.state.showSuggestions && (
+                      <View style={{
+                        position: 'absolute',
+                        top: '100%',
+                        left: 0,
+                        right: 0,
+                        backgroundColor: 'white',
+                        borderWidth: 1,
+                        borderColor: '#ddd',
+                        borderRadius: 4,
+                        maxHeight: 200,
+                        zIndex: 1000,
+                        elevation: 5,
+                        shadowColor: '#000',
+                        shadowOffset: { width: 0, height: 2 },
+                        shadowOpacity: 0.25,
+                        shadowRadius: 3.84,
+                      }}>
+                        <ScrollView>
+                          {this.state.filteredProducts.map((product) => (
+                            <TouchableOpacity
+                              key={product.id}
+                              style={{
+                                padding: 15,
+                                borderBottomWidth: 1,
+                                borderBottomColor: '#eee',
+                              }}
+                              onPress={() => this.handleProductSelect(product)}
+                            >
+                              <Text style={{ fontSize: 16 }}>{product.name}</Text>
+                            </TouchableOpacity>
+                          ))}
+                        </ScrollView>
+                      </View>
+                    )}
                   </View>
-                )}
+                  <Text style={[styles.label, styles.condensedLabel]}>Length:</Text>
+                  <TextInput
+                    style={[styles.input, styles.condensedInput]}
+                    value={this.state.itemLength}
+                    onChangeText={(text) => this.setState({ itemLength: text })}
+                    keyboardType="numeric"
+                    keyboardAppearance="light"
+                    placeholder="-- inches"
+                    placeholderTextColor={"#d3d3d3"}
+                    maxLength={3}
+                  />
+                  <Text style={[styles.label, styles.condensedLabel]}>Width:</Text>
+                  <TextInput
+                    style={[styles.input, styles.condensedInput]}
+                    value={this.state.itemWidth}
+                    onChangeText={(text) => this.setState({ itemWidth: text })}
+                    keyboardType="numeric"
+                    placeholder="-- inches"
+                    keyboardAppearance="light"
+                    placeholderTextColor={"#d3d3d3"}
+                    maxLength={3}
+                  />
+                  <Text style={[styles.label, styles.condensedLabel]}>Height:</Text>
+                  <TextInput
+                    style={[styles.input, styles.condensedInput]}
+                    value={this.state.itemHeight}
+                    onChangeText={(text) => this.setState({ itemHeight: text })}
+                    keyboardType="numeric"
+                    placeholder="-- inches"
+                    keyboardAppearance="light"
+                    placeholderTextColor={"#d3d3d3"}
+                    maxLength={3}
+                  />
+                  <Text style={[styles.label, styles.condensedLabel]}>Quantity:</Text>
+                  <TextInput
+                    style={[styles.input, styles.condensedInput]}
+                    value={this.state.quantity.toString()}
+                    onChangeText={(text) => {
+                      const newQuantity = text === "" ? "" : parseInt(text);
+                      if (!isNaN(newQuantity) || text === "") {
+                        this.setState({ quantity: newQuantity });
+                      }
+                    }}
+                    keyboardType="numeric"
+                    placeholder="Enter Quantity"
+                    placeholderTextColor={"#d3d3d3"}
+                    maxLength={3}
+                  />
+                  <TouchableOpacity
+                    style={styles.submitButton}
+                    onPress={this.handleSubmit}
+                  >
+                    <Text style={styles.buttonText}>Add Item</Text>
+                  </TouchableOpacity>
+                </VStack>
               </View>
-              <Text style={[styles.label, styles.condensedLabel]}>Length:</Text>
-              <TextInput
-                style={[styles.input, styles.condensedInput]}
-                value={this.state.itemLength}
-                onChangeText={(text) => this.setState({ itemLength: text })}
-                keyboardType="numeric"
-                keyboardAppearance="light"
-                placeholder="-- inches"
-                placeholderTextColor={"#d3d3d3"}
-                maxLength={3}
-              />
-              <Text style={[styles.label, styles.condensedLabel]}>Width:</Text>
-              <TextInput
-                style={[styles.input, styles.condensedInput]}
-                value={this.state.itemWidth}
-                onChangeText={(text) => this.setState({ itemWidth: text })}
-                keyboardType="numeric"
-                placeholder="-- inches"
-                keyboardAppearance="light"
-                placeholderTextColor={"#d3d3d3"}
-                maxLength={3}
-              />
-              <Text style={[styles.label, styles.condensedLabel]}>Height:</Text>
-              <TextInput
-                style={[styles.input, styles.condensedInput]}
-                value={this.state.itemHeight}
-                onChangeText={(text) => this.setState({ itemHeight: text })}
-                keyboardType="numeric"
-                placeholder="-- inches"
-                keyboardAppearance="light"
-                placeholderTextColor={"#d3d3d3"}
-                maxLength={3}
-              />
-              <Text style={[styles.label, styles.condensedLabel]}>Quantity:</Text>
-              <TextInput
-                style={[styles.input, styles.condensedInput]}
-                value={this.state.quantity.toString()}
-                onChangeText={(text) => {
-                  const newQuantity = text === "" ? "" : parseInt(text);
-                  if (!isNaN(newQuantity) || text === "") {
-                    this.setState({ quantity: newQuantity });
-                  }
-                }}
-                keyboardType="numeric"
-                placeholder="Enter Quantity"
-                placeholderTextColor={"#d3d3d3"}
-                maxLength={3}
-              />
-              <TouchableOpacity
-                style={styles.submitButton}
-                onPress={this.handleSubmit}
+
+              <View style={styles.contentContainer}>
+                <ScrollView
+                  style={styles.itemsContainer}
+                  contentContainerStyle={styles.itemsList}
+                  removeClippedSubviews={true}
+                  initialNumToRender={10}
+                  maxToRenderPerBatch={5}
+                  windowSize={5}
+                  updateCellsBatchingPeriod={50}
+                  keyboardShouldPersistTaps="handled"
+                >
+                  {this.renderItemsList()}
+                </ScrollView>
+              </View>
+
+              <View style={styles.bottomButtonContainer}>
+                <TouchableOpacity
+                  style={styles.savePackageButton}
+                  onPress={this.toggleSavePackageModal}
+                >
+                  <Text style={styles.buttonText}>Save Package</Text>
+                </TouchableOpacity>
+                <TouchableOpacity
+                  style={styles.visualizeButton}
+                  onPress={this.handleVisualize}
+                  disabled={this.state.isLoading}
+                >
+                  {this.state.isLoading ? (
+                    <ActivityIndicator color="white" />
+                  ) : (
+                    <Text style={styles.buttonText}>Pack!</Text>
+                  )}
+                </TouchableOpacity>
+              </View>
+
+              {/* Save Package Modal */}
+              <Modal
+                visible={this.state.showSavePackageModal}
+                animationType="slide"
+                transparent={true}
+                onRequestClose={this.toggleSavePackageModal}
               >
-                <Text style={styles.buttonText}>Add Item</Text>
-              </TouchableOpacity>
-            </VStack>
-          </View>
-
-          <View style={styles.contentContainer}>
-            <ScrollView
-              style={styles.itemsContainer}
-              contentContainerStyle={styles.itemsList}
-              removeClippedSubviews={true}
-              initialNumToRender={10}
-              maxToRenderPerBatch={5}
-              windowSize={5}
-              updateCellsBatchingPeriod={50}
-              keyboardShouldPersistTaps="handled"
-            >
-              {this.renderItemsList()}
-            </ScrollView>
-          </View>
-
-          <View style={styles.bottomButtonContainer}>
-            <TouchableOpacity
-              style={styles.savePackageButton}
-              onPress={this.toggleSavePackageModal}
-            >
-              <Text style={styles.buttonText}>Save Package</Text>
-            </TouchableOpacity>
-            <TouchableOpacity
-              style={styles.visualizeButton}
-              onPress={this.handleVisualize}
-              disabled={this.state.isLoading}
-            >
-              {this.state.isLoading ? (
-                <ActivityIndicator color="white" />
-              ) : (
-                <Text style={styles.buttonText}>Pack!</Text>
-              )}
-            </TouchableOpacity>
-          </View>
-
-          {/* Save Package Modal */}
-          <Modal
-            visible={this.state.showSavePackageModal}
-            animationType="slide"
-            transparent={true}
-            onRequestClose={this.toggleSavePackageModal}
-          >
-            <TouchableWithoutFeedback onPress={this.toggleSavePackageModal}>
-              <View style={styles.modalOverlay}>
-                <TouchableWithoutFeedback onPress={(e) => e.stopPropagation()}>
-                  <View style={[styles.modalContent, { alignItems: 'center', paddingVertical: 24 }]}>
-                    <Text style={modalStyles.modalTitle}>Save Your Package</Text>
-                    <Text style={modalStyles.modalSubtitle}>
-                    Access saved packages on the side menu under "Saved Packages"
-                    </Text>
-                    <View style={modalStyles.inputContainer}>
-                      <Text style={modalStyles.inputLabel}>Package Name</Text>
-                      <TextInput
-                        style={[styles.input, { 
-                          textAlign: 'center', 
-                          width: '100%',
-                          height: 50,
-                          marginBottom: 24,
-                          fontSize: 16,
-                          borderWidth: 1,
-                          borderColor: '#E2E8F0',
-                          borderRadius: 8,
-                          backgroundColor: '#F8FAFC',
-                          paddingHorizontal: 16,
-                        }]}
-                        value={this.state.packageName}
-                        onChangeText={(text) => this.setState({ packageName: text })}
-                        placeholder="e.g., Holiday Gifts 2024"
-                        placeholderTextColor="#94A3B8"
-                        autoFocus={true}
-                        autoCorrect={false}
-                        autoCapitalize="none"
-                        spellCheck={false}
-                      />
-                    </View>
-                    <TouchableOpacity
-                      style={[styles.buttonApply1, { 
-                        width: '100%',
-                        height: 48,
-                        alignItems: 'center', 
-                        justifyContent: 'center',
-                        borderRadius: 8,
-                        backgroundColor: '#3B82F6',
-                        marginTop: 8,
-                      }]}
-                      onPress={this.handleSavePackage}
-                    >
-                      <Text style={[styles.buttonText, { 
-                        textAlign: 'center',
-                        fontSize: 16,
-                        fontWeight: '600'
-                      }]}>Save Package</Text>
-                    </TouchableOpacity>
+                <TouchableWithoutFeedback onPress={this.toggleSavePackageModal}>
+                  <View style={styles.modalOverlay}>
+                    <TouchableWithoutFeedback onPress={(e) => e.stopPropagation()}>
+                      <View style={[styles.modalContent, { alignItems: 'center', paddingVertical: 24 }]}>
+                        <Text style={modalStyles.modalTitle}>Save Your Package</Text>
+                        <Text style={modalStyles.modalSubtitle}>
+                        Access saved packages on the side menu under "Saved Packages"
+                        </Text>
+                        <View style={modalStyles.inputContainer}>
+                          <Text style={modalStyles.inputLabel}>Package Name</Text>
+                          <TextInput
+                            style={[styles.input, { 
+                              textAlign: 'center', 
+                              width: '100%',
+                              height: 50,
+                              marginBottom: 24,
+                              fontSize: 16,
+                              borderWidth: 1,
+                              borderColor: '#E2E8F0',
+                              borderRadius: 8,
+                              backgroundColor: '#F8FAFC',
+                              paddingHorizontal: 16,
+                            }]}
+                            value={this.state.packageName}
+                            onChangeText={(text) => this.setState({ packageName: text })}
+                            placeholder="e.g., Holiday Gifts 2024"
+                            placeholderTextColor="#94A3B8"
+                            autoFocus={true}
+                            autoCorrect={false}
+                            autoCapitalize="none"
+                            spellCheck={false}
+                          />
+                        </View>
+                        <TouchableOpacity
+                          style={[styles.buttonApply1, { 
+                            width: '100%',
+                            height: 48,
+                            alignItems: 'center', 
+                            justifyContent: 'center',
+                            borderRadius: 8,
+                            backgroundColor: '#3B82F6',
+                            marginTop: 8,
+                          }]}
+                          onPress={this.handleSavePackage}
+                        >
+                          <Text style={[styles.buttonText, { 
+                            textAlign: 'center',
+                            fontSize: 16,
+                            fontWeight: '600'
+                          }]}>Save Package</Text>
+                        </TouchableOpacity>
+                      </View>
+                    </TouchableWithoutFeedback>
                   </View>
                 </TouchableWithoutFeedback>
-              </View>
-            </TouchableWithoutFeedback>
-          </Modal>
+              </Modal>
 
-          {this.state.showDetails && this.state.selectedItem && (
-            <ItemDetailsModal
-              visible={this.state.showDetails}
-              item={{
-                ...this.state.selectedItem,
-                quantity: this.state.selectedItem.quantity || 1,
-              }}
-              closeModal={this.closeModal}
-              handleDeleteAndClose={this.handleDeleteAndClose}
-              handleUpdateItem={this.handleUpdateItem}
-            />
-          )}
-        </View>
-      </TouchableWithoutFeedback>
+              {this.state.showDetails && this.state.selectedItem && (
+                <ItemDetailsModal
+                  visible={this.state.showDetails}
+                  item={{
+                    ...this.state.selectedItem,
+                    quantity: this.state.selectedItem.quantity || 1,
+                  }}
+                  closeModal={this.closeModal}
+                  handleDeleteAndClose={this.handleDeleteAndClose}
+                  handleUpdateItem={this.handleUpdateItem}
+                />
+              )}
+            </View>
+          </TouchableWithoutFeedback>
+        </ScrollView>
+      </KeyboardAvoidingView>
     );
   }
 
