@@ -27,36 +27,35 @@ import { setupScene } from "../utils/renderUtils";
 import { RENDER_CONFIG } from "../utils/renderConfig";
 import Slider from "@react-native-community/slider";
 
-const carrierData = [
+// Memoize carrier data to prevent recreation
+const carrierData = Object.freeze([
   { label: "No Carrier", value: "No Carrier" },
   { label: "UPS", value: "UPS" },
   { label: "USPS", value: "USPS" },
   { label: "FedEx", value: "FedEx" },
-];
+]);
 
-const PriceText = ({ carrier, priceText }) => {
+// Memoize URL mappings
+const CARRIER_URLS = Object.freeze({
+  "Priority Mail": "https://postcalc.usps.com/",
+  "FedEx One Rate": "https://www.fedex.com/en-us/online/rating.html#",
+  "Flat Rates Start at": "https://wwwapps.ups.com/ctc/request?loc=en_US"
+});
+
+// Memoize PriceText component
+const PriceText = React.memo(({ carrier, priceText }) => {
   if (!priceText) {
     return <Text style={styles.text}>Price not available</Text>;
   }
 
   const handlePress = () => {
-    let url = "";
-    if (priceText.includes("Priority Mail")) {
-      url = "https://postcalc.usps.com/";
-    } else if (priceText.includes("FedEx One Rate")) {
-      url = "https://www.fedex.com/en-us/online/rating.html#";
-    } else if (priceText.includes("Flat Rates Start at")) {
-      url = "https://wwwapps.ups.com/ctc/request?loc=en_US";
-    }
-    
+    const url = Object.entries(CARRIER_URLS).find(([key]) => priceText.includes(key))?.[1];
     if (url) {
       Linking.openURL(url);
     }
   };
 
-  const isClickable = priceText.includes("Priority Mail") || 
-                     priceText.includes("FedEx One Rate") || 
-                     priceText.includes("Flat Rates Start at");
+  const isClickable = Object.keys(CARRIER_URLS).some(key => priceText.includes(key));
 
   return isClickable ? (
     <TouchableOpacity onPress={handlePress}>
@@ -65,26 +64,38 @@ const PriceText = ({ carrier, priceText }) => {
   ) : (
     <Text style={styles.text}>{priceText}</Text>
   );
-};
+});
 
 export default class Display3D extends Component {
   constructor(props) {
     super(props);
     
+    // Memoize PanResponder
     this.panResponder = PanResponder.create({
       onStartShouldSetPanResponder: () => true,
       onMoveShouldSetPanResponder: () => true,
       onPanResponderMove: this.handlePanResponderMove,
     });
 
-    // Pre-create scene using shared utility
+    // Pre-create and memoize scene
     this.scene = setupScene();
+    
+    // Memoize animation constants
+    this.ANIMATION_DURATION = 600;
+    this.ANIMATION_SCALE_MIN = 0.8;
+    this.ANIMATION_SCALE_MAX = 1;
     
     // Animation properties
     this.animationStartTime = 0;
-    this.animationDuration = 600; // 600ms total
     this.isAnimating = false;
     this.boxMesh = null;
+    this.frameId = null;
+
+    // Memoize initial camera settings
+    this.defaultCameraSettings = {
+      normal: { distance: 5, fov: 75 },
+      special: { distance: 3.5, fov: 60 }
+    };
 
     this.state = {
       theta: 0,
@@ -122,72 +133,69 @@ export default class Display3D extends Component {
       return;
     }
 
+    // Cancel any existing animation
+    if (this.frameId) {
+      cancelAnimationFrame(this.frameId);
+    }
+
     this.isAnimating = true;
     this.animationStartTime = Date.now();
     
-    // Make materials transparent
-    this.boxMesh.material.transparent = true;
-    this.boxMesh.children.forEach(child => {
-      if (child.material) {
-        child.material.transparent = true;
-      }
+    // Cache materials that need animation
+    const materials = [
+      this.boxMesh.material,
+      ...this.boxMesh.children
+        .filter(child => child.material)
+        .map(child => child.material)
+    ];
+    
+    materials.forEach(material => {
+      material.transparent = true;
     });
 
-    // Start the animation loop
     const animate = () => {
       if (!this.isAnimating) return;
 
       const elapsed = Date.now() - this.animationStartTime;
-      const progress = Math.min(elapsed / this.animationDuration, 1);
+      const progress = Math.min(elapsed / this.ANIMATION_DURATION, 1);
       
-      // First half of animation (fade out)
       if (progress <= 0.5) {
-        const fadeOutProgress = progress * 2; // Scale to 0-1 range
-        const scale = 1 - (0.2 * fadeOutProgress); // Scale from 1 to 0.8
-        const opacity = 1 - fadeOutProgress; // Fade from 1 to 0
-        const rotation = Math.PI * fadeOutProgress; // Rotate from 0 to PI
+        const fadeOutProgress = progress * 2;
+        const scale = this.ANIMATION_SCALE_MAX - ((this.ANIMATION_SCALE_MAX - this.ANIMATION_SCALE_MIN) * fadeOutProgress);
+        const opacity = 1 - fadeOutProgress;
+        const rotation = Math.PI * fadeOutProgress;
 
         this.boxMesh.scale.setScalar(scale);
         this.boxMesh.rotation.y = rotation;
-        this.boxMesh.material.opacity = opacity;
         
-        // Animate child elements
-        this.boxMesh.children.forEach(child => {
-          if (child.material) {
-            child.material.opacity = opacity;
-          }
+        materials.forEach(material => {
+          material.opacity = opacity;
         });
-      } 
-      // Second half of animation (fade in)
-      else {
-        const fadeInProgress = (progress - 0.5) * 2; // Scale to 0-1 range
-        const scale = 0.8 + (0.2 * fadeInProgress); // Scale from 0.8 to 1
-        const opacity = fadeInProgress; // Fade from 0 to 1
-        const rotation = Math.PI * (1 - fadeInProgress); // Rotate from PI to 0
+      } else {
+        const fadeInProgress = (progress - 0.5) * 2;
+        const scale = this.ANIMATION_SCALE_MIN + ((this.ANIMATION_SCALE_MAX - this.ANIMATION_SCALE_MIN) * fadeInProgress);
+        const opacity = fadeInProgress;
+        const rotation = Math.PI * (1 - fadeInProgress);
 
         this.boxMesh.scale.setScalar(scale);
         this.boxMesh.rotation.y = rotation;
-        this.boxMesh.material.opacity = opacity;
         
-        // Animate child elements
-        this.boxMesh.children.forEach(child => {
-          if (child.material) {
-            child.material.opacity = opacity;
-          }
+        materials.forEach(material => {
+          material.opacity = opacity;
         });
       }
 
-      // Check if animation is complete
       if (progress >= 1) {
         this.isAnimating = false;
+        this.frameId = null;
         if (callback) callback();
         this.setState({ isTransitioning: false });
       } else {
-        requestAnimationFrame(animate);
+        this.frameId = requestAnimationFrame(animate);
       }
     };
 
-    animate();
+    this.frameId = requestAnimationFrame(animate);
   }
 
   updateVisualsBasedOnCarrier = (carrier) => {
@@ -329,24 +337,28 @@ export default class Display3D extends Component {
     const { box } = this.state;
     
     if (!this.camera) {
-      // Check if this is a special size box that needs adjusted camera settings
       const specialSize = isSpecialSize(box);
-      let cameraDistance = specialSize ? 3.5 : 5;
-      let fov = specialSize ? 60 : 75;
+      const settings = specialSize ? 
+        this.defaultCameraSettings.special : 
+        this.defaultCameraSettings.normal;
 
       this.camera = new THREE.PerspectiveCamera(
-        fov,
+        settings.fov,
         gl.drawingBufferWidth / gl.drawingBufferHeight,
         0.1,
         1000
       );
-      this.camera.position.set(0, cameraDistance * 0.5, cameraDistance);
+      this.camera.position.set(0, settings.distance * 0.5, settings.distance);
       this.camera.lookAt(0, 0, 0);
     }
 
     if (!this.renderer) {
       this.renderer = new Renderer({ gl });
       this.renderer.setSize(gl.drawingBufferWidth, gl.drawingBufferHeight);
+      
+      // Enable optimizations
+      this.renderer.setPixelRatio(1); // Use device pixel ratio
+      this.renderer.sortObjects = false; // Disable object sorting if not needed
     }
 
     this.setState({ gl }, () => {
