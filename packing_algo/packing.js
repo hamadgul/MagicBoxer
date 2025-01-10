@@ -293,21 +293,21 @@ export function createDisplay(box, scale) {
   const boxes = flatten2(box);
   const items = [];
   const difcolors = [
-    "#FF5733", // Bright Orange-Red
-    "#2DAE42", // Green
-    "#63D7D6", // Light Cyan
-    "#FF7F50", // Coral
-    "#4682B4", // Steel Blue
-    "#9B59B6", // Amethyst Purple
-    "#FFD700", // Gold
-    "#40E0D0", // Turquoise
-    "#DC143C", // Crimson Red
-    "#32CD32", // Lime Green
-    "#FF4500", // Orange Red
-    "#1E90FF", // Dodger Blue
-    "#DA70D6", // Orchid
-    "#8A2BE2", // Blue Violet
+    "#FF0000", // Pure Red
+    "#00FF00", // Pure Green
+    "#0000FF", // Pure Blue
+    "#FFFF00", // Yellow
+    "#FF00FF", // Magenta
+    "#00FFFF", // Cyan
+    "#FFA500", // Orange
+    "#800080", // Purple
+    "#008000", // Dark Green
+    "#000080", // Navy Blue
     "#FF1493", // Deep Pink
+    "#8B4513", // Saddle Brown
+    "#4B0082", // Indigo
+    "#FFD700", // Gold
+    "#00CED1", // Dark Turquoise
   ];
 
   for (let i = 0; i < boxes.length; i++) {
@@ -322,23 +322,30 @@ export function createDisplay(box, scale) {
         item.zz = item.z;
       }
 
+      // Create main geometry with slightly smaller dimensions for gap effect
       const geo = new THREE.BoxGeometry(
-        item.xx / itemScale - 0.001,
-        item.yy / itemScale - 0.001,
-        item.zz / itemScale - 0.001
+        item.xx / itemScale - 0.005,
+        item.yy / itemScale - 0.005,
+        item.zz / itemScale - 0.005
       );
+
+      // Create material with full opacity
       const mat = new THREE.MeshBasicMaterial({
         color: difcolors[i % difcolors.length],
-        opacity: 1,
-        visible: true,
+        opacity: 1.0,
+        transparent: false,
       });
+      
       item.color = difcolors[i % difcolors.length];
       const box1 = new THREE.Mesh(geo, mat);
 
-      // Add edges with light white color
+      // Add white edges for better visibility
       const edges = new THREE.EdgesGeometry(geo);
-      const edgeMaterial = new THREE.LineBasicMaterial(RENDER_CONFIG.item.wireframe);
-      const wireframe = new THREE.LineSegments(edges, edgeMaterial);
+      const lineMat = new THREE.LineBasicMaterial({
+        color: 0xffffff,
+        linewidth: 1.5,
+      });
+      const wireframe = new THREE.LineSegments(edges, lineMat);
       box1.add(wireframe);
 
       // Ensure box center coordinates are set
