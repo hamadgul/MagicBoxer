@@ -79,6 +79,12 @@ export default class Display3D extends Component {
 
     // Pre-create scene using shared utility
     this.scene = setupScene();
+    
+    // Animation properties
+    this.animationStartTime = 0;
+    this.animationDuration = 600; // 600ms total
+    this.isAnimating = false;
+    this.boxMesh = null;
 
     this.state = {
       theta: 0,
@@ -104,9 +110,109 @@ export default class Display3D extends Component {
       currentRotation: 0,
       cameraPosition: { x: -1.2, y: 0.5, z: 5 },
       expandedItems: {},
+      isTransitioning: false
     };
-    // Initialize animations object outside of state
+
     this.animations = {};
+  }
+
+  animateCarrierTransition = (callback) => {
+    if (!this.boxMesh) {
+      if (callback) callback();
+      return;
+    }
+
+    this.isAnimating = true;
+    this.animationStartTime = Date.now();
+    
+    // Make materials transparent
+    this.boxMesh.material.transparent = true;
+    this.boxMesh.children.forEach(child => {
+      if (child.material) {
+        child.material.transparent = true;
+      }
+    });
+
+    // Start the animation loop
+    const animate = () => {
+      if (!this.isAnimating) return;
+
+      const elapsed = Date.now() - this.animationStartTime;
+      const progress = Math.min(elapsed / this.animationDuration, 1);
+      
+      // First half of animation (fade out)
+      if (progress <= 0.5) {
+        const fadeOutProgress = progress * 2; // Scale to 0-1 range
+        const scale = 1 - (0.2 * fadeOutProgress); // Scale from 1 to 0.8
+        const opacity = 1 - fadeOutProgress; // Fade from 1 to 0
+        const rotation = Math.PI * fadeOutProgress; // Rotate from 0 to PI
+
+        this.boxMesh.scale.setScalar(scale);
+        this.boxMesh.rotation.y = rotation;
+        this.boxMesh.material.opacity = opacity;
+        
+        // Animate child elements
+        this.boxMesh.children.forEach(child => {
+          if (child.material) {
+            child.material.opacity = opacity;
+          }
+        });
+      } 
+      // Second half of animation (fade in)
+      else {
+        const fadeInProgress = (progress - 0.5) * 2; // Scale to 0-1 range
+        const scale = 0.8 + (0.2 * fadeInProgress); // Scale from 0.8 to 1
+        const opacity = fadeInProgress; // Fade from 0 to 1
+        const rotation = Math.PI * (1 - fadeInProgress); // Rotate from PI to 0
+
+        this.boxMesh.scale.setScalar(scale);
+        this.boxMesh.rotation.y = rotation;
+        this.boxMesh.material.opacity = opacity;
+        
+        // Animate child elements
+        this.boxMesh.children.forEach(child => {
+          if (child.material) {
+            child.material.opacity = opacity;
+          }
+        });
+      }
+
+      // Check if animation is complete
+      if (progress >= 1) {
+        this.isAnimating = false;
+        if (callback) callback();
+        this.setState({ isTransitioning: false });
+      } else {
+        requestAnimationFrame(animate);
+      }
+    };
+
+    animate();
+  }
+
+  updateVisualsBasedOnCarrier = (carrier) => {
+    this.setState({ isTransitioning: true }, () => {
+      // Start transition animation
+      this.animateCarrierTransition(() => {
+        // Reset animation value
+        this.resetSlider();
+        
+        this.setState(
+          {
+            selectedCarrier: carrier,
+            userInteracted: false,
+            sliderKey: Platform.OS === 'android' ? this.state.sliderKey + 1 : this.state.sliderKey,
+            sliderValue: 0,
+          },
+          () => {
+            this.handleVisualize();
+            if (this.state.gl) {
+              this.initialize3DScene();
+            }
+          }
+        );
+      });
+    });
   }
 
   updateRotation = (value) => {
@@ -157,42 +263,6 @@ export default class Display3D extends Component {
     } else {
       this.updateRotation(value);
     }
-  };
-
-  animate = () => {
-    if (!this.state.gl) return;
-
-    const animate = () => {
-      if (!this.state.gl || !this.camera || !this.scene || !this.renderer) {
-        this.animationFrameId = requestAnimationFrame(animate);
-        return;
-      }
-
-      if (this.state.userInteracted) {
-        const boxRotationY = this.state.currentRotation;
-        const { theta, phi } = this.state;
-        
-        // Cache calculations to avoid recomputing
-        const sinPhi = Math.sin(phi);
-        const cosPhi = Math.cos(phi);
-        const thetaRotation = theta + boxRotationY;
-        
-        this.camera.position.x = 5 * sinPhi * Math.cos(thetaRotation);
-        this.camera.position.y = 5 * cosPhi;
-        this.camera.position.z = 5 * sinPhi * Math.sin(thetaRotation);
-        this.camera.lookAt(0, 0, 0);
-      } else {
-        const { x, y, z } = this.state.cameraPosition;
-        this.camera.position.set(x, y, z);
-        this.camera.lookAt(0, 0, 0);
-      }
-
-      this.renderer.render(this.scene, this.camera);
-      this.state.gl.endFrameEXP();
-      
-      this.animationFrameId = requestAnimationFrame(animate);
-    };
-    animate();
   };
 
   handlePanResponderMove = (event, gestureState) => {
@@ -315,12 +385,25 @@ export default class Display3D extends Component {
       box.y / scale,
       box.z / scale
     );
-    const material = new THREE.MeshBasicMaterial(RENDER_CONFIG.box.material);
+    
+    // Create material with original transparency settings
+    const material = new THREE.MeshBasicMaterial({
+      color: RENDER_CONFIG.box.material.color,
+      transparent: RENDER_CONFIG.box.material.transparent,
+      opacity: RENDER_CONFIG.box.material.opacity,
+      side: THREE.DoubleSide
+    });
+    
     const cube = new THREE.Mesh(geometry, material);
+    this.boxMesh = cube;
 
-    // Create wireframe
+    // Create wireframe with original properties
     const wireframeGeometry = new THREE.EdgesGeometry(geometry);
-    const wireframeMaterial = new THREE.LineBasicMaterial(RENDER_CONFIG.box.wireframe);
+    const wireframeMaterial = new THREE.LineBasicMaterial({
+      color: RENDER_CONFIG.box.wireframe.color,
+      transparent: true,
+      opacity: RENDER_CONFIG.box.wireframe.opacity
+    });
     const wireframe = new THREE.LineSegments(wireframeGeometry, wireframeMaterial);
     cube.add(wireframe);
 
@@ -329,6 +412,7 @@ export default class Display3D extends Component {
       const displayItems = createDisplay(box, scale);
       displayItems.forEach(item => {
         if (item.dis) {
+          // Keep items fully opaque
           cube.add(item.dis);
         }
       });
@@ -368,26 +452,6 @@ export default class Display3D extends Component {
   resetSlider = () => {
     // Reset both animation value and user interaction state
     this.setState({ userInteracted: false, currentRotation: 0 });
-  };
-
-  updateVisualsBasedOnCarrier = (carrier) => {
-    // Reset animation value
-    this.resetSlider();
-    
-    this.setState(
-      {
-        selectedCarrier: carrier,
-        userInteracted: false,
-        sliderKey: Platform.OS === 'android' ? this.state.sliderKey + 1 : this.state.sliderKey,
-        sliderValue: 0,
-      },
-      () => {
-        this.handleVisualize();
-        if (this.state.gl) {
-          this.initialize3DScene();
-        }
-      }
-    );
   };
 
   handleVisualize = () => {
@@ -435,6 +499,35 @@ export default class Display3D extends Component {
         }
       }
     );
+  };
+
+  animate = () => {
+    if (!this.state.gl || !this.camera || !this.scene || !this.renderer) {
+      requestAnimationFrame(this.animate);
+      return;
+    }
+
+    if (this.state.userInteracted) {
+      const boxRotationY = this.state.currentRotation;
+      const { theta, phi } = this.state;
+      
+      const sinPhi = Math.sin(phi);
+      const cosPhi = Math.cos(phi);
+      const thetaRotation = theta + boxRotationY;
+      
+      this.camera.position.x = 5 * sinPhi * Math.cos(thetaRotation);
+      this.camera.position.y = 5 * cosPhi;
+      this.camera.position.z = 5 * sinPhi * Math.sin(thetaRotation);
+    } else {
+      const { x, y, z } = this.state.cameraPosition;
+      this.camera.position.set(x, y, z);
+    }
+
+    this.camera.lookAt(0, 0, 0);
+    this.renderer.render(this.scene, this.camera);
+    this.state.gl.endFrameEXP();
+    
+    requestAnimationFrame(this.animate);
   };
 
   renderCustomSlider = () => {

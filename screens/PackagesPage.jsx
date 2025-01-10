@@ -18,7 +18,7 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import { Ionicons } from "@expo/vector-icons"; 
 import { ItemDetailsModal } from "./FormPage"; 
 import { pack, createDisplay } from "../packing_algo/packing";
-import { v4 as uuidv4 } from 'uuid';
+import * as Crypto from 'expo-crypto';
 
 export default class PackagesPage extends Component {
   state = {
@@ -161,7 +161,7 @@ export default class PackagesPage extends Component {
     });
   };
 
-  handleSaveEditedItem = (updatedItem) => {
+  handleSaveEditedItem = async (updatedItem) => {
     const { selectedPackage, packages } = this.state;
 
     // If quantity is 0, treat it as a delete operation
@@ -170,11 +170,11 @@ export default class PackagesPage extends Component {
       return;
     }
 
-    const replicatedNames = Array.from({ length: updatedItem.quantity }, (_, i) => ({
+    const replicatedNames = await Promise.all(Array.from({ length: updatedItem.quantity }, async (_, i) => ({
       name: updatedItem.itemName,
-      id: uuidv4(),
+      id: await Crypto.randomUUID(),
       parentId: updatedItem.id
-    }));
+    })));
 
     const updatedItemWithReplications = {
       ...updatedItem,
