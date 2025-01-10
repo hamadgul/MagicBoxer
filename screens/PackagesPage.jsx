@@ -508,7 +508,6 @@ export default class PackagesPage extends Component {
                     <Text style={styles.modalTitle}>
                       {selectedPackage}
                     </Text>
-                    <View style={styles.titleUnderline} />
                     <FlatList
                       data={selectedPackage ? packages[selectedPackage] : []}
                       style={styles.flatListStyle}
@@ -897,9 +896,8 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     paddingHorizontal: 16,
-    paddingVertical: 12,
-    borderTopWidth: 1,
-    borderTopColor: '#e2e8f0',
+    paddingTop: 2,
+    paddingBottom: 0,
   },
   footerButton: {
     flexDirection: 'row',
