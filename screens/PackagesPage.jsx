@@ -789,9 +789,15 @@ const styles = StyleSheet.create({
   modalTitle: {
     fontSize: 20,
     fontWeight: "600",
-    color: "#2c3e50",
+    color: "#fff",
     textAlign: "center",
     marginBottom: 10,
+    backgroundColor: '#3B82F6',
+    padding: 15,
+    borderTopLeftRadius: 20,
+    borderTopRightRadius: 20,
+    marginHorizontal: -20,
+    marginTop: -20,
   },
   infoFab: {
     position: 'absolute',

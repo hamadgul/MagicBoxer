@@ -117,7 +117,7 @@ export const ItemDetailsModal = ({
           <View style={modalStyles.centeredView}>
             <View style={[modalStyles.modalContent]}>
               <View style={[modalStyles.modalHeader]}>
-                <Text style={[modalStyles.modalTitle, { color: 'black' }]}>
+                <Text style={[modalStyles.modalTitle, { color: 'white' }]}>
                   {isEditable ? "Edit Item" : "Item Details"}
                 </Text>
               </View>
@@ -963,64 +963,44 @@ export default class FormPage extends Component {
 
               {/* Save Package Modal */}
               <Modal
-                visible={this.state.showSavePackageModal}
                 animationType="slide"
                 transparent={true}
+                visible={this.state.showSavePackageModal}
                 onRequestClose={this.toggleSavePackageModal}
               >
-                <TouchableWithoutFeedback onPress={this.toggleSavePackageModal}>
-                  <View style={styles.modalOverlay}>
-                    <TouchableWithoutFeedback onPress={(e) => e.stopPropagation()}>
-                      <View style={[styles.modalContent, { alignItems: 'center', paddingVertical: 24 }]}>
-                        <Text style={modalStyles.modalTitle}>Save Your Package</Text>
-                        <Text style={modalStyles.modalSubtitle}>
-                        Access saved packages on the side menu under "Saved Packages"
-                        </Text>
-                        <View style={modalStyles.inputContainer}>
-                          <Text style={modalStyles.inputLabel}>Package Name</Text>
-                          <TextInput
-                            style={[styles.input, { 
-                              textAlign: 'center', 
-                              width: '100%',
-                              height: 50,
-                              marginBottom: 24,
-                              fontSize: 16,
-                              borderWidth: 1,
-                              borderColor: '#E2E8F0',
-                              borderRadius: 8,
-                              backgroundColor: '#F8FAFC',
-                              paddingHorizontal: 16,
-                            }]}
-                            value={this.state.packageName}
-                            onChangeText={(text) => this.setState({ packageName: text })}
-                            placeholder="e.g., Holiday Gifts 2024"
-                            placeholderTextColor="#94A3B8"
-                            autoFocus={true}
-                            autoCorrect={false}
-                            autoCapitalize="none"
-                            spellCheck={false}
-                          />
-                        </View>
+                <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
+                  <View style={modalStyles.centeredView}>
+                    <View style={modalStyles.modalContent}>
+                      <View style={modalStyles.modalHeader}>
+                        <Text style={modalStyles.modalTitle}>Save Package</Text>
+                      </View>
+                      <Text style={modalStyles.modalSubtitle}>
+                        Enter a name for your package to save it for future use
+                      </Text>
+                      <View style={modalStyles.inputContainer}>
+                        <Text style={modalStyles.inputLabel}>Package Name</Text>
+                        <TextInput
+                          style={modalStyles.fieldInput}
+                          placeholder="Enter package name"
+                          value={this.state.packageName}
+                          onChangeText={(text) => this.setState({ packageName: text })}
+                        />
+                      </View>
+                      <View style={modalStyles.modalButtonContainer}>
                         <TouchableOpacity
-                          style={[styles.buttonApply1, { 
-                            width: '100%',
-                            height: 48,
-                            alignItems: 'center', 
-                            justifyContent: 'center',
-                            borderRadius: 8,
-                            backgroundColor: '#3B82F6',
-                            marginTop: 8,
-                          }]}
+                          style={[modalStyles.button, modalStyles.cancelButton]}
+                          onPress={this.toggleSavePackageModal}
+                        >
+                          <Text style={modalStyles.buttonText}>Cancel</Text>
+                        </TouchableOpacity>
+                        <TouchableOpacity
+                          style={[modalStyles.button, modalStyles.applyButton]}
                           onPress={this.handleSavePackage}
                         >
-                          <Text style={[styles.buttonText, { 
-                            textAlign: 'center',
-                            fontSize: 16,
-                            fontWeight: '600'
-                          }]}>Save Package</Text>
+                          <Text style={modalStyles.buttonText}>Save</Text>
                         </TouchableOpacity>
                       </View>
-                    </TouchableWithoutFeedback>
+                    </View>
                   </View>
                 </TouchableWithoutFeedback>
               </Modal>
