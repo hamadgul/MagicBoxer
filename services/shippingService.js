@@ -154,7 +154,8 @@ const getUPSRates = async (packageDetails, fromZip, toZip) => {
             ShipTo: {
               Address: {
                 PostalCode: toZip,
-                CountryCode: "US"
+                CountryCode: "US",
+                ResidentialAddressIndicator: service.Code === "03" || service.Code === "12" ? "true" : undefined
               }
             },
             Service: {
@@ -163,7 +164,7 @@ const getUPSRates = async (packageDetails, fromZip, toZip) => {
             },
             Package: {
               PackagingType: {
-                Code: packagingType,
+                Code: "02",  // Customer Supplied Package
                 Description: "Package"
               },
               Dimensions: {
@@ -213,12 +214,28 @@ const getUPSRates = async (packageDetails, fromZip, toZip) => {
       ).then(response => {
         if (response.data.RateResponse?.RatedShipment) {
           const rate = response.data.RateResponse.RatedShipment;
+          console.log('Processing UPS rate:', {
+            service: service.Description,
+            code: service.Code,
+            price: rate.TotalCharges?.MonetaryValue,
+            days: rate.GuaranteedDelivery?.BusinessDaysInTransit
+          });
+
+          const estimatedDays = rate.GuaranteedDelivery?.BusinessDaysInTransit || 
+                              (service.Code === "03" ? "3-5" : 
+                               service.Code === "02" ? "2" :
+                               service.Code === "01" ? "1" :
+                               service.Code === "12" ? "3" :
+                               service.Code === "13" ? "1" :
+                               service.Code === "14" ? "1" :
+                               service.Code === "59" ? "2" : "Unknown");
+
           return {
             carrier: 'UPS',
             service: service.Description,
             price: parseFloat(rate.TotalCharges.MonetaryValue),
             currency: rate.TotalCharges.CurrencyCode,
-            estimatedDays: rate.GuaranteedDelivery?.BusinessDaysInTransit || 'Unknown',
+            estimatedDays,
             dimensions: {
               length: dimensions.x,
               width: dimensions.y,
@@ -227,14 +244,17 @@ const getUPSRates = async (packageDetails, fromZip, toZip) => {
             }
           };
         }
+        console.log('No rate found for UPS service:', service.Description);
         return null;
       }).catch(error => {
+        console.log('Error getting UPS rate for', service.Description, ':', error.response?.data || error.message);
         return null;
       });
     });
 
     const responses = await Promise.all(requests);
     const validRates = responses.filter(rate => rate !== null);
+    console.log('Valid UPS rates:', validRates);
 
     if (validRates.length > 0) {
       return validRates.sort((a, b) => a.price - b.price);
@@ -481,59 +501,37 @@ const calculateDimWeight = (volume, dimDivisor) => {
 
 export const getShippingEstimates = async (packageDetails, fromZip, toZip) => {
   try {
+    console.log('\n=== Getting Shipping Estimates ===');
+    console.log('Package Details:', packageDetails);
+    console.log('From ZIP:', fromZip);
+    console.log('To ZIP:', toZip);
+
     if (!packageDetails || !fromZip || !toZip) {
       throw new Error('Missing required shipping details');
     }
 
     const estimates = [];
-    const actualWeight = packageDetails.weight;
-    const volume = packageDetails.length * packageDetails.width * packageDetails.height;
 
-    const dimWeights = {};
-    Object.entries(CARRIERS).forEach(([carrierId, carrier]) => {
-      dimWeights[carrierId] = calculateDimWeight(volume, carrier.dimDivisor);
-    });
-
+    console.log('\n=== Getting UPS Rates ===');
     const upsRates = await getUPSRates(packageDetails, fromZip, toZip);
-    estimates.push(...upsRates);
+    console.log('UPS Rates received:', upsRates);
+    if (Array.isArray(upsRates)) {
+      estimates.push(...upsRates);
+    }
 
+    console.log('\n=== Getting FedEx Rates ===');
     const fedexRates = await calculateFedExRates({...packageDetails}, fromZip, toZip);
-    estimates.push(...fedexRates);
+    if (Array.isArray(fedexRates)) {
+      estimates.push(...fedexRates);
+    }
 
-    Object.entries(CARRIERS).forEach(([carrierId, carrier]) => {
-      if (carrierId === 'UPS' || carrierId === 'FEDEX') return; // Skip UPS and FedEx since we're using real rates
-      
-      const dimWeight = dimWeights[carrierId];
-      const billableWeight = Math.max(actualWeight, dimWeight);
-      
-      Object.entries(carrier.services).forEach(
-        ([serviceName, serviceDetails]) => {
-          const price = calculatePrice(
-            serviceDetails.baseRate,
-            billableWeight,
-            calculateZone(fromZip, toZip),
-            carrierId
-          );
-          const estimatedDays = calculateEstimatedDays(
-            calculateZone(fromZip, toZip),
-            serviceDetails.daysFactor
-          );
-
-          estimates.push({
-            carrier: carrier.name,
-            service: serviceName,
-            price,
-            estimatedDays: `${estimatedDays} business day${
-              estimatedDays > 1 ? "s" : ""
-            }`,
-          });
-        }
-      );
-    });
+    console.log('\n=== Final Estimates ===');
+    console.log('Total estimates:', estimates.length);
+    console.log('All estimates:', estimates);
 
     return {
       success: true,
-      estimates: estimates.sort((a, b) => a.price - b.price),
+      estimates: estimates.sort((a, b) => a.price - b.price)
     };
   } catch (error) {
     console.error("Error calculating shipping estimates:", error);
