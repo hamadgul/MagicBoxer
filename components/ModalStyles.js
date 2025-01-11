@@ -77,7 +77,6 @@ export const modalStyles = StyleSheet.create({
     color: '#1F2937',
   },
   fieldInput: {
-    flex: 2,
     height: 40,
     borderWidth: 1,
     borderColor: '#D1D5DB',
@@ -86,6 +85,10 @@ export const modalStyles = StyleSheet.create({
     fontSize: 16,
     color: '#1F2937',
     backgroundColor: '#F9FAFB',
+    width: '100%',
+    alignSelf: 'stretch',
+    zIndex: 1,
+    position: 'relative',
   },
   modalButtonContainer: {
     flexDirection: 'row',

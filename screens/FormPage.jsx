@@ -978,12 +978,14 @@ export default class FormPage extends Component {
                         Enter a name for your package to save it for future use
                       </Text>
                       <View style={modalStyles.inputContainer}>
-                        <Text style={modalStyles.inputLabel}>Package Name</Text>
                         <TextInput
                           style={modalStyles.fieldInput}
                           placeholder="Enter package name"
+                          placeholderTextColor="#9CA3AF"
                           value={this.state.packageName}
                           onChangeText={(text) => this.setState({ packageName: text })}
+                          autoCapitalize="none"
+                          autoCorrect={false}
                         />
                       </View>
                       <View style={modalStyles.modalButtonContainer}>

@@ -14,6 +14,7 @@ import {
 } from 'react-native';
 import { getShippingEstimates } from '../services/shippingService';
 import { Ionicons } from '@expo/vector-icons';
+import { pack } from '../packing_algo/packing'; // Import the packing algorithm function
 
 export default function ShipPackagePage({ route, navigation }) {
   const scrollViewRef = useRef(null);
@@ -74,7 +75,26 @@ export default function ShipPackagePage({ route, navigation }) {
 
     setIsLoading(true);
     try {
-      const dimensions = calculatePackageDimensions(selectedPackage.items);
+      // Create itemList for packing algorithm
+      const itemList = selectedPackage.items.flatMap(item =>
+        Array(item.quantity || 1).fill().map(() => [
+          item.itemLength,
+          item.itemWidth,
+          item.itemHeight,
+          item.id,
+          'UPS',
+          item.itemName || 'Unnamed Item'
+        ])
+      );
+
+      // Get optimal box dimensions using packing algorithm
+      const packedResult = pack(itemList, 'UPS');
+      const dimensions = {
+        length: packedResult.x,
+        width: packedResult.y,
+        height: packedResult.z
+      };
+
       const result = await getShippingEstimates(
         {
           ...packageDetails,
@@ -86,7 +106,6 @@ export default function ShipPackagePage({ route, navigation }) {
 
       if (result.success) {
         setShippingEstimates(result.estimates);
-        // Scroll to estimates section
         setTimeout(() => {
           if (estimatesSectionRef.current) {
             estimatesSectionRef.current.measureLayout(
@@ -149,8 +168,14 @@ export default function ShipPackagePage({ route, navigation }) {
                 </View>
                 <Text style={styles.serviceType}>{estimate.service}</Text>
                 <Text style={styles.estimatedDays}>
-                  {estimate.estimatedDays}
+                  Estimated delivery: {estimate.estimatedDays} {estimate.estimatedDays === 1 ? 'day' : 'days'}
+                  {estimate.isEstimate && ' (estimated)'}
                 </Text>
+                {estimate.dimensions && (
+                  <Text style={styles.boxDimensions}>
+                    Box: {estimate.dimensions.boxType} ({Math.ceil(estimate.dimensions.length)}" × {Math.ceil(estimate.dimensions.width)}" × {Math.ceil(estimate.dimensions.height)}")
+                  </Text>
+                )}
               </View>
             ))}
           </View>
@@ -364,7 +389,14 @@ const styles = StyleSheet.create({
   },
   estimatedDays: {
     fontSize: 14,
+    color: '#475569',
+    marginTop: 4,
+  },
+  boxDimensions: {
+    fontSize: 14,
     color: '#64748b',
+    marginTop: 4,
+    fontStyle: 'italic'
   },
   calculateButton: {
     backgroundColor: '#3b82f6',

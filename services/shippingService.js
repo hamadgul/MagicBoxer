@@ -1,3 +1,6 @@
+import axios from 'axios';
+import { pack } from '../packing_algo/packing';
+
 const CARRIERS = {
   USPS: {
     name: "USPS",
@@ -25,6 +28,210 @@ const CARRIERS = {
       "Priority Overnight": { baseRate: 31.5, daysFactor: 0.3 },
     },
   },
+};
+
+const UPS_CONFIG = {
+  clientId: 'reUV3PzybRlMT0iX9GQPnwlTKweX9Wytfzk3q5ZxiQQeWrLv',
+  clientSecret: 'hJmxM48BOykCR8xtXjffYQUKQIRqdxExG6o2vV0FlkD8GkuuFHjl7QIdaGHyAkYg',
+  baseURL: 'https://onlinetools.ups.com/api',
+};
+
+const getUPSAccessToken = async () => {
+  try {
+    const response = await axios.post(
+      'https://onlinetools.ups.com/security/v1/oauth/token',
+      'grant_type=client_credentials',
+      {
+        headers: {
+          'Content-Type': 'application/x-www-form-urlencoded',
+          'x-merchant-id': UPS_CONFIG.clientId,
+        },
+        auth: {
+          username: UPS_CONFIG.clientId,
+          password: UPS_CONFIG.clientSecret,
+        },
+      }
+    );
+    return response.data.access_token;
+  } catch (error) {
+    console.error('Error getting UPS access token:', error);
+    throw error;
+  }
+};
+
+const getUPSRates = async (packageDetails, fromZip, toZip) => {
+  try {
+    const accessToken = await getUPSAccessToken();
+    
+    // Use the same box dimensions that were calculated in Display3D
+    let dimensions = { x: 12, y: 12, z: 12, type: "Standard Box" }; // Default dimensions
+    
+    if (packageDetails.length && packageDetails.width && packageDetails.height) {
+      dimensions = {
+        x: packageDetails.length,
+        y: packageDetails.width,
+        z: packageDetails.height,
+        type: "UPS Box"
+      };
+    }
+
+    // List of UPS service codes to request
+    const serviceOptions = [
+      { Code: "01", Description: "Next Day Air" },
+      { Code: "02", Description: "2nd Day Air" },
+      { Code: "03", Description: "Ground" },
+      { Code: "12", Description: "3 Day Select" },
+      { Code: "13", Description: "Next Day Air Saver" },
+      { Code: "14", Description: "UPS Next Day Air Early" },
+      { Code: "59", Description: "2nd Day Air A.M." }
+    ];
+
+    // Make parallel requests for all service types
+    const ratePromises = serviceOptions.map(service => {
+      const rateRequest = {
+        RateRequest: {
+          Request: {
+            RequestOption: "Rate",
+            TransactionReference: {
+              CustomerContext: `Rating for ${service.Description}`
+            }
+          },
+          Shipment: {
+            Shipper: {
+              Name: "Shipper Name",
+              Address: {
+                PostalCode: fromZip,
+                CountryCode: "US"
+              }
+            },
+            ShipTo: {
+              Name: "Ship To Name",
+              Address: {
+                PostalCode: toZip,
+                CountryCode: "US"
+              }
+            },
+            ShipFrom: {
+              Name: "Ship From Name",
+              Address: {
+                PostalCode: fromZip,
+                CountryCode: "US"
+              }
+            },
+            Service: {
+              Code: service.Code,
+              Description: service.Description
+            },
+            Package: {
+              PackagingType: {
+                Code: "02",
+                Description: "Package"
+              },
+              Dimensions: {
+                UnitOfMeasurement: {
+                  Code: "IN",
+                  Description: "Inches"
+                },
+                Length: String(Math.ceil(dimensions.x)),
+                Width: String(Math.ceil(dimensions.y)),
+                Height: String(Math.ceil(dimensions.z))
+              },
+              PackageWeight: {
+                UnitOfMeasurement: {
+                  Code: "LBS",
+                  Description: "Pounds"
+                },
+                Weight: String(Math.max(Math.ceil(packageDetails.weight), 1))
+              }
+            }
+          }
+        }
+      };
+
+      return axios.post(
+        `${UPS_CONFIG.baseURL}/rating/v1/rate`,
+        rateRequest,
+        {
+          headers: {
+            'Authorization': `Bearer ${accessToken}`,
+            'Content-Type': 'application/json',
+            'transId': `trans_${Date.now()}_${service.Code}`,
+            'transactionSrc': 'MagicBoxer'
+          }
+        }
+      ).then(response => {
+        if (response.data.RateResponse?.RatedShipment) {
+          const rate = response.data.RateResponse.RatedShipment;
+          return {
+            carrier: 'UPS',
+            service: service.Description,
+            price: parseFloat(rate.TotalCharges?.MonetaryValue || '0'),
+            estimatedDays: rate.GuaranteedDelivery?.BusinessDaysInTransit || 
+                          getDefaultEstimatedDays(service.Code),
+            dimensions: {
+              length: dimensions.x,
+              width: dimensions.y,
+              height: dimensions.z,
+              boxType: dimensions.type
+            }
+          };
+        }
+        return null;
+      }).catch(error => {
+        console.error(`Error getting UPS rate for ${service.Description}:`, error.response?.data || error.message);
+        return null;
+      });
+    });
+
+    const results = await Promise.all(ratePromises);
+    const validRates = results.filter(rate => rate !== null);
+
+    if (validRates.length > 0) {
+      return validRates.sort((a, b) => a.price - b.price);
+    }
+    
+    // If we can't get any real rates, fall back to estimates
+    console.log('No rates returned from UPS API, falling back to estimates');
+    return getFallbackUPSRates(packageDetails, fromZip, toZip);
+  } catch (error) {
+    console.error('Error getting UPS rates:', error.response?.data || error.message);
+    return getFallbackUPSRates(packageDetails, fromZip, toZip);
+  }
+};
+
+const getDefaultEstimatedDays = (serviceCode) => {
+  const estimatedDays = {
+    '01': 1,  // Next Day Air
+    '02': 2,  // 2nd Day Air
+    '03': 5,  // Ground
+    '12': 3,  // 3 Day Select
+    '13': 1,  // Next Day Air Saver
+    '14': 1,  // Next Day Air Early
+    '59': 2   // 2nd Day Air A.M.
+  };
+  return estimatedDays[serviceCode] || 5;
+};
+
+const getFallbackUPSRates = (packageDetails, fromZip, toZip) => {
+  return Object.entries(CARRIERS.UPS.services).map(([serviceName, serviceDetails]) => {
+    const zone = calculateZone(fromZip, toZip);
+    const billableWeight = Math.max(
+      packageDetails.weight,
+      calculateDimensionalWeight(
+        packageDetails.length || 1,
+        packageDetails.width || 1,
+        packageDetails.height || 1
+      ).UPS
+    );
+    
+    return {
+      carrier: 'UPS',
+      service: serviceName,
+      price: calculatePrice(serviceDetails.baseRate, billableWeight, zone, 'UPS'),
+      estimatedDays: calculateEstimatedDays(zone, serviceDetails.daysFactor),
+      isEstimate: true
+    };
+  });
 };
 
 const calculateZone = (fromZip, toZip) => {
@@ -84,7 +291,15 @@ export const getShippingEstimates = async (packageDetails, fromZip, toZip) => {
     const zone = calculateZone(fromZip, toZip);
 
     const estimates = [];
+    
+    // Get real UPS rates
+    const upsRates = await getUPSRates(packageDetails, fromZip, toZip);
+    estimates.push(...upsRates);
+
+    // Calculate rates for other carriers using existing logic
     Object.entries(CARRIERS).forEach(([carrierId, carrier]) => {
+      if (carrierId === 'UPS') return; // Skip UPS since we're using real rates
+      
       const dimWeight = dimWeights[carrierId];
       const billableWeight = Math.max(actualWeight, dimWeight);
 
@@ -113,11 +328,15 @@ export const getShippingEstimates = async (packageDetails, fromZip, toZip) => {
       );
     });
 
-    estimates.sort((a, b) => a.price - b.price);
-
-    return { success: true, estimates };
+    return {
+      success: true,
+      estimates: estimates.sort((a, b) => a.price - b.price),
+    };
   } catch (error) {
-    console.error("Error in getShippingEstimates:", error);
-    return { success: false, error: "Failed to calculate shipping estimates" };
+    console.error("Error calculating shipping estimates:", error);
+    return {
+      success: false,
+      error: "Failed to calculate shipping estimates",
+    };
   }
 };
