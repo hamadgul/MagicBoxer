@@ -9,6 +9,7 @@ const CARRIERS = {
       "Priority Mail": { baseRate: 8.7, daysFactor: 0.6 },
       "Ground Advantage": { baseRate: 7.5, daysFactor: 1.0 },
     },
+    dimDivisor: 166
   },
   UPS: {
     name: "UPS",
@@ -18,6 +19,7 @@ const CARRIERS = {
       "2nd Day Air": { baseRate: 18.5, daysFactor: 0.5 },
       "Next Day Air": { baseRate: 29.99, daysFactor: 0.3 },
     },
+    dimDivisor: 139
   },
   FEDEX: {
     name: "FedEx",
@@ -27,6 +29,7 @@ const CARRIERS = {
       "2Day": { baseRate: 19.25, daysFactor: 0.5 },
       "Priority Overnight": { baseRate: 31.5, daysFactor: 0.3 },
     },
+    dimDivisor: 139
   },
 };
 
@@ -34,6 +37,12 @@ const UPS_CONFIG = {
   clientId: 'reUV3PzybRlMT0iX9GQPnwlTKweX9Wytfzk3q5ZxiQQeWrLv',
   clientSecret: 'hJmxM48BOykCR8xtXjffYQUKQIRqdxExG6o2vV0FlkD8GkuuFHjl7QIdaGHyAkYg',
   baseURL: 'https://onlinetools.ups.com/api',
+};
+
+const FEDEX_CONFIG = {
+  apiKey: 'l79b1b174bc2334477a883a08cdfdbdcae',
+  secretKey: 'a2b2e19da8f64c958cd858ff296185f9',
+  baseURL: 'https://apis-sandbox.fedex.com'
 };
 
 const getUPSAccessToken = async () => {
@@ -59,23 +68,64 @@ const getUPSAccessToken = async () => {
   }
 };
 
+const getFedExAccessToken = async () => {
+  try {
+    const formData = new URLSearchParams();
+    formData.append('grant_type', 'client_credentials');
+    formData.append('client_id', FEDEX_CONFIG.apiKey);
+    formData.append('client_secret', FEDEX_CONFIG.secretKey);
+
+    const response = await axios.post(
+      `${FEDEX_CONFIG.baseURL}/oauth/token`,
+      formData.toString(),
+      {
+        headers: {
+          'Content-Type': 'application/x-www-form-urlencoded'
+        }
+      }
+    );
+    return response.data.access_token;
+  } catch (error) {
+    console.error('Error getting FedEx access token:', error.response?.data || error.message);
+    throw error;
+  }
+};
+
 const getUPSRates = async (packageDetails, fromZip, toZip) => {
   try {
-    const accessToken = await getUPSAccessToken();
-    
-    // Use the same box dimensions that were calculated in Display3D
-    let dimensions = { x: 12, y: 12, z: 12, type: "Standard Box" }; // Default dimensions
-    
-    if (packageDetails.length && packageDetails.width && packageDetails.height) {
+    const result = packageDetails.upsResult;
+
+    let dimensions;
+    let packagingType;
+
+    if (!result || result.type === 'No Box Found') {
       dimensions = {
         x: packageDetails.length,
         y: packageDetails.width,
         z: packageDetails.height,
-        type: "UPS Box"
+        type: 'Standard'
       };
+      packagingType = '02'; // Customer Packaging
+    } else {
+      dimensions = {
+        x: result.x,
+        y: result.y,
+        z: result.z,
+        type: result.type
+      };
+
+      const packagingTypeMap = {
+        'Small Box': '21',
+        'Medium Box': '01',
+        'Large Box': '01',
+        'Extra Large Box': '01',
+        'Standard': '02'
+      };
+      packagingType = packagingTypeMap[result.type] || '02';
     }
 
-    // List of UPS service codes to request
+    const accessToken = await getUPSAccessToken();
+    
     const serviceOptions = [
       { Code: "01", Description: "Next Day Air" },
       { Code: "02", Description: "2nd Day Air" },
@@ -86,35 +136,24 @@ const getUPSRates = async (packageDetails, fromZip, toZip) => {
       { Code: "59", Description: "2nd Day Air A.M." }
     ];
 
-    // Make parallel requests for all service types
-    const ratePromises = serviceOptions.map(service => {
-      const rateRequest = {
+    const requests = serviceOptions.map(service => {
+      const payload = {
         RateRequest: {
           Request: {
-            RequestOption: "Rate",
             TransactionReference: {
-              CustomerContext: `Rating for ${service.Description}`
+              CustomerContext: "Rate Request",
             }
           },
           Shipment: {
             Shipper: {
-              Name: "Shipper Name",
               Address: {
                 PostalCode: fromZip,
                 CountryCode: "US"
               }
             },
             ShipTo: {
-              Name: "Ship To Name",
               Address: {
                 PostalCode: toZip,
-                CountryCode: "US"
-              }
-            },
-            ShipFrom: {
-              Name: "Ship From Name",
-              Address: {
-                PostalCode: fromZip,
                 CountryCode: "US"
               }
             },
@@ -124,7 +163,7 @@ const getUPSRates = async (packageDetails, fromZip, toZip) => {
             },
             Package: {
               PackagingType: {
-                Code: "02",
+                Code: packagingType,
                 Description: "Package"
               },
               Dimensions: {
@@ -132,31 +171,43 @@ const getUPSRates = async (packageDetails, fromZip, toZip) => {
                   Code: "IN",
                   Description: "Inches"
                 },
-                Length: String(Math.ceil(dimensions.x)),
-                Width: String(Math.ceil(dimensions.y)),
-                Height: String(Math.ceil(dimensions.z))
+                Length: Math.ceil(dimensions.x).toString(),
+                Width: Math.ceil(dimensions.y).toString(),
+                Height: Math.ceil(dimensions.z).toString()
               },
               PackageWeight: {
                 UnitOfMeasurement: {
                   Code: "LBS",
                   Description: "Pounds"
                 },
-                Weight: String(Math.max(Math.ceil(packageDetails.weight), 1))
+                Weight: Math.max(Math.ceil(packageDetails.weight), 1).toString()
               }
             }
           }
         }
       };
 
+      console.log('\n=== UPS API Request ===\n', {
+        service: service.Description,
+        boxDimensions: {
+          length: Math.ceil(dimensions.x),
+          width: Math.ceil(dimensions.y),
+          height: Math.ceil(dimensions.z),
+          originalBoxType: dimensions.type,
+          apiPackagingType: packagingType
+        },
+        weight: Math.max(Math.ceil(packageDetails.weight), 1)
+      });
+
       return axios.post(
         `${UPS_CONFIG.baseURL}/rating/v1/rate`,
-        rateRequest,
+        payload,
         {
           headers: {
             'Authorization': `Bearer ${accessToken}`,
             'Content-Type': 'application/json',
-            'transId': `trans_${Date.now()}_${service.Code}`,
-            'transactionSrc': 'MagicBoxer'
+            'transId': 'string',
+            'transactionSrc': 'testing'
           }
         }
       ).then(response => {
@@ -165,9 +216,9 @@ const getUPSRates = async (packageDetails, fromZip, toZip) => {
           return {
             carrier: 'UPS',
             service: service.Description,
-            price: parseFloat(rate.TotalCharges?.MonetaryValue || '0'),
-            estimatedDays: rate.GuaranteedDelivery?.BusinessDaysInTransit || 
-                          getDefaultEstimatedDays(service.Code),
+            price: parseFloat(rate.TotalCharges.MonetaryValue),
+            currency: rate.TotalCharges.CurrencyCode,
+            estimatedDays: rate.GuaranteedDelivery?.BusinessDaysInTransit || 'Unknown',
             dimensions: {
               length: dimensions.x,
               width: dimensions.y,
@@ -178,24 +229,174 @@ const getUPSRates = async (packageDetails, fromZip, toZip) => {
         }
         return null;
       }).catch(error => {
-        console.error(`Error getting UPS rate for ${service.Description}:`, error.response?.data || error.message);
         return null;
       });
     });
 
-    const results = await Promise.all(ratePromises);
-    const validRates = results.filter(rate => rate !== null);
+    const responses = await Promise.all(requests);
+    const validRates = responses.filter(rate => rate !== null);
 
     if (validRates.length > 0) {
       return validRates.sort((a, b) => a.price - b.price);
     }
-    
-    // If we can't get any real rates, fall back to estimates
-    console.log('No rates returned from UPS API, falling back to estimates');
-    return getFallbackUPSRates(packageDetails, fromZip, toZip);
+    return [];
   } catch (error) {
-    console.error('Error getting UPS rates:', error.response?.data || error.message);
-    return getFallbackUPSRates(packageDetails, fromZip, toZip);
+    return [];
+  }
+};
+
+const calculateFedExRates = async (packageDetails, fromZip, toZip) => {
+  try {
+    const accessToken = await getFedExAccessToken();
+
+    const result = packageDetails.fedexResult;
+
+    console.log('Debug - FedEx Result:', result); // Debug log
+
+    let dimensions;
+    let packagingType;
+
+    if (!result || result.type === 'No Box Found') {
+      dimensions = {
+        x: packageDetails.length,
+        y: packageDetails.width,
+        z: packageDetails.height,
+        type: 'Standard'
+      };
+      packagingType = 'YOUR_PACKAGING';
+    } else {
+      dimensions = {
+        x: result.x,
+        y: result.y,
+        z: result.z,
+        type: result.type
+      };
+
+      // Map the box type to FedEx API packaging type
+      const packagingTypeMap = {
+        'FedEx Small Box': 'FEDEX_SMALL_BOX',
+        'FedEx Medium Box': 'FEDEX_MEDIUM_BOX',
+        'FedEx Large Box': 'FEDEX_LARGE_BOX',
+        'FedEx Extra Large Box': 'FEDEX_EXTRA_LARGE_BOX',
+        'FedEx Tube': 'FEDEX_TUBE',
+        'FedEx Envelope': 'FEDEX_ENVELOPE',
+        'FedEx Pak': 'FEDEX_PAK',
+        'FedEx Pak Padded': 'FEDEX_PAK',
+        'Standard': 'YOUR_PACKAGING',
+        'Heavy-duty Double-Walled Box': 'YOUR_PACKAGING',
+        'FedEx Box': 'FEDEX_BOX',
+        'FedEx Pak Padded': 'FEDEX_PAK_PADDED',
+        'FedEx Envelope': 'FEDEX_ENVELOPE',
+        'FedEx Tube': 'FEDEX_TUBE',
+        'FedEx 10kg Box': 'FEDEX_10KG_BOX',
+        'FedEx 25kg Box': 'FEDEX_25KG_BOX',
+        'FedEx Extra Large Box': 'FEDEX_EXTRA_LARGE_BOX',
+        'FedEx Large Box': 'FEDEX_LARGE_BOX',
+        'FedEx Medium Box': 'FEDEX_MEDIUM_BOX',
+        'FedEx Padded Pak': 'FEDEX_PADDED_PAK',
+        'FedEx Small Box': 'FEDEX_SMALL_BOX',
+      };
+
+      console.log('Debug - FedEx box type before mapping:', result.type); // Debug log
+      packagingType = packagingTypeMap[result.type];
+      console.log('Debug - FedEx box type after mapping:', packagingType); // Debug log
+
+      // If mapping returns undefined, default to YOUR_PACKAGING
+      if (!packagingType) {
+        console.log('Warning: No matching FedEx packaging type found for:', result.type);
+        packagingType = 'YOUR_PACKAGING';
+      }
+    }
+
+    const payload = {
+      accountNumber: {
+        value: "740561073"
+      },
+      requestedShipment: {
+        shipper: {
+          address: {
+            postalCode: fromZip,
+            countryCode: "US"
+          }
+        },
+        recipient: {
+          address: {
+            postalCode: toZip,
+            countryCode: "US"
+          }
+        },
+        pickupType: "DROPOFF_AT_FEDEX_LOCATION",
+        rateRequestType: ["LIST", "ACCOUNT"],
+        requestedPackageLineItems: [{
+          weight: {
+            value: Math.max(Math.ceil(packageDetails.weight), 1),
+            units: "LB"
+          },
+          dimensions: {
+            length: Math.ceil(dimensions.x),
+            width: Math.ceil(dimensions.y),
+            height: Math.ceil(dimensions.z),
+            units: "IN"
+          },
+          packageSpecialServices: {
+            specialServiceTypes: ["SIGNATURE_OPTION"],
+            signatureOptionType: "DIRECT"
+          }
+        }],
+        packagingType: packagingType,
+        totalPackageCount: "1",
+        preferredCurrency: "USD"
+      },
+      carrierCodes: ["FDXE", "FDXG"],
+      returnTransitTimes: true
+    };
+
+    console.log('\n=== FedEx API Request ===\n', {
+      boxDimensions: {
+        length: Math.ceil(dimensions.x),
+        width: Math.ceil(dimensions.y),
+        height: Math.ceil(dimensions.z),
+        originalBoxType: dimensions.type,
+        apiPackagingType: packagingType
+      },
+      weight: Math.max(Math.ceil(packageDetails.weight), 1)
+    });
+
+    const response = await axios.post(
+      `${FEDEX_CONFIG.baseURL}/rate/v1/rates/quotes`,
+      payload,
+      {
+        headers: {
+          'Authorization': `Bearer ${accessToken}`,
+          'Content-Type': 'application/json',
+          'X-locale': 'en_US'
+        }
+      }
+    );
+
+    if (response.data?.output?.rateReplyDetails) {
+      const rates = response.data.output.rateReplyDetails.map(rate => ({
+        carrier: 'FedEx',
+        service: rate.serviceType.replace(/_/g, ' ')
+          .split(' ')
+          .map(word => word.charAt(0) + word.slice(1).toLowerCase())
+          .join(' ')
+          .replace('Fedex', 'FedEx'),
+        price: parseFloat(rate.ratedShipmentDetails[0].totalNetCharge),
+        currency: 'USD',
+        estimatedDays: rate.transitTime || 'Unknown',
+        dimensions: {
+          length: dimensions.x,
+          width: dimensions.y,
+          height: dimensions.z,
+          boxType: dimensions.type
+        }
+      }));
+      return rates;
+    }
+    return [];
+  } catch (error) {
+    return [];
   }
 };
 
@@ -274,45 +475,47 @@ const calculatePrice = (baseRate, billableWeight, zone, carrierId) => {
   return parseFloat(price.toFixed(2));
 };
 
+const calculateDimWeight = (volume, dimDivisor) => {
+  return (volume / dimDivisor);
+};
+
 export const getShippingEstimates = async (packageDetails, fromZip, toZip) => {
   try {
     if (!packageDetails || !fromZip || !toZip) {
-      return { success: false, error: "Missing required shipping information" };
+      throw new Error('Missing required shipping details');
     }
-
-    const { weight, length, width, height } = packageDetails;
-    const actualWeight = parseFloat(weight);
-
-    if (isNaN(actualWeight) || actualWeight <= 0) {
-      return { success: false, error: "Invalid package weight" };
-    }
-
-    const dimWeights = calculateDimensionalWeight(length, width, height);
-    const zone = calculateZone(fromZip, toZip);
 
     const estimates = [];
-    
-    // Get real UPS rates
+    const actualWeight = packageDetails.weight;
+    const volume = packageDetails.length * packageDetails.width * packageDetails.height;
+
+    const dimWeights = {};
+    Object.entries(CARRIERS).forEach(([carrierId, carrier]) => {
+      dimWeights[carrierId] = calculateDimWeight(volume, carrier.dimDivisor);
+    });
+
     const upsRates = await getUPSRates(packageDetails, fromZip, toZip);
     estimates.push(...upsRates);
 
-    // Calculate rates for other carriers using existing logic
+    const fedexRates = await calculateFedExRates({...packageDetails}, fromZip, toZip);
+    estimates.push(...fedexRates);
+
     Object.entries(CARRIERS).forEach(([carrierId, carrier]) => {
-      if (carrierId === 'UPS') return; // Skip UPS since we're using real rates
+      if (carrierId === 'UPS' || carrierId === 'FEDEX') return; // Skip UPS and FedEx since we're using real rates
       
       const dimWeight = dimWeights[carrierId];
       const billableWeight = Math.max(actualWeight, dimWeight);
-
+      
       Object.entries(carrier.services).forEach(
         ([serviceName, serviceDetails]) => {
           const price = calculatePrice(
             serviceDetails.baseRate,
             billableWeight,
-            zone,
+            calculateZone(fromZip, toZip),
             carrierId
           );
           const estimatedDays = calculateEstimatedDays(
-            zone,
+            calculateZone(fromZip, toZip),
             serviceDetails.daysFactor
           );
 

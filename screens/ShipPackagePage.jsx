@@ -25,6 +25,9 @@ export default function ShipPackagePage({ route, navigation }) {
   const [isKeyboardVisible, setIsKeyboardVisible] = useState(false);
   const [packageDetails, setPackageDetails] = useState({
     weight: '',
+    length: '',
+    width: '',
+    height: ''
   });
   const [fromZip, setFromZip] = useState('');
   const [toZip, setToZip] = useState('');
@@ -32,12 +35,13 @@ export default function ShipPackagePage({ route, navigation }) {
   useEffect(() => {
     if (route.params?.package) {
       setSelectedPackage(route.params.package);
-      if (route.params.package.weight) {
-        setPackageDetails(prev => ({
-          ...prev,
-          weight: route.params.package.weight.toString(),
-        }));
-      }
+      setPackageDetails(prev => ({
+        ...prev,
+        weight: route.params.package.weight?.toString() || '',
+        length: route.params.package.length?.toString() || '',
+        width: route.params.package.width?.toString() || '',
+        height: route.params.package.height?.toString() || ''
+      }));
     }
   }, [route.params]);
 
@@ -82,23 +86,20 @@ export default function ShipPackagePage({ route, navigation }) {
           item.itemWidth,
           item.itemHeight,
           item.id,
-          'UPS',
+          null,
           item.itemName || 'Unnamed Item'
         ])
       );
 
-      // Get optimal box dimensions using packing algorithm
-      const packedResult = pack(itemList, 'UPS');
-      const dimensions = {
-        length: packedResult.x,
-        width: packedResult.y,
-        height: packedResult.z
-      };
+      // Get optimal box dimensions using packing algorithm for each carrier
+      const upsResult = pack(itemList, 'UPS');
+      const fedexResult = pack(itemList, 'FedEx');
 
       const result = await getShippingEstimates(
         {
           ...packageDetails,
-          ...dimensions
+          upsResult,
+          fedexResult
         },
         fromZip,
         toZip
@@ -173,7 +174,7 @@ export default function ShipPackagePage({ route, navigation }) {
                 </Text>
                 {estimate.dimensions && (
                   <Text style={styles.boxDimensions}>
-                    Box: {estimate.dimensions.boxType} ({Math.ceil(estimate.dimensions.length)}" × {Math.ceil(estimate.dimensions.width)}" × {Math.ceil(estimate.dimensions.height)}")
+                    {estimate.dimensions.boxType} ({Math.ceil(estimate.dimensions.length)}" × {Math.ceil(estimate.dimensions.width)}" × {Math.ceil(estimate.dimensions.height)}")
                   </Text>
                 )}
               </View>
