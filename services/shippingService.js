@@ -114,14 +114,20 @@ const getUPSRates = async (packageDetails, fromZip, toZip) => {
         type: result.type
       };
 
-      const packagingTypeMap = {
-        'Small Box': '21',
-        'Medium Box': '01',
-        'Large Box': '01',
-        'Extra Large Box': '01',
-        'Standard': '02'
+      const upsPackagingMap = {
+        'UPS Small Box': '21',
+        'UPS Medium Box': '22',
+        'UPS Large Box': '23',
+        'UPS Extra Large Box': '24',
+        'UPS Pak': '04',
+        'UPS Express Box': '25',
+        'UPS Express Box - Small': '21',
+        'UPS Express Box - Medium': '22',
+        'UPS Express Box - Large': '23',
+        'UPS Express Tube': '24'
       };
-      packagingType = packagingTypeMap[result.type] || '02';
+
+      packagingType = upsPackagingMap[dimensions.type] || "02"; // Use UPS packaging if available, otherwise customer supplied
     }
 
     const accessToken = await getUPSAccessToken();
@@ -164,7 +170,7 @@ const getUPSRates = async (packageDetails, fromZip, toZip) => {
             },
             Package: {
               PackagingType: {
-                Code: "02",  // Customer Supplied Package
+                Code: packagingType,
                 Description: "Package"
               },
               Dimensions: {
@@ -268,22 +274,33 @@ const getUPSRates = async (packageDetails, fromZip, toZip) => {
 const calculateFedExRates = async (packageDetails, fromZip, toZip) => {
   try {
     const accessToken = await getFedExAccessToken();
+    if (!accessToken) {
+      console.error('Failed to get FedEx access token');
+      return [];
+    }
+
+    console.log('\n=== FedEx Request Details ===');
+    console.log('Package Weight:', Math.max(Math.ceil(packageDetails.weight), 1), 'LB');
+    console.log('Dimensions:', {
+      length: Math.ceil(packageDetails.length),
+      width: Math.ceil(packageDetails.width),
+      height: Math.ceil(packageDetails.height),
+      units: 'IN'
+    });
+    console.log('From ZIP:', fromZip);
+    console.log('To ZIP:', toZip);
 
     const result = packageDetails.fedexResult;
-
-    console.log('Debug - FedEx Result:', result); // Debug log
+    console.log('Debug - FedEx Result:', result);
 
     let dimensions;
-    let packagingType;
-
     if (!result || result.type === 'No Box Found') {
       dimensions = {
         x: packageDetails.length,
         y: packageDetails.width,
         z: packageDetails.height,
-        type: 'Standard'
+        type: 'Custom'
       };
-      packagingType = 'YOUR_PACKAGING';
     } else {
       dimensions = {
         x: result.x,
@@ -291,42 +308,49 @@ const calculateFedExRates = async (packageDetails, fromZip, toZip) => {
         z: result.z,
         type: result.type
       };
-
-      // Map the box type to FedEx API packaging type
-      const packagingTypeMap = {
-        'FedEx Small Box': 'FEDEX_SMALL_BOX',
-        'FedEx Medium Box': 'FEDEX_MEDIUM_BOX',
-        'FedEx Large Box': 'FEDEX_LARGE_BOX',
-        'FedEx Extra Large Box': 'FEDEX_EXTRA_LARGE_BOX',
-        'FedEx Tube': 'FEDEX_TUBE',
-        'FedEx Envelope': 'FEDEX_ENVELOPE',
-        'FedEx Pak': 'FEDEX_PAK',
-        'FedEx Pak Padded': 'FEDEX_PAK',
-        'Standard': 'YOUR_PACKAGING',
-        'Heavy-duty Double-Walled Box': 'YOUR_PACKAGING',
-        'FedEx Box': 'FEDEX_BOX',
-        'FedEx Pak Padded': 'FEDEX_PAK_PADDED',
-        'FedEx Envelope': 'FEDEX_ENVELOPE',
-        'FedEx Tube': 'FEDEX_TUBE',
-        'FedEx 10kg Box': 'FEDEX_10KG_BOX',
-        'FedEx 25kg Box': 'FEDEX_25KG_BOX',
-        'FedEx Extra Large Box': 'FEDEX_EXTRA_LARGE_BOX',
-        'FedEx Large Box': 'FEDEX_LARGE_BOX',
-        'FedEx Medium Box': 'FEDEX_MEDIUM_BOX',
-        'FedEx Padded Pak': 'FEDEX_PADDED_PAK',
-        'FedEx Small Box': 'FEDEX_SMALL_BOX',
-      };
-
-      console.log('Debug - FedEx box type before mapping:', result.type); // Debug log
-      packagingType = packagingTypeMap[result.type];
-      console.log('Debug - FedEx box type after mapping:', packagingType); // Debug log
-
-      // If mapping returns undefined, default to YOUR_PACKAGING
-      if (!packagingType) {
-        console.log('Warning: No matching FedEx packaging type found for:', result.type);
-        packagingType = 'YOUR_PACKAGING';
-      }
     }
+
+    // Always use a FedEx box type
+    const getFedExBox = (length, width, height) => {
+      // FedEx box dimensions from smallest to largest
+      const fedexBoxes = [
+        { type: 'FEDEX_SMALL_BOX', dimensions: [10.875, 12.375, 1.5] },
+        { type: 'FEDEX_MEDIUM_BOX', dimensions: [11.5, 13.25, 2.375] },
+        { type: 'FEDEX_LARGE_BOX', dimensions: [17.5, 12, 3] },
+        { type: 'FEDEX_EXTRA_LARGE_BOX', dimensions: [20, 20, 12] }
+      ];
+
+      // Sort dimensions from smallest to largest
+      const itemDims = [length, width, height].sort((a, b) => a - b);
+      
+      // Find the smallest box that fits the item
+      for (const box of fedexBoxes) {
+        const boxDims = box.dimensions.sort((a, b) => a - b);
+        if (itemDims[0] <= boxDims[0] && 
+            itemDims[1] <= boxDims[1] && 
+            itemDims[2] <= boxDims[2]) {
+          return box.type;
+        }
+      }
+      
+      // If no box fits, use the largest box
+      return 'FEDEX_EXTRA_LARGE_BOX';
+    };
+
+    const packagingType = getFedExBox(
+      Math.ceil(dimensions.x),
+      Math.ceil(dimensions.y),
+      Math.ceil(dimensions.z)
+    );
+
+    console.log('Debug - FedEx packaging:', {
+      dimensions: {
+        length: Math.ceil(dimensions.x),
+        width: Math.ceil(dimensions.y),
+        height: Math.ceil(dimensions.z)
+      },
+      selectedBox: packagingType
+    });
 
     const payload = {
       accountNumber: {
@@ -342,11 +366,11 @@ const calculateFedExRates = async (packageDetails, fromZip, toZip) => {
         recipient: {
           address: {
             postalCode: toZip,
-            countryCode: "US"
+            countryCode: "US",
+            residential: true
           }
         },
         pickupType: "DROPOFF_AT_FEDEX_LOCATION",
-        rateRequestType: ["LIST", "ACCOUNT"],
         requestedPackageLineItems: [{
           weight: {
             value: Math.max(Math.ceil(packageDetails.weight), 1),
@@ -357,64 +381,106 @@ const calculateFedExRates = async (packageDetails, fromZip, toZip) => {
             width: Math.ceil(dimensions.y),
             height: Math.ceil(dimensions.z),
             units: "IN"
-          },
-          packageSpecialServices: {
-            specialServiceTypes: ["SIGNATURE_OPTION"],
-            signatureOptionType: "DIRECT"
           }
         }],
-        packagingType: packagingType,
-        totalPackageCount: "1",
-        preferredCurrency: "USD"
-      },
-      carrierCodes: ["FDXE", "FDXG"],
-      returnTransitTimes: true
+        packagingType: "YOUR_PACKAGING",
+        rateRequestType: ["LIST", "ACCOUNT"],
+        variableOptions: ["FREIGHT_GUARANTEE"],
+        carrierCodes: ["FDXE", "FDXG"],
+        requestedCurrency: "USD"
+      }
     };
 
-    console.log('\n=== FedEx API Request ===\n', {
-      boxDimensions: {
-        length: Math.ceil(dimensions.x),
-        width: Math.ceil(dimensions.y),
-        height: Math.ceil(dimensions.z),
-        originalBoxType: dimensions.type,
-        apiPackagingType: packagingType
-      },
-      weight: Math.max(Math.ceil(packageDetails.weight), 1)
-    });
+    console.log('\n=== FedEx API Request ===\n', JSON.stringify(payload, null, 2));
 
-    const response = await axios.post(
-      `${FEDEX_CONFIG.baseURL}/rate/v1/rates/quotes`,
-      payload,
-      {
-        headers: {
-          'Authorization': `Bearer ${accessToken}`,
-          'Content-Type': 'application/json',
-          'X-locale': 'en_US'
+    try {
+      const response = await axios.post(
+        `${FEDEX_CONFIG.baseURL}/rate/v1/rates/quotes`,
+        payload,
+        {
+          headers: {
+            'Authorization': `Bearer ${accessToken}`,
+            'Content-Type': 'application/json',
+            'X-locale': 'en_US'
+          }
         }
+      );
+
+      console.log('\n=== FedEx API Response Status ===');
+      console.log('Status:', response.status);
+      console.log('Status Text:', response.statusText);
+      
+      if (response.data?.output?.alerts) {
+        console.log('\n=== FedEx API Alerts ===');
+        console.log(JSON.stringify(response.data.output.alerts, null, 2));
       }
-    );
 
-    if (response.data?.output?.rateReplyDetails) {
-      const rates = response.data.output.rateReplyDetails.map(rate => ({
-        carrier: 'FedEx',
-        service: rate.serviceType.replace(/_/g, ' ')
-          .split(' ')
-          .map(word => word.charAt(0) + word.slice(1).toLowerCase())
-          .join(' ')
-          .replace('Fedex', 'FedEx'),
-        price: parseFloat(rate.ratedShipmentDetails[0].totalNetCharge),
-        currency: 'USD',
-        estimatedDays: rate.transitTime || 'Unknown',
-        dimensions: {
-          length: dimensions.x,
-          width: dimensions.y,
-          height: dimensions.z,
-          boxType: dimensions.type
-        }
-      }));
-      return rates;
+      if (response.data?.output?.rateReplyDetails) {
+        console.log('\n=== FedEx Rate Details ===');
+        response.data.output.rateReplyDetails.forEach(rate => {
+          console.log('\nService:', rate.serviceType);
+          console.log('Price:', rate.ratedShipmentDetails[0].totalNetCharge);
+          console.log('Transit Time:', rate.transitTime);
+        });
+
+        const getFedExEstimatedDays = (serviceType) => {
+          const estimates = {
+            'FIRST_OVERNIGHT': '1',
+            'PRIORITY_OVERNIGHT': '1',
+            'STANDARD_OVERNIGHT': '1',
+            'FEDEX_2_DAY_AM': '2',
+            'FEDEX_2_DAY': '2',
+            'FEDEX_EXPRESS_SAVER': '3',
+            'FEDEX_GROUND': '3-5',
+            'GROUND_HOME_DELIVERY': '3-5'
+          };
+          return estimates[serviceType] || 'Unknown';
+        };
+
+        const rates = response.data.output.rateReplyDetails.map(rate => {
+          const service = rate.serviceType.replace(/_/g, ' ')
+            .split(' ')
+            .map(word => word.charAt(0) + word.slice(1).toLowerCase())
+            .join(' ')
+            .replace('Fedex', 'FedEx')
+            .replace('Ground Home Delivery', 'Ground');
+
+          return {
+            carrier: 'FedEx',
+            service,
+            price: parseFloat(rate.ratedShipmentDetails[0].totalNetCharge),
+            currency: 'USD',
+            estimatedDays: getFedExEstimatedDays(rate.serviceType),
+            dimensions: {
+              length: dimensions.x,
+              width: dimensions.y,
+              height: dimensions.z,
+              boxType: dimensions.type
+            }
+          };
+        });
+
+        console.log('\n=== Final FedEx Rates ===');
+        console.log(JSON.stringify(rates, null, 2));
+        return rates;
+      }
+
+      console.log('\nNo FedEx rates found in response');
+      return [];
+    } catch (error) {
+      console.error('\n=== FedEx API Error ===');
+      if (error.response) {
+        console.error('Status:', error.response.status);
+        console.error('Headers:', error.response.headers);
+        console.error('Data:', JSON.stringify(error.response.data, null, 2));
+      } else if (error.request) {
+        console.error('Request made but no response received');
+        console.error(error.request);
+      } else {
+        console.error('Error setting up request:', error.message);
+      }
+      return [];
     }
-    return [];
   } catch (error) {
     return [];
   }
