@@ -13,22 +13,10 @@ const CARRIERS = {
   },
   UPS: {
     name: "UPS",
-    services: {
-      Ground: { baseRate: 8.5, daysFactor: 1.0 },
-      "3 Day Select": { baseRate: 12.75, daysFactor: 0.7 },
-      "2nd Day Air": { baseRate: 18.5, daysFactor: 0.5 },
-      "Next Day Air": { baseRate: 29.99, daysFactor: 0.3 },
-    },
     dimDivisor: 139
   },
   FEDEX: {
     name: "FedEx",
-    services: {
-      Ground: { baseRate: 8.75, daysFactor: 1.0 },
-      "Express Saver": { baseRate: 13.5, daysFactor: 0.7 },
-      "2Day": { baseRate: 19.25, daysFactor: 0.5 },
-      "Priority Overnight": { baseRate: 31.5, daysFactor: 0.3 },
-    },
     dimDivisor: 139
   },
 };
@@ -486,39 +474,46 @@ const calculateFedExRates = async (packageDetails, fromZip, toZip) => {
   }
 };
 
-const getDefaultEstimatedDays = (serviceCode) => {
-  const estimatedDays = {
-    '01': 1,  // Next Day Air
-    '02': 2,  // 2nd Day Air
-    '03': 5,  // Ground
-    '12': 3,  // 3 Day Select
-    '13': 1,  // Next Day Air Saver
-    '14': 1,  // Next Day Air Early
-    '59': 2   // 2nd Day Air A.M.
-  };
-  return estimatedDays[serviceCode] || 5;
-};
+const calculateUSPSRates = (packageDetails, fromZip, toZip) => {
+  const zone = calculateZone(fromZip, toZip);
+  const dimWeight = calculateDimWeight(
+    packageDetails.length * packageDetails.width * packageDetails.height,
+    CARRIERS.USPS.dimDivisor
+  );
+  const billableWeight = Math.max(packageDetails.weight, dimWeight);
 
-const getFallbackUPSRates = (packageDetails, fromZip, toZip) => {
-  return Object.entries(CARRIERS.UPS.services).map(([serviceName, serviceDetails]) => {
-    const zone = calculateZone(fromZip, toZip);
-    const billableWeight = Math.max(
-      packageDetails.weight,
-      calculateDimensionalWeight(
-        packageDetails.length || 1,
-        packageDetails.width || 1,
-        packageDetails.height || 1
-      ).UPS
-    );
-    
+  return Object.entries(CARRIERS.USPS.services).map(([serviceName, serviceDetails]) => {
+    const price = calculatePrice(serviceDetails.baseRate, billableWeight, zone, 'USPS');
+    const estimatedDays = calculateEstimatedDays(zone, serviceDetails.daysFactor);
+
     return {
-      carrier: 'UPS',
+      carrier: 'USPS',
       service: serviceName,
-      price: calculatePrice(serviceDetails.baseRate, billableWeight, zone, 'UPS'),
-      estimatedDays: calculateEstimatedDays(zone, serviceDetails.daysFactor),
-      isEstimate: true
+      price: parseFloat(price.toFixed(2)),
+      estimatedDays: estimatedDays,
+      isMockRate: true,
+      dimensions: {
+        length: packageDetails.length,
+        width: packageDetails.width,
+        height: packageDetails.height
+      }
     };
   });
+};
+
+const calculatePrice = (baseRate, billableWeight, zone, carrierId) => {
+  const weightRate = 0.55;
+  const zoneMultiplier = 0.08;
+  const fuelSurcharge = 1.1;
+  const handlingFee = 2.5;
+
+  let price = baseRate;
+  price += billableWeight * weightRate;
+  price *= 1 + zone * zoneMultiplier;
+  price *= fuelSurcharge;
+  price += handlingFee;
+
+  return price;
 };
 
 const calculateZone = (fromZip, toZip) => {
@@ -532,33 +527,9 @@ const calculateZone = (fromZip, toZip) => {
   return 8;
 };
 
-const calculateDimensionalWeight = (length, width, height) => {
-  const dimensionalDivisor = { USPS: 166, UPS: 139, FEDEX: 139 };
-  const weights = {};
-  Object.keys(dimensionalDivisor).forEach((carrier) => {
-    weights[carrier] = (length * width * height) / dimensionalDivisor[carrier];
-  });
-  return weights;
-};
-
 const calculateEstimatedDays = (zone, serviceDaysFactor) => {
   const baseDeliveryDays = { 2: 1, 3: 2, 4: 3, 5: 4, 6: 5, 7: 6, 8: 7 };
   return Math.ceil(baseDeliveryDays[zone] * serviceDaysFactor);
-};
-
-const calculatePrice = (baseRate, billableWeight, zone, carrierId) => {
-  const weightRate = carrierId === "USPS" ? 0.55 : 0.75;
-  const zoneMultiplier = carrierId === "USPS" ? 0.08 : 0.1;
-  const fuelSurcharge = carrierId === "USPS" ? 1.1 : 1.12;
-  const handlingFee = carrierId === "USPS" ? 2.5 : 3.5;
-
-  let price = baseRate;
-  price += billableWeight * weightRate;
-  price *= 1 + zone * zoneMultiplier;
-  price *= fuelSurcharge;
-  price += handlingFee;
-
-  return parseFloat(price.toFixed(2));
 };
 
 const calculateDimWeight = (volume, dimDivisor) => {
@@ -578,26 +549,35 @@ export const getShippingEstimates = async (packageDetails, fromZip, toZip) => {
 
     const estimates = [];
 
-    console.log('\n=== Getting UPS Rates ===');
+    // Get USPS mock rates
+    console.log('\n=== Getting USPS Mock Rates ===');
+    const uspsRates = calculateUSPSRates(packageDetails, fromZip, toZip);
+    estimates.push(...uspsRates);
+
+    // Get real UPS rates from API
+    console.log('\n=== Getting UPS API Rates ===');
     const upsRates = await getUPSRates(packageDetails, fromZip, toZip);
-    console.log('UPS Rates received:', upsRates);
     if (Array.isArray(upsRates)) {
       estimates.push(...upsRates);
     }
 
-    console.log('\n=== Getting FedEx Rates ===');
+    // Get real FedEx rates from API
+    console.log('\n=== Getting FedEx API Rates ===');
     const fedexRates = await calculateFedExRates({...packageDetails}, fromZip, toZip);
     if (Array.isArray(fedexRates)) {
       estimates.push(...fedexRates);
     }
 
+    // Sort all estimates by price
+    const sortedEstimates = estimates.sort((a, b) => a.price - b.price);
+
     console.log('\n=== Final Estimates ===');
-    console.log('Total estimates:', estimates.length);
-    console.log('All estimates:', estimates);
+    console.log('Total estimates:', sortedEstimates.length);
+    console.log('All estimates:', sortedEstimates);
 
     return {
       success: true,
-      estimates: estimates.sort((a, b) => a.price - b.price)
+      estimates: sortedEstimates
     };
   } catch (error) {
     console.error("Error calculating shipping estimates:", error);

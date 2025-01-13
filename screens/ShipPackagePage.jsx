@@ -146,6 +146,34 @@ export default function ShipPackagePage({ route, navigation }) {
     };
   };
 
+  const renderEstimate = ({ item }) => {
+    const isUSPSMock = item.carrier === 'USPS' && item.isMockRate;
+  
+    return (
+      <TouchableOpacity style={styles.estimateItem}>
+        <View style={styles.estimateHeader}>
+          <View style={styles.carrierInfo}>
+            <Text style={styles.carrierName}>{item.carrier}</Text>
+            {isUSPSMock && (
+              <Text style={styles.mockLabel}>(Estimated)</Text>
+            )}
+          </View>
+          <Text style={styles.price}>${item.price.toFixed(2)}</Text>
+        </View>
+        <View style={styles.estimateDetails}>
+          <Text style={styles.serviceName}>{item.service}</Text>
+          <Text style={styles.deliveryTime}>
+            Est. Delivery: {
+              typeof item.estimatedDays === 'string' 
+                ? `${item.estimatedDays} days` 
+                : `${item.estimatedDays} ${item.estimatedDays === 1 ? 'day' : 'days'}`
+            }
+          </Text>
+        </View>
+      </TouchableOpacity>
+    );
+  };
+
   const renderEstimates = () => {
     if (isLoading) {
       return (
@@ -162,21 +190,8 @@ export default function ShipPackagePage({ route, navigation }) {
           <Text style={styles.sectionTitle}>Shipping Estimates</Text>
           <View style={styles.estimatesList}>
             {shippingEstimates.map((estimate, index) => (
-              <View key={index} style={styles.estimateCard}>
-                <View style={styles.estimateHeader}>
-                  <Text style={styles.carrierName}>{estimate.carrier}</Text>
-                  <Text style={styles.estimatePrice}>${estimate.price.toFixed(2)}</Text>
-                </View>
-                <Text style={styles.serviceType}>{estimate.service}</Text>
-                <Text style={styles.estimatedDays}>
-                  Estimated delivery: {estimate.estimatedDays} {estimate.estimatedDays === 1 ? 'day' : 'days'}
-                  {estimate.isEstimate && ' (estimated)'}
-                </Text>
-                {estimate.dimensions && (
-                  <Text style={styles.boxDimensions}>
-                    {estimate.dimensions.boxType} ({Math.ceil(estimate.dimensions.length)}" × {Math.ceil(estimate.dimensions.width)}" × {Math.ceil(estimate.dimensions.height)}")
-                  </Text>
-                )}
+              <View key={index}>
+                {renderEstimate({ item: estimate })}
               </View>
             ))}
           </View>
@@ -360,12 +375,16 @@ const styles = StyleSheet.create({
   estimatesList: {
     gap: 12,
   },
-  estimateCard: {
-    backgroundColor: '#f8fafc',
+  estimateItem: {
+    backgroundColor: 'white',
     borderRadius: 8,
     padding: 16,
-    borderWidth: 1,
-    borderColor: '#e2e8f0',
+    marginBottom: 12,
+    elevation: 2,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
   },
   estimateHeader: {
     flexDirection: 'row',
@@ -373,31 +392,37 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginBottom: 8,
   },
+  carrierInfo: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
   carrierName: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: '#334155',
-  },
-  estimatePrice: {
     fontSize: 18,
-    fontWeight: '700',
-    color: '#3b82f6',
+    fontWeight: '600',
+    color: '#1a1a1a',
   },
-  serviceType: {
-    fontSize: 14,
-    color: '#64748b',
+  mockLabel: {
+    fontSize: 12,
+    color: '#666',
+    marginLeft: 8,
+    fontStyle: 'italic',
+  },
+  price: {
+    fontSize: 20,
+    fontWeight: '700',
+    color: '#2563eb',
+  },
+  estimateDetails: {
+    marginTop: 4,
+  },
+  serviceName: {
+    fontSize: 16,
+    color: '#4b5563',
     marginBottom: 4,
   },
-  estimatedDays: {
+  deliveryTime: {
     fontSize: 14,
-    color: '#475569',
-    marginTop: 4,
-  },
-  boxDimensions: {
-    fontSize: 14,
-    color: '#64748b',
-    marginTop: 4,
-    fontStyle: 'italic'
+    color: '#6b7280',
   },
   calculateButton: {
     backgroundColor: '#3b82f6',
