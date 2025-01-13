@@ -197,9 +197,48 @@ function carrierBoxes(carrier) {
 
         // FEDEX_10KG_BOX : Designed for shipments up to 10 kg (22 lbs).
         // FEDEX_25KG_BOX: Designed for shipments up to 25 kg (55 lbs).
+
+        // From https://www.fedex.com/en-us/shipping/packing/supplies/boxes.html
+        [8,8,8, "FedEx Small Box", "Box Only Price: $1.75"],
+        [12,12,18,"FedEx Store Box", "Box Only Price: $3.75"],
+        [13,9,11,"FedEx Standard Box", "Box Only Price: $2.75"],
+        [16,16,16,"FedEx Standard Box", "Box Only Price: $4.29"],
+        [14,14,14,"FedEx Standard Box", "Box Only Price: $3.75"],
+        [14,14,14,"FedEx Standard Box", "Box Only Price: $6.29"],
+        [23,17,12,"FedEx Standard Box", "Box Only Price: $4.75"],
+        [12,9,6,"FedEx Standard In-Store Box", "Box Only Price: $3.75"],
+        [11,11,11,"FedEx Standard In-Store Box", "Box Only Price: $2.50"],
+        [17,17,7,"FedEx Standard In-Store Box", "Box Only Price: $3.25"],
+        [20,20,12,"FedEx Standard In-Store Box", "Box Only Price: $4.50"],
+        [11,11,11,"FedEx Standard In-Store Box", "Box Only Price: $2.50"],
+        [22,22,22,"FedEx Standard In-Store Box", "Box Only Price: $7.00"],
+        [18,13,11.75,"FedEx Standard In-Store Box", "Box Only Price: $2.50"],
       ];
     case "UPS":
       return [
+        // These are standard UPS box sizes - DO NOT MODIFY
+        [6, 6, 6, "UPS Standard Box", "For this box price contact your local The UPS Store®."],
+        [6, 6, 48, "UPS Standard Box", "For this box price contact your local The UPS Store®."],
+        [8, 8, 8, "UPS Standard Box", "For this box price contact your local The UPS Store®."],
+        [10, 10, 10, "UPS Standard Box", "For this box price contact your local The UPS Store®."],
+        [12, 12, 6, "UPS Standard Box", "For this box price contact your local The UPS Store®."],
+        [12, 12, 12, "UPS Standard Box", "For this box price contact your local The UPS Store®."],
+        [14, 14, 14, "UPS Standard Box", "For this box price contact your local The UPS Store®."],
+        [15, 12, 10, "UPS Standard Box", "For this box price contact your local The UPS Store®."],
+        [15, 15, 48, "UPS Standard Box", "For this box price contact your local The UPS Store®."],
+        [16, 16, 4, "UPS Standard Box", "For this box price contact your local The UPS Store®."],
+        [16, 16, 16, "UPS Standard Box", "For this box price contact your local The UPS Store®."],
+        [17, 11, 8, "UPS Standard Box", "For this box price contact your local The UPS Store®."],
+        [18, 18, 18, "UPS Standard Box", "For this box price contact your local The UPS Store®."],
+        [20, 12, 12, "UPS Standard Box", "For this box price contact your local The UPS Store®."],
+        [20, 20, 12, "UPS Standard Box", "For this box price contact your local The UPS Store®."],
+        [20, 20, 20, "UPS Standard Box", "For this box price contact your local The UPS Store®."],
+        [24, 18, 6, "UPS Standard Box", "For this box price contact your local The UPS Store®."],
+        [24, 18, 18, "UPS Standard Box", "For this box price contact your local The UPS Store®."],
+        [24, 24, 16, "UPS Standard Box", "For this box price contact your local The UPS Store®."],
+        [24, 24, 24, "UPS Standard Box", "For this box price contact your local The UPS Store®."],
+        [30, 24, 6, "UPS Standard Box", "For this box price contact your local The UPS Store®."],
+
         // Express Boxes
         [13, 11, 2, "UPS Express Box - Small", "Free with Express Service"],
         [16, 11, 3, "UPS Express Box - Medium", "Free with Express Service"],
