@@ -2,19 +2,19 @@ import React, { useState, useEffect, useRef } from 'react';
 import {
   View,
   Text,
-  ScrollView,
   StyleSheet,
-  TextInput,
-  Alert,
+  TouchableOpacity,
   ActivityIndicator,
+  ScrollView,
+  Alert,
+  TextInput,
   KeyboardAvoidingView,
   Platform,
-  TouchableOpacity,
-  Keyboard,
+  Keyboard
 } from 'react-native';
 import { getShippingEstimates } from '../services/shippingService';
 import { Ionicons } from '@expo/vector-icons';
-import { pack } from '../packing_algo/packing'; // Import the packing algorithm function
+import { pack } from '../packing_algo/packing';
 
 export default function ShipPackagePage({ route, navigation }) {
   const scrollViewRef = useRef(null);
