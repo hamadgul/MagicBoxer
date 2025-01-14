@@ -16,6 +16,17 @@ export const getScale = (box) => {
   if (matchDims(box, 8.6875, 5.4375, 1.75)) return 6;
   if (matchDims(box, 9.4375, 6.4375, 2.1875)) return 6;
   if (matchDims(box, 10, 7, 3)) return 6;
+
+  if (matchDims(box, 9.75, 11.5, 1)) return 6;
+  if (matchDims(box, 10, 5, 0.25)) return 5;
+  if (matchDims(box, 12.5, 9.5, 0.25)) return 6;
+  if (matchDims(box, 10, 7, 0.25)) return 5;
+  if (matchDims(box, 10, 7, 0.5)) return 5;
+  if (matchDims(box, 12.5, 9.5, 0.5)) return 6;
+
+
+
+
   if (matchDims(box, 7.25, 7.25, 6.5)) return 6;
   if (matchDims(box, 8.75, 2.625, 11.25)) return 6;
   if (matchDims(box, 8.75, 4.375, 11.25)) return 6;
