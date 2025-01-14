@@ -66,6 +66,33 @@ const PriceText = React.memo(({ carrier, priceText }) => {
   );
 });
 
+// Reference dimensions for iPhone 14 Pro
+const IPHONE_14_PRO = {
+  width: 393,
+  height: 852
+};
+
+// Get scale factors based on device screen size
+const getScaleFactors = () => {
+  const { width, height } = Dimensions.get('window');
+  return {
+    scaleX: width / IPHONE_14_PRO.width,
+    scaleY: height / IPHONE_14_PRO.height
+  };
+};
+
+// Scale a value based on screen width
+const scaleWidth = (value) => {
+  const { scaleX } = getScaleFactors();
+  return value * scaleX;
+};
+
+// Scale a value based on screen height
+const scaleHeight = (value) => {
+  const { scaleY } = getScaleFactors();
+  return value * scaleY;
+};
+
 export default class Display3D extends Component {
   constructor(props) {
     super(props);
@@ -999,6 +1026,7 @@ export default class Display3D extends Component {
 
   render() {
     const { selectedBox, selectedCarrier, isBoxCollapsed } = this.state;
+    const { scaleX, scaleY } = getScaleFactors();
     const carriers = this.getMemoizedCarrierData();
 
     if (!selectedBox || !selectedBox.dimensions) {
@@ -1027,7 +1055,7 @@ export default class Display3D extends Component {
             {this.renderCustomSlider()}
           </View>
         </View>
-        <View style={[styles.topContainer, { paddingTop: 15 }, isBoxCollapsed && styles.collapsedTopContainer]}>
+        <View style={[styles.topContainer, { paddingTop: scaleHeight(15) }, isBoxCollapsed && styles.collapsedTopContainer]}>
           <View style={styles.boxWrapper}>
             <View style={[styles.boxDimensionsContainer, isBoxCollapsed && styles.collapsedBox]}>
               <View style={styles.boxHeaderContainer}>
@@ -1135,13 +1163,13 @@ const styles = StyleSheet.create({
   },
   fixedContent: {
     position: 'absolute',
-    top: 220,
+    top: scaleHeight(220),
     left: 0,
     right: 0,
     zIndex: 0,
   },
   glViewWrapper: {
-    height: 460,
+    height: scaleHeight(460),
     width: '100%',
   },
   glView: {
@@ -1149,19 +1177,19 @@ const styles = StyleSheet.create({
   },
   sliderContainer: {
     position: 'absolute',
-    right: 20,
+    right: scaleWidth(20),
     top: '50%',
-    transform: [{ translateY: -100 }],
-    height: 159,
-    width: 40,
+    transform: [{ translateY: scaleHeight(-100) }],
+    height: scaleHeight(159),
+    width: scaleWidth(40),
     justifyContent: 'center',
     alignItems: 'center',
     zIndex: 2,
     backgroundColor: 'transparent',
   },
   slider: {
-    width: 200,
-    height: 40,
+    width: scaleWidth(170),
+    height: scaleHeight(5),
     transform: [
       { rotate: '-90deg' },
       Platform.OS === 'android' ? { scale: 1.2 } : null
@@ -1173,9 +1201,9 @@ const styles = StyleSheet.create({
     left: 0,
     right: 0,
     backgroundColor: '#fff',
-    paddingTop: 15,
-    paddingHorizontal: 15,
-    paddingBottom: 10,
+    paddingTop: scaleHeight(15),
+    paddingHorizontal: scaleWidth(15),
+    paddingBottom: scaleHeight(10),
     zIndex: 1,
   },
   collapsedTopContainer: {
