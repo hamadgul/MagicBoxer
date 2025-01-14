@@ -1,8 +1,8 @@
 const USPS_CONFIG = {
   services: {
-    "Priority Mail Express": { baseRate: 26.35, daysFactor: 0.3 },
-    "Priority Mail": { baseRate: 8.7, daysFactor: 0.6 },
-    "Ground Advantage": { baseRate: 7.5, daysFactor: 1.0 },
+    "Priority Mail Express": { baseRate: 31.55, daysFactor: 0.3 },
+    "Priority Mail": { baseRate: 9.65, daysFactor: 0.6 },
+    "Ground Advantage": { baseRate: 5.40, daysFactor: 1.0 },
   },
   dimDivisor: 166
 };
@@ -28,18 +28,18 @@ const calculateEstimatedDays = (zone, serviceDaysFactor) => {
 };
 
 const calculatePrice = (baseRate, billableWeight, zone) => {
-  const weightRate = 0.55;
-  const zoneMultiplier = 0.08;
-  const fuelSurcharge = 1.1;
-  const handlingFee = 2.5;
+  const weightRate = 0.65;
+  const zoneMultiplier = 0.1;
+  const fuelSurcharge = 1.15;
+  const handlingFee = 3.0;
 
   let price = baseRate;
   price += billableWeight * weightRate;
-  price *= 1 + zone * zoneMultiplier;
+  price *= 1 + (zone - 1) * zoneMultiplier;
   price *= fuelSurcharge;
   price += handlingFee;
 
-  return price;
+  return Math.round(price * 100) / 100;
 };
 
 export const calculateUSPSRates = (packageDetails, fromZip, toZip) => {
