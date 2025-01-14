@@ -2,24 +2,15 @@ import React from "react";
 import {
   View,
   Text,
-  TouchableOpacity,
   ScrollView,
   Alert,
-  Modal,
   StyleSheet,
-  FlatList,
-  TextInput,
-  TouchableWithoutFeedback,
-  Animated,
-  Easing,
-  Keyboard,
   Image,
 } from "react-native";
 import { Button } from "native-base";
 import {
   FontAwesome,
   MaterialIcons,
-  Entypo,
   AntDesign,
   MaterialCommunityIcons,
 } from "@expo/vector-icons";

@@ -8,8 +8,6 @@ import {
   ScrollView,
   Alert,
   TextInput,
-  KeyboardAvoidingView,
-  Platform,
   Keyboard
 } from 'react-native';
 import { getShippingEstimates } from '../services/shippingService';

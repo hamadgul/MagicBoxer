@@ -7,7 +7,6 @@ import {
   StyleSheet,
   Dimensions,
   Modal,
-  Pressable,
 } from 'react-native';
 import { carrierBoxes } from '../packing_algo/carrierBoxes';
 

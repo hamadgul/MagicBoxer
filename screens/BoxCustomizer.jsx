@@ -15,9 +15,7 @@ import * as THREE from 'three';
 import { Renderer } from 'expo-three';
 import { carrierBoxes } from '../packing_algo/carrierBoxes';
 import { getScale } from '../utils/boxSizes';
-import Box from '../packing_algo/Box';
-import Item from '../packing_algo/Item';
-import { createDisplay, fitItem, checkDimensions, pack } from '../packing_algo/packing';
+import { createDisplay, pack } from '../packing_algo/packing';
 
 const carrierData = [
   { label: 'No Carrier', value: 'No Carrier' },

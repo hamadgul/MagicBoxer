@@ -11,11 +11,9 @@ import {
   TouchableWithoutFeedback,
   TouchableOpacity,
   ScrollView,
-  StyleSheet,
   KeyboardAvoidingView,
   Platform,
   ActivityIndicator,
-  FlatList,
 } from "react-native";
 import { VStack } from "native-base";  
 import AsyncStorage from "@react-native-async-storage/async-storage";
@@ -23,8 +21,6 @@ import { generateUUID } from "three/src/math/MathUtils";
 import { pack, createDisplay } from "../packing_algo/packing";
 import styles from "../components/Styles";
 import { modalStyles } from "../components/ModalStyles";
-import { debounce } from 'lodash';
-import DropDownPicker from 'react-native-dropdown-picker';
 var Buffer = require("@craftzdog/react-native-buffer").Buffer;
 const productList = require('../products.json') || [];
 
