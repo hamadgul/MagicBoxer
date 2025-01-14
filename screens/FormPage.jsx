@@ -917,7 +917,7 @@ export default class FormPage extends Component {
                     style={styles.submitButton}
                     onPress={this.handleSubmit}
                   >
-                    <Text style={styles.buttonText}>Add Item</Text>
+                    <Text style={styles.buttonText}>Add item</Text>
                   </TouchableOpacity>
                 </VStack>
               </View>
@@ -942,17 +942,17 @@ export default class FormPage extends Component {
                   style={styles.savePackageButton}
                   onPress={this.toggleSavePackageModal}
                 >
-                  <Text style={styles.buttonText}>Save Package</Text>
+                  <Text style={styles.savePackageButtonText}>Save Package</Text>
                 </TouchableOpacity>
                 <TouchableOpacity
-                  style={styles.visualizeButton}
+                  style={styles.packButton}
                   onPress={this.handleVisualize}
                   disabled={this.state.isLoading}
                 >
                   {this.state.isLoading ? (
                     <ActivityIndicator color="white" />
                   ) : (
-                    <Text style={styles.buttonText}>Pack!</Text>
+                    <Text style={styles.buttonText}>Pack</Text>
                   )}
                 </TouchableOpacity>
               </View>

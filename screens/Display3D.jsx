@@ -148,7 +148,8 @@ export default class Display3D extends Component {
       currentRotation: 0,
       cameraPosition: { x: -1.2, y: 0.5, z: 5 },
       expandedItems: {},
-      isTransitioning: false
+      isTransitioning: false,
+      isSliding: false
     };
 
     this.animations = {};
@@ -296,7 +297,25 @@ export default class Display3D extends Component {
         this.updateRotation(value);
       });
     } else {
-      this.updateRotation(value);
+      if (this.state.isSliding) {
+        this.updateRotation(value);
+      }
+    }
+  };
+
+  handleSlidingStart = () => {
+    if (Platform.OS === 'android') {
+      this.setState({ isSliding: true });
+    }
+  };
+
+  handleSlidingComplete = (value) => {
+    if (Platform.OS === 'android') {
+      this.setState({ 
+        isSliding: false,
+        currentRotation: value,
+        sliderValue: value
+      });
     }
   };
 
@@ -574,23 +593,33 @@ export default class Display3D extends Component {
       <View style={styles.sliderContainer}>
         <Slider
           key={Platform.OS === 'android' ? this.state.sliderKey : undefined}
-          style={styles.slider}
+          style={[
+            styles.slider,
+            Platform.OS === 'android' && {
+              height: 40,
+              padding: 10,
+            }
+          ]}
           minimumValue={0}
           maximumValue={Math.PI}
           step={Platform.OS === 'android' ? 0.05 : 0.01}
           value={this.state.currentRotation}
           onValueChange={this.handleRotationChange}
+          onSlidingStart={this.handleSlidingStart}
+          onSlidingComplete={this.handleSlidingComplete}
           minimumTrackTintColor="#4A90E2"
           maximumTrackTintColor="rgba(74, 144, 226, 0.2)"
           thumbTintColor="#4A90E2"
           inverted={Platform.OS === 'ios'}
           {...(Platform.OS === 'android' ? {
             thumbStyle: {
-              width: 20,
-              height: 20,
-              borderRadius: 10,
+              width: 24,
+              height: 24,
+              borderRadius: 12,
               backgroundColor: '#4A90E2',
-            }
+            },
+            hitSlop: { top: 10, bottom: 10, left: 10, right: 10 },
+            touchSlop: 0
           } : {})}
         />
       </View>
