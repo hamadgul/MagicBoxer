@@ -553,10 +553,18 @@ export default class Display3D extends Component {
           step={Platform.OS === 'android' ? 0.05 : 0.01}
           value={this.state.currentRotation}
           onValueChange={this.handleRotationChange}
-          minimumTrackTintColor="#007AFF"
-          maximumTrackTintColor="#B4B4B4"
-          thumbTintColor="#007AFF"
-          inverted={true}
+          minimumTrackTintColor="#4A90E2"
+          maximumTrackTintColor="rgba(74, 144, 226, 0.2)"
+          thumbTintColor="#4A90E2"
+          inverted={Platform.OS === 'ios'}
+          {...(Platform.OS === 'android' ? {
+            thumbStyle: {
+              width: 20,
+              height: 20,
+              borderRadius: 10,
+              backgroundColor: '#4A90E2',
+            }
+          } : {})}
         />
       </View>
     );
@@ -752,9 +760,14 @@ export default class Display3D extends Component {
           </View>
           <View style={[styles.percentageContainer, { 
             width: volumePercentage <= 15 ? 'auto' : `${Math.min(100, volumePercentage)}%`,
-            left: volumePercentage <= 15 ? 0 : 'auto'
+            left: volumePercentage <= 15 ? 2 : 'auto',
+            right: volumePercentage <= 15 ? 'auto' : 0,
+            alignItems: volumePercentage <= 15 ? 'flex-start' : 'flex-end'
           }]}>
-            <Text style={[styles.percentageText, { color: percentageColor }]}>
+            <Text style={[styles.percentageText, { 
+              color: percentageColor,
+              textAlign: volumePercentage <= 15 ? 'left' : 'right'
+            }]}>
               {volumePercentage}%
             </Text>
           </View>
@@ -1139,11 +1152,12 @@ const styles = StyleSheet.create({
     right: 20,
     top: '50%',
     transform: [{ translateY: -100 }],
-    height: 150,
+    height: 159,
     width: 40,
     justifyContent: 'center',
     alignItems: 'center',
     zIndex: 2,
+    backgroundColor: 'transparent',
   },
   slider: {
     width: 200,
