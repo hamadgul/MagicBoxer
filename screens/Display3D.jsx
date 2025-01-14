@@ -547,7 +547,7 @@ export default class Display3D extends Component {
       <View style={styles.sliderContainer}>
         <Slider
           key={Platform.OS === 'android' ? this.state.sliderKey : undefined}
-          style={{ width: "100%", height: 40 }}
+          style={styles.slider}
           minimumValue={0}
           maximumValue={Math.PI}
           step={Platform.OS === 'android' ? 0.05 : 0.01}
@@ -556,6 +556,7 @@ export default class Display3D extends Component {
           minimumTrackTintColor="#007AFF"
           maximumTrackTintColor="#B4B4B4"
           thumbTintColor="#007AFF"
+          inverted={true}
         />
       </View>
     );
@@ -654,6 +655,113 @@ export default class Display3D extends Component {
     // Convert back to percentage
     return `${Math.round((clampedHeight / viewportHeight) * 100)}%`;
   }
+
+  calculateVolume = (l, w, h) => {
+    const length = parseFloat(l);
+    const width = parseFloat(w);
+    const height = parseFloat(h);
+    
+    if (isNaN(length) || isNaN(width) || isNaN(height)) {
+      console.log('Invalid dimensions:', { l, w, h });
+      return 0;
+    }
+    
+    return length * width * height;
+  };
+
+  getVolumeInfo = () => {
+    const { selectedBox, itemsTotal } = this.state;
+    if (!selectedBox || !selectedBox.dimensions) {
+      console.log('No box or dimensions');
+      return { totalVolume: 0, usedVolume: 0 };
+    }
+
+    // Get box dimensions
+    const boxDims = selectedBox.dimensions;
+    const totalVolume = this.calculateVolume(
+      boxDims.x || boxDims[0],
+      boxDims.y || boxDims[1],
+      boxDims.z || boxDims[2]
+    );
+
+    let usedVolume = 0;
+    if (itemsTotal && Array.isArray(itemsTotal)) {
+      usedVolume = itemsTotal.reduce((acc, item) => {
+        if (!item || typeof item !== 'object') {
+          console.log('Invalid item:', item);
+          return acc;
+        }
+
+        // Use the item's volume property if available, otherwise calculate it
+        if (item.vol) {
+          return acc + item.vol;
+        }
+
+        const itemVolume = this.calculateVolume(
+          item.x || item.xx,
+          item.y || item.yy,
+          item.z || item.zz
+        );
+        
+        console.log('Item volume calculation:', {
+          name: item.itemName,
+          dimensions: [item.x || item.xx, item.y || item.yy, item.z || item.zz],
+          volume: itemVolume
+        });
+        
+        return acc + itemVolume;
+      }, 0);
+    }
+
+    console.log('Final volumes:', { totalVolume, usedVolume });
+    return { totalVolume, usedVolume };
+  };
+
+  renderVolumeInfo = () => {
+    const { totalVolume, usedVolume } = this.getVolumeInfo();
+    const volumePercentage = totalVolume > 0 ? ((usedVolume / totalVolume) * 100).toFixed(1) : 0;
+    const percentageColor = volumePercentage > 95 ? '#4CAF50' :  // Dark green for excellent utilization
+                          volumePercentage > 85 ? '#66BB6A' :  // Light green for very good utilization
+                          volumePercentage > 70 ? '#81C784' :  // Lighter green for good utilization
+                          volumePercentage > 50 ? '#FFA726' :  // Orange for medium utilization
+                          volumePercentage > 40 ? '#DAA520' :  // Goldenrod (darker yellow) for low-medium utilization
+                          '#FF7043';  // Red-orange for low utilization
+
+    return (
+      <View style={styles.volumeInfo}>
+        <View style={styles.volumeRow}>
+          <View style={styles.volumeItem}>
+            <Text style={styles.volumeLabel}>Used Volume</Text>
+            <Text style={styles.volumeValue}>
+              {!isNaN(usedVolume) ? usedVolume.toFixed(2) : '0.00'}
+              <Text style={styles.volumeUnit}> in³</Text>
+            </Text>
+          </View>
+          <View style={[styles.volumeDivider]} />
+          <View style={styles.volumeItem}>
+            <Text style={styles.volumeLabel}>Box Volume</Text>
+            <Text style={styles.volumeValue}>
+              {!isNaN(totalVolume) ? totalVolume.toFixed(2) : '0.00'}
+              <Text style={styles.volumeUnit}> in³</Text>
+            </Text>
+          </View>
+        </View>
+        <View style={styles.progressContainer}>
+          <View style={styles.progressBarContainer}>
+            <View style={[styles.progressBar, { width: `${Math.min(100, volumePercentage)}%`, backgroundColor: percentageColor }]} />
+          </View>
+          <View style={[styles.percentageContainer, { 
+            width: volumePercentage <= 15 ? 'auto' : `${Math.min(100, volumePercentage)}%`,
+            left: volumePercentage <= 15 ? 0 : 'auto'
+          }]}>
+            <Text style={[styles.percentageText, { color: percentageColor }]}>
+              {volumePercentage}%
+            </Text>
+          </View>
+        </View>
+      </View>
+    );
+  };
 
   renderLegendModal = () => {
     const { itemsTotal, isLegendVisible, expandedItems } = this.state;
@@ -902,23 +1010,11 @@ export default class Display3D extends Component {
               style={styles.glView}
               onContextCreate={this._onGLContextCreate}
             />
-          </View>
-          <View style={styles.sliderContainer}>
-            <Slider
-              key={Platform.OS === 'android' ? this.state.sliderKey : undefined}
-              style={styles.slider}
-              minimumValue={0}
-              maximumValue={Math.PI}
-              step={Platform.OS === 'android' ? 0.05 : 0.01}
-              value={this.state.currentRotation}
-              onValueChange={this.handleRotationChange}
-              minimumTrackTintColor="#007AFF"
-              maximumTrackTintColor="#B4B4B4"
-              thumbTintColor="#007AFF"
-            />
+            {this.renderVolumeInfo()}
+            {this.renderCustomSlider()}
           </View>
         </View>
-        <View style={[styles.topContainer, isBoxCollapsed && styles.collapsedTopContainer]}>
+        <View style={[styles.topContainer, { paddingTop: 15 }, isBoxCollapsed && styles.collapsedTopContainer]}>
           <View style={styles.boxWrapper}>
             <View style={[styles.boxDimensionsContainer, isBoxCollapsed && styles.collapsedBox]}>
               <View style={styles.boxHeaderContainer}>
@@ -1039,28 +1135,34 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   sliderContainer: {
-    height: 40,
-    paddingHorizontal: 30,
-    marginBottom: 10,
-    marginTop: -10,
+    position: 'absolute',
+    right: 20,
+    top: '50%',
+    transform: [{ translateY: -100 }],
+    height: 150,
+    width: 40,
     justifyContent: 'center',
+    alignItems: 'center',
+    zIndex: 2,
   },
   slider: {
-    width: '100%',
+    width: 200,
     height: 40,
-    transform: Platform.OS === 'android' ? [{ scale: 1.2 }] : [],
+    transform: [
+      { rotate: '-90deg' },
+      Platform.OS === 'android' ? { scale: 1.2 } : null
+    ].filter(Boolean),
   },
   topContainer: {
     position: 'absolute',
     top: 0,
     left: 0,
     right: 0,
-    paddingHorizontal: 10,
-    paddingTop: 12,
-    width: '100%',
-    alignItems: 'center',
-    zIndex: 1,
     backgroundColor: '#fff',
+    paddingTop: 15,
+    paddingHorizontal: 15,
+    paddingBottom: 10,
+    zIndex: 1,
   },
   collapsedTopContainer: {
     position: 'absolute',
@@ -1417,5 +1519,74 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: '#4A5568',
     fontFamily: Platform.OS === 'ios' ? 'Menlo' : 'monospace',
+  },
+  volumeInfo: {
+    position: 'absolute',
+    bottom: -20,
+    left: 20,
+    right: 20,
+    backgroundColor: 'rgba(255, 255, 255, 0.95)',
+    borderRadius: 12,
+    padding: 20,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 8,
+    elevation: 5,
+    borderWidth: 1,
+    borderColor: 'rgba(230, 230, 230, 0.5)',
+  },
+  volumeRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 12,
+  },
+  volumeItem: {
+    flex: 1,
+    alignItems: 'center',
+  },
+  volumeDivider: {
+    width: 1,
+    height: 30,
+    backgroundColor: '#E0E0E0',
+    marginHorizontal: 15,
+  },
+  volumeLabel: {
+    fontSize: 12,
+    color: '#666',
+    marginBottom: 4,
+    fontWeight: '500',
+  },
+  volumeValue: {
+    fontSize: 18,
+    color: '#333',
+    fontWeight: '600',
+  },
+  volumeUnit: {
+    fontSize: 14,
+    color: '#666',
+    fontWeight: '400',
+  },
+  progressContainer: {
+    marginTop: 8,
+  },
+  progressBarContainer: {
+    height: 4,
+    backgroundColor: '#F0F0F0',
+    borderRadius: 2,
+    overflow: 'hidden',
+  },
+  progressBar: {
+    height: '100%',
+    borderRadius: 2,
+  },
+  percentageContainer: {
+    alignItems: 'flex-end',
+  },
+  percentageText: {
+    fontSize: 10,
+    color: '#666',
+    marginTop: 4,
   },
 });
