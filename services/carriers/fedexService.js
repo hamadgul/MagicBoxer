@@ -176,12 +176,15 @@ export const calculateFedExRates = async (packageDetails, fromZip, toZip) => {
                 case "FEDEX_GROUND":
                   estimatedDays = "3-5";
                   break;
-                case "FEDEX_2_DAY":
+                case "FedEx 2Day®":
+                case "FedEx 2Day® AM":
+
                   estimatedDays = "2";
                   break;
-                case "PRIORITY_OVERNIGHT":
-                case "STANDARD_OVERNIGHT":
-                  estimatedDays = "1";
+                case "FedEx Priority Overnight®":
+                case "FedEx Standard Overnight®":
+                case "FedEx First Overnight®":
+                  estimatedDays = "> 1";
                   break;
                 default:
                   estimatedDays = "3-7";

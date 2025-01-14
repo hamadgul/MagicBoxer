@@ -152,7 +152,7 @@ export const getUPSRates = async (packageDetails, fromZip, toZip) => {
                                service.Code === "01" ? "1" :
                                service.Code === "12" ? "3" :
                                service.Code === "13" ? "1" :
-                               service.Code === "14" ? "1" :
+                               service.Code === "14" ? "> 1" :
                                service.Code === "59" ? "2" : "Unknown");
 
           return {

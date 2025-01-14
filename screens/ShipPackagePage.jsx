@@ -21,6 +21,7 @@ export default function ShipPackagePage({ route, navigation }) {
   const estimatesSectionRef = useRef(null);
   const [selectedPackage, setSelectedPackage] = useState(null);
   const [shippingEstimates, setShippingEstimates] = useState([]);
+  const [errors, setErrors] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
   const [isKeyboardVisible, setIsKeyboardVisible] = useState(false);
   const [packageDetails, setPackageDetails] = useState({
@@ -78,6 +79,7 @@ export default function ShipPackagePage({ route, navigation }) {
     }
 
     setIsLoading(true);
+    setErrors([]);
     try {
       // Create itemList for packing algorithm
       const itemList = selectedPackage.items.flatMap(item =>
@@ -105,8 +107,11 @@ export default function ShipPackagePage({ route, navigation }) {
         toZip
       );
 
-      if (result.success) {
+      if (result.estimates && result.estimates.length > 0) {
         setShippingEstimates(result.estimates);
+        if (result.errors && result.errors.length > 0) {
+          setErrors(result.errors);
+        }
         setTimeout(() => {
           if (estimatesSectionRef.current) {
             estimatesSectionRef.current.measureLayout(
@@ -118,7 +123,10 @@ export default function ShipPackagePage({ route, navigation }) {
           }
         }, 100);
       } else {
-        Alert.alert('Error', result.error || 'Failed to get shipping estimates');
+        const errorMessage = result.errors && result.errors.length > 0
+          ? result.errors.map(err => `${err.carrier}: ${err.message}`).join('\n')
+          : result.error || 'Failed to get shipping estimates';
+        Alert.alert('Error', errorMessage);
       }
     } catch (error) {
       console.error('Error getting shipping estimates:', error);
@@ -276,6 +284,19 @@ export default function ShipPackagePage({ route, navigation }) {
               Calculate Shipping Rates
             </Text>
           </TouchableOpacity>
+
+          {errors.length > 0 && (
+            <View style={styles.errorContainer}>
+              {errors.map((error, index) => (
+                <View key={index} style={styles.errorItem}>
+                  <Ionicons name="warning" size={20} color="#ef4444" />
+                  <Text style={styles.errorText}>
+                    {error.carrier}: {error.message}
+                  </Text>
+                </View>
+              ))}
+            </View>
+          )}
 
           {renderEstimates()}
           
@@ -444,5 +465,24 @@ const styles = StyleSheet.create({
     color: '#fff',
     fontSize: 16,
     fontWeight: '600',
+  },
+  errorContainer: {
+    marginHorizontal: 16,
+    marginTop: 8,
+    padding: 12,
+    backgroundColor: '#fef2f2',
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: '#fecaca',
+  },
+  errorItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginVertical: 4,
+  },
+  errorText: {
+    marginLeft: 8,
+    color: '#b91c1c',
+    flex: 1,
   },
 });
