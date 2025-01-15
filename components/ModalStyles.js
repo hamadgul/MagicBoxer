@@ -93,7 +93,9 @@ export const modalStyles = StyleSheet.create({
   modalButtonContainer: {
     flexDirection: 'row',
     justifyContent: 'space-around',
-    paddingTop: 20,
+    //paddingTop: 10,
+    //marginTop: 5,
+    paddingBottom: 0,
     width: '100%',
   },
   button: {

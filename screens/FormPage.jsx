@@ -123,18 +123,36 @@ export const ItemDetailsModal = ({
         }}>
           <View style={modalStyles.centeredView}>
             <View style={[modalStyles.modalContent]}>
-              <View style={[modalStyles.modalHeader, { flexDirection: 'row', alignItems: 'center', justifyContent: 'center' }]}>
+              <View style={[modalStyles.modalHeader, { height: 54 }]}>
                 {showBackButton && !isEditable && (
                   <TouchableOpacity
-                    style={{ position: 'absolute', left: 15 }}
+                    style={{ position: 'absolute', left: 15, top: 15, zIndex: 1 }}
                     onPress={closeModal}
                   >
                     <Ionicons name="arrow-back" size={24} color="white" />
                   </TouchableOpacity>
                 )}
-                <Text style={[modalStyles.modalTitle, { color: 'white' }]}>
-                  {isEditable ? "Edit Item" : "Item Details"}
-                </Text>
+                <View style={{ 
+                  position: 'absolute', 
+                  left: 0, 
+                  right: 0, 
+                  top: 0, 
+                  bottom: 0, 
+                  justifyContent: 'center', 
+                  alignItems: 'center',
+                  paddingHorizontal: 40 
+                }}>
+                  <Text 
+                    style={[modalStyles.modalTitle, { 
+                      color: 'white',
+                      textAlign: 'center'
+                    }]}
+                    numberOfLines={1}
+                    ellipsizeMode="tail"
+                  >
+                    {isEditable ? "Edit Item" : item?.itemName}
+                  </Text>
+                </View>
               </View>
 
               <ScrollView 
@@ -143,9 +161,9 @@ export const ItemDetailsModal = ({
                 keyboardShouldPersistTaps="handled"
               >
                 <View style={{ width: '100%' }}>
-                  <View style={modalStyles.fieldRow}>
-                    <Text style={modalStyles.fieldLabel}>Name:</Text>
-                    {isEditable ? (
+                  {isEditable ? (
+                    <View style={modalStyles.fieldRow}>
+                      <Text style={modalStyles.fieldLabel}>Name:</Text>
                       <TextInput
                         style={[
                           modalStyles.fieldValue,
@@ -167,10 +185,8 @@ export const ItemDetailsModal = ({
                         }
                         maxLength={20}
                       />
-                    ) : (
-                      <Text style={modalStyles.fieldValue}>{item?.itemName}</Text>
-                    )}
-                  </View>
+                    </View>
+                  ) : null}
                   
                   <View style={modalStyles.fieldRow}>
                     <Text style={modalStyles.fieldLabel}>Length:</Text>
