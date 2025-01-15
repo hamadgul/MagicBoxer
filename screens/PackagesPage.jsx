@@ -227,12 +227,17 @@ export default class PackagesPage extends Component {
         await AsyncStorage.setItem("packages", JSON.stringify(packages));
         if (updatedPackage.length === 0) {
           Alert.alert(
-            "Package Deleted",
-            "The package was successfully deleted."
+            "Success",
+            `Package "${selectedPackage}" was removed`
           );
           this.closePackageModal();
         } else {
-          Alert.alert("Item Deleted", "Item was successfully deleted.");
+          Alert.alert("Success", `${itemToDelete.itemName} was removed`, [
+            {
+              text: "OK",
+              onPress: () => this.setState({ showPackageModal: true })
+            }
+          ]);
         }
       } catch (error) {
         Alert.alert("Error", "Failed to delete item or package.");
