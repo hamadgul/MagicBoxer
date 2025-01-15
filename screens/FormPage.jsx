@@ -632,7 +632,7 @@ export default class FormPage extends Component {
           JSON.stringify(this.state.items)
         ).toString("base64");
         await AsyncStorage.setItem("itemList", serializedItems);
-        Alert.alert("Item Deleted");
+        Alert.alert("Success", `${itemToDelete.itemName} was removed`);
         this.closeModal();
       } catch (error) {
         Alert.alert("Error deleting item", error.message);
@@ -641,6 +641,7 @@ export default class FormPage extends Component {
   };
 
   deleteItem = async (index) => {
+    const itemToDelete = this.state.items[index];
     const updatedItems = this.state.items.filter(
       (_, itemIndex) => index !== itemIndex
     );
@@ -650,7 +651,7 @@ export default class FormPage extends Component {
         JSON.stringify(updatedItems)
       ).toString("base64");
       await AsyncStorage.setItem("itemList", serializedItems);
-      Alert.alert("Item Deleted");
+      Alert.alert("Success", `${itemToDelete.itemName} was removed`);
     } catch (error) {
       Alert.alert("Error deleting item");
     }
@@ -831,7 +832,7 @@ export default class FormPage extends Component {
       this._storeData();
     });
 
-    Alert.alert("Success", "Item was submitted.");
+    Alert.alert("Success", `${this.state.itemName} has been added`);
     this.resetForm();
     Keyboard.dismiss();
   };
@@ -899,7 +900,7 @@ export default class FormPage extends Component {
             <View style={styles.container}>
               <View style={styles.formContainer}>
                 <VStack space={2} width="100%">
-                  <Text style={[styles.label, styles.condensedLabel]}>Name:</Text>
+                  <Text style={[styles.label, styles.condensedLabel]}>Name</Text>
                   <View style={{ position: 'relative', zIndex: 1 }}>
                     <TextInput
                       ref={this.inputRef}
@@ -948,7 +949,7 @@ export default class FormPage extends Component {
                       </View>
                     )}
                   </View>
-                  <Text style={[styles.label, styles.condensedLabel]}>Length:</Text>
+                  <Text style={[styles.label, styles.condensedLabel]}>Length</Text>
                   <View style={[styles.input, styles.condensedInput, { 
                     flexDirection: 'row',
                     alignItems: 'center',
@@ -974,7 +975,7 @@ export default class FormPage extends Component {
                       color: '#64748B',
                     }}>inches</Text>
                   </View>
-                  <Text style={[styles.label, styles.condensedLabel]}>Width:</Text>
+                  <Text style={[styles.label, styles.condensedLabel]}>Width</Text>
                   <View style={[styles.input, styles.condensedInput, { 
                     flexDirection: 'row',
                     alignItems: 'center',
@@ -1000,7 +1001,7 @@ export default class FormPage extends Component {
                       color: '#64748B',
                     }}>inches</Text>
                   </View>
-                  <Text style={[styles.label, styles.condensedLabel]}>Height:</Text>
+                  <Text style={[styles.label, styles.condensedLabel]}>Height</Text>
                   <View style={[styles.input, styles.condensedInput, { 
                     flexDirection: 'row',
                     alignItems: 'center',
@@ -1026,7 +1027,7 @@ export default class FormPage extends Component {
                       color: '#64748B',
                     }}>inches</Text>
                   </View>
-                  <Text style={[styles.label, styles.condensedLabel]}>Quantity:</Text>
+                  <Text style={[styles.label, styles.condensedLabel]}>Quantity</Text>
                   <View style={{ 
                     flexDirection: 'row', 
                     alignItems: 'center',
