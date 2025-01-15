@@ -21,6 +21,7 @@ import { generateUUID } from "three/src/math/MathUtils";
 import { pack, createDisplay } from "../packing_algo/packing";
 import styles from "../components/Styles";
 import { modalStyles } from "../components/ModalStyles";
+import { Ionicons } from "@expo/vector-icons";
 var Buffer = require("@craftzdog/react-native-buffer").Buffer;
 const productList = require('../products.json') || [];
 
@@ -41,6 +42,7 @@ export const ItemDetailsModal = ({
   closeModal,
   handleUpdateItem,
   handleDeleteAndClose,
+  showBackButton = false,
 }) => {
   const [isEditable, setIsEditable] = React.useState(false);
   const [editedItem, setEditedItem] = React.useState({
@@ -121,7 +123,15 @@ export const ItemDetailsModal = ({
         }}>
           <View style={modalStyles.centeredView}>
             <View style={[modalStyles.modalContent]}>
-              <View style={[modalStyles.modalHeader]}>
+              <View style={[modalStyles.modalHeader, { flexDirection: 'row', alignItems: 'center', justifyContent: 'center' }]}>
+                {showBackButton && !isEditable && (
+                  <TouchableOpacity
+                    style={{ position: 'absolute', left: 15 }}
+                    onPress={closeModal}
+                  >
+                    <Ionicons name="arrow-back" size={24} color="white" />
+                  </TouchableOpacity>
+                )}
                 <Text style={[modalStyles.modalTitle, { color: 'white' }]}>
                   {isEditable ? "Edit Item" : "Item Details"}
                 </Text>
@@ -1193,6 +1203,7 @@ export default class FormPage extends Component {
                   closeModal={this.closeModal}
                   handleDeleteAndClose={this.handleDeleteAndClose}
                   handleUpdateItem={this.handleUpdateItem}
+                  showBackButton={true}
                 />
               )}
             </View>

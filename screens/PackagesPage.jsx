@@ -562,9 +562,15 @@ export default class PackagesPage extends Component {
             <ItemDetailsModal
               visible={showDetailsModal}
               item={selectedItem}
-              closeModal={() => this.setState({ showDetailsModal: false })}
+              closeModal={() => {
+                this.setState({ showDetailsModal: false }, () => {
+                  // After closing the details modal, show the package modal again
+                  this.setState({ showPackageModal: true });
+                });
+              }}
               handleDeleteAndClose={() => this.handleDeleteItem(selectedItem)}
               handleUpdateItem={this.handleSaveEditedItem}
+              showBackButton={true}
             />
           )}
 
@@ -712,7 +718,7 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: "center",
     alignItems: "center",
-    backgroundColor: "rgba(0, 0, 0, 0.5)",
+    backgroundColor: "transparent",
   },
   modalContent: {
     backgroundColor: "white",
