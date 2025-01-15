@@ -93,6 +93,15 @@ export const ItemDetailsModal = ({
     setIsEditable(false);
   };
 
+  const handleQuantityChange = (action) => {
+    const currentQuantity = parseInt(editedItem.quantity) || 0;
+    if (action === 'decrease' && currentQuantity > 1) {
+      setEditedItem({ ...editedItem, quantity: (currentQuantity - 1).toString() });
+    } else if (action === 'increase') {
+      setEditedItem({ ...editedItem, quantity: (currentQuantity + 1).toString() });
+    }
+  };
+
   return (
     <Modal
       animationType="slide"
@@ -139,6 +148,7 @@ export const ItemDetailsModal = ({
                             paddingHorizontal: 12,
                             fontSize: 16,
                             color: '#334155',
+                            height: 42,
                           }
                         ]}
                         value={editedItem.itemName}
@@ -162,17 +172,19 @@ export const ItemDetailsModal = ({
                           alignItems: 'center',
                           backgroundColor: '#F8FAFC',
                           borderRadius: 8,
+                          paddingVertical: 0,
+                          paddingHorizontal: 12,
                           borderWidth: 1,
                           borderColor: '#E2E8F0',
-                          paddingVertical: 8,
-                          paddingHorizontal: 12,
+                          minHeight: 44,
                         }
                       ]}>
                         <TextInput
                           style={{
                             flex: 1,
-                            fontSize: 16,
+                            fontSize: 15,
                             color: '#334155',
+                            paddingVertical: 8,
                           }}
                           value={editedItem.itemLength}
                           onChangeText={(text) => {
@@ -182,7 +194,7 @@ export const ItemDetailsModal = ({
                           maxLength={3}
                         />
                         <Text style={{ 
-                          fontSize: 16,
+                          fontSize: 15,
                           color: '#94A3B8',
                         }}>inches</Text>
                       </View>
@@ -201,17 +213,19 @@ export const ItemDetailsModal = ({
                           alignItems: 'center',
                           backgroundColor: '#F8FAFC',
                           borderRadius: 8,
+                          paddingVertical: 0,
+                          paddingHorizontal: 12,
                           borderWidth: 1,
                           borderColor: '#E2E8F0',
-                          paddingVertical: 8,
-                          paddingHorizontal: 12,
+                          minHeight: 44,
                         }
                       ]}>
                         <TextInput
                           style={{
                             flex: 1,
-                            fontSize: 16,
+                            fontSize: 15,
                             color: '#334155',
+                            paddingVertical: 8,
                           }}
                           value={editedItem.itemWidth}
                           onChangeText={(text) => {
@@ -221,7 +235,7 @@ export const ItemDetailsModal = ({
                           maxLength={3}
                         />
                         <Text style={{ 
-                          fontSize: 16,
+                          fontSize: 15,
                           color: '#94A3B8',
                         }}>inches</Text>
                       </View>
@@ -240,17 +254,19 @@ export const ItemDetailsModal = ({
                           alignItems: 'center',
                           backgroundColor: '#F8FAFC',
                           borderRadius: 8,
+                          paddingVertical: 0,
+                          paddingHorizontal: 12,
                           borderWidth: 1,
                           borderColor: '#E2E8F0',
-                          paddingVertical: 8,
-                          paddingHorizontal: 12,
+                          minHeight: 44,
                         }
                       ]}>
                         <TextInput
                           style={{
                             flex: 1,
-                            fontSize: 16,
+                            fontSize: 15,
                             color: '#334155',
+                            paddingVertical: 8,
                           }}
                           value={editedItem.itemHeight}
                           onChangeText={(text) => {
@@ -260,7 +276,7 @@ export const ItemDetailsModal = ({
                           maxLength={3}
                         />
                         <Text style={{ 
-                          fontSize: 16,
+                          fontSize: 15,
                           color: '#94A3B8',
                         }}>inches</Text>
                       </View>
@@ -273,68 +289,51 @@ export const ItemDetailsModal = ({
                     <Text style={modalStyles.fieldLabel}>Quantity:</Text>
                     {isEditable ? (
                       <View style={[
-                        { 
-                          flexDirection: 'row', 
+                        modalStyles.fieldValue,
+                        {
+                          flexDirection: 'row',
                           alignItems: 'center',
-                          justifyContent: 'space-between',
                           backgroundColor: '#F8FAFC',
                           borderRadius: 8,
+                          paddingVertical: 0,
+                          paddingHorizontal: 12,
                           borderWidth: 1,
                           borderColor: '#E2E8F0',
-                          paddingHorizontal: 12,
-                          paddingVertical: 8,
-                        },
-                        modalStyles.fieldValue
+                          minHeight: 44,
+                        }
                       ]}>
-                        <TouchableOpacity 
+                        <TouchableOpacity
+                          onPress={() => handleQuantityChange('decrease')}
                           style={{
-                            width: 28,
-                            height: 28,
-                            borderRadius: 4,
-                            backgroundColor: '#E5E7EB',
-                            alignItems: 'center',
-                            justifyContent: 'center',
-                          }}
-                          onPress={() => {
-                            const currentQuantity = parseInt(editedItem.quantity) || 0;
-                            if (currentQuantity > 1) {
-                              setEditedItem({ ...editedItem, quantity: (currentQuantity - 1).toString() });
-                            }
+                            paddingVertical: 8,
+                            paddingRight: 12,
                           }}
                         >
-                          <Text style={{ fontSize: 18, color: '#4B5563' }}>-</Text>
+                          <Text style={{ fontSize: 20, color: '#334155' }}>-</Text>
                         </TouchableOpacity>
                         <TextInput
                           style={{
+                            flex: 1,
+                            fontSize: 15,
+                            color: '#334155',
                             textAlign: 'center',
-                            fontSize: 16,
-                            color: '#1F2937',
-                            minWidth: 40,
+                            paddingVertical: 8,
                           }}
-                          value={editedItem.quantity}
+                          value={editedItem.quantity.toString()}
                           onChangeText={(text) => {
-                            const newQuantity = text === "" ? "" : parseInt(text);
-                            if (!isNaN(newQuantity) || text === "") {
-                              setEditedItem({ ...editedItem, quantity: text });
-                            }
+                            const newQuantity = parseInt(text) || 0;
+                            setEditedItem({ ...editedItem, quantity: newQuantity });
                           }}
                           keyboardType="numeric"
                         />
-                        <TouchableOpacity 
+                        <TouchableOpacity
+                          onPress={() => handleQuantityChange('increase')}
                           style={{
-                            width: 28,
-                            height: 28,
-                            borderRadius: 4,
-                            backgroundColor: '#E5E7EB',
-                            alignItems: 'center',
-                            justifyContent: 'center',
-                          }}
-                          onPress={() => {
-                            const currentQuantity = parseInt(editedItem.quantity) || 0;
-                            setEditedItem({ ...editedItem, quantity: (currentQuantity + 1).toString() });
+                            paddingVertical: 8,
+                            paddingLeft: 12,
                           }}
                         >
-                          <Text style={{ fontSize: 18, color: '#4B5563' }}>+</Text>
+                          <Text style={{ fontSize: 20, color: '#334155' }}>+</Text>
                         </TouchableOpacity>
                       </View>
                     ) : (
@@ -950,133 +949,82 @@ export default class FormPage extends Component {
                     )}
                   </View>
                   <Text style={[styles.label, styles.condensedLabel]}>Length:</Text>
-                  <View style={{ 
-                    flex: 2,
+                  <View style={[styles.input, styles.condensedInput, { 
                     flexDirection: 'row',
                     alignItems: 'center',
-                    justifyContent: 'space-between',
-                    marginBottom: 8,
-                  }}>
-                    <View style={{ 
-                      flex: 1,
-                      flexDirection: 'row',
-                      alignItems: 'center',
-                      backgroundColor: '#FFFFFF',
-                      borderRadius: 8,
-                      borderWidth: 1,
-                      borderColor: '#E2E8F0',
-                      paddingVertical: 8,
-                      paddingHorizontal: 12,
-                      shadowColor: "#000",
-                      shadowOffset: { width: 0, height: 1 },
-                      shadowOpacity: 0.06,
-                      shadowRadius: 4,
-                      elevation: 2,
-                    }}>
-                      <TextInput
-                        style={{
-                          flex: 1,
-                          paddingHorizontal: 14,
-                          fontSize: 15,
-                          color: '#334155',
-                        }}
-                        value={this.state.itemLength}
-                        onChangeText={(text) => this.setState({ itemLength: text })}
-                        keyboardType="numeric"
-                        maxLength={3}
-                      />
-                      <Text style={{ 
-                        paddingRight: 14,
+                    paddingVertical: 0,
+                    paddingHorizontal: 0,
+                  }]}>
+                    <TextInput
+                      style={{
+                        flex: 1,
+                        height: '100%',
+                        paddingHorizontal: 14,
                         fontSize: 15,
-                        color: '#64748B',
-                      }}>inches</Text>
-                    </View>
+                        color: '#334155',
+                      }}
+                      value={this.state.itemLength}
+                      onChangeText={(text) => this.setState({ itemLength: text })}
+                      keyboardType="numeric"
+                      maxLength={3}
+                    />
+                    <Text style={{ 
+                      paddingRight: 14,
+                      fontSize: 15,
+                      color: '#64748B',
+                    }}>inches</Text>
                   </View>
                   <Text style={[styles.label, styles.condensedLabel]}>Width:</Text>
-                  <View style={{ 
-                    flex: 2,
+                  <View style={[styles.input, styles.condensedInput, { 
                     flexDirection: 'row',
                     alignItems: 'center',
-                    justifyContent: 'space-between',
-                    marginBottom: 8,
-                  }}>
-                    <View style={{ 
-                      flex: 1,
-                      flexDirection: 'row',
-                      alignItems: 'center',
-                      backgroundColor: '#FFFFFF',
-                      borderRadius: 8,
-                      borderWidth: 1,
-                      borderColor: '#E2E8F0',
-                      paddingVertical: 8,
-                      paddingHorizontal: 12,
-                      shadowColor: "#000",
-                      shadowOffset: { width: 0, height: 1 },
-                      shadowOpacity: 0.06,
-                      shadowRadius: 4,
-                      elevation: 2,
-                    }}>
-                      <TextInput
-                        style={{
-                          flex: 1,
-                          paddingHorizontal: 14,
-                          fontSize: 15,
-                          color: '#334155',
-                        }}
-                        value={this.state.itemWidth}
-                        onChangeText={(text) => this.setState({ itemWidth: text })}
-                        keyboardType="numeric"
-                        maxLength={3}
-                      />
-                      <Text style={{ 
-                        paddingRight: 14,
+                    paddingVertical: 0,
+                    paddingHorizontal: 0,
+                  }]}>
+                    <TextInput
+                      style={{
+                        flex: 1,
+                        height: '100%',
+                        paddingHorizontal: 14,
                         fontSize: 15,
-                        color: '#64748B',
-                      }}>inches</Text>
-                    </View>
+                        color: '#334155',
+                      }}
+                      value={this.state.itemWidth}
+                      onChangeText={(text) => this.setState({ itemWidth: text })}
+                      keyboardType="numeric"
+                      maxLength={3}
+                    />
+                    <Text style={{ 
+                      paddingRight: 14,
+                      fontSize: 15,
+                      color: '#64748B',
+                    }}>inches</Text>
                   </View>
                   <Text style={[styles.label, styles.condensedLabel]}>Height:</Text>
-                  <View style={{ 
-                    flex: 2,
+                  <View style={[styles.input, styles.condensedInput, { 
                     flexDirection: 'row',
                     alignItems: 'center',
-                    justifyContent: 'space-between',
-                    marginBottom: 8,
-                  }}>
-                    <View style={{ 
-                      flex: 1,
-                      flexDirection: 'row',
-                      alignItems: 'center',
-                      backgroundColor: '#FFFFFF',
-                      borderRadius: 8,
-                      borderWidth: 1,
-                      borderColor: '#E2E8F0',
-                      paddingVertical: 8,
-                      paddingHorizontal: 12,
-                      shadowColor: "#000",
-                      shadowOffset: { width: 0, height: 1 },
-                      shadowOpacity: 0.06,
-                      shadowRadius: 4,
-                      elevation: 2,
-                    }}>
-                      <TextInput
-                        style={{
-                          flex: 1,
-                          paddingHorizontal: 14,
-                          fontSize: 15,
-                          color: '#334155',
-                        }}
-                        value={this.state.itemHeight}
-                        onChangeText={(text) => this.setState({ itemHeight: text })}
-                        keyboardType="numeric"
-                        maxLength={3}
-                      />
-                      <Text style={{ 
-                        paddingRight: 14,
+                    paddingVertical: 0,
+                    paddingHorizontal: 0,
+                  }]}>
+                    <TextInput
+                      style={{
+                        flex: 1,
+                        height: '100%',
+                        paddingHorizontal: 14,
                         fontSize: 15,
-                        color: '#64748B',
-                      }}>inches</Text>
-                    </View>
+                        color: '#334155',
+                      }}
+                      value={this.state.itemHeight}
+                      onChangeText={(text) => this.setState({ itemHeight: text })}
+                      keyboardType="numeric"
+                      maxLength={3}
+                    />
+                    <Text style={{ 
+                      paddingRight: 14,
+                      fontSize: 15,
+                      color: '#64748B',
+                    }}>inches</Text>
                   </View>
                   <Text style={[styles.label, styles.condensedLabel]}>Quantity:</Text>
                   <View style={{ 
