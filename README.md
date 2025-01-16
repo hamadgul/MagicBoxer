@@ -1,50 +1,38 @@
-# Welcome to your Expo app 👋
+# 📦 MagicBoxer
 
-This is an [Expo](https://expo.dev) project created with [`create-expo-app`](https://www.npmjs.com/package/create-expo-app).
+![magicboxer-logo](https://user-images.githubusercontent.com/107427242/203152605-efeeb449-2a52-49ea-8549-3a0418538e90.png)
 
-## Get started
+**MagicBoxer** simplifies packing, helping you choose the perfect box, optimize space, and save on shipping costs. Discover how our unique features make your packing experience stress-free!
 
-1. Install dependencies
+## 🚀 Key Features
 
-   ```bash
-   npm install
-   ```
+### 🧠 Smart Packing Algorithm
 
-2. Start the app
+Automatically finds the best box for your items, maximizing space and minimizing hassle.
 
-   ```bash
-    npx expo start
-   ```
+### 🖥️ Interactive 3D Packing Visuals
 
-In the output, you'll find options to open the app in a
+Get a 360-degree view of exactly how to pack your items, ensuring everything fits perfectly.
 
-- [development build](https://docs.expo.dev/develop/development-builds/introduction/)
-- [Android emulator](https://docs.expo.dev/workflow/android-studio-emulator/)
-- [iOS simulator](https://docs.expo.dev/workflow/ios-simulator/)
-- [Expo Go](https://expo.dev/go), a limited sandbox for trying out app development with Expo
+### 💰 Shipping Cost Comparisons
 
-You can start developing by editing the files inside the **app** directory. This project uses [file-based routing](https://docs.expo.dev/router/introduction).
+Compare prices across top shipping carriers to find the best and most cost-effective option for your needs.
 
-## Get a fresh project
+---
 
-When you're ready, run:
+✨ Whether you’re moving, frequently shipping, or just sending a gift, MagicBoxer takes the guesswork out of packing so you can focus on what matters most. Say goodbye to packing headaches and hello to seamless, stress-free shipping! ✨
 
-```bash
-npm run reset-project
-```
-
-This command will move the starter code to the **app-example** directory and create a blank **app** directory where you can start developing.
-
-## Learn more
-
-To learn more about developing your project with Expo, look at the following resources:
-
-- [Expo documentation](https://docs.expo.dev/): Learn fundamentals, or go into advanced topics with our [guides](https://docs.expo.dev/guides).
-- [Learn Expo tutorial](https://docs.expo.dev/tutorial/introduction/): Follow a step-by-step tutorial where you'll create a project that runs on Android, iOS, and the web.
-
-## Join the community
-
-Join our community of developers creating universal apps.
-
-- [Expo on GitHub](https://github.com/expo/expo): View our open source platform and contribute.
-- [Discord community](https://chat.expo.dev): Chat with Expo users and ask questions.
+<table>
+  <tr>
+    <td style="padding: 10px;"><img src="/demo/1.PNG" alt="1" width="400"/></td>
+    <td style="padding: 10px;"><img src="/demo/2.PNG" alt="2" width="400"/></td>
+  </tr>
+  <tr>
+    <td style="padding: 10px;"><img src="/demo/FormPage.jpeg" alt="FormPage" width="400"/></td>
+    <td style="padding: 10px;"><img src="/demo/3.PNG" alt="3" width="400"/></td>
+  </tr>
+  <tr>
+    <td style="padding: 10px;"><img src="/demo/5.PNG" alt="5" width="400"/></td>
+    <td style="padding: 10px;"><img src="/demo/4.PNG" alt="4" width="400"/></td>
+  </tr>
+</table>
