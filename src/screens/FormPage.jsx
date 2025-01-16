@@ -872,20 +872,20 @@ export default class FormPage extends Component {
   };
 
   renderItem = (item, index) => {
-    const backgroundColor = itemButtonColors[index % itemButtonColors.length];
     return (
       <TouchableOpacity
         key={item.id}
-        style={[styles.itemButton, { backgroundColor }]}
+        style={[styles.itemButton]}
         onPress={() => this.openModal(item)}
       >
-        <Text 
-          style={styles.buttonText}
-          numberOfLines={1}
-          ellipsizeMode="tail"
-        >
-          {item.itemName}
-        </Text>
+        <View style={styles.itemContentContainer}>
+          <Text style={styles.itemIndex}>{`${index + 1}.`}</Text>
+          <View style={styles.itemNameContainer}>
+            <Text style={[styles.buttonText, { color: '#1E3A8A' }]} numberOfLines={1}>
+              {item.itemName}{item.quantity > 1 ? ` (×${item.quantity})` : ''}
+            </Text>
+          </View>
+        </View>
       </TouchableOpacity>
     );
   }
@@ -894,18 +894,28 @@ export default class FormPage extends Component {
     const { items } = this.state;
     if (items.length === 0) {
       return (
-        <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center', padding: 20 }}>
-          <Text style={{ color: '#94A3B8', fontSize: 16, textAlign: 'left', marginBottom: 10 }}>
+        <View style={styles.emptyContainer}>
+          <Text style={styles.emptyText}>
             No items added yet for this package.
           </Text>
-          <Text style={{ color: '#94A3B8', fontSize: 16, textAlign: 'center' }}>
+          <Text style={styles.emptySubtext}>
             Add items above and access saved packages on the side menu.
           </Text>
         </View>
       );
     }
 
-    return items.map((item, index) => this.renderItem(item, index));
+    return (
+      <ScrollView 
+        showsVerticalScrollIndicator={false}
+        contentContainerStyle={styles.carouselContainer}
+        decelerationRate="fast"
+        snapToInterval={54 * 1}
+        snapToAlignment="start"
+      >
+        {items.map((item, index) => this.renderItem(item, index))}
+      </ScrollView>
+    );
   }
 
   render() {
@@ -1123,7 +1133,7 @@ export default class FormPage extends Component {
                     style={styles.submitButton}
                     onPress={this.handleSubmit}
                   >
-                    <Text style={styles.buttonText}>Add item</Text>
+                    <Text style={[styles.buttonText, { color: '#FFFFFF' }]}>Add item</Text>
                   </TouchableOpacity>
                 </VStack>
               </View>
@@ -1158,7 +1168,7 @@ export default class FormPage extends Component {
                   {this.state.isLoading ? (
                     <ActivityIndicator color="white" />
                   ) : (
-                    <Text style={styles.buttonText}>Pack</Text>
+                    <Text style={[styles.buttonText, { color: '#FFFFFF' }]}>Pack</Text>
                   )}
                 </TouchableOpacity>
               </View>
