@@ -1180,43 +1180,48 @@ export default class FormPage extends Component {
                 visible={this.state.showSavePackageModal}
                 onRequestClose={this.toggleSavePackageModal}
               >
-                <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
-                  <View style={modalStyles.centeredView}>
-                    <View style={modalStyles.modalContent}>
-                      <View style={modalStyles.modalHeader}>
-                        <Text style={modalStyles.modalTitle}>Save Package</Text>
-                      </View>
-                      <Text style={modalStyles.modalSubtitle}>
-                        Enter a name for your package to save it for future use
-                      </Text>
-                      <View style={modalStyles.inputContainer}>
-                        <TextInput
-                          style={modalStyles.fieldInput}
-                          placeholder="Enter package name"
-                          placeholderTextColor="#9CA3AF"
-                          value={this.state.packageName}
-                          onChangeText={(text) => this.setState({ packageName: text })}
-                          autoCapitalize="none"
-                          autoCorrect={false}
-                        />
-                      </View>
-                      <View style={modalStyles.modalButtonContainer}>
-                        <TouchableOpacity
-                          style={[modalStyles.button, modalStyles.cancelButton]}
-                          onPress={this.toggleSavePackageModal}
-                        >
-                          <Text style={modalStyles.buttonText}>Cancel</Text>
-                        </TouchableOpacity>
-                        <TouchableOpacity
-                          style={[modalStyles.button, modalStyles.applyButton]}
-                          onPress={this.handleSavePackage}
-                        >
-                          <Text style={modalStyles.buttonText}>Save</Text>
-                        </TouchableOpacity>
+                <KeyboardAvoidingView 
+                  behavior={Platform.OS === "ios" ? "padding" : "height"}
+                  style={{ flex: 1 }}
+                >
+                  <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
+                    <View style={modalStyles.centeredView}>
+                      <View style={modalStyles.modalContent}>
+                        <View style={modalStyles.modalHeader}>
+                          <Text style={modalStyles.modalTitle}>Save Package</Text>
+                        </View>
+                        <Text style={modalStyles.modalSubtitle}>
+                          Enter a name for your package to save it for future use
+                        </Text>
+                        <View style={modalStyles.inputContainer}>
+                          <TextInput
+                            style={modalStyles.fieldInput}
+                            placeholder="Enter package name"
+                            placeholderTextColor="#9CA3AF"
+                            value={this.state.packageName}
+                            onChangeText={(text) => this.setState({ packageName: text })}
+                            autoCapitalize="none"
+                            autoCorrect={false}
+                          />
+                        </View>
+                        <View style={modalStyles.modalButtonContainer}>
+                          <TouchableOpacity
+                            style={[modalStyles.button, modalStyles.cancelButton]}
+                            onPress={this.toggleSavePackageModal}
+                          >
+                            <Text style={modalStyles.buttonText}>Cancel</Text>
+                          </TouchableOpacity>
+                          <TouchableOpacity
+                            style={[modalStyles.button, modalStyles.applyButton]}
+                            onPress={this.handleSavePackage}
+                          >
+                            <Text style={modalStyles.buttonText}>Save</Text>
+                          </TouchableOpacity>
+                        </View>
                       </View>
                     </View>
-                  </View>
-                </TouchableWithoutFeedback>
+                  </TouchableWithoutFeedback>
+                </KeyboardAvoidingView>
               </Modal>
 
               {this.state.showDetails && this.state.selectedItem && (

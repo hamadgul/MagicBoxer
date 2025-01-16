@@ -315,7 +315,8 @@ const styles = StyleSheet.create({
   modalButtonContainer: {
     flexDirection: "row",
     justifyContent: "space-around",
-    marginTop: 12 * scale,
+    marginTop: 35 * scale,
+    marginBottom: 15 * scale,
   },
   itemsList: {
     flexDirection: "row",
@@ -407,6 +408,10 @@ const styles = StyleSheet.create({
     fontSize: 15 * scale,
     textAlign: 'center',
     opacity: 0.9,
+  },
+  inputContainer: {
+    width: '100%',
+    marginBottom: 25 * scale,
   },
 });
 

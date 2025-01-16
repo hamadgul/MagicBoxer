@@ -89,6 +89,7 @@ export const modalStyles = StyleSheet.create({
     alignSelf: 'stretch',
     zIndex: 1,
     position: 'relative',
+    marginBottom: 35,
   },
   modalButtonContainer: {
     flexDirection: 'row',
