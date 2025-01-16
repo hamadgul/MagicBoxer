@@ -27,7 +27,7 @@
       <dict>
         <key>CFBundleURLSchemes</key>
         <array>
-          <string>com.anonymous.magicpackagingapp</string>
+          <string>com.magicboxer.app</string>
         </array>
       </dict>
     </array>

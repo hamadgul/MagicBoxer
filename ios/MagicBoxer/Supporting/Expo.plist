@@ -7,6 +7,6 @@
     <key>EXUpdatesEnabled</key>
     <false/>
     <key>EXUpdatesLaunchWaitMs</key>
-    <integer>3000</integer>
+    <integer>0</integer>
   </dict>
 </plist>

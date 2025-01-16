@@ -1,45 +1,46 @@
 {
   "expo": {
     "newArchEnabled": true,
-    "name": "MagicBoxer",
-    "displayName": "MagicBoxer",
-    "description": "Smart Packaging App.",
-    "slug": "magic-packaging-app",
-    "privacy": "public",
-    "platforms": [
-      "ios",
-      "android"
-    ],
+    "name": "MagicBoxer-new",
+    "slug": "MagicBoxer-new",
     "version": "1.0.0",
-    "sdkVersion": "52.0.0",
     "orientation": "portrait",
-    "icon": "./assets/images/icon.png",
+    "icon": "./assets/icon.png",
     "splash": {
-      "image": "./assets/images/splash.png",
+      "image": "./assets/splash.png",
       "resizeMode": "contain",
-      "backgroundColor": "#b1fcfb"
+      "backgroundColor": "#b3fcfa"
     },
+    "scheme": "myapp",
+    "userInterfaceStyle": "automatic",
     "ios": {
-      "supportsTablet": true,
-      "bundleIdentifier": "com.anonymous.magicpackagingapp"
+      "supportsTablet": true
     },
     "android": {
-      "package": "com.anonymous.magicpackagingapp",
       "adaptiveIcon": {
-        "foregroundImage": "./assets/images/icon.png",
-        "backgroundColor": "#b1fcfb"
+        "foregroundImage": "./assets/adaptive-icon.png",
+        "backgroundColor": "#b3fcfa"
       }
     },
-    "updates": {
-      "fallbackToCacheTimeout": 3000
+    "web": {
+      "bundler": "metro",
+      "output": "static",
+      "favicon": "./assets/images/favicon.png"
     },
-    "assetBundlePatterns": [
-      "**/*"
+    "plugins": [
+      "expo-router",
+      [
+        "expo-splash-screen",
+        {
+          "image": "./assets/splash.png",
+          "imageWidth": 200,
+          "resizeMode": "contain",
+          "backgroundColor": "#b3fcfa"
+        }
+      ]
     ],
-    "extra": {
-      "eas": {
-        "projectId": "66ab1026-5bb7-4a2d-b9d9-7a249cb07c90"
-      }
+    "experiments": {
+      "typedRoutes": true
     }
   }
 }
