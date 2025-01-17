@@ -563,14 +563,17 @@ export default class PackagesPage extends Component {
               visible={showDetailsModal}
               item={selectedItem}
               closeModal={() => {
-                this.setState({ showDetailsModal: false }, () => {
-                  // After closing the details modal, show the package modal again
-                  this.setState({ showPackageModal: true });
-                });
+                this.setState({ showDetailsModal: false });
               }}
               handleDeleteAndClose={() => this.handleDeleteItem(selectedItem)}
               handleUpdateItem={this.handleSaveEditedItem}
               showBackButton={true}
+              onBackButtonPress={() => {
+                this.setState({ showDetailsModal: false }, () => {
+                  // Only show package modal when back button is pressed
+                  this.setState({ showPackageModal: true });
+                });
+              }}
             />
           )}
 

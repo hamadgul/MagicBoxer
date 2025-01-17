@@ -43,6 +43,7 @@ export const ItemDetailsModal = ({
   handleUpdateItem,
   handleDeleteAndClose,
   showBackButton = false,
+  onBackButtonPress,
 }) => {
   const [isEditable, setIsEditable] = React.useState(false);
   const [editedItem, setEditedItem] = React.useState({
@@ -104,6 +105,14 @@ export const ItemDetailsModal = ({
     }
   };
 
+  const handleBackPress = () => {
+    if (onBackButtonPress) {
+      onBackButtonPress();
+    } else {
+      closeModal();
+    }
+  };
+
   return (
     <Modal
       animationType="slide"
@@ -127,7 +136,7 @@ export const ItemDetailsModal = ({
                 {showBackButton && !isEditable && (
                   <TouchableOpacity
                     style={{ position: 'absolute', left: 15, top: 15, zIndex: 1 }}
-                    onPress={closeModal}
+                    onPress={handleBackPress}
                   >
                     <Ionicons name="arrow-back" size={24} color="white" />
                   </TouchableOpacity>
