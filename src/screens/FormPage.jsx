@@ -1234,7 +1234,7 @@ export default class FormPage extends Component {
                   closeModal={this.closeModal}
                   handleDeleteAndClose={this.handleDeleteAndClose}
                   handleUpdateItem={this.handleUpdateItem}
-                  showBackButton={true}
+                  showBackButton={false}
                 />
               )}
             </View>
