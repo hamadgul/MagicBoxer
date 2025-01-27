@@ -778,7 +778,7 @@ export default class Display3D extends Component {
               <Text style={styles.volumeUnit}> in³</Text>
             </Text>
           </View>
-          <View style={[styles.volumeDivider]} />
+          <View style={styles.volumeDivider} />
           <View style={styles.volumeItem}>
             <Text style={styles.volumeLabel}>Box Volume</Text>
             <Text style={styles.volumeValue}>
@@ -1604,12 +1604,11 @@ const styles = StyleSheet.create({
     fontSize: 12,
     color: '#666',
     marginBottom: 4,
-    fontWeight: '500',
   },
   volumeValue: {
     fontSize: 18,
-    color: '#333',
     fontWeight: '600',
+    color: '#333',
   },
   volumeUnit: {
     fontSize: 14,
