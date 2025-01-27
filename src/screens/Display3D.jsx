@@ -18,7 +18,6 @@ import {
   GLView
 } from "expo-gl";
 import * as THREE from "three";
-import { Renderer } from "expo-three";
 import { Dropdown } from "react-native-element-dropdown";
 import AntDesign from "@expo/vector-icons/AntDesign";
 import { pack, createDisplay } from "../packing_algo/packing";
@@ -26,6 +25,7 @@ import { isSpecialSize, getScale } from "../utils/boxSizes";
 import { setupScene, setupCamera, setupRenderer, createBoxMesh } from "../utils/renderUtils";
 import { RENDER_CONFIG } from "../utils/renderConfig";
 import Slider from "@react-native-community/slider";
+import { scaleWidth, scaleHeight, getScaleFactors } from '../utils/screenScaling';
 
 // Memoize carrier data to prevent recreation
 const carrierData = Object.freeze([
@@ -66,44 +66,33 @@ const PriceText = React.memo(({ carrier, priceText }) => {
   );
 });
 
-// Reference dimensions for iPhone 14 Pro
-const IPHONE_14_PRO = {
-  width: 393,
-  height: 852
-};
-
-// Get scale factors based on device screen size
-const getScaleFactors = () => {
-  const { width, height } = Dimensions.get('window');
-  return {
-    scaleX: width / IPHONE_14_PRO.width,
-    scaleY: height / IPHONE_14_PRO.height
-  };
-};
-
-// Scale a value based on screen width
-const scaleWidth = (value) => {
-  const { scaleX } = getScaleFactors();
-  return value * scaleX;
-};
-
-// Scale a value based on screen height
-const scaleHeight = (value) => {
-  const { scaleY } = getScaleFactors();
-  return value * scaleY;
-};
-
 export default class Display3D extends Component {
   constructor(props) {
     super(props);
     
-    // Memoize PanResponder
+    // Pre-bind methods to avoid recreating functions in render
+    this.handlePanResponderMove = this.handlePanResponderMove.bind(this);
+    this.handlePanResponderRelease = this.handlePanResponderRelease.bind(this);
+    this._onGLContextCreate = this._onGLContextCreate.bind(this);
+    this.animate = this.animate.bind(this);
+    this.handleRotationChange = this.handleRotationChange.bind(this);
+    this.handleSlidingStart = this.handleSlidingStart.bind(this);
+    this.handleSlidingComplete = this.handleSlidingComplete.bind(this);
+    this.updateRotation = this.updateRotation.bind(this);
+    this.handleVisualize = this.handleVisualize.bind(this);
+    this.updateVisualsBasedOnCarrier = this.updateVisualsBasedOnCarrier.bind(this);
+    this.resetSlider = this.resetSlider.bind(this);
+    this.addBoxToScene = this.addBoxToScene.bind(this);
+    this.initialize3DScene = this.initialize3DScene.bind(this);
+    
+    // Initialize PanResponder once
     this.panResponder = PanResponder.create({
       onStartShouldSetPanResponder: () => true,
       onMoveShouldSetPanResponder: () => true,
       onPanResponderMove: this.handlePanResponderMove,
+      onPanResponderRelease: this.handlePanResponderRelease,
     });
-
+    
     // Pre-create and memoize scene
     this.scene = setupScene();
     
@@ -131,8 +120,8 @@ export default class Display3D extends Component {
       sliderKey: 0,
       sliderValue: 0,
       dimensions: {
-        width: 0,
-        height: 0,
+        width: scaleWidth(393),
+        height: scaleHeight(852)
       },
       currentRotation: 0,
       cameraPosition: RENDER_CONFIG.camera.initialPosition,
@@ -319,6 +308,10 @@ export default class Display3D extends Component {
         userInteracted: true
       };
     });
+  };
+
+  handlePanResponderRelease = (event, gestureState) => {
+    // Do nothing
   };
 
   componentWillUnmount() {
@@ -1032,7 +1025,6 @@ export default class Display3D extends Component {
 
   render() {
     const { selectedBox, selectedCarrier, isBoxCollapsed } = this.state;
-    const { scaleX, scaleY } = getScaleFactors();
     const carriers = this.getMemoizedCarrierData();
 
     if (!selectedBox || !selectedBox.dimensions) {
