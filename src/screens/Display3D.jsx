@@ -26,14 +26,7 @@ import { setupScene, setupCamera, setupRenderer, createBoxMesh } from "../utils/
 import { RENDER_CONFIG } from "../utils/renderConfig";
 import Slider from "@react-native-community/slider";
 import { scaleWidth, scaleHeight, getScaleFactors } from '../utils/screenScaling';
-
-// Memoize carrier data to prevent recreation
-const carrierData = Object.freeze([
-  { label: "No Carrier", value: "No Carrier" },
-  { label: "UPS", value: "UPS" },
-  { label: "USPS", value: "USPS" },
-  { label: "FedEx", value: "FedEx" },
-]);
+import memoize from 'memoize-one';
 
 // Memoize URL mappings
 const CARRIER_URLS = Object.freeze({
@@ -731,56 +724,26 @@ export default class Display3D extends Component {
     return length * width * height;
   };
 
-  getVolumeInfo = () => {
-    const { selectedBox, itemsTotal } = this.state;
+  getVolumeInfo = memoize((selectedBox, itemsTotal) => {
     if (!selectedBox || !selectedBox.dimensions) {
-      console.log('No box or dimensions');
       return { totalVolume: 0, usedVolume: 0 };
     }
 
-    // Get box dimensions
     const boxDims = selectedBox.dimensions;
-    const totalVolume = this.calculateVolume(
-      boxDims.x || boxDims[0],
-      boxDims.y || boxDims[1],
-      boxDims.z || boxDims[2]
-    );
-
+    const totalVolume = this.calculateVolume(boxDims[0], boxDims[1], boxDims[2]);
+    
     let usedVolume = 0;
-    if (itemsTotal && Array.isArray(itemsTotal)) {
+    if (Array.isArray(itemsTotal)) {
       usedVolume = itemsTotal.reduce((acc, item) => {
-        if (!item || typeof item !== 'object') {
-          console.log('Invalid item:', item);
-          return acc;
-        }
-
-        // Use the item's volume property if available, otherwise calculate it
-        if (item.vol) {
-          return acc + item.vol;
-        }
-
-        const itemVolume = this.calculateVolume(
-          item.x || item.xx,
-          item.y || item.yy,
-          item.z || item.zz
-        );
-        
-        console.log('Item volume calculation:', {
-          name: item.itemName,
-          dimensions: [item.x || item.xx, item.y || item.yy, item.z || item.zz],
-          volume: itemVolume
-        });
-        
-        return acc + itemVolume;
+        return acc + this.calculateVolume(item.x, item.y, item.z);
       }, 0);
     }
 
-    console.log('Final volumes:', { totalVolume, usedVolume });
     return { totalVolume, usedVolume };
-  };
+  });
 
   renderVolumeInfo = () => {
-    const { totalVolume, usedVolume } = this.getVolumeInfo();
+    const { totalVolume, usedVolume } = this.getVolumeInfo(this.state.selectedBox, this.state.itemsTotal);
     const volumePercentage = totalVolume > 0 ? ((usedVolume / totalVolume) * 100).toFixed(1) : 0;
     const percentageColor = volumePercentage > 95 ? '#4CAF50' :  // Dark green for excellent utilization
                           volumePercentage > 85 ? '#66BB6A' :  // Light green for very good utilization
@@ -1044,14 +1007,16 @@ export default class Display3D extends Component {
     );
   }
 
-  getMemoizedCarrierData = () => {
-    if (!this._carrierData) {
-      this._carrierData = this.props.route.params?.isFromTestPage 
-        ? [this.props.route.params?.testPageCarrier]
-        : ['No Carrier', 'USPS', 'FedEx', 'UPS'];
-    }
-    return this._carrierData;
-  };
+  getMemoizedCarrierData = memoize((isFromTestPage, testPageCarrier) => {
+    const carriers = isFromTestPage 
+      ? [testPageCarrier]
+      : ['No Carrier', 'USPS', 'FedEx', 'UPS'];
+      
+    return carriers.map(carrier => ({
+      label: carrier,
+      value: carrier
+    }));
+  });
 
   getBoxScale = (box) => {
     if (!box) return 1;
@@ -1077,7 +1042,10 @@ export default class Display3D extends Component {
 
   render() {
     const { selectedBox, selectedCarrier, isBoxCollapsed } = this.state;
-    const carriers = this.getMemoizedCarrierData();
+    const carriers = this.getMemoizedCarrierData(
+      this.props.route.params?.isFromTestPage,
+      this.props.route.params?.testPageCarrier
+    );
 
     if (!selectedBox || !selectedBox.dimensions) {
       return <Text style={styles.noBoxText}>No box selected</Text>;
@@ -1140,7 +1108,7 @@ export default class Display3D extends Component {
                 <View style={styles.carrierDropdownContainer}>
                   <Dropdown
                     style={styles.input}
-                    data={carrierData}
+                    data={carriers}
                     labelField="label"
                     valueField="value"
                     placeholder="Select Carrier"
