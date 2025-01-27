@@ -85,7 +85,15 @@ export default class Display3D extends Component {
     this.addBoxToScene = this.addBoxToScene.bind(this);
     this.initialize3DScene = this.initialize3DScene.bind(this);
     
-    // Initialize PanResponder once
+    // Cache frequently accessed values
+    this._carrierData = null;
+    this._lastDimensions = null;
+    this._lastBoxScale = null;
+    this.isUnmounting = false;
+    this.lastFrameTime = 0;
+    this.frameCount = 0;
+    
+    // Initialize PanResponder once with optimized handlers
     this.panResponder = PanResponder.create({
       onStartShouldSetPanResponder: () => true,
       onMoveShouldSetPanResponder: () => true,
@@ -207,10 +215,10 @@ export default class Display3D extends Component {
   }
 
   updateVisualsBasedOnCarrier = (carrier) => {
+    if (carrier === this.state.selectedCarrier) return;
+    
     this.setState({ isTransitioning: true }, () => {
-      // Start transition animation
       this.animateCarrierTransition(() => {
-        // Reset animation value
         this.resetSlider();
         
         this.setState(
@@ -237,7 +245,7 @@ export default class Display3D extends Component {
     this.cube.rotation.y = value;
     
     if (this.state.box && Array.isArray(this.state.itemsTotal)) {
-      const scale = getScale(this.state.box);
+      const scale = this.getBoxScale(this.state.box);
       const baseMovement = this.state.box.y / 10;
       
       let movementMultiplier;
@@ -270,11 +278,13 @@ export default class Display3D extends Component {
 
   handleRotationChange = (value) => {
     if (Platform.OS === 'ios') {
-      this.setState({ 
-        sliderValue: value,
-        currentRotation: value 
-      }, () => {
-        this.updateRotation(value);
+      requestAnimationFrame(() => {
+        this.setState({ 
+          sliderValue: value,
+          currentRotation: value 
+        }, () => {
+          this.updateRotation(value);
+        });
       });
     } else {
       if (this.state.isSliding) {
@@ -301,13 +311,11 @@ export default class Display3D extends Component {
 
   handlePanResponderMove = (event, gestureState) => {
     const { dx, dy } = gestureState;
-    this.setState(prevState => {
-      return {
-        theta: prevState.theta - dx * 0.001,
-        phi: Math.max(0.1, Math.min(Math.PI - 0.1, prevState.phi - dy * 0.001)),
-        userInteracted: true
-      };
-    });
+    this.setState(prevState => ({
+      theta: prevState.theta - dx * 0.001,
+      phi: Math.max(0.1, Math.min(Math.PI - 0.1, prevState.phi - dy * 0.001)),
+      userInteracted: true
+    }));
   };
 
   handlePanResponderRelease = (event, gestureState) => {
@@ -315,6 +323,7 @@ export default class Display3D extends Component {
   };
 
   componentWillUnmount() {
+    this.isUnmounting = true;
     if (this.pendingUpdate) {
       clearTimeout(this.pendingUpdate);
     }
@@ -325,7 +334,7 @@ export default class Display3D extends Component {
       cancelAnimationFrame(this.animationFrameId);
     }
 
-    // Clean up THREE.js resources
+    // Enhanced cleanup for THREE.js resources
     if (this.scene) {
       this.scene.traverse((object) => {
         if (object.geometry) {
@@ -333,33 +342,48 @@ export default class Display3D extends Component {
         }
         if (object.material) {
           if (Array.isArray(object.material)) {
-            object.material.forEach(material => material.dispose());
+            object.material.forEach(material => {
+              if (material.map) material.map.dispose();
+              material.dispose();
+            });
           } else {
+            if (object.material.map) object.material.map.dispose();
             object.material.dispose();
           }
+        }
+        if (object.texture) {
+          object.texture.dispose();
         }
       });
       this.scene = null;
     }
+    
     if (this.renderer) {
       this.renderer.dispose();
+      this.renderer.forceContextLoss();
       this.renderer = null;
     }
+    
     if (this.camera) {
       this.camera = null;
     }
   }
 
   shouldComponentUpdate(nextProps, nextState) {
-    // Only update if these specific states change
+    // Optimize re-renders by checking specific state changes
     return (
       this.state.selectedCarrier !== nextState.selectedCarrier ||
       this.state.sliderValue !== nextState.sliderValue ||
       this.state.currentRotation !== nextState.currentRotation ||
       this.state.isBoxCollapsed !== nextState.isBoxCollapsed ||
       this.state.isLegendVisible !== nextState.isLegendVisible ||
+      this.state.gl !== nextState.gl ||
+      this.state.userInteracted !== nextState.userInteracted ||
+      this.state.isTransitioning !== nextState.isTransitioning ||
       JSON.stringify(this.state.itemsTotal) !== JSON.stringify(nextState.itemsTotal) ||
-      JSON.stringify(this.state.selectedBox) !== JSON.stringify(nextState.selectedBox)
+      JSON.stringify(this.state.selectedBox) !== JSON.stringify(nextState.selectedBox) ||
+      JSON.stringify(this.state.dimensions) !== JSON.stringify(nextState.dimensions) ||
+      JSON.stringify(this.state.expandedItems) !== JSON.stringify(nextState.expandedItems)
     );
   }
 
@@ -389,7 +413,7 @@ export default class Display3D extends Component {
       this.scene.remove(this.cube);
     }
 
-    const scale = getScale(this.state.box);
+    const scale = this.getBoxScale(this.state.box);
     this.cube = createBoxMesh(this.state.box, scale);
     this.boxMesh = this.cube;
 
@@ -456,7 +480,7 @@ export default class Display3D extends Component {
       return;
     }
 
-    const scale = getScale(packedResult);
+    const scale = this.getBoxScale(packedResult);
     const itemsDisplay = createDisplay(packedResult, scale);
 
     this.setState(
@@ -514,7 +538,7 @@ export default class Display3D extends Component {
     this.setState(
       {
         box: packedResult,
-        itemsTotal: createDisplay(packedResult, getScale(packedResult)),
+        itemsTotal: createDisplay(packedResult, this.getBoxScale(packedResult)),
         selectedBox: {
           dimensions: [packedResult.x, packedResult.y, packedResult.z],
           priceText: packedResult.priceText,
@@ -530,30 +554,42 @@ export default class Display3D extends Component {
   };
 
   animate = () => {
-    if (!this.state.gl || !this.camera || !this.scene || !this.renderer) {
-      this.animationFrameId = requestAnimationFrame(this.animate);
+    if (!this.state.gl || !this.camera || !this.scene || !this.renderer || this.isUnmounting) {
+      if (this.animationFrameId) {
+        cancelAnimationFrame(this.animationFrameId);
+      }
       return;
     }
 
-    if (this.state.userInteracted) {
-      const boxRotationY = this.state.currentRotation;
-      const { theta, phi } = this.state;
-      
-      const sinPhi = Math.sin(phi);
-      const cosPhi = Math.cos(phi);
-      const thetaRotation = theta + boxRotationY;
-      
-      this.camera.position.x = 5 * sinPhi * Math.cos(thetaRotation);
-      this.camera.position.y = 5 * cosPhi;
-      this.camera.position.z = 5 * sinPhi * Math.sin(thetaRotation);
-    } else {
-      const { x, y, z } = this.state.cameraPosition;
-      this.camera.position.set(x, y, z);
-    }
+    const now = performance.now();
+    const elapsed = now - this.lastFrameTime;
+    
+    // Limit to ~60 FPS
+    if (elapsed > 16) {
+      this.lastFrameTime = now;
+      this.frameCount++;
 
-    this.camera.lookAt(0, 0, 0);
-    this.renderer.render(this.scene, this.camera);
-    this.state.gl.endFrameEXP();
+      if (this.state.userInteracted) {
+        const boxRotationY = this.state.currentRotation;
+        const { theta, phi } = this.state;
+        
+        // Cache math calculations
+        const sinPhi = Math.sin(phi);
+        const cosPhi = Math.cos(phi);
+        const thetaRotation = theta + boxRotationY;
+        
+        this.camera.position.x = 5 * sinPhi * Math.cos(thetaRotation);
+        this.camera.position.y = 5 * cosPhi;
+        this.camera.position.z = 5 * sinPhi * Math.sin(thetaRotation);
+      } else {
+        const { x, y, z } = this.state.cameraPosition;
+        this.camera.position.set(x, y, z);
+      }
+
+      this.camera.lookAt(0, 0, 0);
+      this.renderer.render(this.scene, this.camera);
+      this.state.gl.endFrameEXP();
+    }
     
     this.animationFrameId = requestAnimationFrame(this.animate);
   };
@@ -610,9 +646,6 @@ export default class Display3D extends Component {
   };
 
   toggleItemExpansion = (itemName) => {
-    console.log('Toggling item:', itemName);
-    
-    // Initialize animation if it doesn't exist
     if (!this.animations[itemName]) {
       this.animations[itemName] = new Animated.Value(0);
     }
@@ -628,23 +661,18 @@ export default class Display3D extends Component {
 
     Animated.timing(this.animations[itemName], {
       toValue: willExpand ? 1 : 0,
-      duration: 300,
+      duration: 250,
       useNativeDriver: false,
       easing: Easing.inOut(Easing.ease)
-    }).start(() => {
-      // Force modal height recalculation after animation
-      this.forceUpdate();
-    });
+    }).start();
   };
 
   initializeAnimations = (items) => {
-    // Reset animations
-    this.animations = {};
-    
-    // Initialize animation for each parent item
     items.forEach(item => {
-      if (item.isParent) {
-        this.animations[item.displayName] = new Animated.Value(0);
+      if (item.isParent && !this.animations[item.displayName]) {
+        this.animations[item.displayName] = new Animated.Value(
+          this.state.expandedItems[item.displayName] ? 1 : 0
+        );
       }
     });
   };
@@ -942,11 +970,11 @@ export default class Display3D extends Component {
                           {
                             maxHeight: this.animations[item.displayName]?.interpolate({
                               inputRange: [0, 1],
-                              outputRange: [0, 1000]
+                              outputRange: [0, 500]
                             }) || 0,
                             opacity: this.animations[item.displayName]?.interpolate({
-                              inputRange: [0, 0.5, 1],
-                              outputRange: [0, 0, 1]
+                              inputRange: [0, 0.3, 1],
+                              outputRange: [0, 1, 1]
                             }) || 0
                           }
                         ]}
@@ -1017,10 +1045,34 @@ export default class Display3D extends Component {
   }
 
   getMemoizedCarrierData = () => {
-    if (this.props.route.params?.isFromTestPage) {
-      return [this.props.route.params?.testPageCarrier];
+    if (!this._carrierData) {
+      this._carrierData = this.props.route.params?.isFromTestPage 
+        ? [this.props.route.params?.testPageCarrier]
+        : ['No Carrier', 'USPS', 'FedEx', 'UPS'];
     }
-    return ['No Carrier', 'USPS', 'FedEx', 'UPS'];
+    return this._carrierData;
+  };
+
+  getBoxScale = (box) => {
+    if (!box) return 1;
+    
+    const boxKey = `${box.x}-${box.y}-${box.z}`;
+    if (this._lastBoxScale?.key === boxKey) {
+      return this._lastBoxScale.scale;
+    }
+    
+    const scale = getScale(box);
+    this._lastBoxScale = { key: boxKey, scale };
+    return scale;
+  };
+
+  handleLayout = (event) => {
+    const { width, height } = event.nativeEvent.layout;
+    if (this._lastDimensions?.width !== width || 
+        this._lastDimensions?.height !== height) {
+      this._lastDimensions = { width, height };
+      this.setState({ dimensions: { width, height } });
+    }
   };
 
   render() {
@@ -1035,11 +1087,7 @@ export default class Display3D extends Component {
       <View 
         style={[styles.container]} 
         onLayout={(event) => {
-          const { width, height } = event.nativeEvent.layout;
-          if (width !== this.state.dimensions.width || 
-              height !== this.state.dimensions.height) {
-            this.setState({ dimensions: { width, height } });
-          }
+          this.handleLayout(event);
         }}
       >
         <View style={styles.fixedContent}>
@@ -1526,13 +1574,20 @@ const styles = StyleSheet.create({
     height: '100%',
     borderRadius: 2,
   },
-  childItemText: {
+  childLegendText: {
     fontSize: 14,
     color: '#4A5568',
   },
-  childItemNumber: {
-    fontSize: 13,
-    color: '#718096',
+  childDimensionsContainer: {
+    backgroundColor: '#EDF2F7',
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 6,
+    marginLeft: 8,
+  },
+  childDimensionsText: {
+    fontSize: 14,
+    color: '#4A5568',
     fontFamily: Platform.OS === 'ios' ? 'Menlo' : 'monospace',
   },
   colorBox: {
@@ -1627,5 +1682,14 @@ const styles = StyleSheet.create({
     fontSize: 10,
     color: '#666',
     marginTop: 4,
+  },
+  childItemText: {
+    fontSize: 14,
+    color: '#4A5568',
+  },
+  childItemNumber: {
+    fontSize: 13,
+    color: '#718096',
+    fontFamily: Platform.OS === 'ios' ? 'Menlo' : 'monospace',
   },
 });
