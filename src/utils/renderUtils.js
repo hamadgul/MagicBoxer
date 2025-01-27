@@ -1,4 +1,5 @@
 import * as THREE from "three";
+import { Renderer } from "expo-three";
 import { RENDER_CONFIG } from "./renderConfig";
 
 const validateDimension = (value, scale, defaultValue = 1) => {
@@ -24,8 +25,6 @@ export const createBoxMesh = (box, scale) => {
   const height = validateDimension(box.y, scale);
   const depth = validateDimension(box.z, scale);
 
-  console.log('Box dimensions:', { width, height, depth, scale });
-
   const geometry = new THREE.BoxGeometry(width, height, depth);
   const material = new THREE.MeshBasicMaterial(RENDER_CONFIG.box.material);
   const cube = new THREE.Mesh(geometry, material);
@@ -50,58 +49,19 @@ export const createItemMesh = (item, scale) => {
   const height = validateDimension(item.yy, scale);
   const depth = validateDimension(item.zz, scale);
 
-  console.log('Item dimensions:', { 
-    width, height, depth, 
-    originalDims: { xx: item.xx, yy: item.yy, zz: item.zz }, 
-    scale 
-  });
-
   const geometry = new THREE.BoxGeometry(width, height, depth);
-  const material = new THREE.MeshPhongMaterial({
-    color: item.color || 0x808080,
-    opacity: 0.8,
-    transparent: true,
+  const material = new THREE.MeshBasicMaterial({
+    ...RENDER_CONFIG.item.wireframe,
+    side: THREE.DoubleSide
   });
+
   const mesh = new THREE.Mesh(geometry, material);
-
-  // Add edges
-  const edges = new THREE.EdgesGeometry(geometry);
-  const edgeMaterial = new THREE.LineBasicMaterial(RENDER_CONFIG.item.wireframe);
-  const wireframe = new THREE.LineSegments(edges, edgeMaterial);
+  
+  // Add wireframe
+  const wireframeGeometry = new THREE.EdgesGeometry(geometry);
+  const wireframeMaterial = new THREE.LineBasicMaterial(RENDER_CONFIG.item.wireframe);
+  const wireframe = new THREE.LineSegments(wireframeGeometry, wireframeMaterial);
   mesh.add(wireframe);
-
-  // Add a small identifier plate above the item
-  if (item.itemName) {
-    try {
-      const plateWidth = Math.max(0.1, width * 0.8);
-      const plateHeight = Math.max(0.05, width * 0.2);
-      const plateDepth = 0.01;
-      
-      const plateGeometry = new THREE.BoxGeometry(plateWidth, plateDepth, plateHeight);
-      const plateMaterial = new THREE.MeshBasicMaterial({
-        color: 0xffffff,
-        opacity: 0.9,
-        transparent: true,
-      });
-      
-      const plate = new THREE.Mesh(plateGeometry, plateMaterial);
-      const plateOffset = Math.max(0.05, height + plateHeight / 2);
-      plate.position.set(0, plateOffset, 0);
-      plate.rotation.x = Math.PI / 2; // Rotate to be horizontal
-      mesh.add(plate);
-
-      // Add a colored border/outline
-      const borderGeometry = new THREE.EdgesGeometry(plateGeometry);
-      const borderMaterial = new THREE.LineBasicMaterial({
-        color: item.color || 0x808080,
-        linewidth: 2,
-      });
-      const border = new THREE.LineSegments(borderGeometry, borderMaterial);
-      plate.add(border);
-    } catch (error) {
-      console.error('Error creating identifier plate:', error);
-    }
-  }
 
   return mesh;
 };
@@ -110,13 +70,14 @@ export const setupScene = () => {
   const scene = new THREE.Scene();
   scene.background = new THREE.Color(RENDER_CONFIG.scene.background);
 
-  // Add lights
+  // Add ambient light
   const ambientLight = new THREE.AmbientLight(
     RENDER_CONFIG.lights.ambient.color,
     RENDER_CONFIG.lights.ambient.intensity
   );
   scene.add(ambientLight);
 
+  // Add directional light
   const directionalLight = new THREE.DirectionalLight(
     RENDER_CONFIG.lights.directional.color,
     RENDER_CONFIG.lights.directional.intensity
@@ -125,4 +86,30 @@ export const setupScene = () => {
   scene.add(directionalLight);
 
   return scene;
+};
+
+export const setupRenderer = (gl) => {
+  const renderer = new Renderer({ gl });
+  renderer.setPixelRatio(RENDER_CONFIG.renderer.pixelRatio);
+  renderer.sortObjects = RENDER_CONFIG.renderer.sortObjects;
+  return renderer;
+};
+
+export const setupCamera = (gl, isSpecialSize = false) => {
+  const settings = isSpecialSize ? 
+    RENDER_CONFIG.camera.settings.special : 
+    RENDER_CONFIG.camera.settings.normal;
+
+  const camera = new THREE.PerspectiveCamera(
+    settings.fov,
+    gl.drawingBufferWidth / gl.drawingBufferHeight,
+    0.1,
+    1000
+  );
+
+  const { x, y, z } = RENDER_CONFIG.camera.initialPosition;
+  camera.position.set(x, y, z);
+  camera.lookAt(...RENDER_CONFIG.camera.lookAt);
+
+  return camera;
 };

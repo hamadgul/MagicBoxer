@@ -23,7 +23,7 @@ import { Dropdown } from "react-native-element-dropdown";
 import AntDesign from "@expo/vector-icons/AntDesign";
 import { pack, createDisplay } from "../packing_algo/packing";
 import { isSpecialSize, getScale } from "../utils/boxSizes";
-import { setupScene } from "../utils/renderUtils";
+import { setupScene, setupCamera, setupRenderer, createBoxMesh } from "../utils/renderUtils";
 import { RENDER_CONFIG } from "../utils/renderConfig";
 import Slider from "@react-native-community/slider";
 
@@ -107,22 +107,11 @@ export default class Display3D extends Component {
     // Pre-create and memoize scene
     this.scene = setupScene();
     
-    // Memoize animation constants
-    this.ANIMATION_DURATION = 600;
-    this.ANIMATION_SCALE_MIN = 0.8;
-    this.ANIMATION_SCALE_MAX = 1;
-    
     // Animation properties
     this.animationStartTime = 0;
     this.isAnimating = false;
     this.boxMesh = null;
     this.frameId = null;
-
-    // Memoize initial camera settings
-    this.defaultCameraSettings = {
-      normal: { distance: 5, fov: 75 },
-      special: { distance: 3.5, fov: 60 }
-    };
 
     this.state = {
       theta: 0,
@@ -146,7 +135,7 @@ export default class Display3D extends Component {
         height: 0,
       },
       currentRotation: 0,
-      cameraPosition: { x: -1.2, y: 0.5, z: 5 },
+      cameraPosition: RENDER_CONFIG.camera.initialPosition,
       expandedItems: {},
       isTransitioning: false,
       isSliding: false
@@ -185,11 +174,12 @@ export default class Display3D extends Component {
       if (!this.isAnimating) return;
 
       const elapsed = Date.now() - this.animationStartTime;
-      const progress = Math.min(elapsed / this.ANIMATION_DURATION, 1);
+      const progress = Math.min(elapsed / RENDER_CONFIG.box.animation.duration, 1);
       
       if (progress <= 0.5) {
         const fadeOutProgress = progress * 2;
-        const scale = this.ANIMATION_SCALE_MAX - ((this.ANIMATION_SCALE_MAX - this.ANIMATION_SCALE_MIN) * fadeOutProgress);
+        const scale = RENDER_CONFIG.box.animation.scale.max - 
+          ((RENDER_CONFIG.box.animation.scale.max - RENDER_CONFIG.box.animation.scale.min) * fadeOutProgress);
         const opacity = 1 - fadeOutProgress;
         const rotation = Math.PI * fadeOutProgress;
 
@@ -201,7 +191,8 @@ export default class Display3D extends Component {
         });
       } else {
         const fadeInProgress = (progress - 0.5) * 2;
-        const scale = this.ANIMATION_SCALE_MIN + ((this.ANIMATION_SCALE_MAX - this.ANIMATION_SCALE_MIN) * fadeInProgress);
+        const scale = RENDER_CONFIG.box.animation.scale.min + 
+          ((RENDER_CONFIG.box.animation.scale.max - RENDER_CONFIG.box.animation.scale.min) * fadeInProgress);
         const opacity = fadeInProgress;
         const rotation = Math.PI * (1 - fadeInProgress);
 
@@ -384,27 +375,12 @@ export default class Display3D extends Component {
     
     if (!this.camera) {
       const specialSize = isSpecialSize(box);
-      const settings = specialSize ? 
-        this.defaultCameraSettings.special : 
-        this.defaultCameraSettings.normal;
-
-      this.camera = new THREE.PerspectiveCamera(
-        settings.fov,
-        gl.drawingBufferWidth / gl.drawingBufferHeight,
-        0.1,
-        1000
-      );
-      this.camera.position.set(0, settings.distance * 0.5, settings.distance);
-      this.camera.lookAt(0, 0, 0);
+      this.camera = setupCamera(gl, specialSize);
     }
 
     if (!this.renderer) {
-      this.renderer = new Renderer({ gl });
+      this.renderer = setupRenderer(gl);
       this.renderer.setSize(gl.drawingBufferWidth, gl.drawingBufferHeight);
-      
-      // Enable optimizations
-      this.renderer.setPixelRatio(1); // Use device pixel ratio
-      this.renderer.sortObjects = false; // Disable object sorting if not needed
     }
 
     this.setState({ gl }, () => {
@@ -420,9 +396,23 @@ export default class Display3D extends Component {
       this.scene.remove(this.cube);
     }
 
-    this.cube = this.createBox(this.state.box, this.state.itemsTotal);
-    if (this.scene) {
+    const scale = getScale(this.state.box);
+    this.cube = createBoxMesh(this.state.box, scale);
+    this.boxMesh = this.cube;
+
+    if (this.scene && this.cube) {
       this.scene.add(this.cube);
+      
+      // Create items
+      if (this.state.itemsTotal.length > 0) {
+        const displayItems = createDisplay(this.state.box, scale);
+        displayItems.forEach(item => {
+          if (item.dis) {
+            this.cube.add(item.dis);
+          }
+        });
+        this.setState({ itemsTotal: displayItems });
+      }
     }
   };
 
@@ -436,8 +426,7 @@ export default class Display3D extends Component {
     this.animate();
   };
 
-  createBox = (box, itemsTotal) => {
-    const scale = getScale(box);
+  createBoxMesh = (box, scale) => {
     const geometry = new THREE.BoxGeometry(
       box.x / scale,
       box.y / scale,
@@ -464,18 +453,6 @@ export default class Display3D extends Component {
     });
     const wireframe = new THREE.LineSegments(wireframeGeometry, wireframeMaterial);
     cube.add(wireframe);
-
-    // Create items with the same scale as the box
-    if (itemsTotal && itemsTotal.length > 0) {
-      const displayItems = createDisplay(box, scale);
-      displayItems.forEach(item => {
-        if (item.dis) {
-          // Keep items fully opaque
-          cube.add(item.dis);
-        }
-      });
-      this.setState({ itemsTotal: displayItems });
-    }
 
     return cube;
   };
@@ -561,7 +538,7 @@ export default class Display3D extends Component {
 
   animate = () => {
     if (!this.state.gl || !this.camera || !this.scene || !this.renderer) {
-      requestAnimationFrame(this.animate);
+      this.animationFrameId = requestAnimationFrame(this.animate);
       return;
     }
 
@@ -585,7 +562,7 @@ export default class Display3D extends Component {
     this.renderer.render(this.scene, this.camera);
     this.state.gl.endFrameEXP();
     
-    requestAnimationFrame(this.animate);
+    this.animationFrameId = requestAnimationFrame(this.animate);
   };
 
   renderCustomSlider = () => {
