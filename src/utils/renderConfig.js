@@ -7,12 +7,14 @@ export const RENDER_CONFIG = {
       transparent: true,
       opacity: 0.25,
       color: 0x808080,
-      side: THREE.DoubleSide
+      side: THREE.FrontSide, // Better performance than DoubleSide
+      depthWrite: false // Better transparency handling
     },
     wireframe: {
-      color: 0x000000,  // Black wireframe for box
+      color: 0x000000,
       opacity: 0.7,
-      transparent: true
+      transparent: true,
+      depthWrite: false
     },
     animation: {
       duration: 600,
@@ -24,9 +26,10 @@ export const RENDER_CONFIG = {
   },
   item: {
     wireframe: {
-      color: 'white',   // White wireframe for items
+      color: 'white',
       opacity: 0.7,
-      transparent: true
+      transparent: true,
+      depthWrite: false
     }
   },
   camera: {
@@ -54,8 +57,12 @@ export const RENDER_CONFIG = {
     },
     directional: {
       color: 0xffffff,
-      intensity: 0.5,
-      position: [5, 5, 5],
+      intensity: 0.6,
+      position: {
+        x: 5,
+        y: 5,
+        z: 5
+      }
     },
   },
   scene: {

@@ -26,12 +26,18 @@ export const createBoxMesh = (box, scale) => {
   const depth = validateDimension(box.z, scale);
 
   const geometry = new THREE.BoxGeometry(width, height, depth);
-  const material = new THREE.MeshBasicMaterial(RENDER_CONFIG.box.material);
+  const material = new THREE.MeshBasicMaterial({
+    ...RENDER_CONFIG.box.material,
+    depthWrite: false // Better transparency handling
+  });
   const cube = new THREE.Mesh(geometry, material);
 
-  // Create wireframe
+  // Create wireframe with better performance settings
   const wireframeGeometry = new THREE.EdgesGeometry(geometry);
-  const wireframeMaterial = new THREE.LineBasicMaterial(RENDER_CONFIG.box.wireframe);
+  const wireframeMaterial = new THREE.LineBasicMaterial({
+    ...RENDER_CONFIG.box.wireframe,
+    depthWrite: false
+  });
   const wireframe = new THREE.LineSegments(wireframeGeometry, wireframeMaterial);
   cube.add(wireframe);
 
@@ -51,15 +57,23 @@ export const createItemMesh = (item, scale) => {
 
   const geometry = new THREE.BoxGeometry(width, height, depth);
   const material = new THREE.MeshBasicMaterial({
-    ...RENDER_CONFIG.item.wireframe,
-    side: THREE.DoubleSide
+    color: item.color || 0x808080,
+    transparent: true,
+    opacity: 0.6,
+    depthWrite: false // Better transparency handling
   });
 
   const mesh = new THREE.Mesh(geometry, material);
   
-  // Add wireframe
+  // Create wireframe with better performance settings
   const wireframeGeometry = new THREE.EdgesGeometry(geometry);
-  const wireframeMaterial = new THREE.LineBasicMaterial(RENDER_CONFIG.item.wireframe);
+  const wireframeMaterial = new THREE.LineBasicMaterial({
+    color: RENDER_CONFIG.item.wireframe.color,
+    transparent: true,
+    opacity: RENDER_CONFIG.item.wireframe.opacity,
+    depthWrite: false
+  });
+  
   const wireframe = new THREE.LineSegments(wireframeGeometry, wireframeMaterial);
   mesh.add(wireframe);
 
@@ -68,21 +82,24 @@ export const createItemMesh = (item, scale) => {
 
 export const setupScene = () => {
   const scene = new THREE.Scene();
-  scene.background = new THREE.Color(RENDER_CONFIG.scene.background);
-
-  // Add ambient light
+  
+  // Add ambient light for consistent lighting
   const ambientLight = new THREE.AmbientLight(
     RENDER_CONFIG.lights.ambient.color,
     RENDER_CONFIG.lights.ambient.intensity
   );
   scene.add(ambientLight);
 
-  // Add directional light
+  // Add directional light for depth
   const directionalLight = new THREE.DirectionalLight(
     RENDER_CONFIG.lights.directional.color,
     RENDER_CONFIG.lights.directional.intensity
   );
-  directionalLight.position.set(...RENDER_CONFIG.lights.directional.position);
+  directionalLight.position.set(
+    RENDER_CONFIG.lights.directional.position.x,
+    RENDER_CONFIG.lights.directional.position.y,
+    RENDER_CONFIG.lights.directional.position.z
+  );
   scene.add(directionalLight);
 
   return scene;
@@ -90,26 +107,36 @@ export const setupScene = () => {
 
 export const setupRenderer = (gl) => {
   const renderer = new Renderer({ gl });
-  renderer.setPixelRatio(RENDER_CONFIG.renderer.pixelRatio);
-  renderer.sortObjects = RENDER_CONFIG.renderer.sortObjects;
+  
+  // Configure renderer for React Native
+  renderer.setClearColor(0x000000, 0);
+  renderer.setPixelRatio(1); // Use 1 for better performance on mobile
+  renderer.shadowMap.enabled = false; // Disable shadows for better performance
+  
   return renderer;
 };
 
 export const setupCamera = (gl, isSpecialSize = false) => {
-  const settings = isSpecialSize ? 
-    RENDER_CONFIG.camera.settings.special : 
-    RENDER_CONFIG.camera.settings.normal;
+  const { width, height } = gl.drawingBufferWidth 
+    ? { width: gl.drawingBufferWidth, height: gl.drawingBufferHeight }
+    : { width: 1, height: 1 };
+
+  const config = isSpecialSize 
+    ? RENDER_CONFIG.camera.settings.special 
+    : RENDER_CONFIG.camera.settings.normal;
 
   const camera = new THREE.PerspectiveCamera(
-    settings.fov,
-    gl.drawingBufferWidth / gl.drawingBufferHeight,
+    config.fov,
+    width / height,
     0.1,
     1000
   );
 
-  const { x, y, z } = RENDER_CONFIG.camera.initialPosition;
-  camera.position.set(x, y, z);
-  camera.lookAt(...RENDER_CONFIG.camera.lookAt);
+  camera.position.set(
+    RENDER_CONFIG.camera.initialPosition.x,
+    RENDER_CONFIG.camera.initialPosition.y,
+    RENDER_CONFIG.camera.initialPosition.z
+  );
 
   return camera;
 };

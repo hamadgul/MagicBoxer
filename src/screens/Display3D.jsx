@@ -348,18 +348,46 @@ export default class Display3D extends Component {
           object.texture.dispose();
         }
       });
-      this.scene = null;
+    }
+    
+    // Clear scene objects
+    if (this.scene && this.scene.children) {
+      while(this.scene.children.length > 0) { 
+        this.scene.remove(this.scene.children[0]); 
+      }
+    }
+
+    // Specific cleanup for Expo GL context
+    if (this.state.gl) {
+      const gl = this.state.gl;
+      // Delete all GL buffers
+      const numTextureUnits = gl.getParameter(gl.MAX_TEXTURE_IMAGE_UNITS);
+      for (let unit = 0; unit < numTextureUnits; ++unit) {
+        gl.activeTexture(gl.TEXTURE0 + unit);
+        gl.bindTexture(gl.TEXTURE_2D, null);
+        gl.bindTexture(gl.TEXTURE_CUBE_MAP, null);
+      }
+      
+      // Delete all framebuffers and renderbuffers
+      gl.bindFramebuffer(gl.FRAMEBUFFER, null);
+      gl.bindRenderbuffer(gl.RENDERBUFFER, null);
+      
+      // Reset viewport and clear color
+      gl.viewport(0, 0, gl.drawingBufferWidth, gl.drawingBufferHeight);
+      gl.clearColor(0, 0, 0, 0);
+      gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
     }
     
     if (this.renderer) {
       this.renderer.dispose();
-      this.renderer.forceContextLoss();
       this.renderer = null;
     }
-    
-    if (this.camera) {
-      this.camera = null;
-    }
+
+    // Clear references
+    this.scene = null;
+    this.camera = null;
+    this.cube = null;
+    this.boxMesh = null;
   }
 
   shouldComponentUpdate(nextProps, nextState) {
@@ -381,6 +409,12 @@ export default class Display3D extends Component {
   }
 
   _onGLContextCreate = async (gl) => {
+    // Setup GL context for Expo
+    gl.viewport(0, 0, gl.drawingBufferWidth, gl.drawingBufferHeight);
+    gl.enable(gl.DEPTH_TEST);
+    gl.enable(gl.BLEND);
+    gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA);
+
     const { box } = this.state;
     
     if (!this.camera) {
@@ -391,11 +425,15 @@ export default class Display3D extends Component {
     if (!this.renderer) {
       this.renderer = setupRenderer(gl);
       this.renderer.setSize(gl.drawingBufferWidth, gl.drawingBufferHeight);
+      // Set clear color and alpha for proper transparency
+      this.renderer.setClearColor(0x000000, 0);
     }
 
     this.setState({ gl }, () => {
       this.addBoxToScene();
-      this.animate();
+      if (!this.isUnmounting) {
+        this.animate();
+      }
     });
   };
 
