@@ -1,87 +1,28 @@
 // packing.js
 import * as THREE from "three";
 import { carrierBoxes } from './carrierBoxes';
-import { createItemMesh } from '../utils/renderUtils';
-import { RENDER_CONFIG } from '../utils/renderConfig';
 
-//quicksort needed for itemList/boxList
-function quickSort(arr, l, r) {
-  if (l < r) {
-    const pivot = r;
-    const partIndex = partition(arr, pivot, l, r);
-    quickSort(arr, l, partIndex - 1);
-    quickSort(arr, partIndex + 1, r);
+// Object pooling system
+const boxPool = [];
+const perf = {
+  boxCreations: 0,
+  boxReuses: 0,
+  startTime: performance.now()
+};
+
+function releaseBox(box) {
+  boxPool.push(box);
+}
+
+function getBox(dims) {
+  if (boxPool.length > 0) {
+    const reused = boxPool.pop();
+    Object.assign(reused, new Box(dims));
+    perf.boxReuses++;
+    return reused;
   }
-  return arr;
-}
-
-function partition(arr, pivot, l, r) {
-  const val = arr[pivot].vol;
-  let partIndex = l;
-
-  for (let i = l; i < r; i++) {
-    if (arr[i].vol < val) {
-      swap(arr, i, partIndex);
-      partIndex++;
-    }
-  }
-  swap(arr, r, partIndex);
-  return partIndex;
-}
-
-function swap(arr, i, j) {
-  [arr[i], arr[j]] = [arr[j], arr[i]];
-}
-
-class Box {
-  constructor(dims) {
-    this.x = dims[0];
-    this.y = dims[1] || 0;
-    this.z = dims[2];
-    this.type = dims[3] || "";
-    this.priceText = dims[4] || "";
-    this.cx = this.x / 2;
-    this.cy = -this.y / 2;
-    this.cz = this.z / 2;
-    this.vol = this.x * this.y * this.z;
-    this.items = [];
-    this.parts = null;
-    this.sec = [];
-    this.remainvol = this.vol;
-
-    if (isNaN(this.cy)) {
-      console.error("Invalid y dimension", { y: this.y });
-      this.cy = 0;
-    }
-  }
-}
-
-class Item {
-  constructor(dims) {
-    this.x = dims[0];
-    this.y = dims[1] || 0;
-    this.z = dims[2];
-    this.xx = null;
-    this.yy = null;
-    this.zz = null;
-    this.vol = this.x * this.y * this.z;
-    this.dis = null;
-    this.pos = null;
-    this.sec = [];
-    this.SKU = dims[3];
-    this.color = "";
-    this.itemName = dims[5];
-
-    if (isNaN(this.y)) {
-      console.error("Invalid y dimension in item", { y: this.y });
-      this.y = 0;
-    }
-  }
-}
-
-//find the total volume of the list of items
-function vol(itemList) {
-  return itemList.reduce((tot, item) => tot + item.vol, 0);
+  perf.boxCreations++;
+  return new Box(dims);
 }
 
 //filter out the boxes that aren't big enough to hold all items
@@ -92,7 +33,7 @@ function filterVol(boxes, itemVol) {
 //make each dimension into an instance of the class
 function initialize(boxes, items) {
   return {
-    boxes: boxes.map(box => new Box(box)),
+    boxes: boxes.map(box => getBox(box)),
     items: items.map(item => new Item(item))
   };
 }
@@ -105,16 +46,16 @@ export function pack(itemList, carrier, optionalBox) {
   const filteredBoxes = filterVol(boxes, itemVol);
   
   if (filteredBoxes.length === 0) {
-    return new Box([12, 12, 12, "No Box Found", 
+    return getBox([12, 12, 12, "No Box Found", 
       `No suitable box found in ${carrier}'s standard sizes. Try a different carrier or split the items between multiple boxes.`]);
   }
 
-  const sortedItems = quickSort([...items], 0, items.length - 1).reverse();
-  const sortedBoxes = quickSort(filteredBoxes, 0, filteredBoxes.length - 1);
-  const finalBox = findBox(sortedItems, sortedBoxes, 0);
+  const sortedItems = [...items].sort((a, b) => b.vol - a.vol);
+  const sortedBoxes = [...filteredBoxes].sort((a, b) => a.vol - b.vol);
+  const finalBox = findBox(sortedItems, sortedBoxes);
   
   if (finalBox === "No boxes found") {
-    return new Box([12, 12, 12, "No Box Found", 
+    return getBox([12, 12, 12, "No Box Found", 
       `No suitable box found in ${carrier}'s standard sizes. Try a different carrier or split the items between multiple boxes.`]);
   }
   
@@ -122,18 +63,21 @@ export function pack(itemList, carrier, optionalBox) {
 }
 
 //iterate through the list of items to add each one to the box. moves to next box if any items fail to be placed in a box. returns finalized box
-function findBox(itemList, boxSizes, j) {
-  if (j >= boxSizes.length) {
-    return "No boxes found";
-  }
-  const currentBox = boxSizes[j];
-  for (let i = 0; i < itemList.length; i++) {
-    const b = fitItem(itemList[i], currentBox);
-    if (!b) {
-      return findBox(itemList, boxSizes, j + 1);
+function findBox(itemList, boxSizes) {
+  for (let j = 0; j < boxSizes.length; j++) {
+    const currentBox = boxSizes[j];
+    let allFit = true;
+    
+    for (let i = 0; i < itemList.length; i++) {
+      if (!fitItem(itemList[i], currentBox)) {
+        allFit = false;
+        break;
+      }
     }
+    
+    if (allFit) return finalize(currentBox);
   }
-  return finalize(currentBox);
+  return "No boxes found";
 }
 
 //doesn't work completely; this function will take the resulting box object and unnest the boxes inside. This will tell us the positions of each item in the main box.
@@ -164,7 +108,7 @@ function splitBox(item, curbox) {
   const boxes = [];
 
   if (by !== 0) {
-    const box1 = new Box([item.xx, by, item.zz]);
+    const box1 = getBox([item.xx, by, item.zz]);
     Object.assign(box1, {
       cx: curbox.cx,
       cy: curbox.cy + item.yy,
@@ -175,7 +119,7 @@ function splitBox(item, curbox) {
   }
 
   if (bx !== 0) {
-    const box2 = new Box([bx, curbox.y, curbox.z]);
+    const box2 = getBox([bx, curbox.y, curbox.z]);
     Object.assign(box2, {
       cx: curbox.cx - item.xx,
       cy: curbox.cy,
@@ -186,7 +130,7 @@ function splitBox(item, curbox) {
   }
 
   if (bz !== 0) {
-    const box3 = new Box([item.xx, curbox.y, bz]);
+    const box3 = getBox([item.xx, curbox.y, bz]);
     Object.assign(box3, {
       cx: curbox.cx,
       cy: curbox.cy,
@@ -262,6 +206,57 @@ function fitItem(item, box) {
     }
     return false;
   }
+}
+
+class Box {
+  constructor(dims) {
+    this.x = dims[0];
+    this.y = dims[1] || 0;
+    this.z = dims[2];
+    this.type = dims[3] || "";
+    this.priceText = dims[4] || "";
+    this.cx = this.x / 2;
+    this.cy = -this.y / 2;
+    this.cz = this.z / 2;
+    this.vol = this.x * this.y * this.z;
+    this.items = [];
+    this.parts = null;
+    this.sec = [];
+    this.remainvol = this.vol;
+
+    if (isNaN(this.cy)) {
+      console.error("Invalid y dimension", { y: this.y });
+      this.cy = 0;
+    }
+  }
+}
+
+class Item {
+  constructor(dims) {
+    this.x = dims[0];
+    this.y = dims[1] || 0;
+    this.z = dims[2];
+    this.xx = null;
+    this.yy = null;
+    this.zz = null;
+    this.vol = this.x * this.y * this.z;
+    this.dis = null;
+    this.pos = null;
+    this.sec = [];
+    this.SKU = dims[3];
+    this.color = "";
+    this.itemName = dims[5];
+
+    if (isNaN(this.y)) {
+      console.error("Invalid y dimension in item", { y: this.y });
+      this.y = 0;
+    }
+  }
+}
+
+//find the total volume of the list of items
+function vol(itemList) {
+  return itemList.reduce((tot, item) => tot + item.vol, 0);
 }
 
 function helper(ob, a) {
