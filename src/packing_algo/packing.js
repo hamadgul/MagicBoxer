@@ -147,49 +147,25 @@ function splitBox(item, curbox) {
 //else, rotate the item as much as it can until it fits inside the box. once it fits, split the resulting box, and return true
 //if there was no rotation where the item will fit, we also return false
 function checkDimensions(item, box) {
-  if (item.vol > box.remainvol) {
-    return false;
-  } else {
-    for (let rotation = 1; rotation <= 6; rotation++) {
-      switch (rotation) {
-        case 1:
-          item.xx = item.x;
-          item.yy = item.y;
-          item.zz = item.z;
-          break;
-        case 2:
-          item.xx = item.x;
-          item.yy = item.z;
-          item.zz = item.y;
-          break;
-        case 3:
-          item.xx = item.y;
-          item.yy = item.x;
-          item.zz = item.z;
-          break;
-        case 4:
-          item.xx = item.y;
-          item.yy = item.z;
-          item.zz = item.x;
-          break;
-        case 5:
-          item.xx = item.z;
-          item.yy = item.x;
-          item.zz = item.y;
-          break;
-        case 6:
-          item.xx = item.z;
-          item.yy = item.y;
-          item.zz = item.x;
-      }
+  if (item.vol > box.remainvol) return false;
+  
+  const rotations = [
+    [item.x, item.y, item.z],
+    [item.x, item.z, item.y],
+    [item.y, item.x, item.z],
+    [item.y, item.z, item.x],
+    [item.z, item.x, item.y],
+    [item.z, item.y, item.x]
+  ];
 
-      if (item.xx <= box.x && item.yy <= box.y && item.zz <= box.z) {
-        box.parts = splitBox(item, box);
-        return true;
-      }
+  for (const [w, h, d] of rotations) {
+    if (w <= box.x && h <= box.y && d <= box.z) {
+      Object.assign(item, { xx: w, yy: h, zz: d });
+      box.parts = splitBox(item, box);
+      return true;
     }
-    return false;
   }
+  return false;
 }
 
 //checks to see if the item will fit inside the box. checks if the box is split up at all. if it isn't, run checkDimensions. If it is split, run this function recursively until it finds
