@@ -166,41 +166,30 @@ export default class Display3D extends Component {
       const elapsed = Date.now() - this.animationStartTime;
       const progress = Math.min(elapsed / RENDER_CONFIG.box.animation.duration, 1);
       
+      let innerProgress, scale, opacity, rotation;
       if (progress <= 0.5) {
-        const fadeOutProgress = progress * 2;
-        const scale = RENDER_CONFIG.box.animation.scale.max - 
-          ((RENDER_CONFIG.box.animation.scale.max - RENDER_CONFIG.box.animation.scale.min) * fadeOutProgress);
-        const opacity = 1 - fadeOutProgress;
-        const rotation = Math.PI * fadeOutProgress;
-
-        this.boxMesh.scale.setScalar(scale);
-        this.boxMesh.rotation.y = rotation;
-        
-        materials.forEach(material => {
-          material.opacity = opacity;
-        });
+        innerProgress = progress * 2;
+        scale = RENDER_CONFIG.box.animation.scale.max - (RENDER_CONFIG.box.animation.scale.max - RENDER_CONFIG.box.animation.scale.min) * innerProgress;
+        opacity = 1 - innerProgress;
+        rotation = Math.PI * innerProgress;
       } else {
-        const fadeInProgress = (progress - 0.5) * 2;
-        const scale = RENDER_CONFIG.box.animation.scale.min + 
-          ((RENDER_CONFIG.box.animation.scale.max - RENDER_CONFIG.box.animation.scale.min) * fadeInProgress);
-        const opacity = fadeInProgress;
-        const rotation = Math.PI * (1 - fadeInProgress);
-
-        this.boxMesh.scale.setScalar(scale);
-        this.boxMesh.rotation.y = rotation;
-        
-        materials.forEach(material => {
-          material.opacity = opacity;
-        });
+        innerProgress = (progress - 0.5) * 2;
+        scale = RENDER_CONFIG.box.animation.scale.min + (RENDER_CONFIG.box.animation.scale.max - RENDER_CONFIG.box.animation.scale.min) * innerProgress;
+        opacity = innerProgress;
+        rotation = Math.PI * (1 - innerProgress);
       }
-
-      if (progress >= 1) {
+      this.boxMesh.scale.setScalar(scale);
+      this.boxMesh.rotation.y = rotation;
+      materials.forEach(material => {
+        material.opacity = opacity;
+      });
+      if (progress < 1) {
+        this.frameId = requestAnimationFrame(animate);
+      } else {
         this.isAnimating = false;
         this.frameId = null;
         if (callback) callback();
         this.setState({ isTransitioning: false });
-      } else {
-        this.frameId = requestAnimationFrame(animate);
       }
     };
 
