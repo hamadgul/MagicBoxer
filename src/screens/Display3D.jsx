@@ -132,6 +132,8 @@ export default class Display3D extends Component {
     };
 
     this.animations = {};
+    this.rotation = 0;
+    this.throttled = false;
   }
 
   animateCarrierTransition = (callback) => {
@@ -293,11 +295,17 @@ export default class Display3D extends Component {
 
   handlePanResponderMove = (event, gestureState) => {
     const { dx, dy } = gestureState;
-    this.setState(prevState => ({
-      theta: prevState.theta - dx * 0.001,
-      phi: Math.max(0.1, Math.min(Math.PI - 0.1, prevState.phi - dy * 0.001)),
-      userInteracted: true
-    }));
+    if (!this.throttled) {
+      this.throttled = true;
+      requestAnimationFrame(() => {
+        this.setState(prevState => ({
+          theta: prevState.theta - dx * 0.001,
+          phi: Math.max(0.1, Math.min(Math.PI - 0.1, prevState.phi - dy * 0.001)),
+          userInteracted: true
+        }));
+        this.throttled = false;
+      });
+    }
   };
 
   handlePanResponderRelease = (event, gestureState) => {
@@ -590,7 +598,7 @@ export default class Display3D extends Component {
       this.frameCount++;
 
       if (this.state.userInteracted) {
-        const boxRotationY = this.state.currentRotation;
+        const boxRotationY = this.rotation;
         const { theta, phi } = this.state;
         
         // Cache math calculations
