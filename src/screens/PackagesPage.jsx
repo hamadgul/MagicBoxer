@@ -19,6 +19,7 @@ import { Ionicons } from "@expo/vector-icons";
 import { ItemDetailsModal } from "./FormPage"; 
 import { pack, createDisplay } from "../packing_algo/packing";
 import * as Crypto from 'expo-crypto';
+import { modalStyles } from "../theme/ModalStyles"; // Import modalStyles
 
 export default class PackagesPage extends Component {
   state = {
@@ -156,8 +157,11 @@ export default class PackagesPage extends Component {
   };
 
   handleEditItem = (item) => {
-    this.setState({ showPackageModal: false }, () => {
-      this.setState({ selectedItem: item, showDetailsModal: true });
+    // Use a single setState call instead of sequential calls
+    this.setState({ 
+      showPackageModal: false,
+      selectedItem: item, 
+      showDetailsModal: true 
     });
   };
 
@@ -510,9 +514,12 @@ export default class PackagesPage extends Component {
               <View style={styles.modalOverlay}>
                 <TouchableWithoutFeedback onPress={(e) => e.stopPropagation()}>
                   <View style={styles.modalContent}>
-                    <Text style={styles.modalTitle}>
-                      {selectedPackage}
-                    </Text>
+                    {/* Add a proper header with rounded corners */}
+                    <View style={modalStyles.modalHeader}>
+                      <Text style={modalStyles.modalTitle}>
+                        {selectedPackage}
+                      </Text>
+                    </View>
                     <FlatList
                       data={selectedPackage ? packages[selectedPackage] : []}
                       style={styles.flatListStyle}
@@ -558,24 +565,23 @@ export default class PackagesPage extends Component {
             </TouchableWithoutFeedback>
           </Modal>
 
-          {showDetailsModal && selectedItem && (
-            <ItemDetailsModal
-              visible={showDetailsModal}
-              item={selectedItem}
-              closeModal={() => {
-                this.setState({ showDetailsModal: false });
-              }}
-              handleDeleteAndClose={() => this.handleDeleteItem(selectedItem)}
-              handleUpdateItem={this.handleSaveEditedItem}
-              showBackButton={true}
-              onBackButtonPress={() => {
-                this.setState({ showDetailsModal: false }, () => {
-                  // Only show package modal when back button is pressed
-                  this.setState({ showPackageModal: true });
-                });
-              }}
-            />
-          )}
+          {/* Always render the ItemDetailsModal but control visibility with the visible prop */}
+          <ItemDetailsModal
+            visible={showDetailsModal && selectedItem !== null}
+            item={selectedItem}
+            closeModal={() => {
+              this.setState({ showDetailsModal: false });
+            }}
+            handleDeleteAndClose={() => selectedItem && this.handleDeleteItem(selectedItem)}
+            handleUpdateItem={this.handleSaveEditedItem}
+            showBackButton={true}
+            onBackButtonPress={() => {
+              this.setState({ 
+                showDetailsModal: false,
+                showPackageModal: true
+              });
+            }}
+          />
 
           <TouchableOpacity
             style={styles.fab}
