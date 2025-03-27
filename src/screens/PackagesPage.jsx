@@ -33,6 +33,8 @@ export default class PackagesPage extends Component {
     newPackageName: "",
     isEditMode: false,
     editingPackage: null,
+    showSavedItemsModal: false,
+    savedItems: [],
   };
 
   constructor(props) {
@@ -53,6 +55,17 @@ export default class PackagesPage extends Component {
         shadowOpacity: 0,
       },
       headerTintColor: 'white',
+      headerRight: () => (
+        <TouchableOpacity 
+          style={{ marginRight: 15 }}
+          onPress={() => {
+            console.log('Header button pressed');
+            this.setState({ showSavedItemsModal: true });
+          }}
+        >
+          <Ionicons name="add-circle" size={24} color="white" />
+        </TouchableOpacity>
+      ),
     });
   }
 
@@ -94,8 +107,14 @@ export default class PackagesPage extends Component {
     
     this.focusListener = this.props.navigation.addListener(
       "focus",
-      this.fetchPackages
+      () => {
+        this.fetchPackages();
+        this.fetchSavedItems();
+      }
     );
+    
+    // Initial fetch of saved items
+    this.fetchSavedItems();
   }
 
   componentWillUnmount() {
@@ -123,6 +142,35 @@ export default class PackagesPage extends Component {
       this.setState({ packages });
     } catch (error) {
       Alert.alert("Error", "Failed to load packages.");
+    }
+  };
+
+  fetchSavedItems = async () => {
+    try {
+      console.log('Fetching saved items...');
+      const savedItemsString = await AsyncStorage.getItem("savedItems");
+      
+      if (!savedItemsString) {
+        console.log('No saved items found in storage');
+        this.setState({ savedItems: [] });
+        return;
+      }
+      
+      try {
+        const savedItems = JSON.parse(savedItemsString);
+        console.log('Saved items loaded successfully:', savedItems);
+        this.setState({ savedItems }, () => {
+          console.log('Saved items state updated:', this.state.savedItems);
+        });
+      } catch (parseError) {
+        console.error('Error parsing saved items JSON:', parseError);
+        this.setState({ savedItems: [] });
+        Alert.alert("Error", "There was a problem loading your saved items.");
+      }
+    } catch (error) {
+      console.error("Error loading saved items:", error);
+      this.setState({ savedItems: [] });
+      Alert.alert("Error", "Failed to load saved items.");
     }
   };
 
@@ -690,6 +738,44 @@ export default class PackagesPage extends Component {
                       style={styles.flatListStyle}
                       contentContainerStyle={styles.flatListContainer}
                       keyExtractor={(item) => item.id}
+                      ListFooterComponent={
+                        <TouchableOpacity
+                          style={styles.addItemPlaceholder}
+                          onPress={async () => {
+                            try {
+                              const savedItemsString = await AsyncStorage.getItem("savedItems");
+                              const items = savedItemsString ? JSON.parse(savedItemsString) : [];
+                              
+                              if (items.length === 0) {
+                                Alert.alert("No Saved Items", "You don't have any saved items yet.");
+                                return;
+                              }
+                              
+                              // Create a list of saved items for selection
+                              const buttons = items.map((item, index) => ({
+                                text: item.name,
+                                onPress: () => this.handleAddSavedItemToPackage(item)
+                              }));
+                              
+                              // Add a cancel button
+                              buttons.push({ text: "Cancel", style: "cancel" });
+                              
+                              // Show the alert with saved items as buttons
+                              Alert.alert(
+                                "Select a Saved Item",
+                                "Choose an item to add to your package:",
+                                buttons
+                              );
+                            } catch (error) {
+                              Alert.alert("Error", "Failed to load saved items: " + error.message);
+                            }
+                          }}
+                          activeOpacity={0.6}
+                        >
+                          <Ionicons name="add-circle-outline" size={24} color="#3B82F6" />
+                          <Text style={styles.addItemText}>Add from saved items</Text>
+                        </TouchableOpacity>
+                      }
                       renderItem={({ item }) => (
                         <TouchableOpacity
                           style={styles.itemContainer}
@@ -707,7 +793,12 @@ export default class PackagesPage extends Component {
                         </TouchableOpacity>
                       )}
                     />
+
+
+
+
                     <View style={styles.modalFooter}>
+
                       <TouchableOpacity
                         style={[styles.footerButton, styles.packButton]}
                         onPress={this.handlePackItems}
@@ -724,6 +815,68 @@ export default class PackagesPage extends Component {
                         <Text style={styles.footerButtonText}>Shipping Estimate</Text>
                       </TouchableOpacity>
                     </View>
+                  </View>
+                </TouchableWithoutFeedback>
+              </View>
+            </TouchableWithoutFeedback>
+          </Modal>
+
+          {/* Saved Items Modal */}
+          <Modal
+            visible={this.state.showSavedItemsModal}
+            transparent={true}
+            animationType="slide"
+            onRequestClose={() => this.setState({ showSavedItemsModal: false })}
+          >
+            <TouchableWithoutFeedback onPress={() => this.setState({ showSavedItemsModal: false })}>
+              <View style={styles.modalOverlay}>
+                <TouchableWithoutFeedback onPress={(e) => e.stopPropagation()}>
+                  <View style={styles.modalContent}>
+                    <View style={[modalStyles.modalHeader, { justifyContent: 'space-between' }]}>
+                      <Text style={modalStyles.modalTitle}>Select Saved Item</Text>
+                      <TouchableOpacity
+                        onPress={() => this.setState({ showSavedItemsModal: false })}
+                        style={{ padding: 8 }}
+                      >
+                        <Ionicons name="close" size={24} color="#fff" />
+                      </TouchableOpacity>
+                    </View>
+                    
+                    {this.state.savedItems.length === 0 ? (
+                      <View style={styles.emptyContainer}>
+                        <Ionicons name="bookmark-outline" size={60} color="#CBD5E1" />
+                        <Text style={styles.emptyText}>
+                          You don't have any saved items yet. Create them in the My Saved Items page.
+                        </Text>
+                      </View>
+                    ) : (
+                      <FlatList
+                        data={this.state.savedItems}
+                        style={styles.flatListStyle}
+                        contentContainerStyle={styles.flatListContainer}
+                        keyExtractor={(item) => item.id}
+                        renderItem={({ item }) => (
+                          <TouchableOpacity
+                            style={styles.itemContainer}
+                            onPress={() => this.handleAddSavedItemToPackage(item)}
+                          >
+                            <View style={{ width: "100%" }}>
+                              <Text style={styles.itemText}>{item.name}</Text>
+                              <Text style={styles.itemDimensions}>
+                                {item.dimensions.length.split(' ')[0]}L × {item.dimensions.width.split(' ')[0]}W × {item.dimensions.height.split(' ')[0]}H
+                              </Text>
+                            </View>
+                          </TouchableOpacity>
+                        )}
+                      />
+                    )}
+                    
+                    <TouchableOpacity
+                      style={[modalStyles.button, modalStyles.cancelButton, { alignSelf: 'center', marginTop: 16, marginBottom: 8 }]}
+                      onPress={() => this.setState({ showSavedItemsModal: false })}
+                    >
+                      <Text style={modalStyles.buttonText}>Cancel</Text>
+                    </TouchableOpacity>
                   </View>
                 </TouchableWithoutFeedback>
               </View>
@@ -776,6 +929,8 @@ export default class PackagesPage extends Component {
           >
             <Ionicons name="add" size={30} color="white" />
           </TouchableOpacity>
+
+
 
           <TouchableOpacity
             style={styles.infoFab}
@@ -836,6 +991,71 @@ export default class PackagesPage extends Component {
       </View>
     );
   }
+
+  handleAddSavedItemToPackage = async (savedItem) => {
+    try {
+      console.log('Adding saved item to package:', savedItem);
+      const { selectedPackage, packages } = this.state;
+      
+      if (!selectedPackage) {
+        Alert.alert("Error", "No package selected.");
+        return;
+      }
+      
+      // Generate a unique ID for the new item
+      const generateUUID = async () => {
+        try {
+          return await Crypto.randomUUID();
+        } catch (error) {
+          // Fallback for older devices
+          return 'item-' + Math.random().toString(36).substring(2, 15);
+        }
+      };
+      
+      // Parse dimensions from the saved item format (e.g., "5.00 inches" -> 5)
+      const parseItemDimension = (dimensionStr) => {
+        if (!dimensionStr) return 0;
+        const match = dimensionStr.match(/([\d.]+)/);
+        return match ? parseFloat(match[1]) : 0;
+      };
+      
+      // Convert saved item format to package item format
+      const itemId = await generateUUID();
+      const newItem = {
+        id: itemId,
+        itemName: savedItem.name,
+        itemLength: parseItemDimension(savedItem.dimensions.length),
+        itemWidth: parseItemDimension(savedItem.dimensions.width),
+        itemHeight: parseItemDimension(savedItem.dimensions.height),
+        quantity: 1,
+        replicatedNames: [{
+          name: savedItem.name,
+          id: await generateUUID(),
+          parentId: itemId
+        }]
+      };
+      
+      console.log('Converted item:', newItem);
+      
+      // Add the item to the package
+      const updatedPackages = { ...packages };
+      updatedPackages[selectedPackage] = [...updatedPackages[selectedPackage], newItem];
+      
+      // Save to AsyncStorage
+      await AsyncStorage.setItem("packages", JSON.stringify(updatedPackages));
+      
+      // Update state
+      this.setState({
+        packages: updatedPackages,
+        showSavedItemsModal: false
+      });
+      
+      Alert.alert("Success", `${savedItem.name} added to ${selectedPackage}.`);
+    } catch (error) {
+      console.error("Error adding saved item to package:", error);
+      Alert.alert("Error", "Failed to add item to package.");
+    }
+  };
 }
 
 const styles = StyleSheet.create({
@@ -1102,7 +1322,7 @@ const styles = StyleSheet.create({
   modalFooter: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    paddingHorizontal: 16,
+    paddingHorizontal: 10,
     paddingTop: 2,
     paddingBottom: 0,
   },
@@ -1111,10 +1331,10 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     paddingVertical: 12,
-    paddingHorizontal: 20,
+    paddingHorizontal: 8,
     borderRadius: 8,
     flex: 1,
-    marginHorizontal: 6,
+    marginHorizontal: 4,
   },
   packButton: {
     backgroundColor: '#3b82f6',
@@ -1155,5 +1375,55 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.25,
     shadowRadius: 4,
     zIndex: 1,
+  },
+  addItemButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: '#EFF6FF',
+    borderWidth: 1,
+    borderColor: '#3B82F6',
+    borderRadius: 8,
+    padding: 12,
+    marginVertical: 10,
+    marginHorizontal: 16,
+  },
+  addItemButtonText: {
+    fontSize: 16,
+    color: '#3B82F6',
+    fontWeight: '500',
+    marginLeft: 8,
+  },
+  testButton: {
+    backgroundColor: '#f59e0b',
+    padding: 12,
+    borderRadius: 8,
+    alignItems: 'center',
+    marginVertical: 10,
+    marginHorizontal: 16,
+  },
+  testButtonText: {
+    color: 'white',
+    fontWeight: '600',
+    fontSize: 16,
+  },
+  addItemPlaceholder: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: '#F0F9FF',
+    borderWidth: 1,
+    borderStyle: 'dashed',
+    borderColor: '#3B82F6',
+    borderRadius: 8,
+    padding: 16,
+    marginVertical: 8,
+    marginHorizontal: 16,
+  },
+  addItemText: {
+    fontSize: 16,
+    color: '#3B82F6',
+    fontWeight: '500',
+    marginLeft: 8,
   },
 });
