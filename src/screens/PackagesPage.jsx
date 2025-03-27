@@ -157,11 +157,15 @@ export default class PackagesPage extends Component {
   };
 
   handleEditItem = (item) => {
-    // Use a single setState call instead of sequential calls
-    this.setState({ 
-      showPackageModal: false,
-      selectedItem: item, 
-      showDetailsModal: true 
+    // First close the package modal
+    this.setState({ showPackageModal: false }, () => {
+      // Then after the package modal is closed, set the selected item and show details modal
+      setTimeout(() => {
+        this.setState({ 
+          selectedItem: item, 
+          showDetailsModal: true 
+        });
+      }, 100);
     });
   };
 
@@ -565,23 +569,30 @@ export default class PackagesPage extends Component {
             </TouchableWithoutFeedback>
           </Modal>
 
-          {/* Always render the ItemDetailsModal but control visibility with the visible prop */}
-          <ItemDetailsModal
-            visible={showDetailsModal && selectedItem !== null}
-            item={selectedItem}
-            closeModal={() => {
-              this.setState({ showDetailsModal: false });
-            }}
-            handleDeleteAndClose={() => selectedItem && this.handleDeleteItem(selectedItem)}
-            handleUpdateItem={this.handleSaveEditedItem}
-            showBackButton={true}
-            onBackButtonPress={() => {
-              this.setState({ 
-                showDetailsModal: false,
-                showPackageModal: true
-              });
-            }}
-          />
+          {/* Conditionally render the ItemDetailsModal to avoid potential issues */}
+          {selectedItem && (
+            <ItemDetailsModal
+              visible={showDetailsModal}
+              item={selectedItem}
+              closeModal={() => {
+                this.setState({ showDetailsModal: false, selectedItem: null });
+              }}
+              handleDeleteAndClose={() => selectedItem && this.handleDeleteItem(selectedItem)}
+              handleUpdateItem={this.handleSaveEditedItem}
+              showBackButton={true}
+              onBackButtonPress={() => {
+                this.setState({ 
+                  showDetailsModal: false,
+                  selectedItem: null
+                }, () => {
+                  // Add a small delay before showing the package modal again
+                  setTimeout(() => {
+                    this.setState({ showPackageModal: true });
+                  }, 100);
+                });
+              }}
+            />
+          )}
 
           <TouchableOpacity
             style={styles.fab}
