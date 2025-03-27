@@ -47,23 +47,38 @@ export const ItemDetailsModal = ({
 }) => {
   const [isEditable, setIsEditable] = React.useState(false);
   const [editedItem, setEditedItem] = React.useState({
-    itemName: item?.itemName || "",
-    itemLength: item?.itemLength?.toString() || "",
-    itemWidth: item?.itemWidth?.toString() || "",
-    itemHeight: item?.itemHeight?.toString() || "",
-    quantity: item?.quantity?.toString() || "1",
+    itemName: "",
+    itemLength: "",
+    itemWidth: "",
+    itemHeight: "",
+    quantity: "1",
   });
+  
+  // Update editedItem whenever the item prop changes
+  React.useEffect(() => {
+    if (item) {
+      setEditedItem({
+        itemName: item.itemName || "",
+        itemLength: item.itemLength?.toString() || "",
+        itemWidth: item.itemWidth?.toString() || "",
+        itemHeight: item.itemHeight?.toString() || "",
+        quantity: item.quantity?.toString() || "1",
+      });
+    }
+  }, [item]);
 
   const handleEditToggle = () => {
     if (isEditable) {
       // Reset form when canceling edit
-      setEditedItem({
-        itemName: item?.itemName || "",
-        itemLength: item?.itemLength?.toString() || "",
-        itemWidth: item?.itemWidth?.toString() || "",
-        itemHeight: item?.itemHeight?.toString() || "",
-        quantity: item?.quantity?.toString() || "1",
-      });
+      if (item) {
+        setEditedItem({
+          itemName: item.itemName || "",
+          itemLength: item.itemLength?.toString() || "",
+          itemWidth: item.itemWidth?.toString() || "",
+          itemHeight: item.itemHeight?.toString() || "",
+          quantity: item.quantity?.toString() || "1",
+        });
+      }
     }
     setIsEditable(!isEditable);
   };

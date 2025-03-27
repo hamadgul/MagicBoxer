@@ -58,6 +58,19 @@ export default class PackagesPage extends Component {
 
   componentDidMount() {
     this.fetchPackages();
+    
+    // Reset any stuck state when the component mounts
+    this.setState({
+      showPackageModal: false,
+      showDetailsModal: false,
+      selectedItem: null,
+      selectedPackage: null
+    });
+    
+    // Initialize these properties to avoid undefined errors
+    this.selectedItemTemp = null;
+    this.tempPackageName = null;
+    
     this.focusListener = this.props.navigation.addListener(
       "focus",
       this.fetchPackages
@@ -148,108 +161,171 @@ export default class PackagesPage extends Component {
   };
 
   closePackageModal = () => {
-    this.setState({
-      showPackageModal: false,
-      selectedPackage: null,
-      showDetailsModal: false,
-      selectedItem: null,
-    });
+    // Close modals one at a time to prevent state conflicts
+    if (this.state.showDetailsModal) {
+      this.setState({
+        showDetailsModal: false,
+        selectedItem: null
+      }, () => {
+        setTimeout(() => {
+          this.setState({
+            showPackageModal: false,
+            selectedPackage: null
+          });
+        }, 100);
+      });
+    } else {
+      this.setState({
+        showPackageModal: false,
+        selectedPackage: null
+      });
+    }
   };
 
   handleEditItem = (item) => {
-    // First close the package modal
-    this.setState({ showPackageModal: false }, () => {
-      // Then after the package modal is closed, set the selected item and show details modal
-      setTimeout(() => {
-        this.setState({ 
-          selectedItem: item, 
-          showDetailsModal: true 
+    if (!item) return;
+    
+    // Make a deep copy of the item to avoid reference issues
+    const itemCopy = JSON.parse(JSON.stringify(item));
+    
+    // Store the item and package name for later use
+    this.selectedItemTemp = itemCopy;
+    this.tempPackageName = this.state.selectedPackage;
+    
+    // First set the selected item, then close the package modal, then show details modal
+    // This sequence ensures the item is available when the modal tries to render
+    this.setState({ selectedItem: itemCopy }, () => {
+      this.setState({ showPackageModal: false }, () => {
+        // Use requestAnimationFrame for smoother transitions on native
+        requestAnimationFrame(() => {
+          setTimeout(() => {
+            this.setState({ showDetailsModal: true });
+          }, 300);
         });
-      }, 100);
+      });
     });
   };
 
   handleSaveEditedItem = async (updatedItem) => {
-    const { selectedPackage, packages } = this.state;
+    // First close the modal
+    this.setState({ 
+      showDetailsModal: false,
+      selectedItem: null 
+    }, async () => {
+      // Use the stored package name if selectedPackage is null
+      const packageName = this.state.selectedPackage || this.tempPackageName;
+      const { packages } = this.state;
+      
+      if (!packageName || !packages[packageName]) {
+        Alert.alert("Error", "Could not find the package to update.");
+        return;
+      }
 
-    // If quantity is 0, treat it as a delete operation
-    if (updatedItem.quantity === 0) {
-      this.handleDeleteItem(updatedItem);
-      return;
-    }
+      // If quantity is 0, treat it as a delete operation
+      if (updatedItem.quantity === 0) {
+        this.handleDeleteItem(updatedItem);
+        return;
+      }
 
-    const replicatedNames = await Promise.all(Array.from({ length: updatedItem.quantity }, async (_, i) => ({
-      name: updatedItem.itemName,
-      id: await Crypto.randomUUID(),
-      parentId: updatedItem.id
-    })));
+      const replicatedNames = await Promise.all(Array.from({ length: updatedItem.quantity }, async (_, i) => ({
+        name: updatedItem.itemName,
+        id: await Crypto.randomUUID(),
+        parentId: updatedItem.id
+      })));
 
-    const updatedItemWithReplications = {
-      ...updatedItem,
-      replicatedNames: replicatedNames,
-    };
+      const updatedItemWithReplications = {
+        ...updatedItem,
+        replicatedNames: replicatedNames,
+      };
 
-    const updatedPackage = packages[selectedPackage].map((item) =>
-      item.id === updatedItem.id ? updatedItemWithReplications : item
-    );
+      const updatedPackage = packages[packageName].map((item) =>
+        item.id === updatedItem.id ? updatedItemWithReplications : item
+      );
 
-    const updatedPackages = { ...packages, [selectedPackage]: updatedPackage };
+      const updatedPackages = { ...packages, [packageName]: updatedPackage };
 
-    this.setState(
-      { packages: updatedPackages, showDetailsModal: false },
-      async () => {
-        try {
-          await AsyncStorage.setItem(
-            "packages",
-            JSON.stringify(updatedPackages)
-          );
+      try {
+        await AsyncStorage.setItem("packages", JSON.stringify(updatedPackages));
+        
+        // Update state after AsyncStorage is updated
+        this.setState({ packages: updatedPackages }, () => {
           Alert.alert("Success", `${updatedItem.itemName} was successfully updated`, [
             {
               text: "OK",
-              onPress: () => this.setState({ showPackageModal: true })
+              onPress: () => {
+                // Show the package modal again with the correct package selected
+                this.setState({ 
+                  showPackageModal: true,
+                  selectedPackage: packageName
+                });
+              }
             }
           ]);
-        } catch (error) {
-          Alert.alert("Error", "Failed to save edited item.");
-        }
+        });
+      } catch (error) {
+        Alert.alert("Error", "Failed to save edited item.");
       }
-    );
+    });
   };
 
   handleDeleteItem = (itemToDelete) => {
-    const { selectedPackage, packages } = this.state;
-    const updatedPackage = packages[selectedPackage].filter(
-      (item) => item.id !== itemToDelete.id
-    );
-
-    // If the updated package is empty, delete the entire package
-    if (updatedPackage.length === 0) {
-      delete packages[selectedPackage];
-    } else {
-      // Otherwise, update the package with the remaining items
-      packages[selectedPackage] = updatedPackage;
-    }
-
-    this.setState({ packages, showDetailsModal: false }, async () => {
-      try {
-        await AsyncStorage.setItem("packages", JSON.stringify(packages));
-        if (updatedPackage.length === 0) {
-          Alert.alert(
-            "Success",
-            `Package "${selectedPackage}" was removed`
-          );
-          this.closePackageModal();
-        } else {
-          Alert.alert("Success", `${itemToDelete.itemName} was removed`, [
-            {
-              text: "OK",
-              onPress: () => this.setState({ showPackageModal: true })
-            }
-          ]);
-        }
-      } catch (error) {
-        Alert.alert("Error", "Failed to delete item or package.");
+    // First close the modal
+    this.setState({ 
+      showDetailsModal: false,
+      selectedItem: null 
+    }, () => {
+      // Use the stored package name if selectedPackage is null
+      const packageName = this.state.selectedPackage || this.tempPackageName;
+      const { packages } = this.state;
+      
+      if (!packageName || !packages[packageName]) {
+        Alert.alert("Error", "Could not find the package to update.");
+        return;
       }
+      
+      const updatedPackage = packages[packageName].filter(
+        (item) => item.id !== itemToDelete.id
+      );
+
+      // Create a new packages object to ensure state updates properly
+      const updatedPackages = { ...packages };
+      
+      // If the updated package is empty, delete the entire package
+      if (updatedPackage.length === 0) {
+        delete updatedPackages[packageName];
+      } else {
+        // Otherwise, update the package with the remaining items
+        updatedPackages[packageName] = updatedPackage;
+      }
+
+      // Update AsyncStorage and state
+      AsyncStorage.setItem("packages", JSON.stringify(updatedPackages))
+        .then(() => {
+          this.setState({ packages: updatedPackages }, () => {
+            if (updatedPackage.length === 0) {
+              Alert.alert(
+                "Success",
+                `Package "${packageName}" was removed`
+              );
+              this.closePackageModal();
+            } else {
+              Alert.alert("Success", `${itemToDelete.itemName} was removed`, [
+                {
+                  text: "OK",
+                  onPress: () => {
+                    this.setState({ 
+                      showPackageModal: true,
+                      selectedPackage: packageName
+                    });
+                  }
+                }
+              ]);
+            }
+          });
+        })
+        .catch(error => {
+          Alert.alert("Error", "Failed to delete item or package.");
+        });
     });
   };
 
@@ -569,30 +645,38 @@ export default class PackagesPage extends Component {
             </TouchableWithoutFeedback>
           </Modal>
 
-          {/* Conditionally render the ItemDetailsModal to avoid potential issues */}
-          {selectedItem && (
-            <ItemDetailsModal
-              visible={showDetailsModal}
-              item={selectedItem}
-              closeModal={() => {
-                this.setState({ showDetailsModal: false, selectedItem: null });
-              }}
-              handleDeleteAndClose={() => selectedItem && this.handleDeleteItem(selectedItem)}
-              handleUpdateItem={this.handleSaveEditedItem}
-              showBackButton={true}
-              onBackButtonPress={() => {
-                this.setState({ 
-                  showDetailsModal: false,
-                  selectedItem: null
-                }, () => {
-                  // Add a small delay before showing the package modal again
-                  setTimeout(() => {
-                    this.setState({ showPackageModal: true });
-                  }, 100);
-                });
-              }}
-            />
-          )}
+          {/* Completely separate modal rendering from state updates */}
+          <ItemDetailsModal
+            visible={showDetailsModal && selectedItem !== null}
+            item={selectedItem}
+            closeModal={() => {
+              // Just close this modal first
+              this.setState({ showDetailsModal: false }, () => {
+                // Clear the selected item after the modal is closed
+                setTimeout(() => {
+                  this.setState({ selectedItem: null });
+                }, 100);
+              });
+            }}
+            handleDeleteAndClose={() => selectedItem && this.handleDeleteItem(selectedItem)}
+            handleUpdateItem={this.handleSaveEditedItem}
+            showBackButton={true}
+            onBackButtonPress={() => {
+              // First close this modal completely
+              this.setState({ 
+                showDetailsModal: false,
+                selectedItem: null 
+              }, () => {
+                // Then after a delay, show the package modal
+                setTimeout(() => {
+                  this.setState({ 
+                    showPackageModal: true,
+                    selectedPackage: this.state.selectedPackage || this.tempPackageName || Object.keys(this.state.packages)[0]
+                  });
+                }, 300);
+              });
+            }}
+          />
 
           <TouchableOpacity
             style={styles.fab}
