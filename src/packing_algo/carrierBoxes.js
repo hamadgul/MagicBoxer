@@ -213,6 +213,10 @@ function carrierBoxes(carrier) {
         [11,11,11,"FedEx Standard In-Store Box", "Box Only Price: $2.50"],
         [22,22,22,"FedEx Standard In-Store Box", "Box Only Price: $7.00"],
         [18,13,11.75,"FedEx Standard In-Store Box", "Box Only Price: $2.50"],
+
+        // FedEx Freight
+        [48, 48, 5.5, "FedEx Freight Box 48x40", "Contact FedEx Store for price"],
+        [48, 48, 6, "FedEx Freight Box 48x40", "Contact FedEx Store for price"]
       ];
     case "UPS":
       return [
@@ -301,7 +305,11 @@ function carrierBoxes(carrier) {
 
         // Wine Shipping Boxes
         [18, 18, 28, "UPS Store Wine Box - 2 Bottle", "Box Only Price: $14.95"],
-        [18, 18, 42, "UPS Store Wine Box - 3 Bottle", "Box Only Price: $16.95"]
+        [18, 18, 42, "UPS Store Wine Box - 3 Bottle", "Box Only Price: $16.95"],
+
+        // UPS Freight
+        [48, 48, 5.5, "UPS Freight Box 48x40", "Contact UPS Store for price"],
+        [48, 48, 6, "UPS Freight Box 48x40", "Contact UPS Store for price"]
       ];
     default:
       return [

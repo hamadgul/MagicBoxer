@@ -644,7 +644,7 @@ export default class Display3D extends Component {
           minimumTrackTintColor="#4A90E2"
           maximumTrackTintColor="rgba(74, 144, 226, 0.2)"
           thumbTintColor="#4A90E2"
-          inverted={Platform.OS === 'ios'}
+          inverted={false}
           {...(Platform.OS === 'android' ? {
             thumbStyle: {
               width: 24,

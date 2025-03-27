@@ -33,7 +33,7 @@ module.exports = {
     ],
     extra: {
       eas: {
-        projectId: "magic-boxer"
+        projectId: "cd5ed8c1-ac97-4e35-847d-8510f3b63746"
       }
     }
   }
