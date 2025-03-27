@@ -299,6 +299,25 @@ export default class SavedItemsPage extends Component {
     });
   };
 
+  // Helper function to format dimension values without unnecessary decimal places
+  formatDimension = (dimension) => {
+    if (!dimension) return "0";
+    
+    // Extract the numeric part
+    const numericPart = dimension.split(' ')[0];
+    
+    // Convert to number and check if it's an integer
+    const value = parseFloat(numericPart);
+    
+    // If it's a whole number, return without decimal places
+    if (value % 1 === 0) {
+      return Math.floor(value).toString();
+    }
+    
+    // Otherwise return with decimal places (trim trailing zeros)
+    return value.toString().replace(/\.?0+$/, '');
+  };
+  
   renderItem = (item) => {
     return (
       <View key={item.id} style={styles.itemRow}>
@@ -312,7 +331,7 @@ export default class SavedItemsPage extends Component {
               <Text style={styles.itemName}>{item.name}</Text>
             </View>
             <Text style={styles.itemDimensions}>
-              {item.dimensions.length.split(' ')[0]}L × {item.dimensions.width.split(' ')[0]}W × {item.dimensions.height.split(' ')[0]}H
+              {this.formatDimension(item.dimensions.length)}L × {this.formatDimension(item.dimensions.width)}W × {this.formatDimension(item.dimensions.height)}H
             </Text>
           </TouchableOpacity>
         </View>
@@ -438,8 +457,8 @@ export default class SavedItemsPage extends Component {
                           }}
                           value={itemLength}
                           onChangeText={(text) => this.setState({ itemLength: text })}
-                          keyboardType="numeric"
-                          placeholder="0.00"
+                          keyboardType="decimal-pad"
+                          placeholder=""
                           placeholderTextColor="#64748B"
                           maxLength={5}
                         />
@@ -475,8 +494,8 @@ export default class SavedItemsPage extends Component {
                           }}
                           value={itemWidth}
                           onChangeText={(text) => this.setState({ itemWidth: text })}
-                          keyboardType="numeric"
-                          placeholder="0.00"
+                          keyboardType="decimal-pad"
+                          placeholder=""
                           placeholderTextColor="#64748B"
                           maxLength={5}
                         />
@@ -512,8 +531,8 @@ export default class SavedItemsPage extends Component {
                           }}
                           value={itemHeight}
                           onChangeText={(text) => this.setState({ itemHeight: text })}
-                          keyboardType="numeric"
-                          placeholder="0.00"
+                          keyboardType="decimal-pad"
+                          placeholder=""
                           placeholderTextColor="#64748B"
                           maxLength={5}
                         />
@@ -600,11 +619,12 @@ const styles = StyleSheet.create({
   },
   scrollView: {
     flex: 1,
-    padding: 10,
+    padding: 16,
     paddingBottom: 96,
   },
   scrollViewContent: {
     paddingBottom: 20,
+    paddingTop: 8,
   },
   headerContainer: {
     flexDirection: 'row',
@@ -632,23 +652,24 @@ const styles = StyleSheet.create({
   itemRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginBottom: 10,
+    marginBottom: 16,
   },
   itemContainer: {
     flex: 1,
     backgroundColor: 'white',
-    borderRadius: 10,
+    borderRadius: 12,
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
+    shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
-    shadowRadius: 2,
-    elevation: 2,
+    shadowRadius: 8,
+    elevation: 3,
+    overflow: 'hidden',
   },
   item: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    padding: 15,
+    padding: 16,
   },
   itemLeftContent: {
     flexDirection: 'row',

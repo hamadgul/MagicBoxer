@@ -49,12 +49,12 @@ function DrawerNavigator() {
       }
     },
     {
-      name: "FormPage",
+      name: "Create Package",
       component: FormPage,
       options: {
-        ...headerWithIcon('add-circle-outline', 'Add Items'),
-        drawerLabel: "Items to Pack",
-        title: "Add Items!",
+        ...headerWithIcon('add-circle-outline', 'Create Package'),
+        drawerLabel: "Create Package",
+        title: "Create Package",
         drawerIcon: ({ focused, color, size }) => (
           <Ionicons name="cube-outline" size={size} color={color} />
         )

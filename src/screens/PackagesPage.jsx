@@ -772,7 +772,7 @@ export default class PackagesPage extends Component {
 
           <TouchableOpacity
             style={styles.fab}
-            onPress={() => this.props.navigation.navigate("FormPage")}
+            onPress={() => this.props.navigation.navigate("Create Package")}
           >
             <Ionicons name="add" size={30} color="white" />
           </TouchableOpacity>

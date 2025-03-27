@@ -179,7 +179,7 @@ const GettingStartedPage = ({ navigation }) => {
       <View style={styles.centeredButtonContainer}>
         <Button
           style={styles.proceedButton}
-          onPress={() => navigation.navigate("FormPage")}
+          onPress={() => navigation.navigate("Create Package")}
         >
           <Text style={styles.proceedButtonText}>Let's Get Started</Text>
         </Button>
