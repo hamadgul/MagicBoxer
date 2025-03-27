@@ -174,7 +174,15 @@ export const ItemDetailsModal = ({
       visible={visible && isLoaded}
       onRequestClose={() => {
         console.log('Modal onRequestClose triggered');
-        if (!isEditable) closeModal();
+        // Handle back button press properly
+        if (!isEditable) {
+          if (showBackButton && onBackButtonPress) {
+            // Use the custom back button handler if provided
+            onBackButtonPress();
+          } else {
+            closeModal();
+          }
+        }
       }}
     >
       <KeyboardAvoidingView 

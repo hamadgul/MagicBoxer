@@ -706,18 +706,25 @@ export default class PackagesPage extends Component {
             handleUpdateItem={this.handleSaveEditedItem}
             showBackButton={true}
             onBackButtonPress={() => {
-              // First close this modal completely
+              console.log('Back button pressed in ItemDetailsModal');
+              // First ensure we have the package name stored
+              const packageName = this.state.selectedPackage || this.tempPackageName || Object.keys(this.state.packages)[0];
+              
+              // Use a more reliable approach for iOS IPA version
+              // Close the details modal first
               this.setState({ 
-                showDetailsModal: false,
-                selectedItem: null 
+                showDetailsModal: false 
               }, () => {
-                // Then after a delay, show the package modal
-                setTimeout(() => {
-                  this.setState({ 
-                    showPackageModal: true,
-                    selectedPackage: this.state.selectedPackage || this.tempPackageName || Object.keys(this.state.packages)[0]
-                  });
-                }, 300);
+                // Clear the selected item
+                this.setState({ selectedItem: null }, () => {
+                  // Then show the package modal with the correct package
+                  setTimeout(() => {
+                    this.setState({ 
+                      showPackageModal: true,
+                      selectedPackage: packageName
+                    });
+                  }, 100); // Shorter delay to improve responsiveness
+                });
               });
             }}
           />
