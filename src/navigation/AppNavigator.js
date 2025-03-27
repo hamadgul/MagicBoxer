@@ -19,6 +19,7 @@ import RequestFormPage from "../screens/RequestFormPage";
 import TestPage from "../screens/TestPage";
 import BoxCustomizer from "../screens/BoxCustomizer"; 
 import TestProduct from "../screens/TestProduct";
+import SavedItemsPage from "../screens/SavedItemsPage";
 
 const Stack = createNativeStackNavigator();
 const Drawer = createDrawerNavigator();
@@ -67,6 +68,17 @@ function DrawerNavigator() {
         drawerLabel: "Saved Packages",
         drawerIcon: ({ focused, color, size }) => (
           <Ionicons name="archive-outline" size={size} color={color} />
+        )
+      }
+    },
+    {
+      name: "My Saved Items",
+      component: SavedItemsPage,
+      options: {
+        ...headerWithIcon('bookmark-outline', 'My Saved Items'),
+        drawerLabel: "My Saved Items",
+        drawerIcon: ({ focused, color, size }) => (
+          <Ionicons name="bookmark-outline" size={size} color={color} />
         )
       }
     },

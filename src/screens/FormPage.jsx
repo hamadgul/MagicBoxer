@@ -23,7 +23,8 @@ import styles from "../theme/Styles";
 import { modalStyles } from "../theme/ModalStyles";
 import { Ionicons } from "@expo/vector-icons";
 var Buffer = require("@craftzdog/react-native-buffer").Buffer;
-const productList = require('../products.json') || [];
+// Default product list from bundled assets
+const defaultProductList = require('../products.json') || [];
 
 const itemButtonColors = [
   "#3B5998",
@@ -499,10 +500,38 @@ export default class FormPage extends Component {
       packageName: '',
       isLoading: false,
       filteredProducts: [],
-      showSuggestions: false
+      showSuggestions: false,
+      productList: defaultProductList // Initialize with default products
     };
     this.inputRef = React.createRef();
   }
+
+  loadCustomProducts = async () => {
+    try {
+      // Load custom products from AsyncStorage
+      const customProductsString = await AsyncStorage.getItem("customProducts");
+      let customProducts = [];
+      
+      if (customProductsString) {
+        customProducts = JSON.parse(customProductsString);
+      }
+      
+      // Merge with default products, prioritizing custom products
+      // (in case of duplicate names)
+      const customProductNames = customProducts.map(p => p.name.toLowerCase());
+      
+      const filteredDefaultProducts = defaultProductList.filter(
+        p => !customProductNames.includes(p.name.toLowerCase())
+      );
+      
+      const mergedProducts = [...customProducts, ...filteredDefaultProducts];
+      
+      this.setState({ productList: mergedProducts });
+      console.log(`Loaded ${customProducts.length} custom products`);
+    } catch (error) {
+      console.error("Error loading custom products:", error);
+    }
+  };
 
   handleChange = (text) => {
     this.setState({ itemName: text });
@@ -515,7 +544,7 @@ export default class FormPage extends Component {
       return;
     }
 
-    const results = productList.filter(product =>
+    const results = this.state.productList.filter(product =>
       product.name.toLowerCase().includes(text.toLowerCase())
     ).slice(0, 5); // Limit to 5 suggestions
 
@@ -563,6 +592,20 @@ export default class FormPage extends Component {
 
   componentDidMount() {
     this.loadItems();
+    this.loadCustomProducts();
+    
+    // Refresh custom products when the screen comes into focus
+    this.focusListener = this.props.navigation.addListener(
+      "focus",
+      this.loadCustomProducts
+    );
+  }
+  
+  componentWillUnmount() {
+    // Clean up the focus listener when component unmounts
+    if (this.focusListener) {
+      this.focusListener();
+    }
   }
 
   // Load items from AsyncStorage

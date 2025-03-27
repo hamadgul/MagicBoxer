@@ -595,32 +595,73 @@ export default class PackagesPage extends Component {
                 this.setState({ renamePackageModal: false });
               }}
             >
-              <View style={styles.modalOverlay}>
-                <TouchableWithoutFeedback onPress={() => Keyboard.dismiss()}>
-                  <View style={[styles.modalContent, { alignItems: 'center' }]}>
-                    <Text style={styles.modalTitle}>Edit Package Name:</Text>
-                    <TextInput
-                      style={styles.renameInput}
-                      value={newPackageName}
-                      onChangeText={(text) => this.setState({ newPackageName: text })}
-                      placeholder="Package Name"
-                      autoFocus={true}
-                      selectTextOnFocus={true}
-                    />
-                    <TouchableOpacity
-                      style={[styles.buttonApply1, { 
-                        width: 100,
-                        height: 40,
-                        alignItems: 'center', 
-                        justifyContent: 'center'
-                      }]}
-                      onPress={() => {
-                        Keyboard.dismiss();
-                        this.handleRenamePackage();
-                      }}
-                    >
-                      <Text style={[styles.buttonText, { textAlign: 'center' }]}>Save</Text>
-                    </TouchableOpacity>
+              <View style={modalStyles.centeredView}>
+                <TouchableWithoutFeedback onPress={(e) => e.stopPropagation()}>
+                  <View style={modalStyles.modalContent}>
+                    <View style={modalStyles.modalHeader}>
+                      <Text style={modalStyles.modalTitle}>Edit Package Name</Text>
+                    </View>
+                    
+                    <View style={modalStyles.fieldRow}>
+                      <Text style={modalStyles.fieldLabel}>Name:</Text>
+                      <TextInput
+                        style={[
+                          modalStyles.fieldValue,
+                          {
+                            backgroundColor: '#F8FAFC',
+                            borderRadius: 8,
+                            borderWidth: 1,
+                            borderColor: '#E2E8F0',
+                            paddingVertical: 8,
+                            paddingHorizontal: 12,
+                            fontSize: 16,
+                            color: '#334155',
+                            height: 42,
+                          }
+                        ]}
+                        value={newPackageName}
+                        onChangeText={(text) => this.setState({ newPackageName: text })}
+                        placeholder="Enter package name"
+                        placeholderTextColor="#64748B"
+                        autoFocus={false}
+                        selectTextOnFocus={true}
+                      />
+                    </View>
+                    
+                    <View style={{
+                      flexDirection: 'row',
+                      justifyContent: 'space-between',
+                      marginTop: 20,
+                      paddingHorizontal: 10
+                    }}>
+                      <TouchableOpacity
+                        style={[modalStyles.button, modalStyles.cancelButton, {
+                          paddingVertical: 12,
+                          paddingHorizontal: 20,
+                          elevation: 2
+                        }]}
+                        onPress={() => {
+                          Keyboard.dismiss();
+                          this.setState({ renamePackageModal: false });
+                        }}
+                      >
+                        <Text style={modalStyles.buttonText}>Cancel</Text>
+                      </TouchableOpacity>
+                      
+                      <TouchableOpacity
+                        style={[modalStyles.button, modalStyles.saveButton, {
+                          paddingVertical: 12,
+                          paddingHorizontal: 25,
+                          elevation: 2
+                        }]}
+                        onPress={() => {
+                          Keyboard.dismiss();
+                          this.handleRenamePackage();
+                        }}
+                      >
+                        <Text style={[modalStyles.buttonText, {fontWeight: '600'}]}>Save</Text>
+                      </TouchableOpacity>
+                    </View>
                   </View>
                 </TouchableWithoutFeedback>
               </View>

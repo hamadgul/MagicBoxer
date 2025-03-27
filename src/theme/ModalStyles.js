@@ -121,6 +121,9 @@ export const modalStyles = StyleSheet.create({
   applyButton: {
     backgroundColor: '#10B981',
   },
+  saveButton: {
+    backgroundColor: '#22C55E',
+  },
   cancelButton: {
     backgroundColor: '#6B7280',
   },
