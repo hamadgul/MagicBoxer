@@ -53,17 +53,31 @@ export const ItemDetailsModal = ({
     itemHeight: "",
     quantity: "1",
   });
+  const [isLoaded, setIsLoaded] = React.useState(false);
+  
+  // Log when modal becomes visible for debugging
+  React.useEffect(() => {
+    if (visible) {
+      console.log('ItemDetailsModal became visible, item:', item?.id);
+    }
+  }, [visible]);
   
   // Update editedItem whenever the item prop changes
   React.useEffect(() => {
-    if (item) {
-      setEditedItem({
-        itemName: item.itemName || "",
-        itemLength: item.itemLength?.toString() || "",
-        itemWidth: item.itemWidth?.toString() || "",
-        itemHeight: item.itemHeight?.toString() || "",
-        quantity: item.quantity?.toString() || "1",
-      });
+    try {
+      if (item) {
+        console.log('ItemDetailsModal received item update:', item.id);
+        setEditedItem({
+          itemName: item.itemName || "",
+          itemLength: item.itemLength?.toString() || "",
+          itemWidth: item.itemWidth?.toString() || "",
+          itemHeight: item.itemHeight?.toString() || "",
+          quantity: item.quantity?.toString() || "1",
+        });
+        setIsLoaded(true);
+      }
+    } catch (error) {
+      console.error('Error updating editedItem:', error);
     }
   }, [item]);
 
@@ -128,12 +142,38 @@ export const ItemDetailsModal = ({
     }
   };
 
+  // Safety check for production builds
+  const safeItem = React.useMemo(() => {
+    if (!item) return null;
+    try {
+      // Validate that item has all required properties
+      const validatedItem = {
+        ...item,
+        itemName: item.itemName || '',
+        itemLength: item.itemLength || 0,
+        itemWidth: item.itemWidth || 0,
+        itemHeight: item.itemHeight || 0,
+        quantity: item.quantity || 1,
+      };
+      return validatedItem;
+    } catch (error) {
+      console.error('Error validating item:', error);
+      return null;
+    }
+  }, [item]);
+
+  // Don't render if there's no valid item or if modal isn't visible
+  if (!visible || !safeItem) {
+    return null;
+  }
+  
   return (
     <Modal
       animationType="slide"
       transparent={true}
-      visible={visible}
+      visible={visible && isLoaded}
       onRequestClose={() => {
+        console.log('Modal onRequestClose triggered');
         if (!isEditable) closeModal();
       }}
     >

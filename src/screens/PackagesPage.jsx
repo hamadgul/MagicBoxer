@@ -57,6 +57,7 @@ export default class PackagesPage extends Component {
   }
 
   componentDidMount() {
+    console.log('PackagesPage mounted');
     this.fetchPackages();
     
     // Reset any stuck state when the component mounts
@@ -71,6 +72,26 @@ export default class PackagesPage extends Component {
     this.selectedItemTemp = null;
     this.tempPackageName = null;
     
+    // Add error boundary for production
+    if (!__DEV__) {
+      this.errorHandler = error => {
+        console.error('Caught error in PackagesPage:', error);
+        Alert.alert(
+          'Something went wrong',
+          'The application encountered an error. Please try again.'
+        );
+        // Reset modal state to avoid freezes
+        this.setState({
+          showPackageModal: false,
+          showDetailsModal: false,
+          selectedItem: null
+        });
+      };
+      
+      // Set up error handler
+      this.errorSubscription = global.ErrorUtils?.setGlobalHandler?.(this.errorHandler);
+    }
+    
     this.focusListener = this.props.navigation.addListener(
       "focus",
       this.fetchPackages
@@ -78,9 +99,21 @@ export default class PackagesPage extends Component {
   }
 
   componentWillUnmount() {
+    console.log('PackagesPage unmounting');
+    
+    // Clean up listeners
     if (this.focusListener) {
       this.focusListener();
     }
+    
+    // Clean up error handler if it exists
+    if (this.errorSubscription) {
+      global.ErrorUtils?.setGlobalHandler?.(global.ErrorUtils.getGlobalHandler());
+    }
+    
+    // Make sure we clean up any dangling state
+    this.selectedItemTemp = null;
+    this.tempPackageName = null;
   }
 
   fetchPackages = async () => {
@@ -185,25 +218,36 @@ export default class PackagesPage extends Component {
   handleEditItem = (item) => {
     if (!item) return;
     
-    // Make a deep copy of the item to avoid reference issues
-    const itemCopy = JSON.parse(JSON.stringify(item));
-    
-    // Store the item and package name for later use
-    this.selectedItemTemp = itemCopy;
-    this.tempPackageName = this.state.selectedPackage;
-    
-    // First set the selected item, then close the package modal, then show details modal
-    // This sequence ensures the item is available when the modal tries to render
-    this.setState({ selectedItem: itemCopy }, () => {
+    try {
+      console.log('handleEditItem called with item:', item.id);
+      
+      // Make a deep copy of the item to avoid reference issues
+      const itemCopy = JSON.parse(JSON.stringify(item));
+      
+      // Store the item and package name for later use
+      this.selectedItemTemp = itemCopy;
+      this.tempPackageName = this.state.selectedPackage;
+      
+      console.log('Setting selectedItem first');
+      
+      // PRODUCTION-SAFE APPROACH: Use a simpler state update sequence
+      // First close the package modal completely
       this.setState({ showPackageModal: false }, () => {
-        // Use requestAnimationFrame for smoother transitions on native
-        requestAnimationFrame(() => {
-          setTimeout(() => {
-            this.setState({ showDetailsModal: true });
-          }, 300);
-        });
+        console.log('Package modal closed');
+        
+        // Wait a moment before setting the item and opening the details modal
+        setTimeout(() => {
+          console.log('Setting selectedItem and opening details modal');
+          this.setState({ 
+            selectedItem: itemCopy,
+            showDetailsModal: true 
+          });
+        }, 500); // Longer timeout for production builds
       });
-    });
+    } catch (error) {
+      console.error('Error in handleEditItem:', error);
+      Alert.alert('Error', 'There was a problem opening the item details. Please try again.');
+    }
   };
 
   handleSaveEditedItem = async (updatedItem) => {
