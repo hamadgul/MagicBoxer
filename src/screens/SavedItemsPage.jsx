@@ -13,6 +13,8 @@ import {
   Animated,
   Easing,
   Keyboard,
+  Platform,
+  KeyboardAvoidingView,
 } from "react-native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { Ionicons } from "@expo/vector-icons";
@@ -386,20 +388,24 @@ export default class SavedItemsPage extends Component {
               itemHeight: ""
             })}
           >
-            <TouchableWithoutFeedback 
-              onPress={() => {
-                Keyboard.dismiss();
-                this.setState({ 
-                  showAddItemModal: false,
-                  isEditing: false,
-                  selectedItem: null,
-                  itemName: "",
-                  itemLength: "",
-                  itemWidth: "",
-                  itemHeight: ""
-                });
-              }}>
-              <View style={modalStyles.centeredView}>
+            <KeyboardAvoidingView 
+              behavior={Platform.OS === "ios" ? "padding" : "height"}
+              style={{ flex: 1 }}
+            >
+              <TouchableWithoutFeedback 
+                onPress={() => {
+                  Keyboard.dismiss();
+                  this.setState({ 
+                    showAddItemModal: false,
+                    isEditing: false,
+                    selectedItem: null,
+                    itemName: "",
+                    itemLength: "",
+                    itemWidth: "",
+                    itemHeight: ""
+                  });
+                }}>
+                <View style={modalStyles.centeredView}>
                 <TouchableWithoutFeedback onPress={(e) => e.stopPropagation()}>
                   <View style={modalStyles.modalContent}>
                   <View style={modalStyles.modalHeader}>
@@ -608,6 +614,7 @@ export default class SavedItemsPage extends Component {
                 </TouchableWithoutFeedback>
               </View>
             </TouchableWithoutFeedback>
+            </KeyboardAvoidingView>
           </Modal>
 
 

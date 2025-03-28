@@ -24,17 +24,9 @@ import { modalStyles } from "../theme/ModalStyles";
 import { Ionicons } from "@expo/vector-icons";
 var Buffer = require("@craftzdog/react-native-buffer").Buffer;
 // Default product list from bundled assets
-const defaultProductList = require('../products.json') || [];
+//const defaultProductList = require('../products.json') || [];
 
-const itemButtonColors = [
-  "#3B5998",
-  "#008080",
-  "#556B2F",
-  "#8B0000",
-  "#FF8C00",
-  "#6A0DAD",
-  "#008B8B",
-];
+
 
 // Make sure ItemDetailsModal is exported correctly
 export const ItemDetailsModal = ({
@@ -501,7 +493,7 @@ export default class FormPage extends Component {
       isLoading: false,
       filteredProducts: [],
       showSuggestions: false,
-      productList: defaultProductList // Initialize with default products
+      productList: [] // Initialize with empty array instead of defaultProductList
     };
     this.inputRef = React.createRef();
   }
@@ -516,17 +508,8 @@ export default class FormPage extends Component {
         customProducts = JSON.parse(customProductsString);
       }
       
-      // Merge with default products, prioritizing custom products
-      // (in case of duplicate names)
-      const customProductNames = customProducts.map(p => p.name.toLowerCase());
-      
-      const filteredDefaultProducts = defaultProductList.filter(
-        p => !customProductNames.includes(p.name.toLowerCase())
-      );
-      
-      const mergedProducts = [...customProducts, ...filteredDefaultProducts];
-      
-      this.setState({ productList: mergedProducts });
+      // Just use the custom products directly since we no longer have defaultProductList
+      this.setState({ productList: customProducts });
       console.log(`Loaded ${customProducts.length} custom products`);
     } catch (error) {
       console.error("Error loading custom products:", error);
@@ -544,9 +527,13 @@ export default class FormPage extends Component {
       return;
     }
 
-    const results = this.state.productList.filter(product =>
-      product.name.toLowerCase().includes(text.toLowerCase())
-    ).slice(0, 5); // Limit to 5 suggestions
+    // Safely handle the case when productList is empty or undefined
+    const { productList = [] } = this.state;
+    
+    const results = productList.length > 0 ? 
+      productList.filter(product =>
+        product.name.toLowerCase().includes(text.toLowerCase())
+      ).slice(0, 5) : []; // Limit to 5 suggestions
 
     this.setState({ 
       filteredProducts: results,

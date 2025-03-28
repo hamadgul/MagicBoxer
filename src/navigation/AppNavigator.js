@@ -18,7 +18,7 @@ import ShipPackagePage from "../screens/ShipPackagePage";
 import RequestFormPage from "../screens/RequestFormPage";
 import TestPage from "../screens/TestPage";
 import BoxCustomizer from "../screens/BoxCustomizer"; 
-import TestProduct from "../screens/TestProduct";
+//import TestProduct from "../screens/TestProduct";
 import SavedItemsPage from "../screens/SavedItemsPage";
 
 const Stack = createNativeStackNavigator();

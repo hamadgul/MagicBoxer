@@ -23,7 +23,7 @@ export const modalStyles = StyleSheet.create({
     elevation: 5,
   },
   modalHeader: {
-    backgroundColor: '#3c82f5',
+    backgroundColor: '#64748B', // Changed to medium-light gray to distinguish from blue page headers
     borderTopLeftRadius: 20,
     borderTopRightRadius: 20,
     padding: 15,
@@ -113,19 +113,19 @@ export const modalStyles = StyleSheet.create({
     color: 'white',
   },
   editButton: {
-    backgroundColor: '#3B82F6',
+    backgroundColor: '#64748B', // Medium-light gray to match modal header
   },
   deleteButton: {
-    backgroundColor: '#EF4444',
+    backgroundColor: '#EF4444', // Keep red for delete actions
   },
   applyButton: {
-    backgroundColor: '#10B981',
+    backgroundColor: '#475569', // Slightly darker gray for apply button
   },
   saveButton: {
-    backgroundColor: '#22C55E',
+    backgroundColor: '#475569', // Slightly darker gray for save button
   },
   cancelButton: {
-    backgroundColor: '#6B7280',
+    backgroundColor: '#94A3B8', // Lighter gray for cancel
   },
   modalSubtitle: {
     fontSize: 16,
