@@ -52,7 +52,12 @@ function DrawerNavigator() {
       name: "Create Package",
       component: FormPage,
       options: {
-        ...headerWithIcon('add-circle-outline', 'Create Package'),
+        headerTitle: () => (
+          <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'center' }}>
+            <Text style={{ color: 'white', fontSize: 18, fontWeight: '600' }}>Create Package</Text>
+          </View>
+        ),
+        headerRight: () => null,
         drawerLabel: "Create Package",
         title: "Create Package",
         drawerIcon: ({ focused, color, size }) => (

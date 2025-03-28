@@ -54,18 +54,7 @@ export default class PackagesPage extends Component {
         elevation: 0,
         shadowOpacity: 0,
       },
-      headerTintColor: 'white',
-      headerRight: () => (
-        <TouchableOpacity 
-          style={{ marginRight: 15 }}
-          onPress={() => {
-            console.log('Header button pressed');
-            this.setState({ showSavedItemsModal: true });
-          }}
-        >
-          <Ionicons name="add-circle" size={24} color="white" />
-        </TouchableOpacity>
-      ),
+      headerTintColor: 'white'
     });
   }
 

@@ -552,7 +552,13 @@ export default class SavedItemsPage extends Component {
                   }}>
                     {this.state.isEditing ? (
                       <TouchableOpacity
-                        style={[modalStyles.button, modalStyles.deleteButton]}
+                        style={[modalStyles.button, modalStyles.deleteButton, {
+                          paddingVertical: 12,
+                          paddingHorizontal: 25,
+                          minWidth: 100,
+                          justifyContent: 'center',
+                          alignItems: 'center'
+                        }]}
                         onPress={() => {
                           if (this.state.selectedItem) {
                             this.handleDeleteItem(this.state.selectedItem.id);
@@ -565,7 +571,10 @@ export default class SavedItemsPage extends Component {
                       <TouchableOpacity
                         style={[modalStyles.button, modalStyles.cancelButton, {
                           paddingVertical: 12,
-                          paddingHorizontal: 20
+                          paddingHorizontal: 25,
+                          minWidth: 100,
+                          justifyContent: 'center',
+                          alignItems: 'center'
                         }]}
                         onPress={() => this.setState({ 
                           showAddItemModal: false,
@@ -585,6 +594,9 @@ export default class SavedItemsPage extends Component {
                       style={[modalStyles.button, modalStyles.saveButton, {
                         paddingVertical: 12,
                         paddingHorizontal: 25,
+                        minWidth: 100,
+                        justifyContent: 'center',
+                        alignItems: 'center',
                         elevation: 2
                       }]}
                       onPress={this.handleAddItem}
