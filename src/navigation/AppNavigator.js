@@ -31,7 +31,7 @@ const Drawer = createDrawerNavigator();
 function CustomDrawerContent(props) {
   return (
     <View style={styles.drawerContainer}>
-      {/* Use a separate SafeAreaView with forceInset for the header to handle iPhone notches properly */}
+      {/* Header with logo and app name */}
       <View style={styles.drawerHeader}>
         <View style={styles.safeAreaPadding} />
         <View style={styles.logoContainer}>
@@ -40,9 +40,19 @@ function CustomDrawerContent(props) {
         </View>
         <View style={styles.divider} />
       </View>
-      <DrawerContentScrollView {...props} contentContainerStyle={styles.drawerScrollContent}>
-        <DrawerItemList {...props} />
+      
+      {/* Main content with scrolling menu items */}
+      <DrawerContentScrollView 
+        {...props} 
+        contentContainerStyle={styles.drawerScrollContent}
+        showsVerticalScrollIndicator={false}
+      >
+        <View style={styles.menuContainer}>
+          <DrawerItemList {...props} />
+        </View>
       </DrawerContentScrollView>
+      
+      {/* Footer with version info */}
       <View style={styles.drawerFooter}>
         <Text style={styles.versionText}>Version 1.0.0</Text>
       </View>
@@ -194,6 +204,16 @@ function DrawerNavigator() {
       screenOptions={{
         drawerActiveTintColor: '#3B82F6',
         drawerInactiveTintColor: '#64748B',
+        drawerLabelStyle: {
+          fontSize: 15,
+          fontWeight: '500',
+          marginLeft: -4, // Adjusted to prevent overlap with icons
+        },
+        drawerItemStyle: {
+          borderRadius: 8,
+          paddingVertical: 2,
+          marginVertical: 2,
+        },
         headerStyle: {
           backgroundColor: '#3B82F6'
         },
@@ -203,7 +223,7 @@ function DrawerNavigator() {
         headerTintColor: 'white',
         headerTitleAlign: 'center',
         drawerStyle: {
-          width: '70%', // Make drawer narrower
+          width: '68%', // Make drawer slightly narrower
           backgroundColor: '#FFFFFF',
           borderTopLeftRadius: 15,
           borderBottomLeftRadius: 15,
@@ -379,8 +399,8 @@ const styles = StyleSheet.create({
   logoContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingHorizontal: 16,
-    paddingVertical: 12,
+    paddingHorizontal: 18,
+    paddingVertical: 14,
   },
   logoImage: {
     width: 45,
@@ -392,24 +412,32 @@ const styles = StyleSheet.create({
     fontWeight: '600',
     marginLeft: 6,
     color: '#3B82F6',
+    letterSpacing: 0.3, // Slight letter spacing for a more premium look
   },
   divider: {
     height: 1,
     backgroundColor: '#E2E8F0',
-    marginBottom: 8,
+    marginBottom: 6, // Reduced spacing after divider
   },
   drawerScrollContent: {
     paddingTop: 0,
   },
+  menuContainer: {
+    paddingHorizontal: 0, // Remove horizontal padding to give more space
+    paddingTop: 4,
+  },
   drawerFooter: {
-    padding: 16,
+    padding: 12,
+    paddingBottom: 25, // Extra padding at the bottom for iPhone
     borderTopWidth: 1,
     borderTopColor: '#E2E8F0',
+    marginTop: 'auto', // Push to bottom of container
   },
   versionText: {
     fontSize: 12,
     color: '#94A3B8',
     textAlign: 'center',
+    fontWeight: '500',
   },
 });
 
