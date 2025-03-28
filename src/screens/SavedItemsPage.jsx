@@ -426,7 +426,7 @@ export default class SavedItemsPage extends Component {
                         ]}
                         value={itemName}
                         onChangeText={(text) => this.setState({ itemName: text })}
-                        placeholder="Enter item name"
+                        placeholder=""
                         placeholderTextColor="#64748B"
                         maxLength={30}
                       />

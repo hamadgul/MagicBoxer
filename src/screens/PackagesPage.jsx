@@ -749,7 +749,7 @@ export default class PackagesPage extends Component {
 
 
                     <TouchableOpacity
-                      style={styles.addItemPlaceholder}
+                      style={[styles.addItemPlaceholder, { alignSelf: 'center' }]}
                       onPress={async () => {
                         try {
                           const savedItemsString = await AsyncStorage.getItem("savedItems");
@@ -798,7 +798,7 @@ export default class PackagesPage extends Component {
                       <Text style={styles.addItemText}>Add from saved items</Text>
                     </TouchableOpacity>
                     
-                    <View style={styles.modalFooter}>
+                    <View style={[styles.modalFooter, { width: '100%', alignSelf: 'center' }]}>
 
                       <TouchableOpacity
                         style={[styles.footerButton, styles.packButton]}
@@ -1344,9 +1344,10 @@ const styles = StyleSheet.create({
   modalFooter: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    paddingHorizontal: 10,
+    width: '100%',
     paddingTop: 2,
     paddingBottom: 0,
+    alignSelf: 'center',
   },
   footerButton: {
     flexDirection: 'row',
@@ -1356,7 +1357,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 8,
     borderRadius: 8,
     flex: 1,
-    marginHorizontal: 4,
+    marginHorizontal: 2,
   },
   packButton: {
     backgroundColor: '#3b82f6',
@@ -1441,7 +1442,7 @@ const styles = StyleSheet.create({
     padding: 16,
     marginBottom: 12,
     marginTop: 4,
-    marginHorizontal: 16,
+    width: '100%',
   },
   addItemText: {
     fontSize: 16,
