@@ -10,6 +10,7 @@ import {
   TextInput,
   Keyboard
 } from 'react-native';
+import axios from 'axios';
 import { getShippingEstimates } from '../services/shipping/shippingService';
 import { Ionicons } from '@expo/vector-icons';
 import { pack } from '../packing_algo/packing';
@@ -30,6 +31,7 @@ export default function ShipPackagePage({ route, navigation }) {
   });
   const [fromZip, setFromZip] = useState('');
   const [toZip, setToZip] = useState('');
+  const [apiDebugData, setApiDebugData] = useState(null);
 
   useEffect(() => {
     if (route.params?.package) {
@@ -78,6 +80,8 @@ export default function ShipPackagePage({ route, navigation }) {
 
     setIsLoading(true);
     setErrors([]);
+    setApiDebugData(null);
+    
     try {
       // Create itemList for packing algorithm
       const itemList = selectedPackage.items.flatMap(item =>
@@ -94,6 +98,56 @@ export default function ShipPackagePage({ route, navigation }) {
       // Get optimal box dimensions using packing algorithm for each carrier
       const upsResult = pack(itemList, 'UPS');
       const fedexResult = pack(itemList, 'FedEx');
+      
+      // Create a debug data collector
+      const debugData = {
+        requests: {},
+        responses: {},
+        errors: {}
+      };
+      
+      // Monkey patch axios to capture requests and responses
+      const originalAxiosPost = axios.post;
+      axios.post = async function(url, data, config) {
+        // Store the request
+        const carrier = url.includes('fedex') ? 'FedEx' : 
+                      url.includes('ups') ? 'UPS' : 'Unknown';
+        
+        if (!debugData.requests[carrier]) {
+          debugData.requests[carrier] = [];
+        }
+        debugData.requests[carrier].push({
+          url,
+          data,
+          headers: config?.headers
+        });
+        
+        try {
+          const response = await originalAxiosPost.apply(this, arguments);
+          
+          // Store the response
+          if (!debugData.responses[carrier]) {
+            debugData.responses[carrier] = [];
+          }
+          debugData.responses[carrier].push({
+            status: response.status,
+            data: response.data
+          });
+          
+          return response;
+        } catch (error) {
+          // Store the error
+          if (!debugData.errors[carrier]) {
+            debugData.errors[carrier] = [];
+          }
+          debugData.errors[carrier].push({
+            message: error.message,
+            response: error.response?.data
+          });
+          
+          throw error;
+        }
+      };
 
       const result = await getShippingEstimates(
         {
@@ -104,6 +158,12 @@ export default function ShipPackagePage({ route, navigation }) {
         fromZip,
         toZip
       );
+      
+      // Restore original axios.post
+      axios.post = originalAxiosPost;
+      
+      // Store debug data
+      setApiDebugData(debugData);
 
       if (result.estimates && result.estimates.length > 0) {
         setShippingEstimates(result.estimates);
@@ -282,6 +342,52 @@ export default function ShipPackagePage({ route, navigation }) {
               Calculate Shipping Rates
             </Text>
           </TouchableOpacity>
+          
+          {apiDebugData && (
+            <TouchableOpacity 
+              style={styles.debugButton}
+              onPress={() => {
+                Alert.alert(
+                  'API Debug Data', 
+                  'View detailed API request and response data for each carrier?',
+                  [
+                    { text: 'Cancel', style: 'cancel' },
+                    { 
+                      text: 'View UPS Data', 
+                      onPress: () => {
+                        Alert.alert(
+                          'UPS API Data',
+                          JSON.stringify({
+                            requests: apiDebugData.requests['UPS'] || [],
+                            responses: apiDebugData.responses['UPS'] || [],
+                            errors: apiDebugData.errors['UPS'] || []
+                          }, null, 2)
+                        );
+                      }
+                    },
+                    { 
+                      text: 'View FedEx Data', 
+                      onPress: () => {
+                        Alert.alert(
+                          'FedEx API Data',
+                          JSON.stringify({
+                            requests: apiDebugData.requests['FedEx'] || [],
+                            responses: apiDebugData.responses['FedEx'] || [],
+                            errors: apiDebugData.errors['FedEx'] || []
+                          }, null, 2)
+                        );
+                      }
+                    }
+                  ]
+                );
+              }}
+            >
+              <Ionicons name="bug" size={20} color="#fff" style={styles.buttonIcon} />
+              <Text style={styles.calculateButtonText}>
+                Show API Debug Data
+              </Text>
+            </TouchableOpacity>
+          )}
 
           {errors.length > 0 && (
             <View style={styles.errorContainer}>
@@ -454,6 +560,26 @@ const styles = StyleSheet.create({
     shadowOffset: { width: 0, height: 1 },
     shadowOpacity: 0.1,
     shadowRadius: 2,
+  },
+  debugButton: {
+    backgroundColor: '#f59e0b',
+    flexDirection: 'row',
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 12,
+    borderRadius: 8,
+    marginBottom: 16,
+    marginHorizontal: 16,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.1,
+    shadowRadius: 2,
+  },
+  debugButtonText: {
+    color: '#fff',
+    fontSize: 16,
+    fontWeight: '600',
+    marginLeft: 8,
     elevation: 2,
   },
   buttonIcon: {

@@ -738,57 +738,6 @@ export default class PackagesPage extends Component {
                       style={styles.flatListStyle}
                       contentContainerStyle={styles.flatListContainer}
                       keyExtractor={(item) => item.id}
-                      ListFooterComponent={
-                        <TouchableOpacity
-                          style={styles.addItemPlaceholder}
-                          onPress={async () => {
-                            try {
-                              const savedItemsString = await AsyncStorage.getItem("savedItems");
-                              const items = savedItemsString ? JSON.parse(savedItemsString) : [];
-                              
-                              if (items.length === 0) {
-                                Alert.alert(
-                                  "No Saved Items", 
-                                  "You don't have any saved items yet. Go to the Saved Items page to create some items first.",
-                                  [
-                                    { text: "Cancel", style: "cancel" },
-                                    { 
-                                      text: "Go to Saved Items", 
-                                      onPress: () => {
-                                        this.closePackageModal();
-                                        this.props.navigation.navigate("My Saved Items");
-                                      }
-                                    }
-                                  ]
-                                );
-                                return;
-                              }
-                              
-                              // Create a list of saved items for selection
-                              const buttons = items.map((item, index) => ({
-                                text: item.name,
-                                onPress: () => this.handleAddSavedItemToPackage(item)
-                              }));
-                              
-                              // Add a cancel button
-                              buttons.push({ text: "Cancel", style: "cancel" });
-                              
-                              // Show the alert with saved items as buttons
-                              Alert.alert(
-                                "Select a Saved Item",
-                                "Choose an item to add to your package:",
-                                buttons
-                              );
-                            } catch (error) {
-                              Alert.alert("Error", "Failed to load saved items: " + error.message);
-                            }
-                          }}
-                          activeOpacity={0.6}
-                        >
-                          <Ionicons name="add-circle-outline" size={24} color="#3B82F6" />
-                          <Text style={styles.addItemText}>Add from saved items</Text>
-                        </TouchableOpacity>
-                      }
                       renderItem={({ item }) => (
                         <TouchableOpacity
                           style={styles.itemContainer}
@@ -810,6 +759,56 @@ export default class PackagesPage extends Component {
 
 
 
+                    <TouchableOpacity
+                      style={styles.addItemPlaceholder}
+                      onPress={async () => {
+                        try {
+                          const savedItemsString = await AsyncStorage.getItem("savedItems");
+                          const items = savedItemsString ? JSON.parse(savedItemsString) : [];
+                          
+                          if (items.length === 0) {
+                            Alert.alert(
+                              "No Saved Items", 
+                              "You don't have any saved items yet. Go to the Saved Items page to create some items first.",
+                              [
+                                { text: "Cancel", style: "cancel" },
+                                { 
+                                  text: "Go to Saved Items", 
+                                  onPress: () => {
+                                    this.closePackageModal();
+                                    this.props.navigation.navigate("My Saved Items");
+                                  }
+                                }
+                              ]
+                            );
+                            return;
+                          }
+                          
+                          // Create a list of saved items for selection
+                          const buttons = items.map((item, index) => ({
+                            text: item.name,
+                            onPress: () => this.handleAddSavedItemToPackage(item)
+                          }));
+                          
+                          // Add a cancel button
+                          buttons.push({ text: "Cancel", style: "cancel" });
+                          
+                          // Show the alert with saved items as buttons
+                          Alert.alert(
+                            "Select a Saved Item",
+                            "Choose an item to add to your package:",
+                            buttons
+                          );
+                        } catch (error) {
+                          Alert.alert("Error", "Failed to load saved items: " + error.message);
+                        }
+                      }}
+                      activeOpacity={0.6}
+                    >
+                      <Ionicons name="add-circle-outline" size={24} color="#3B82F6" />
+                      <Text style={styles.addItemText}>Add from saved items</Text>
+                    </TouchableOpacity>
+                    
                     <View style={styles.modalFooter}>
 
                       <TouchableOpacity
@@ -1451,7 +1450,8 @@ const styles = StyleSheet.create({
     borderColor: '#3B82F6',
     borderRadius: 8,
     padding: 16,
-    marginVertical: 8,
+    marginBottom: 12,
+    marginTop: 4,
     marginHorizontal: 16,
   },
   addItemText: {
