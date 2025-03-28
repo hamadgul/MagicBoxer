@@ -266,7 +266,7 @@ const styles = StyleSheet.create({
     fontSize: 20,
     fontWeight: 'bold',
     marginBottom: 15,
-    color: '#2c3e50',
+    color: '#64748B', // Updated to match the item name text color
   },
   carrierButton: {
     backgroundColor: '#3498db',

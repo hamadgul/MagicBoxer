@@ -191,7 +191,7 @@ export const ItemDetailsModal = ({
                     style={{ position: 'absolute', left: 15, top: 15, zIndex: 1 }}
                     onPress={handleBackPress}
                   >
-                    <Ionicons name="arrow-back" size={24} color="white" />
+                    <Ionicons name="arrow-back" size={24} color="#64748B" />
                   </TouchableOpacity>
                 )}
                 <View style={{ 
@@ -206,7 +206,7 @@ export const ItemDetailsModal = ({
                 }}>
                   <Text 
                     style={[modalStyles.modalTitle, { 
-                      color: 'white',
+                      color: '#64748B', // Updated to match the item name text color
                       textAlign: 'center'
                     }]}
                     numberOfLines={1}
@@ -978,15 +978,14 @@ export default class FormPage extends Component {
         onPress={() => this.openModal(item)}
       >
         <View style={styles.horizontalItemContentContainer}>
-          <Text style={styles.horizontalItemIndex}>{`${index + 1}`}</Text>
           <View style={styles.horizontalItemNameContainer}>
-            <Text style={[styles.buttonText, { color: '#1E3A8A', textAlign: 'center' }]} numberOfLines={2}>
+            <Text style={[styles.buttonText, { color: '#64748B', textAlign: 'center' }]} numberOfLines={2}>
               {item.itemName}{item.quantity > 1 ? `
 (×${item.quantity})` : ''}
             </Text>
           </View>
           <View style={styles.horizontalItemDimensions}>
-            <Text style={styles.dimensionText}>{`${item.itemLength}×${item.itemWidth}×${item.itemHeight}`}</Text>
+            <Text style={[styles.dimensionText, { color: '#64748B' }]}>{`${item.itemLength}×${item.itemWidth}×${item.itemHeight}`}</Text>
           </View>
         </View>
       </TouchableOpacity>

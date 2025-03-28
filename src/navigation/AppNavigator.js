@@ -202,8 +202,8 @@ function DrawerNavigator() {
       drawerPosition="right"
       drawerContent={(props) => <CustomDrawerContent {...props} />}
       screenOptions={{
-        drawerActiveTintColor: '#3B82F6',
-        drawerInactiveTintColor: '#64748B',
+        drawerActiveTintColor: '#64748B', // Changed to match modal header gray
+        drawerInactiveTintColor: '#94A3B8', // Lighter gray for inactive items
         drawerLabelStyle: {
           fontSize: 15,
           fontWeight: '500',
@@ -400,24 +400,24 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     paddingHorizontal: 18,
-    paddingVertical: 14,
+    paddingVertical: 18, // Increased vertical padding
   },
   logoImage: {
-    width: 45,
-    height: 45,
+    width: 50, // Increased logo size
+    height: 50, // Increased logo size
     resizeMode: 'contain',
   },
   logoText: {
-    fontSize: 20,
+    fontSize: 22, // Increased font size
     fontWeight: '600',
-    marginLeft: 6,
-    color: '#3B82F6',
+    marginLeft: 8, // Slightly increased spacing
+    color: '#64748B', // Changed to match the active drawer item color for consistency
     letterSpacing: 0.3, // Slight letter spacing for a more premium look
   },
   divider: {
-    height: 1,
+    height: 1.5, // Slightly thicker divider
     backgroundColor: '#E2E8F0',
-    marginBottom: 6, // Reduced spacing after divider
+    marginBottom: 8, // Slightly increased spacing after divider
   },
   drawerScrollContent: {
     paddingTop: 0,

@@ -23,7 +23,7 @@ export const modalStyles = StyleSheet.create({
     elevation: 5,
   },
   modalHeader: {
-    backgroundColor: '#64748B', // Changed to medium-light gray to distinguish from blue page headers
+    backgroundColor: '#E2E8F0', // Updated to match the item card background color
     borderTopLeftRadius: 20,
     borderTopRightRadius: 20,
     padding: 15,
@@ -34,15 +34,15 @@ export const modalStyles = StyleSheet.create({
   modalTitle: {
     fontSize: 20,
     fontWeight: '600',
-    color: '#ffffff',
+    color: '#64748B', // Matches the item name text color
     textAlign: 'center',
   },
   modalHeaderText: {
-    color: '#ffffff',
+    color: '#64748B', // Matches the item name text color
     fontSize: 16,
   },
   modalHeaderSubtitle: {
-    color: '#ffffff',
+    color: '#64748B', // Matches the item name text color
     fontSize: 14,
     opacity: 0.9,
   },

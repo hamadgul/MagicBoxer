@@ -745,8 +745,8 @@ export default class PackagesPage extends Component {
                       )}
                     />
 
-
-
+                    {/* Add spacing between item list and button */}
+                    <View style={{ height: 16 }} />
 
                     <TouchableOpacity
                       style={[styles.addItemPlaceholder, { alignSelf: 'center' }]}
@@ -1237,10 +1237,10 @@ const styles = StyleSheet.create({
   modalTitle: {
     fontSize: 20,
     fontWeight: "600",
-    color: "#fff",
+    color: "#64748B", // Updated to match the item name text color
     textAlign: "center",
     marginBottom: 10,
-    backgroundColor: '#3B82F6',
+    backgroundColor: '#E2E8F0', // Updated to match the item card background
     padding: 15,
     borderTopLeftRadius: 20,
     borderTopRightRadius: 20,

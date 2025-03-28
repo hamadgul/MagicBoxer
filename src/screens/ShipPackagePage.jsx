@@ -79,7 +79,6 @@ export default function ShipPackagePage({ route, navigation }) {
 
     setIsLoading(true);
     setErrors([]);
-    setApiDebugData(null);
     
     try {
       // Create itemList for packing algorithm
@@ -290,51 +289,7 @@ export default function ShipPackagePage({ route, navigation }) {
             </Text>
           </TouchableOpacity>
           
-          {apiDebugData && (
-            <TouchableOpacity 
-              style={styles.debugButton}
-              onPress={() => {
-                Alert.alert(
-                  'API Debug Data', 
-                  'View detailed API request and response data for each carrier?',
-                  [
-                    { text: 'Cancel', style: 'cancel' },
-                    { 
-                      text: 'View UPS Data', 
-                      onPress: () => {
-                        Alert.alert(
-                          'UPS API Data',
-                          JSON.stringify({
-                            requests: apiDebugData.requests['UPS'] || [],
-                            responses: apiDebugData.responses['UPS'] || [],
-                            errors: apiDebugData.errors['UPS'] || []
-                          }, null, 2)
-                        );
-                      }
-                    },
-                    { 
-                      text: 'View FedEx Data', 
-                      onPress: () => {
-                        Alert.alert(
-                          'FedEx API Data',
-                          JSON.stringify({
-                            requests: apiDebugData.requests['FedEx'] || [],
-                            responses: apiDebugData.responses['FedEx'] || [],
-                            errors: apiDebugData.errors['FedEx'] || []
-                          }, null, 2)
-                        );
-                      }
-                    }
-                  ]
-                );
-              }}
-            >
-              <Ionicons name="bug" size={20} color="#fff" style={styles.buttonIcon} />
-              <Text style={styles.calculateButtonText}>
-                Show API Debug Data
-              </Text>
-            </TouchableOpacity>
-          )}
+          {/* Debug button removed to fix ReferenceError with apiDebugData */}
 
           {errors.length > 0 && (
             <View style={styles.errorContainer}>

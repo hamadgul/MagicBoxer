@@ -117,6 +117,7 @@ const styles = StyleSheet.create({
     fontSize: 15 * scale,
     fontWeight: "600",
     textAlign: 'center',
+    letterSpacing: 0.2, // Added letter spacing for better readability
   },
   savePackageButtonText: {
     color: "#0066FF",
@@ -124,7 +125,7 @@ const styles = StyleSheet.create({
     fontWeight: "600",
   },
   itemButton: {
-    backgroundColor: '#93C5FD',
+    backgroundColor: '#E2E8F0', // Slightly darker gray background
     paddingVertical: 8 * scale,
     paddingHorizontal: 15 * scale,
     borderRadius: 10 * scale,
@@ -144,22 +145,24 @@ const styles = StyleSheet.create({
     width: '95%',
   },
   horizontalItemButton: {
-    backgroundColor: '#93C5FD',
-    padding: 10 * scale,
-    borderRadius: 10 * scale,
+    backgroundColor: '#E2E8F0', // Slightly darker gray background
+    padding: 12 * scale, // Slightly increased padding
+    borderRadius: 12 * scale, // Increased border radius for a softer look
     marginHorizontal: 6 * scale,
     height: 120 * scale,
     width: 150 * scale,
-    shadowColor: "#000",
+    shadowColor: "#64748B", // Changed shadow color to match text
     shadowOffset: {
       width: 0,
-      height: 1,
+      height: 2, // Slightly increased shadow height
     },
-    shadowOpacity: 0.12,
-    shadowRadius: 3,
-    elevation: 2,
+    shadowOpacity: 0.15, // Slightly increased shadow opacity
+    shadowRadius: 5, // Increased shadow radius for a softer shadow
+    elevation: 3, // Slightly increased elevation
     justifyContent: 'center',
     alignItems: 'center',
+    borderWidth: 1, // Added subtle border
+    borderColor: '#CBD5E1', // Light gray border
   },
   horizontalItemContentContainer: {
     flex: 1,
@@ -170,8 +173,8 @@ const styles = StyleSheet.create({
   horizontalItemIndex: {
     fontSize: 16 * scale,
     fontWeight: "700",
-    color: '#1E3A8A',
-    backgroundColor: '#DBEAFE',
+    color: '#64748B',
+    backgroundColor: '#E2E8F0',
     width: 30 * scale,
     height: 30 * scale,
     borderRadius: 15 * scale,
@@ -182,20 +185,25 @@ const styles = StyleSheet.create({
   horizontalItemNameContainer: {
     alignItems: 'center',
     justifyContent: 'center',
-    paddingHorizontal: 5 * scale,
+    paddingHorizontal: 8 * scale,
+    paddingVertical: 6 * scale,
     flex: 1,
+    marginBottom: 6 * scale,
   },
   horizontalItemDimensions: {
     marginTop: 5 * scale,
-    backgroundColor: '#DBEAFE',
-    paddingHorizontal: 8 * scale,
-    paddingVertical: 3 * scale,
-    borderRadius: 4 * scale,
+    backgroundColor: '#D1D9E6', // Slightly different shade for contrast
+    paddingHorizontal: 10 * scale, // Increased padding
+    paddingVertical: 4 * scale, // Increased padding
+    borderRadius: 8 * scale, // Increased border radius
+    borderWidth: 1, // Added subtle border
+    borderColor: '#CBD5E1', // Light gray border
   },
   dimensionText: {
     fontSize: 12 * scale,
-    color: '#1E3A8A',
-    fontWeight: '500',
+    color: '#64748B',
+    fontWeight: '600', // Slightly bolder font
+    letterSpacing: 0.3, // Added letter spacing for better readability
   },
   itemIndex: {
     fontSize: 14 * scale,
@@ -281,7 +289,7 @@ const styles = StyleSheet.create({
   modalTitle: {
     fontSize: 18 * scale,
     fontWeight: "700",
-    color: "#1F2937",
+    color: "#64748B", // Updated to match the item name text color
     marginBottom: 15 * scale,
     textAlign: "center",
     width: "100%",

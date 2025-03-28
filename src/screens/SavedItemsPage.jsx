@@ -733,7 +733,7 @@ const styles = StyleSheet.create({
   modalTitle: {
     fontSize: 18,
     fontWeight: '600',
-    color: '#1E293B',
+    color: '#64748B', // Updated to match the item name text color
     marginBottom: 15,
   },
   renameInput: {

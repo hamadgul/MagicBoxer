@@ -226,7 +226,7 @@ const styles = StyleSheet.create({
   brandName: {
     fontSize: 32,
     fontWeight: '800',
-    color: '#3B82F6',
+    color: '#64748B', // Changed to match the side menu header color for consistency
     letterSpacing: 0.5,
   },
   section: {
