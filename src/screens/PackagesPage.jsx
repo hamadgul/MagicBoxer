@@ -747,7 +747,20 @@ export default class PackagesPage extends Component {
                               const items = savedItemsString ? JSON.parse(savedItemsString) : [];
                               
                               if (items.length === 0) {
-                                Alert.alert("No Saved Items", "You don't have any saved items yet.");
+                                Alert.alert(
+                                  "No Saved Items", 
+                                  "You don't have any saved items yet. Go to the Saved Items page to create some items first.",
+                                  [
+                                    { text: "Cancel", style: "cancel" },
+                                    { 
+                                      text: "Go to Saved Items", 
+                                      onPress: () => {
+                                        this.closePackageModal();
+                                        this.props.navigation.navigate("My Saved Items");
+                                      }
+                                    }
+                                  ]
+                                );
                                 return;
                               }
                               
@@ -999,6 +1012,27 @@ export default class PackagesPage extends Component {
       
       if (!selectedPackage) {
         Alert.alert("Error", "No package selected.");
+        return;
+      }
+      
+      // Check if an item with the same name already exists in the package
+      const existingItem = packages[selectedPackage].find(
+        item => item.itemName.toLowerCase() === savedItem.name.toLowerCase()
+      );
+      
+      if (existingItem) {
+        // Item already exists in the package
+        Alert.alert(
+          "Item Already in Package",
+          `${savedItem.name} is already in this package. You can edit the quantity if you'd like.`,
+          [
+            { text: "Cancel", style: "cancel" },
+            { 
+              text: "Edit Item", 
+              onPress: () => this.handleEditItem(existingItem)
+            }
+          ]
+        );
         return;
       }
       
