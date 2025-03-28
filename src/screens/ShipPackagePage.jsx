@@ -31,7 +31,6 @@ export default function ShipPackagePage({ route, navigation }) {
   });
   const [fromZip, setFromZip] = useState('');
   const [toZip, setToZip] = useState('');
-  const [apiDebugData, setApiDebugData] = useState(null);
 
   useEffect(() => {
     if (route.params?.package) {
@@ -99,55 +98,7 @@ export default function ShipPackagePage({ route, navigation }) {
       const upsResult = pack(itemList, 'UPS');
       const fedexResult = pack(itemList, 'FedEx');
       
-      // Create a debug data collector
-      const debugData = {
-        requests: {},
-        responses: {},
-        errors: {}
-      };
-      
-      // Monkey patch axios to capture requests and responses
-      const originalAxiosPost = axios.post;
-      axios.post = async function(url, data, config) {
-        // Store the request
-        const carrier = url.includes('fedex') ? 'FedEx' : 
-                      url.includes('ups') ? 'UPS' : 'Unknown';
-        
-        if (!debugData.requests[carrier]) {
-          debugData.requests[carrier] = [];
-        }
-        debugData.requests[carrier].push({
-          url,
-          data,
-          headers: config?.headers
-        });
-        
-        try {
-          const response = await originalAxiosPost.apply(this, arguments);
-          
-          // Store the response
-          if (!debugData.responses[carrier]) {
-            debugData.responses[carrier] = [];
-          }
-          debugData.responses[carrier].push({
-            status: response.status,
-            data: response.data
-          });
-          
-          return response;
-        } catch (error) {
-          // Store the error
-          if (!debugData.errors[carrier]) {
-            debugData.errors[carrier] = [];
-          }
-          debugData.errors[carrier].push({
-            message: error.message,
-            response: error.response?.data
-          });
-          
-          throw error;
-        }
-      };
+      // Get shipping estimates directly
 
       const result = await getShippingEstimates(
         {
@@ -159,11 +110,7 @@ export default function ShipPackagePage({ route, navigation }) {
         toZip
       );
       
-      // Restore original axios.post
-      axios.post = originalAxiosPost;
-      
-      // Store debug data
-      setApiDebugData(debugData);
+      // Process shipping estimate results
 
       if (result.estimates && result.estimates.length > 0) {
         setShippingEstimates(result.estimates);

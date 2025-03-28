@@ -21,8 +21,7 @@ import FAQsPage from "../screens/FAQsPage";
 import ShipPackagePage from "../screens/ShipPackagePage";
 import RequestFormPage from "../screens/RequestFormPage";
 import TestPage from "../screens/TestPage";
-import BoxCustomizer from "../screens/BoxCustomizer"; 
-//import TestProduct from "../screens/TestProduct";
+import BoxCustomizer from "../screens/BoxCustomizer";
 import SavedItemsPage from "../screens/SavedItemsPage";
 
 const Stack = createNativeStackNavigator();
@@ -209,21 +208,11 @@ function DrawerNavigator() {
           borderTopLeftRadius: 15,
           borderBottomLeftRadius: 15,
           shadowColor: '#000',
-          shadowOffset: { width: -2, height: 0 },
-          shadowOpacity: 0.1,
-          shadowRadius: 5,
-          elevation: 5,
-        },
-        drawerItemStyle: {
-          borderRadius: 8,
-          paddingVertical: 4,
-          marginVertical: 4,
-          marginHorizontal: 10,
-        },
-        drawerLabelStyle: {
-          fontSize: 15,
-          fontWeight: '500',
-        },
+          shadowOffset: { width: 0, height: 2 },
+          shadowOpacity: 0.25,
+          shadowRadius: 3.84,
+          elevation: 5
+        }
       }}
     >
       {screens.map((screen) => (
@@ -375,55 +364,53 @@ function AppNavigator() {
   );
 }
 
-export default AppNavigator;
-
-// Styles for the custom drawer content
+// Styles for the custom drawer
 const styles = StyleSheet.create({
   drawerContainer: {
     flex: 1,
     backgroundColor: '#FFFFFF',
   },
   drawerHeader: {
-    paddingBottom: 15,
-    paddingHorizontal: 20,
-    backgroundColor: '#FFFFFF', // White background for better contrast
+    backgroundColor: '#FFFFFF',
   },
   safeAreaPadding: {
-    height: 50, // Safe area padding to avoid iPhone camera notch
+    height: 30, // Adjust based on device
   },
   logoContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginBottom: 10,
+    paddingHorizontal: 16,
+    paddingVertical: 12,
   },
   logoImage: {
-    width: 50,
-    height: 50,
+    width: 45,
+    height: 45,
     resizeMode: 'contain',
   },
   logoText: {
-    fontSize: 22,
-    fontWeight: '700',
-    color: '#3B82F6', // Same blue as page headers
-    marginLeft: 5,
+    fontSize: 20,
+    fontWeight: '600',
+    marginLeft: 6,
+    color: '#3B82F6',
   },
   divider: {
     height: 1,
     backgroundColor: '#E2E8F0',
-    marginTop: 5,
-    marginBottom: 0, // Reduced bottom margin to minimize white space
+    marginBottom: 8,
   },
   drawerScrollContent: {
-    paddingTop: 0, // Reduced padding to minimize white space
+    paddingTop: 0,
   },
   drawerFooter: {
-    padding: 20,
+    padding: 16,
     borderTopWidth: 1,
     borderTopColor: '#E2E8F0',
-    alignItems: 'center',
   },
   versionText: {
     fontSize: 12,
     color: '#94A3B8',
+    textAlign: 'center',
   },
 });
+
+export default AppNavigator;

@@ -23,9 +23,6 @@ import styles from "../theme/Styles";
 import { modalStyles } from "../theme/ModalStyles";
 import { Ionicons } from "@expo/vector-icons";
 var Buffer = require("@craftzdog/react-native-buffer").Buffer;
-// Default product list from bundled assets
-//const defaultProductList = require('../products.json') || [];
-
 
 
 // Make sure ItemDetailsModal is exported correctly
