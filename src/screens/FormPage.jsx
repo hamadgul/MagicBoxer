@@ -977,15 +977,19 @@ export default class FormPage extends Component {
     return (
       <TouchableOpacity
         key={item.id}
-        style={[styles.itemButton]}
+        style={[styles.horizontalItemButton]}
         onPress={() => this.openModal(item)}
       >
-        <View style={styles.itemContentContainer}>
-          <Text style={styles.itemIndex}>{`${index + 1}.`}</Text>
-          <View style={styles.itemNameContainer}>
-            <Text style={[styles.buttonText, { color: '#1E3A8A' }]} numberOfLines={1}>
-              {item.itemName}{item.quantity > 1 ? ` (×${item.quantity})` : ''}
+        <View style={styles.horizontalItemContentContainer}>
+          <Text style={styles.horizontalItemIndex}>{`${index + 1}`}</Text>
+          <View style={styles.horizontalItemNameContainer}>
+            <Text style={[styles.buttonText, { color: '#1E3A8A', textAlign: 'center' }]} numberOfLines={2}>
+              {item.itemName}{item.quantity > 1 ? `
+(×${item.quantity})` : ''}
             </Text>
+          </View>
+          <View style={styles.horizontalItemDimensions}>
+            <Text style={styles.dimensionText}>{`${item.itemLength}×${item.itemWidth}×${item.itemHeight}`}</Text>
           </View>
         </View>
       </TouchableOpacity>
@@ -1009,11 +1013,13 @@ export default class FormPage extends Component {
 
     return (
       <ScrollView 
-        showsVerticalScrollIndicator={false}
-        contentContainerStyle={styles.carouselContainer}
+        horizontal={true}
+        showsHorizontalScrollIndicator={true}
+        contentContainerStyle={styles.horizontalCarouselContainer}
         decelerationRate="fast"
-        snapToInterval={54 * 1}
+        snapToInterval={170} // Width of the item + margins
         snapToAlignment="start"
+        showsVerticalScrollIndicator={false}
       >
         {items.map((item, index) => this.renderItem(item, index))}
       </ScrollView>
@@ -1240,19 +1246,13 @@ export default class FormPage extends Component {
                 </VStack>
               </View>
 
-              <View style={styles.contentContainer}>
-                <ScrollView
+              <View style={styles.horizontalContentContainer}>
+                <View
                   style={styles.itemsContainer}
-                  contentContainerStyle={styles.itemsList}
                   removeClippedSubviews={true}
-                  initialNumToRender={10}
-                  maxToRenderPerBatch={5}
-                  windowSize={5}
-                  updateCellsBatchingPeriod={50}
-                  keyboardShouldPersistTaps="handled"
                 >
                   {this.renderItemsList()}
-                </ScrollView>
+                </View>
               </View>
 
               <View style={styles.bottomButtonContainer}>

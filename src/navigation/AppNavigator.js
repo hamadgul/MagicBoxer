@@ -2,8 +2,12 @@ import React from "react";
 import { createDrawerNavigator } from "@react-navigation/drawer";
 import { createNativeStackNavigator } from "@react-navigation/native-stack";
 import { Ionicons } from "@expo/vector-icons";
-import { View, Text } from "react-native";
+import { View, Text, Image, StyleSheet, TouchableOpacity, SafeAreaView } from "react-native";
+import { DrawerContentScrollView, DrawerItemList } from '@react-navigation/drawer';
 import { DEV_BUILD_APP } from "../config/environment";
+
+// Import the MagicBoxer icon without background
+import MagicBoxerIcon from "../assets/images/icon_nobg.png";
 
 // Import screens, make sure paths are correct
 import GettingStartedPage from "../screens/GettingStartedPage";
@@ -23,6 +27,29 @@ import SavedItemsPage from "../screens/SavedItemsPage";
 
 const Stack = createNativeStackNavigator();
 const Drawer = createDrawerNavigator();
+
+// Custom drawer content component for a more professional look
+function CustomDrawerContent(props) {
+  return (
+    <View style={styles.drawerContainer}>
+      {/* Use a separate SafeAreaView with forceInset for the header to handle iPhone notches properly */}
+      <View style={styles.drawerHeader}>
+        <View style={styles.safeAreaPadding} />
+        <View style={styles.logoContainer}>
+          <Image source={MagicBoxerIcon} style={styles.logoImage} />
+          <Text style={styles.logoText}>MagicBoxer</Text>
+        </View>
+        <View style={styles.divider} />
+      </View>
+      <DrawerContentScrollView {...props} contentContainerStyle={styles.drawerScrollContent}>
+        <DrawerItemList {...props} />
+      </DrawerContentScrollView>
+      <View style={styles.drawerFooter}>
+        <Text style={styles.versionText}>Version 1.0.0</Text>
+      </View>
+    </View>
+  );
+}
 
 // Drawer navigator to handle side menu for specific pages
 function DrawerNavigator() {
@@ -164,6 +191,7 @@ function DrawerNavigator() {
   return (
     <Drawer.Navigator 
       drawerPosition="right"
+      drawerContent={(props) => <CustomDrawerContent {...props} />}
       screenOptions={{
         drawerActiveTintColor: '#3B82F6',
         drawerInactiveTintColor: '#64748B',
@@ -174,7 +202,28 @@ function DrawerNavigator() {
           color: 'white'
         },
         headerTintColor: 'white',
-        headerTitleAlign: 'center'
+        headerTitleAlign: 'center',
+        drawerStyle: {
+          width: '70%', // Make drawer narrower
+          backgroundColor: '#FFFFFF',
+          borderTopLeftRadius: 15,
+          borderBottomLeftRadius: 15,
+          shadowColor: '#000',
+          shadowOffset: { width: -2, height: 0 },
+          shadowOpacity: 0.1,
+          shadowRadius: 5,
+          elevation: 5,
+        },
+        drawerItemStyle: {
+          borderRadius: 8,
+          paddingVertical: 4,
+          marginVertical: 4,
+          marginHorizontal: 10,
+        },
+        drawerLabelStyle: {
+          fontSize: 15,
+          fontWeight: '500',
+        },
       }}
     >
       {screens.map((screen) => (
@@ -327,3 +376,54 @@ function AppNavigator() {
 }
 
 export default AppNavigator;
+
+// Styles for the custom drawer content
+const styles = StyleSheet.create({
+  drawerContainer: {
+    flex: 1,
+    backgroundColor: '#FFFFFF',
+  },
+  drawerHeader: {
+    paddingBottom: 15,
+    paddingHorizontal: 20,
+    backgroundColor: '#FFFFFF', // White background for better contrast
+  },
+  safeAreaPadding: {
+    height: 50, // Safe area padding to avoid iPhone camera notch
+  },
+  logoContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 10,
+  },
+  logoImage: {
+    width: 50,
+    height: 50,
+    resizeMode: 'contain',
+  },
+  logoText: {
+    fontSize: 22,
+    fontWeight: '700',
+    color: '#3B82F6', // Same blue as page headers
+    marginLeft: 5,
+  },
+  divider: {
+    height: 1,
+    backgroundColor: '#E2E8F0',
+    marginTop: 5,
+    marginBottom: 0, // Reduced bottom margin to minimize white space
+  },
+  drawerScrollContent: {
+    paddingTop: 0, // Reduced padding to minimize white space
+  },
+  drawerFooter: {
+    padding: 20,
+    borderTopWidth: 1,
+    borderTopColor: '#E2E8F0',
+    alignItems: 'center',
+  },
+  versionText: {
+    fontSize: 12,
+    color: '#94A3B8',
+  },
+});

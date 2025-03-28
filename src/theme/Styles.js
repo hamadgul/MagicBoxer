@@ -143,6 +143,60 @@ const styles = StyleSheet.create({
     elevation: 2,
     width: '95%',
   },
+  horizontalItemButton: {
+    backgroundColor: '#93C5FD',
+    padding: 10 * scale,
+    borderRadius: 10 * scale,
+    marginHorizontal: 6 * scale,
+    height: 120 * scale,
+    width: 150 * scale,
+    shadowColor: "#000",
+    shadowOffset: {
+      width: 0,
+      height: 1,
+    },
+    shadowOpacity: 0.12,
+    shadowRadius: 3,
+    elevation: 2,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  horizontalItemContentContainer: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    width: '100%',
+  },
+  horizontalItemIndex: {
+    fontSize: 16 * scale,
+    fontWeight: "700",
+    color: '#1E3A8A',
+    backgroundColor: '#DBEAFE',
+    width: 30 * scale,
+    height: 30 * scale,
+    borderRadius: 15 * scale,
+    textAlign: 'center',
+    lineHeight: 30 * scale,
+    marginBottom: 5 * scale,
+  },
+  horizontalItemNameContainer: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingHorizontal: 5 * scale,
+    flex: 1,
+  },
+  horizontalItemDimensions: {
+    marginTop: 5 * scale,
+    backgroundColor: '#DBEAFE',
+    paddingHorizontal: 8 * scale,
+    paddingVertical: 3 * scale,
+    borderRadius: 4 * scale,
+  },
+  dimensionText: {
+    fontSize: 12 * scale,
+    color: '#1E3A8A',
+    fontWeight: '500',
+  },
   itemIndex: {
     fontSize: 14 * scale,
     fontWeight: "600",
@@ -154,6 +208,11 @@ const styles = StyleSheet.create({
   carouselContainer: {
     paddingVertical: 10 * scale,
     paddingHorizontal: 5 * scale,
+  },
+  horizontalCarouselContainer: {
+    paddingVertical: 10 * scale,
+    paddingHorizontal: 10 * scale,
+    alignItems: 'center',
   },
   itemsContainer: {
     flex: 1,
@@ -184,6 +243,10 @@ const styles = StyleSheet.create({
   },
   contentContainer: {
     height: 150 * scale,
+    marginBottom: 10 * scale,
+  },
+  horizontalContentContainer: {
+    height: 140 * scale,
     marginBottom: 10 * scale,
   },
   bottomButtonContainer: {
