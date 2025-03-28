@@ -44,17 +44,17 @@ export default class PackagesPage extends Component {
     this.props.navigation.setOptions({
       headerTitle: () => (
         <View style={styles.headerContainer}>
-          <Ionicons name="cube-outline" size={24} color="white" />
+          <Ionicons name="archive-outline" size={24} color="#64748B" />
           <Text style={styles.headerTitle}>Saved Packages</Text>
         </View>
       ),
       headerTitleAlign: 'center',
       headerStyle: {
-        backgroundColor: '#3B82F6',
+        backgroundColor: '#E2E8F0',
         elevation: 0,
         shadowOpacity: 0,
       },
-      headerTintColor: 'white'
+      headerTintColor: '#64748B'
     });
   }
 
@@ -1379,7 +1379,7 @@ const styles = StyleSheet.create({
   headerTitle: {
     fontSize: 18,
     fontWeight: '600',
-    color: 'white',
+    color: '#64748B',
     marginLeft: 10,
   },
   fab: {

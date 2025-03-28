@@ -65,8 +65,8 @@ function DrawerNavigator() {
   const headerWithIcon = (iconName, title) => ({
     headerTitle: () => (
       <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'center' }}>
-        <Text style={{ color: 'white', fontSize: 18, fontWeight: '600' }}>{title}</Text>
-        <Ionicons name={iconName} size={24} color="white" style={{ marginLeft: 10 }} />
+        <Ionicons name={iconName} size={24} color="#64748B" style={{ marginRight: 10 }} />
+        <Text style={{ color: '#64748B', fontSize: 18, fontWeight: '600' }}>{title}</Text>
       </View>
     ),
     headerRight: () => null, // Remove default right button
@@ -90,7 +90,8 @@ function DrawerNavigator() {
       options: {
         headerTitle: () => (
           <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'center' }}>
-            <Text style={{ color: 'white', fontSize: 18, fontWeight: '600' }}>Create Package</Text>
+            <Ionicons name="cube-outline" size={24} color="#64748B" style={{ marginRight: 10 }} />
+            <Text style={{ color: '#64748B', fontSize: 18, fontWeight: '600' }}>Create Package</Text>
           </View>
         ),
         headerRight: () => null,
@@ -215,12 +216,12 @@ function DrawerNavigator() {
           marginVertical: 2,
         },
         headerStyle: {
-          backgroundColor: '#3B82F6'
+          backgroundColor: '#E2E8F0' // Updated to match the item card background color
         },
         headerTitleStyle: {
-          color: 'white'
+          color: '#64748B' // Updated to match the item name text color
         },
-        headerTintColor: 'white',
+        headerTintColor: '#64748B', // Updated to match the item name text color
         headerTitleAlign: 'center',
         drawerStyle: {
           width: '68%', // Make drawer slightly narrower
@@ -252,8 +253,8 @@ function AppNavigator() {
   const headerWithIcon = (iconName, title) => ({
     headerTitle: () => (
       <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'center' }}>
-        <Text style={{ color: 'white', fontSize: 18, fontWeight: '600' }}>{title}</Text>
-        <Ionicons name={iconName} size={24} color="white" style={{ marginLeft: 10 }} />
+        <Ionicons name={iconName} size={24} color="#64748B" style={{ marginRight: 10 }} />
+        <Text style={{ color: '#64748B', fontSize: 18, fontWeight: '600' }}>{title}</Text>
       </View>
     ),
     headerRight: () => null, // Remove default right button
@@ -271,7 +272,7 @@ function AppNavigator() {
       name: "Display3D",
       component: Display3D,
       options: {
-        ...headerWithIcon('cube', 'Optimal Box Size'),
+        ...headerWithIcon('cube-outline', 'Optimal Box Size'),
         headerShown: true,
         gestureEnabled: true,
       }
@@ -280,7 +281,7 @@ function AppNavigator() {
       name: "TestDisplay3D",
       component: TestDisplay3D,
       options: {
-        ...headerWithIcon('cube', 'Box Visualization'),
+        ...headerWithIcon('cube-outline', 'Box Visualization'),
         headerShown: true,
         gestureEnabled: true,
       }
@@ -363,12 +364,12 @@ function AppNavigator() {
     <Stack.Navigator
       screenOptions={{
         headerStyle: {
-          backgroundColor: '#3B82F6',
+          backgroundColor: '#E2E8F0',
         },
         headerTitleStyle: {
-          color: 'white',
+          color: '#64748B',
         },
-        headerTintColor: 'white',
+        headerTintColor: '#64748B',
         headerTitleAlign: 'center',
       }}
     >
