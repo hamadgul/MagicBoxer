@@ -65,7 +65,7 @@ function DrawerNavigator() {
   const headerWithIcon = (iconName, title) => ({
     headerTitle: () => (
       <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'center' }}>
-        <Ionicons name={iconName} size={24} color="#64748B" style={{ marginRight: 10 }} />
+        <Ionicons name={iconName} size={24} color="#3B82F6" style={{ marginRight: 10 }} />
         <Text style={{ color: '#64748B', fontSize: 18, fontWeight: '600' }}>{title}</Text>
       </View>
     ),
@@ -90,7 +90,7 @@ function DrawerNavigator() {
       options: {
         headerTitle: () => (
           <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'center' }}>
-            <Ionicons name="cube-outline" size={24} color="#64748B" style={{ marginRight: 10 }} />
+            <Ionicons name="cube-outline" size={24} color="#3B82F6" style={{ marginRight: 10 }} />
             <Text style={{ color: '#64748B', fontSize: 18, fontWeight: '600' }}>Create Package</Text>
           </View>
         ),

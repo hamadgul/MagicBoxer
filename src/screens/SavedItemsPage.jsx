@@ -41,7 +41,7 @@ export default class SavedItemsPage extends Component {
     this.props.navigation.setOptions({
       headerTitle: () => (
         <View style={styles.headerContainer}>
-          <Ionicons name="bookmark-outline" size={24} color="#64748B" />
+          <Ionicons name="bookmark-outline" size={24} color="#3B82F6" />
           <Text style={styles.headerTitle}>My Saved Items</Text>
         </View>
       ),

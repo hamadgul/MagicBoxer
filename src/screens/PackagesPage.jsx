@@ -46,7 +46,7 @@ export default class PackagesPage extends Component {
     this.props.navigation.setOptions({
       headerTitle: () => (
         <View style={styles.headerContainer}>
-          <Ionicons name="archive-outline" size={24} color="#64748B" />
+          <Ionicons name="archive-outline" size={24} color="#3B82F6" />
           <Text style={styles.headerTitle}>Saved Packages</Text>
         </View>
       ),
