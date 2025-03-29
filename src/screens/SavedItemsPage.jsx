@@ -33,6 +33,9 @@ export default class SavedItemsPage extends Component {
     itemWidth: "",
     itemHeight: "",
     isEditing: false, // Flag to determine if we're adding or editing an item
+    selectionMode: false, // Flag to determine if we're in bulk selection mode
+    selectedItems: [], // Array of selected item IDs
+    showDeleteConfirmModal: false, // Flag to show delete confirmation modal
   };
 
   constructor(props) {
@@ -320,16 +323,75 @@ export default class SavedItemsPage extends Component {
     return value.toString().replace(/\.?0+$/, '');
   };
   
+  toggleItemSelection = (itemId) => {
+    this.setState(prevState => {
+      const selectedItems = [...prevState.selectedItems];
+      const index = selectedItems.indexOf(itemId);
+      
+      if (index > -1) {
+        selectedItems.splice(index, 1);
+      } else {
+        selectedItems.push(itemId);
+      }
+      
+      return { selectedItems };
+    });
+  };
+
+  toggleSelectionMode = () => {
+    this.setState(prevState => ({
+      selectionMode: !prevState.selectionMode,
+      selectedItems: []
+    }));
+  };
+
+  deleteSelectedItems = async () => {
+    const { savedItems, selectedItems } = this.state;
+    
+    try {
+      // Filter out the selected items
+      const updatedItems = savedItems.filter(item => !selectedItems.includes(item.id));
+      
+      // Save to AsyncStorage
+      await AsyncStorage.setItem("savedItems", JSON.stringify(updatedItems));
+      
+      // Update state
+      this.setState({
+        savedItems: updatedItems,
+        selectionMode: false,
+        selectedItems: [],
+        showDeleteConfirmModal: false
+      });
+      
+      Alert.alert("Success", `${selectedItems.length} item(s) deleted successfully.`);
+    } catch (error) {
+      console.error("Error deleting items:", error);
+      Alert.alert("Error", "Failed to delete items.");
+    }
+  };
+
   renderItem = (item) => {
+    const { selectionMode, selectedItems } = this.state;
+    const isSelected = selectedItems.includes(item.id);
+    
     return (
       <View key={item.id} style={styles.itemRow}>
         <View style={styles.itemContainer}>
           <TouchableOpacity
-            style={styles.item}
-            onPress={() => this.openEditModal(item)}
+            style={[styles.item, isSelected && selectionMode && styles.selectedItem]}
+            onPress={() => selectionMode ? this.toggleItemSelection(item.id) : this.openEditModal(item)}
           >
             <View style={styles.itemLeftContent}>
-              <Ionicons name="bookmark" size={20} color="#3B82F6" style={styles.itemIcon} />
+              {selectionMode ? (
+                <Ionicons 
+                  name={isSelected ? "checkbox" : "square-outline"} 
+                  size={20} 
+                  color="#3B82F6" 
+                  style={styles.itemIcon} 
+                />
+              ) : (
+                <Ionicons name="bookmark" size={20} color="#3B82F6" style={styles.itemIcon} />
+              )}
               <Text style={styles.itemName}>{item.name}</Text>
             </View>
             <Text style={styles.itemDimensions}>
@@ -357,9 +419,41 @@ export default class SavedItemsPage extends Component {
           Keyboard.dismiss();
         }}>
         <View style={styles.container}>
+          {/* Selection mode action bar at the top */}
+          {this.state.selectionMode && (
+            <View style={styles.selectionActionBar}>
+              <Text style={styles.selectedCountText}>
+                {this.state.selectedItems.length} item(s) selected
+              </Text>
+              
+              <View style={styles.selectionActionButtons}>
+                <TouchableOpacity
+                  style={[styles.actionButton, styles.cancelSelectionButton]}
+                  onPress={this.toggleSelectionMode}
+                >
+                  <Text style={styles.cancelButtonText}>Cancel</Text>
+                </TouchableOpacity>
+                
+                <TouchableOpacity
+                  style={[styles.actionButton, styles.actionDeleteButton]}
+                  onPress={() => {
+                    if (this.state.selectedItems.length > 0) {
+                      this.setState({ showDeleteConfirmModal: true });
+                    } else {
+                      Alert.alert("No Items Selected", "Please select at least one item to delete.");
+                    }
+                  }}
+                  disabled={this.state.selectedItems.length === 0}
+                >
+                  <Text style={styles.deleteButtonText}>Delete</Text>
+                </TouchableOpacity>
+              </View>
+            </View>
+          )}
+          
           <ScrollView 
             style={styles.scrollView}
-            contentContainerStyle={styles.scrollViewContent}
+            contentContainerStyle={[styles.scrollViewContent, this.state.selectionMode && styles.scrollViewWithActionBar]}
           >
             {savedItems.length === 0 ? (
               <View style={styles.emptyContainer}>
@@ -619,11 +713,64 @@ export default class SavedItemsPage extends Component {
 
 
 
+          {/* Delete confirmation modal */}
+          <Modal
+            visible={this.state.showDeleteConfirmModal}
+            transparent={true}
+            animationType="fade"
+            onRequestClose={() => this.setState({ showDeleteConfirmModal: false })}
+          >
+            <TouchableWithoutFeedback 
+              onPress={() => this.setState({ showDeleteConfirmModal: false })}
+            >
+              <View style={modalStyles.centeredView}>
+                <TouchableWithoutFeedback onPress={(e) => e.stopPropagation()}>
+                  <View style={modalStyles.modalContent}>
+                    <View style={modalStyles.modalHeader}>
+                      <Text style={modalStyles.modalTitle}>Confirm Deletion</Text>
+                    </View>
+                    
+                    <Text style={modalStyles.modalSubtitle}>
+                      Are you sure you want to delete {this.state.selectedItems.length} selected item(s)?
+                    </Text>
+                    
+                    <View style={modalStyles.modalButtonContainer}>
+                      <TouchableOpacity
+                        style={[modalStyles.button, modalStyles.cancelButton]}
+                        onPress={() => this.setState({ showDeleteConfirmModal: false })}
+                      >
+                        <Text style={modalStyles.buttonText}>Cancel</Text>
+                      </TouchableOpacity>
+                      
+                      <TouchableOpacity
+                        style={[modalStyles.button, modalStyles.deleteButton]}
+                        onPress={this.deleteSelectedItems}
+                      >
+                        <Text style={modalStyles.buttonText}>Delete</Text>
+                      </TouchableOpacity>
+                    </View>
+                  </View>
+                </TouchableWithoutFeedback>
+              </View>
+            </TouchableWithoutFeedback>
+          </Modal>
+
+
+
+          {/* Add item FAB */}
           <TouchableOpacity
-            style={styles.fab}
+            style={[styles.fab, styles.addFab]}
             onPress={() => this.setState({ showAddItemModal: true })}
           >
             <Ionicons name="add" size={30} color="white" />
+          </TouchableOpacity>
+          
+          {/* Selection mode FAB */}
+          <TouchableOpacity
+            style={[styles.fab, styles.selectFab]}
+            onPress={this.toggleSelectionMode}
+          >
+            <Ionicons name={this.state.selectionMode ? "close" : "list"} size={26} color="white" />
           </TouchableOpacity>
         </View>
       </TouchableWithoutFeedback>
@@ -644,6 +791,9 @@ const styles = StyleSheet.create({
   scrollViewContent: {
     paddingBottom: 20,
     paddingTop: 8,
+  },
+  scrollViewWithActionBar: {
+    paddingTop: 0,
   },
   headerContainer: {
     flexDirection: 'row',
@@ -722,15 +872,17 @@ const styles = StyleSheet.create({
     height: 60,
     alignItems: 'center',
     justifyContent: 'center',
-    right: 20,
-    bottom: 20,
-    backgroundColor: '#3B82F6',
     borderRadius: 30,
     elevation: 8,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.25,
     shadowRadius: 3.84,
+  },
+  addFab: {
+    right: 20,
+    bottom: 20,
+    backgroundColor: '#3B82F6',
   },
   modalTitle: {
     fontSize: 18,
@@ -756,5 +908,64 @@ const styles = StyleSheet.create({
   buttonText: {
     color: 'white',
     fontWeight: '600',
+  },
+  selectFab: {
+    left: 20, // Position on the far left of the screen, opposite to the add item FAB
+    bottom: 20,
+    backgroundColor: '#64748B',
+  },
+  selectedItem: {
+    backgroundColor: '#EFF6FF',
+  },
+  selectionActionBar: {
+    width: '100%',
+    backgroundColor: 'white',
+    padding: 16,
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    borderBottomWidth: 1,
+    borderBottomColor: '#E2E8F0',
+    elevation: 4,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 2,
+    marginBottom: 8,
+  },
+  selectedCountText: {
+    fontSize: 16,
+    color: '#64748B',
+    fontWeight: '500',
+  },
+  selectionActionButtons: {
+    flexDirection: 'row',
+  },
+  actionButton: {
+    paddingVertical: 10,
+    paddingHorizontal: 16,
+    borderRadius: 8,
+    marginLeft: 8,
+    alignItems: 'center',
+    justifyContent: 'center',
+    minWidth: 80,
+  },
+  actionDeleteButton: {
+    backgroundColor: '#EF4444',
+    paddingHorizontal: 20,
+  },
+  cancelSelectionButton: {
+    backgroundColor: '#F1F5F9',
+    paddingHorizontal: 20,
+  },
+  cancelButtonText: {
+    color: '#64748B',
+    fontWeight: '600',
+    textAlign: 'center',
+  },
+  deleteButtonText: {
+    color: 'white',
+    fontWeight: '600',
+    textAlign: 'center',
   },
 });
