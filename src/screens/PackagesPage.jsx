@@ -69,7 +69,9 @@ export default class PackagesPage extends Component {
       showPackageModal: false,
       showDetailsModal: false,
       selectedItem: null,
-      selectedPackage: null
+      selectedPackage: null,
+      showOptionsModal: false,
+      showSavedItemsModal: false
     });
     
     // Initialize these properties to avoid undefined errors
@@ -89,7 +91,9 @@ export default class PackagesPage extends Component {
           showPackageModal: false,
           showDetailsModal: false,
           selectedItem: null,
-          selectedPackage: null
+          selectedPackage: null,
+          showOptionsModal: false,
+          showSavedItemsModal: false
         });
       };
       
@@ -98,7 +102,7 @@ export default class PackagesPage extends Component {
     }
     
     // Add a back button handler for hardware back button (Android) and gesture (iOS)
-    this.backHandler = this.props.navigation.addListener(
+    this.navigationBackHandler = this.props.navigation.addListener(
       'beforeRemove',
       (e) => {
         // If any modal is open, prevent navigation and close the modal instead
@@ -115,17 +119,23 @@ export default class PackagesPage extends Component {
         if (this.state.showDetailsModal) {
           // If details modal is open, close it and show package modal
           const packageName = this.state.selectedPackage || this.tempPackageName || Object.keys(this.state.packages)[0];
+          
+          // Close the details modal first
           this.setState({ 
             showDetailsModal: false,
             selectedItem: null
-          }, () => {
-            setTimeout(() => {
+          });
+          
+          // Wait for animation to complete before showing package modal
+          setTimeout(() => {
+            if (this.mounted) { // Check if component is still mounted
               this.setState({ 
                 showPackageModal: true,
                 selectedPackage: packageName
               });
-            }, 300);
-          });
+            }
+          }, 500);
+          
           return true; // Prevent default back behavior
         } else if (this.state.showPackageModal) {
           // If package modal is open, close it
@@ -144,6 +154,9 @@ export default class PackagesPage extends Component {
       }
     );
     
+    // Set mounted flag for safety checks
+    this.mounted = true;
+    
     // Initial fetch of saved items
     this.fetchSavedItems();
   }
@@ -151,15 +164,22 @@ export default class PackagesPage extends Component {
   componentWillUnmount() {
     console.log('PackagesPage unmounting');
     
+    // Set mounted flag to false to prevent setState after unmount
+    this.mounted = false;
+    
     // Clean up listeners
     if (this.focusListener) {
       this.focusListener();
     }
     
+    if (this.navigationBackHandler) {
+      this.navigationBackHandler();
+    }
+    
     if (this.backHandler) {
       if (Platform.OS === 'android') {
         this.backHandler.remove();
-      } else {
+      } else if (typeof this.backHandler === 'function') {
         this.backHandler();
       }
     }
@@ -281,25 +301,20 @@ export default class PackagesPage extends Component {
   };
 
   closePackageModal = () => {
-    // Close modals sequentially to prevent freezing in production builds
-    if (this.state.showDetailsModal) {
-      this.setState({
-        showDetailsModal: false,
-        selectedItem: null
-      }, () => {
-        setTimeout(() => {
-          this.setState({
-            showPackageModal: false,
-            selectedPackage: null
-          });
-        }, 300);
-      });
-    } else {
-      this.setState({
-        showPackageModal: false,
-        selectedPackage: null
-      });
-    }
+    // Close all modals with a clean approach
+    // Reset all modal-related state to prevent any lingering state issues
+    this.setState({
+      showPackageModal: false,
+      showDetailsModal: false,
+      selectedPackage: null,
+      selectedItem: null,
+      showOptionsModal: false,
+      showSavedItemsModal: false
+    });
+    
+    // Also clear any temporary references
+    this.selectedItemTemp = null;
+    this.tempPackageName = null;
   };
 
   handleEditItem = (item) => {
@@ -317,17 +332,22 @@ export default class PackagesPage extends Component {
       
       console.log('Setting selectedItem first');
       
-      // REVERTING TO SEQUENTIAL APPROACH FOR PRODUCTION COMPATIBILITY
-      // First close the package modal
-      this.setState({ showPackageModal: false }, () => {
-        // Wait for the first modal to close completely
+      // PRODUCTION-SAFE APPROACH WITH DIRECT NAVIGATION
+      // Instead of using nested modals, close everything and set a flag
+      // to show the item details after a delay
+      this.setState({ 
+        showPackageModal: false,
+        showDetailsModal: false,
+        selectedItem: null
+      }, () => {
+        // Use a longer timeout to ensure all modal animations are complete
         setTimeout(() => {
           // Then open the details modal with the selected item
           this.setState({ 
             selectedItem: itemCopy,
             showDetailsModal: true 
           });
-        }, 300);
+        }, 500);
       });
     } catch (error) {
       console.error('Error in handleEditItem:', error);
@@ -336,11 +356,17 @@ export default class PackagesPage extends Component {
   };
 
   handleSaveEditedItem = async (updatedItem) => {
-    // First close the modal
-    this.setState({ 
-      showDetailsModal: false,
-      selectedItem: null 
-    }, async () => {
+    if (!this.mounted) return; // Safety check
+    
+    try {
+      console.log('Saving edited item:', updatedItem.id);
+      
+      // First close the modal
+      this.setState({ 
+        showDetailsModal: false,
+        selectedItem: null 
+      });
+      
       // Use the stored package name if selectedPackage is null
       const packageName = this.state.selectedPackage || this.tempPackageName;
       const { packages } = this.state;
@@ -356,11 +382,23 @@ export default class PackagesPage extends Component {
         return;
       }
 
-      const replicatedNames = await Promise.all(Array.from({ length: updatedItem.quantity }, async (_, i) => ({
-        name: updatedItem.itemName,
-        id: await Crypto.randomUUID(),
-        parentId: updatedItem.id
-      })));
+      // Generate replicated names
+      let replicatedNames = [];
+      try {
+        replicatedNames = await Promise.all(Array.from({ length: updatedItem.quantity }, async (_, i) => ({
+          name: updatedItem.itemName,
+          id: await Crypto.randomUUID(),
+          parentId: updatedItem.id
+        })));
+      } catch (error) {
+        console.error('Error generating UUIDs:', error);
+        // Fallback for UUID generation
+        replicatedNames = Array.from({ length: updatedItem.quantity }, (_, i) => ({
+          name: updatedItem.itemName,
+          id: 'item-' + Math.random().toString(36).substring(2, 15),
+          parentId: updatedItem.id
+        }));
+      }
 
       const updatedItemWithReplications = {
         ...updatedItem,
@@ -377,32 +415,49 @@ export default class PackagesPage extends Component {
         await AsyncStorage.setItem("packages", JSON.stringify(updatedPackages));
         
         // Update state after AsyncStorage is updated
-        this.setState({ packages: updatedPackages }, () => {
-          Alert.alert("Success", `${updatedItem.itemName} was successfully updated`, [
-            {
-              text: "OK",
-              onPress: () => {
-                // Show the package modal again with the correct package selected
-                this.setState({ 
-                  showPackageModal: true,
-                  selectedPackage: packageName
-                });
+        if (this.mounted) { // Safety check
+          this.setState({ packages: updatedPackages }, () => {
+            Alert.alert("Success", `${updatedItem.itemName} was successfully updated`, [
+              {
+                text: "OK",
+                onPress: () => {
+                  // Use setTimeout to ensure alert is dismissed before showing modal
+                  setTimeout(() => {
+                    if (this.mounted) { // Safety check
+                      // Show the package modal again with the correct package selected
+                      this.setState({ 
+                        showPackageModal: true,
+                        selectedPackage: packageName
+                      });
+                    }
+                  }, 100);
+                }
               }
-            }
-          ]);
-        });
+            ]);
+          });
+        }
       } catch (error) {
+        console.error('Error saving to AsyncStorage:', error);
         Alert.alert("Error", "Failed to save edited item.");
       }
-    });
+    } catch (error) {
+      console.error('Error in handleSaveEditedItem:', error);
+      Alert.alert("Error", "An unexpected error occurred while saving the item.");
+    }
   };
 
   handleDeleteItem = (itemToDelete) => {
-    // First close the modal
-    this.setState({ 
-      showDetailsModal: false,
-      selectedItem: null 
-    }, () => {
+    if (!this.mounted) return; // Safety check
+    
+    try {
+      console.log('Deleting item:', itemToDelete.id);
+      
+      // First close the modal
+      this.setState({ 
+        showDetailsModal: false,
+        selectedItem: null 
+      });
+      
       // Use the stored package name if selectedPackage is null
       const packageName = this.state.selectedPackage || this.tempPackageName;
       const { packages } = this.state;
@@ -430,32 +485,43 @@ export default class PackagesPage extends Component {
       // Update AsyncStorage and state
       AsyncStorage.setItem("packages", JSON.stringify(updatedPackages))
         .then(() => {
-          this.setState({ packages: updatedPackages }, () => {
-            if (updatedPackage.length === 0) {
-              Alert.alert(
-                "Success",
-                `Package "${packageName}" was removed`
-              );
-              this.closePackageModal();
-            } else {
-              Alert.alert("Success", `${itemToDelete.itemName} was removed`, [
-                {
-                  text: "OK",
-                  onPress: () => {
-                    this.setState({ 
-                      showPackageModal: true,
-                      selectedPackage: packageName
-                    });
+          if (this.mounted) { // Safety check
+            this.setState({ packages: updatedPackages }, () => {
+              if (updatedPackage.length === 0) {
+                Alert.alert(
+                  "Success",
+                  `Package "${packageName}" was removed`
+                );
+                this.closePackageModal();
+              } else {
+                Alert.alert("Success", `${itemToDelete.itemName} was removed`, [
+                  {
+                    text: "OK",
+                    onPress: () => {
+                      // Use setTimeout to ensure alert is dismissed before showing modal
+                      setTimeout(() => {
+                        if (this.mounted) { // Safety check
+                          this.setState({ 
+                            showPackageModal: true,
+                            selectedPackage: packageName
+                          });
+                        }
+                      }, 100);
+                    }
                   }
-                }
-              ]);
-            }
-          });
+                ]);
+              }
+            });
+          }
         })
         .catch(error => {
+          console.error('Error deleting item:', error);
           Alert.alert("Error", "Failed to delete item or package.");
         });
-    });
+    } catch (error) {
+      console.error('Error in handleDeleteItem:', error);
+      Alert.alert("Error", "An unexpected error occurred while deleting the item.");
+    }
   };
 
   handlePackItems = async () => {
@@ -933,12 +999,18 @@ export default class PackagesPage extends Component {
           </Modal>
 
           {/* Completely separate modal rendering from state updates */}
+          {/* Using key to force re-render of the modal when selectedItem changes */}
           <ItemDetailsModal
+            key={selectedItem ? selectedItem.id : 'no-item'}
             visible={showDetailsModal && selectedItem !== null}
             item={selectedItem}
             closeModal={() => {
-              // Just close this modal first
-              this.setState({ showDetailsModal: false, selectedItem: null });
+              console.log('Closing item details modal');
+              // Just close this modal first with a clean approach
+              this.setState({ 
+                showDetailsModal: false,
+                selectedItem: null 
+              });
             }}
             handleDeleteAndClose={() => selectedItem && this.handleDeleteItem(selectedItem)}
             handleUpdateItem={this.handleSaveEditedItem}
@@ -948,20 +1020,20 @@ export default class PackagesPage extends Component {
               // First ensure we have the package name stored
               const packageName = this.state.selectedPackage || this.tempPackageName || Object.keys(this.state.packages)[0];
               
-              // REVERTING TO SEQUENTIAL APPROACH FOR PRODUCTION COMPATIBILITY
-              // First close the details modal
+              // IMPROVED APPROACH FOR PRODUCTION COMPATIBILITY
+              // First close the details modal completely
               this.setState({ 
                 showDetailsModal: false,
                 selectedItem: null
               }, () => {
-                // Wait for the first modal to close completely
+                // Use a longer timeout to ensure modal is fully closed
                 setTimeout(() => {
                   // Then show the package modal
                   this.setState({ 
                     showPackageModal: true,
                     selectedPackage: packageName
                   });
-                }, 300);
+                }, 500);
               });
             }}
           />
