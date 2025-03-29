@@ -1189,9 +1189,14 @@ export default class PackagesPage extends Component {
               )}
               <Text style={styles.packageName}>{packageName}</Text>
             </View>
-            <Text style={styles.itemCount}>
-              {this.state.packages[packageName].length} unique {this.state.packages[packageName].length === 1 ? 'item' : 'items'}
-            </Text>
+            <View style={styles.itemCountContainer}>
+              <Text style={styles.itemCount}>
+                {this.state.packages[packageName].length} unique {this.state.packages[packageName].length === 1 ? 'item' : 'items'}
+              </Text>
+              <Text style={styles.totalItemCount}>
+                {this.calculateTotalItems(packageName)} total {this.calculateTotalItems(packageName) === 1 ? 'item' : 'items'}
+              </Text>
+            </View>
           </TouchableOpacity>
         </Animated.View>
 
@@ -1239,6 +1244,14 @@ export default class PackagesPage extends Component {
       selectionMode: false,
       selectedPackages: []
     });
+  };
+
+  calculateTotalItems = (packageName) => {
+    // Calculate the total number of items including replicated items
+    return this.state.packages[packageName].reduce((total, item) => {
+      // Add the quantity or the number of replicated items
+      return total + (item.quantity || (item.replicatedNames ? item.replicatedNames.length : 1));
+    }, 0);
   };
 
   // Delete selected packages
@@ -1419,10 +1432,19 @@ const styles = StyleSheet.create({
     letterSpacing: 0.3,
     flex: 1,
   },
+  itemCountContainer: {
+    alignItems: 'flex-end',
+  },
   itemCount: {
     fontSize: 14,
     color: "#7f8c8d",
     fontWeight: "500",
+  },
+  totalItemCount: {
+    fontSize: 12,
+    color: "#94a3b8",
+    fontWeight: "400",
+    marginTop: 2,
   },
   editButton: {
     width: 36,
