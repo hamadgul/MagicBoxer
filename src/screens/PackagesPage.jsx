@@ -13,6 +13,8 @@ import {
   Animated,
   Easing,
   Keyboard,
+  Platform,
+  BackHandler,
 } from "react-native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { Ionicons } from "@expo/vector-icons"; 
@@ -107,6 +109,33 @@ export default class PackagesPage extends Component {
       }
     );
     
+    // Add a hardware back button handler for Android
+    if (Platform.OS === 'android') {
+      this.backHandler = BackHandler.addEventListener('hardwareBackPress', () => {
+        if (this.state.showDetailsModal) {
+          // If details modal is open, close it and show package modal
+          const packageName = this.state.selectedPackage || this.tempPackageName || Object.keys(this.state.packages)[0];
+          this.setState({ 
+            showDetailsModal: false,
+            selectedItem: null
+          }, () => {
+            setTimeout(() => {
+              this.setState({ 
+                showPackageModal: true,
+                selectedPackage: packageName
+              });
+            }, 300);
+          });
+          return true; // Prevent default back behavior
+        } else if (this.state.showPackageModal) {
+          // If package modal is open, close it
+          this.closePackageModal();
+          return true; // Prevent default back behavior
+        }
+        return false; // Let default back behavior happen
+      });
+    }
+    
     this.focusListener = this.props.navigation.addListener(
       "focus",
       () => {
@@ -128,7 +157,11 @@ export default class PackagesPage extends Component {
     }
     
     if (this.backHandler) {
-      this.backHandler();
+      if (Platform.OS === 'android') {
+        this.backHandler.remove();
+      } else {
+        this.backHandler();
+      }
     }
     
     // Clean up error handler if it exists
@@ -248,14 +281,25 @@ export default class PackagesPage extends Component {
   };
 
   closePackageModal = () => {
-    // Close all modals at once to prevent state conflicts
-    // This is more reliable in production builds
-    this.setState({
-      showPackageModal: false,
-      showDetailsModal: false,
-      selectedPackage: null,
-      selectedItem: null
-    });
+    // Close modals sequentially to prevent freezing in production builds
+    if (this.state.showDetailsModal) {
+      this.setState({
+        showDetailsModal: false,
+        selectedItem: null
+      }, () => {
+        setTimeout(() => {
+          this.setState({
+            showPackageModal: false,
+            selectedPackage: null
+          });
+        }, 300);
+      });
+    } else {
+      this.setState({
+        showPackageModal: false,
+        selectedPackage: null
+      });
+    }
   };
 
   handleEditItem = (item) => {
@@ -273,12 +317,17 @@ export default class PackagesPage extends Component {
       
       console.log('Setting selectedItem first');
       
-      // IMPROVED PRODUCTION-SAFE APPROACH: Use a single state update
-      // This prevents race conditions that can cause freezes in production builds
-      this.setState({ 
-        showPackageModal: false,
-        selectedItem: itemCopy,
-        showDetailsModal: true 
+      // REVERTING TO SEQUENTIAL APPROACH FOR PRODUCTION COMPATIBILITY
+      // First close the package modal
+      this.setState({ showPackageModal: false }, () => {
+        // Wait for the first modal to close completely
+        setTimeout(() => {
+          // Then open the details modal with the selected item
+          this.setState({ 
+            selectedItem: itemCopy,
+            showDetailsModal: true 
+          });
+        }, 300);
       });
     } catch (error) {
       console.error('Error in handleEditItem:', error);
@@ -899,12 +948,20 @@ export default class PackagesPage extends Component {
               // First ensure we have the package name stored
               const packageName = this.state.selectedPackage || this.tempPackageName || Object.keys(this.state.packages)[0];
               
-              // Improved approach for iOS IPA version - single state update
+              // REVERTING TO SEQUENTIAL APPROACH FOR PRODUCTION COMPATIBILITY
+              // First close the details modal
               this.setState({ 
                 showDetailsModal: false,
-                selectedItem: null,
-                showPackageModal: true,
-                selectedPackage: packageName
+                selectedItem: null
+              }, () => {
+                // Wait for the first modal to close completely
+                setTimeout(() => {
+                  // Then show the package modal
+                  this.setState({ 
+                    showPackageModal: true,
+                    selectedPackage: packageName
+                  });
+                }, 300);
               });
             }}
           />
