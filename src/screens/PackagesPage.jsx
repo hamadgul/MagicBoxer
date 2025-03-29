@@ -37,6 +37,10 @@ export default class PackagesPage extends Component {
     editingPackage: null,
     showSavedItemsModal: false,
     savedItems: [],
+    // Bulk selection state
+    selectionMode: false,
+    selectedPackages: [],
+    showDeleteConfirmModal: false,
   };
 
   constructor(props) {
@@ -689,7 +693,7 @@ export default class PackagesPage extends Component {
       >
         <View style={styles.container}>
           <ScrollView 
-            style={styles.scrollView}
+            style={[styles.scrollView, this.state.selectionMode && { marginTop: 60 }]}
             contentContainerStyle={styles.scrollViewContent}
           >
             {Object.keys(packages).length === 0 ? (
@@ -739,6 +743,48 @@ export default class PackagesPage extends Component {
             </TouchableOpacity>
           </Modal>
 
+          {/* Delete confirmation modal */}
+          <Modal
+            visible={this.state.showDeleteConfirmModal}
+            transparent={true}
+            animationType="fade"
+            onRequestClose={() => this.setState({ showDeleteConfirmModal: false })}
+          >
+            <TouchableWithoutFeedback 
+              onPress={() => this.setState({ showDeleteConfirmModal: false })}
+            >
+              <View style={modalStyles.centeredView}>
+                <TouchableWithoutFeedback onPress={(e) => e.stopPropagation()}>
+                  <View style={modalStyles.modalContent}>
+                    <View style={modalStyles.modalHeader}>
+                      <Text style={modalStyles.modalTitle}>Confirm Deletion</Text>
+                    </View>
+                    
+                    <Text style={modalStyles.modalSubtitle}>
+                      Are you sure you want to delete {this.state.selectedPackages.length} selected package(s)?
+                    </Text>
+                    
+                    <View style={modalStyles.modalButtonContainer}>
+                      <TouchableOpacity
+                        style={[modalStyles.button, modalStyles.cancelButton]}
+                        onPress={() => this.setState({ showDeleteConfirmModal: false })}
+                      >
+                        <Text style={modalStyles.buttonText}>Cancel</Text>
+                      </TouchableOpacity>
+                      
+                      <TouchableOpacity
+                        style={[modalStyles.button, modalStyles.deleteButton]}
+                        onPress={this.deleteSelectedPackages}
+                      >
+                        <Text style={modalStyles.buttonText}>Delete</Text>
+                      </TouchableOpacity>
+                    </View>
+                  </View>
+                </TouchableWithoutFeedback>
+              </View>
+            </TouchableWithoutFeedback>
+          </Modal>
+          
           {/* Rename Package Modal */}
           <Modal
             visible={renamePackageModal}
@@ -1056,15 +1102,43 @@ export default class PackagesPage extends Component {
 
 
 
+          {/* Selection mode action bar at the top */}
+          {this.state.selectionMode && (
+            <View style={styles.selectionActionBar}>
+              <Text style={styles.selectedCountText}>
+                {this.state.selectedPackages.length} package(s) selected
+              </Text>
+              
+              <View style={styles.selectionActionButtons}>
+                <TouchableOpacity
+                  style={[styles.actionButton, styles.cancelSelectionButton]}
+                  onPress={this.cancelSelection}
+                >
+                  <Text style={styles.cancelButtonText}>Cancel</Text>
+                </TouchableOpacity>
+                
+                <TouchableOpacity
+                  style={[styles.actionButton, styles.actionDeleteButton]}
+                  onPress={() => {
+                    if (this.state.selectedPackages.length > 0) {
+                      this.setState({ showDeleteConfirmModal: true });
+                    } else {
+                      Alert.alert("No Packages Selected", "Please select at least one package to delete.");
+                    }
+                  }}
+                  disabled={this.state.selectedPackages.length === 0}
+                >
+                  <Text style={styles.deleteButtonText}>Delete</Text>
+                </TouchableOpacity>
+              </View>
+            </View>
+          )}
+          
           <TouchableOpacity
-            style={styles.infoFab}
-            onPress={() => Alert.alert(
-              "Package Options",
-              "Long press on any package to rename or delete the entire package.",
-              [{ text: "OK", onPress: () => {} }]
-            )}
+            style={[styles.fab, styles.selectFab]}
+            onPress={this.toggleSelectionMode}
           >
-            <Ionicons name="information-circle" size={30} color="white" />
+            <Ionicons name={this.state.selectionMode ? "close" : "list"} size={26} color="white" />
           </TouchableOpacity>
         </View>
       </TouchableWithoutFeedback>
@@ -1073,13 +1147,15 @@ export default class PackagesPage extends Component {
 
   renderPackage = (packageName) => {
     const isEditing = this.state.isEditMode && this.state.editingPackage === packageName;
+    const { selectionMode, selectedPackages } = this.state;
+    const isSelected = selectedPackages.includes(packageName);
     const animatedStyle = {
       transform: [{ translateX: isEditing ? this.shakeAnimation : 0 }],
     };
 
     return (
       <View key={packageName} style={styles.packageRow}>
-        {isEditing && (
+        {isEditing && !selectionMode && (
           <TouchableOpacity
             style={styles.editButton}
             onPress={() => this.handleDeletePackage(packageName)}
@@ -1090,12 +1166,27 @@ export default class PackagesPage extends Component {
         
         <Animated.View style={[styles.packageContainer, animatedStyle]}>
           <TouchableOpacity
-            style={styles.package}
-            onPress={() => !isEditing && this.openPackageDetails(packageName)}
-            onLongPress={() => this.toggleEditMode(packageName)}
+            style={[styles.package, isSelected && selectionMode && styles.selectedPackage]}
+            onPress={() => {
+              if (selectionMode) {
+                this.togglePackageSelection(packageName);
+              } else if (!isEditing) {
+                this.openPackageDetails(packageName);
+              }
+            }}
+            onLongPress={() => !selectionMode && this.toggleEditMode(packageName)}
           >
             <View style={styles.packageLeftContent}>
-              <Ionicons name="cube" size={20} color="#3B82F6" style={styles.packageIcon} />
+              {selectionMode ? (
+                <Ionicons 
+                  name={isSelected ? "checkbox" : "square-outline"} 
+                  size={20} 
+                  color="#3B82F6" 
+                  style={styles.packageIcon} 
+                />
+              ) : (
+                <Ionicons name="cube" size={20} color="#3B82F6" style={styles.packageIcon} />
+              )}
               <Text style={styles.packageName}>{packageName}</Text>
             </View>
             <Text style={styles.itemCount}>
@@ -1104,7 +1195,7 @@ export default class PackagesPage extends Component {
           </TouchableOpacity>
         </Animated.View>
 
-        {isEditing && (
+        {isEditing && !selectionMode && (
           <TouchableOpacity
             style={styles.editButton}
             onPress={() => this.openRenameModal(packageName)}
@@ -1116,6 +1207,78 @@ export default class PackagesPage extends Component {
     );
   }
 
+  // Toggle selection mode for bulk operations
+  toggleSelectionMode = () => {
+    this.setState(prevState => ({
+      selectionMode: !prevState.selectionMode,
+      selectedPackages: [],
+      isEditMode: false,
+      editingPackage: null,
+      showOptionsModal: false,
+      showPackageModal: false
+    }));
+  };
+
+  // Toggle selection of a package
+  togglePackageSelection = (packageName) => {
+    this.setState(prevState => {
+      const isSelected = prevState.selectedPackages.includes(packageName);
+      const updatedSelection = isSelected
+        ? prevState.selectedPackages.filter(name => name !== packageName)
+        : [...prevState.selectedPackages, packageName];
+      
+      return {
+        selectedPackages: updatedSelection
+      };
+    });
+  };
+
+  // Cancel selection mode
+  cancelSelection = () => {
+    this.setState({
+      selectionMode: false,
+      selectedPackages: []
+    });
+  };
+
+  // Delete selected packages
+  deleteSelectedPackages = async () => {
+    const { selectedPackages, packages } = this.state;
+    
+    if (selectedPackages.length === 0) {
+      Alert.alert("No Packages Selected", "Please select at least one package to delete.");
+      return;
+    }
+    
+    try {
+      // Create a copy of packages without the selected ones
+      const updatedPackages = { ...packages };
+      selectedPackages.forEach(packageName => {
+        delete updatedPackages[packageName];
+      });
+      
+      // Save updated packages to AsyncStorage
+      await AsyncStorage.setItem('packages', JSON.stringify(updatedPackages));
+      
+      // Update state
+      this.setState({
+        packages: updatedPackages,
+        selectedPackages: [],
+        selectionMode: false,
+        showDeleteConfirmModal: false
+      });
+      
+      // Show success message
+      Alert.alert(
+        "Success",
+        `${selectedPackages.length} package(s) deleted successfully.`
+      );
+    } catch (error) {
+      console.error('Error deleting packages:', error);
+      Alert.alert("Error", "There was a problem deleting the selected packages.");
+    }
+  };
+  
   handleAddSavedItemToPackage = async (savedItem) => {
     try {
       console.log('Adding saved item to package:', savedItem);
@@ -1374,18 +1537,23 @@ const styles = StyleSheet.create({
     position: 'absolute',
     left: 20, // Position on the left side
     bottom: 20,
-    width: 56,
-    height: 56,
-    borderRadius: 28,
+    width: 60,
+    height: 60,
+    borderRadius: 30,
     backgroundColor: '#3B82F6',
     justifyContent: 'center',
     alignItems: 'center',
-    elevation: 4,
+    elevation: 8,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.25,
-    shadowRadius: 4,
+    shadowRadius: 3.84,
     zIndex: 1,
+  },
+  selectFab: {
+    backgroundColor: '#64748B',
+    right: 'auto', // Override the right positioning from fab style
+    left: 20,     // Position on the left side
   },
   noPackagesText: {
     fontSize: 16,
@@ -1411,6 +1579,65 @@ const styles = StyleSheet.create({
     backgroundColor: "#F8FAFC",
     color: "#2c3e50",
     placeholderTextColor: "#94A3B8",
+  },
+  selectionActionBar: {
+    width: '100%',
+    backgroundColor: 'white',
+    padding: 16,
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    borderBottomWidth: 1,
+    borderBottomColor: '#E2E8F0',
+    elevation: 4,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 2,
+    marginBottom: 8,
+    zIndex: 10,
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+  },
+  selectedCountText: {
+    fontSize: 16,
+    color: '#64748B',
+    fontWeight: '500',
+  },
+  selectionActionButtons: {
+    flexDirection: 'row',
+  },
+  actionButton: {
+    paddingVertical: 10,
+    paddingHorizontal: 16,
+    borderRadius: 8,
+    marginLeft: 8,
+    alignItems: 'center',
+    justifyContent: 'center',
+    minWidth: 80,
+  },
+  actionDeleteButton: {
+    backgroundColor: '#EF4444',
+    paddingHorizontal: 20,
+  },
+  cancelSelectionButton: {
+    backgroundColor: '#F1F5F9',
+    paddingHorizontal: 20,
+  },
+  cancelButtonText: {
+    color: '#64748B',
+    fontWeight: '600',
+    textAlign: 'center',
+  },
+  deleteButtonText: {
+    color: 'white',
+    fontWeight: '600',
+    textAlign: 'center',
+  },
+  selectedPackage: {
+    backgroundColor: '#EFF6FF',
   },
   input: {
     borderWidth: 1,
@@ -1509,17 +1736,17 @@ const styles = StyleSheet.create({
     position: 'absolute',
     right: 20,
     bottom: 20,
-    width: 56,
-    height: 56,
-    borderRadius: 28,
+    width: 60,
+    height: 60,
+    borderRadius: 30,
     backgroundColor: '#3B82F6',
     justifyContent: 'center',
     alignItems: 'center',
-    elevation: 4,
+    elevation: 8,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.25,
-    shadowRadius: 4,
+    shadowRadius: 3.84,
     zIndex: 1,
   },
   addItemButton: {
