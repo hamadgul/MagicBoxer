@@ -9,7 +9,7 @@ module.exports = {
     splash: {
       image: "./assets/splash.png",
       resizeMode: "contain",
-      backgroundColor: "#b3fcfa"
+      backgroundColor: "#c6c6c7"
     },
     assetBundlePatterns: [
       "**/*"
@@ -21,7 +21,7 @@ module.exports = {
     android: {
       adaptiveIcon: {
         foregroundImage: "./assets/adaptive-icon.png",
-        backgroundColor: "#ffffff"
+        backgroundColor: "#c6c6c7"
       },
       package: "com.magicboxer.app"
     },

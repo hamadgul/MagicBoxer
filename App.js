@@ -131,6 +131,6 @@ export default function App() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#0f2d44", // Match splash screen background color
+    backgroundColor: "#c6c6c7", // Match splash screen background color
   }
 });

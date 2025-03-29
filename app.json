@@ -9,17 +9,18 @@
     "splash": {
       "image": "./assets/splash.png",
       "resizeMode": "contain",
-      "backgroundColor": "#b3fcfa"
+      "backgroundColor": "#c6c6c7"
     },
     "scheme": "myapp",
     "userInterfaceStyle": "automatic",
     "ios": {
-      "supportsTablet": true
+      "supportsTablet": true,
+      "backgroundColor": "#c6c6c7"
     },
     "android": {
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",
-        "backgroundColor": "#b3fcfa"
+        "backgroundColor": "#c6c6c7"
       }
     },
     "web": {
@@ -35,7 +36,7 @@
           "image": "./assets/splash.png",
           "imageWidth": 200,
           "resizeMode": "contain",
-          "backgroundColor": "#E2E8F0"
+          "backgroundColor": "#c6c6c7"
         }
       ]
     ],
