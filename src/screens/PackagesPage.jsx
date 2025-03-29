@@ -692,7 +692,16 @@ export default class PackagesPage extends Component {
             style={styles.scrollView}
             contentContainerStyle={styles.scrollViewContent}
           >
-            {Object.keys(packages).map(this.renderPackage)}
+            {Object.keys(packages).length === 0 ? (
+              <View style={styles.emptyContainer}>
+                <Ionicons name="cube-outline" size={60} color="#CBD5E1" />
+                <Text style={styles.emptyText}>
+                  There are no saved packages. Go to the Create Package Page to start creating packages.
+                </Text>
+              </View>
+            ) : (
+              Object.keys(packages).map(this.renderPackage)
+            )}
           </ScrollView>
 
           {/* Options Modal */}
@@ -1563,5 +1572,20 @@ const styles = StyleSheet.create({
     color: '#3B82F6',
     fontWeight: '500',
     marginLeft: 8,
+  },
+  emptyContainer: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingTop: 100,
+    paddingHorizontal: 40,
+  },
+  emptyText: {
+    fontSize: 16,
+    color: '#64748B',
+    textAlign: 'center',
+    marginTop: 20,
+    marginHorizontal: 'auto',
+    width: '80%',
   },
 });

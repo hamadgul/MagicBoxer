@@ -365,7 +365,7 @@ export default class SavedItemsPage extends Component {
               <View style={styles.emptyContainer}>
                 <Ionicons name="bookmark-outline" size={60} color="#CBD5E1" />
                 <Text style={styles.emptyText}>
-                  Your saved items will appear here and can be accessed on the Add Items page.
+                  Your saved items will appear here and can be accessed via the Name dropdown on the Create Package Page.
                 </Text>
               </View>
             ) : (
@@ -667,6 +667,8 @@ const styles = StyleSheet.create({
     color: '#64748B',
     textAlign: 'center',
     marginTop: 20,
+    marginHorizontal: 'auto',
+    width: '80%',
   },
   itemRow: {
     flexDirection: 'row',
