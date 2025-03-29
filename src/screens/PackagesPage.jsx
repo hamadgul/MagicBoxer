@@ -86,13 +86,26 @@ export default class PackagesPage extends Component {
         this.setState({
           showPackageModal: false,
           showDetailsModal: false,
-          selectedItem: null
+          selectedItem: null,
+          selectedPackage: null
         });
       };
       
       // Set up error handler
       this.errorSubscription = global.ErrorUtils?.setGlobalHandler?.(this.errorHandler);
     }
+    
+    // Add a back button handler for hardware back button (Android) and gesture (iOS)
+    this.backHandler = this.props.navigation.addListener(
+      'beforeRemove',
+      (e) => {
+        // If any modal is open, prevent navigation and close the modal instead
+        if (this.state.showDetailsModal || this.state.showPackageModal) {
+          e.preventDefault();
+          this.closePackageModal();
+        }
+      }
+    );
     
     this.focusListener = this.props.navigation.addListener(
       "focus",
@@ -112,6 +125,10 @@ export default class PackagesPage extends Component {
     // Clean up listeners
     if (this.focusListener) {
       this.focusListener();
+    }
+    
+    if (this.backHandler) {
+      this.backHandler();
     }
     
     // Clean up error handler if it exists
@@ -231,25 +248,14 @@ export default class PackagesPage extends Component {
   };
 
   closePackageModal = () => {
-    // Close modals one at a time to prevent state conflicts
-    if (this.state.showDetailsModal) {
-      this.setState({
-        showDetailsModal: false,
-        selectedItem: null
-      }, () => {
-        setTimeout(() => {
-          this.setState({
-            showPackageModal: false,
-            selectedPackage: null
-          });
-        }, 100);
-      });
-    } else {
-      this.setState({
-        showPackageModal: false,
-        selectedPackage: null
-      });
-    }
+    // Close all modals at once to prevent state conflicts
+    // This is more reliable in production builds
+    this.setState({
+      showPackageModal: false,
+      showDetailsModal: false,
+      selectedPackage: null,
+      selectedItem: null
+    });
   };
 
   handleEditItem = (item) => {
@@ -267,19 +273,12 @@ export default class PackagesPage extends Component {
       
       console.log('Setting selectedItem first');
       
-      // PRODUCTION-SAFE APPROACH: Use a simpler state update sequence
-      // First close the package modal completely
-      this.setState({ showPackageModal: false }, () => {
-        console.log('Package modal closed');
-        
-        // Wait a moment before setting the item and opening the details modal
-        setTimeout(() => {
-          console.log('Setting selectedItem and opening details modal');
-          this.setState({ 
-            selectedItem: itemCopy,
-            showDetailsModal: true 
-          });
-        }, 500); // Longer timeout for production builds
+      // IMPROVED PRODUCTION-SAFE APPROACH: Use a single state update
+      // This prevents race conditions that can cause freezes in production builds
+      this.setState({ 
+        showPackageModal: false,
+        selectedItem: itemCopy,
+        showDetailsModal: true 
       });
     } catch (error) {
       console.error('Error in handleEditItem:', error);
@@ -890,12 +889,7 @@ export default class PackagesPage extends Component {
             item={selectedItem}
             closeModal={() => {
               // Just close this modal first
-              this.setState({ showDetailsModal: false }, () => {
-                // Clear the selected item after the modal is closed
-                setTimeout(() => {
-                  this.setState({ selectedItem: null });
-                }, 100);
-              });
+              this.setState({ showDetailsModal: false, selectedItem: null });
             }}
             handleDeleteAndClose={() => selectedItem && this.handleDeleteItem(selectedItem)}
             handleUpdateItem={this.handleSaveEditedItem}
@@ -905,21 +899,12 @@ export default class PackagesPage extends Component {
               // First ensure we have the package name stored
               const packageName = this.state.selectedPackage || this.tempPackageName || Object.keys(this.state.packages)[0];
               
-              // Use a more reliable approach for iOS IPA version
-              // Close the details modal first
+              // Improved approach for iOS IPA version - single state update
               this.setState({ 
-                showDetailsModal: false 
-              }, () => {
-                // Clear the selected item
-                this.setState({ selectedItem: null }, () => {
-                  // Then show the package modal with the correct package
-                  setTimeout(() => {
-                    this.setState({ 
-                      showPackageModal: true,
-                      selectedPackage: packageName
-                    });
-                  }, 100); // Shorter delay to improve responsiveness
-                });
+                showDetailsModal: false,
+                selectedItem: null,
+                showPackageModal: true,
+                selectedPackage: packageName
               });
             }}
           />
