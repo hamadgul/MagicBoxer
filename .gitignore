@@ -43,4 +43,5 @@ yarn-error.*
 # typescript
 *.tsbuildinfo
 
-# @end expo-cli
+# @end expo-cli// Add API config file to gitignore
+src/config/apiConfig.js

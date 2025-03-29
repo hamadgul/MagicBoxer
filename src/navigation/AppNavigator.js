@@ -21,8 +21,9 @@ import FAQsPage from "../screens/FAQsPage";
 import ShipPackagePage from "../screens/ShipPackagePage";
 import RequestFormPage from "../screens/RequestFormPage";
 import TestPage from "../screens/TestPage";
-import BoxCustomizer from "../screens/BoxCustomizer";
+
 import SavedItemsPage from "../screens/SavedItemsPage";
+import LookupItemPage from "../screens/LookupItemPage";
 
 const Stack = createNativeStackNavigator();
 const Drawer = createDrawerNavigator();
@@ -125,16 +126,17 @@ function DrawerNavigator() {
       }
     },
     {
-      name: "Box Customizer",
-      component: BoxCustomizer,
+      name: "Lookup Item Dims",
+      component: LookupItemPage,
       options: {
-        ...headerWithIcon('cube-outline', 'Box Customizer'),
-        drawerLabel: "Box Customizer",
+        ...headerWithIcon('search-outline', 'Lookup Item Dims'),
+        drawerLabel: "Lookup Item Dims",
         drawerIcon: ({ focused, color, size }) => (
-          <Ionicons name="cube-outline" size={size} color={color} />
+          <Ionicons name="search-outline" size={size} color={color} />
         )
       }
     },
+
     {
       name: "Help",
       component: FAQsPage,
@@ -173,17 +175,7 @@ function DrawerNavigator() {
           )
         }
       },
-      {
-        name: "Test products",
-        component: TestProduct,
-        options: {
-          ...headerWithIcon('construct-outline', 'Test Products'),
-          drawerLabel: "Test Products",
-          drawerIcon: ({ focused, color, size }) => (
-            <Ionicons name="cube-outline" size={size} color={color} />
-          )
-        }
-      },
+
       {
         name: "Test Display3D",
         component: TestDisplay3D,
@@ -286,15 +278,7 @@ function AppNavigator() {
         gestureEnabled: true,
       }
     },
-    {
-      name: "Box Customizer",
-      component: BoxCustomizer,
-      options: {
-        ...headerWithIcon('cube-outline', 'Box Customizer'),
-        headerShown: true,
-        gestureEnabled: true,
-      }
-    },
+
     {
       name: "Shipping Estimate",
       component: ShipPackagePage,
@@ -348,15 +332,7 @@ function AppNavigator() {
           gestureEnabled: true,
         }
       },
-      {
-        name: "Test products",
-        component: TestProduct,
-        options: {
-          ...headerWithIcon('construct-outline', 'Test Products'),
-          headerShown: true,
-          gestureEnabled: true,
-        }
-      }
+
     );
   }
 
