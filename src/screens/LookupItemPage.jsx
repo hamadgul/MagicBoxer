@@ -381,7 +381,7 @@ const LookupItemPage = ({ navigation }) => {
                 style={styles.input}
                 value={itemName}
                 onChangeText={setItemName}
-                placeholder="e.g. MacBook Pro"
+                placeholder="e.g. iPhone 14 Pro"
                 placeholderTextColor="#94A3B8"
               />
             </View>
@@ -404,7 +404,7 @@ const LookupItemPage = ({ navigation }) => {
                 style={styles.input}
                 value={itemType}
                 onChangeText={setItemType}
-                placeholder="e.g. Laptop, Keyboard, Hammer"
+                placeholder="e.g. Laptop, Glasses, Appliance"
                 placeholderTextColor="#94A3B8"
               />
             </View>
@@ -437,6 +437,15 @@ const LookupItemPage = ({ navigation }) => {
               )}
             </TouchableOpacity>
           </View>
+          
+          {!loading && !result && (
+            <View style={styles.instructionContainer}>
+              <Ionicons name="bulb-outline" size={24} color="#3B82F6" style={styles.instructionIcon} />
+              <Text style={styles.instructionText}>
+                Lookup your product using our AI to find your dimensions. The more info you provide, the more accurate the response!
+              </Text>
+            </View>
+          )}
           
           {result && (
             <View style={styles.resultContainer}>
@@ -668,6 +677,32 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
+  },
+  instructionContainer: {
+    backgroundColor: '#F0F9FF',
+    borderRadius: 12,
+    padding: 16,
+    marginHorizontal: 16,
+    marginTop: 16,
+    marginBottom: 16,
+    flexDirection: 'row',
+    alignItems: 'center',
+    borderLeftWidth: 3,
+    borderLeftColor: '#3B82F6',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.1,
+    shadowRadius: 2,
+    elevation: 2,
+  },
+  instructionIcon: {
+    marginRight: 12,
+  },
+  instructionText: {
+    fontSize: 15,
+    color: '#334155',
+    flex: 1,
+    lineHeight: 22,
   },
 });
 

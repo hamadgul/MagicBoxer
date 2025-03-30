@@ -98,7 +98,7 @@ const GettingStartedPage = ({ navigation }) => {
             <View style={styles.stepTextContainer}>
               <Text style={styles.stepTitle}>Save Your Package</Text>
               <Text style={styles.stepDescription}>
-                Save your package or let MagicBoxer optimize the arrangement for you.
+                Save your package, easily access it later!
               </Text>
             </View>
           </View>
@@ -109,9 +109,9 @@ const GettingStartedPage = ({ navigation }) => {
               <Text style={styles.stepNumber}>3</Text>
             </View>
             <View style={styles.stepTextContainer}>
-              <Text style={styles.stepTitle}>Visualize in 3D</Text>
+              <Text style={styles.stepTitle}>Visualized & Packed in 3D</Text>
               <Text style={styles.stepDescription}>
-                See your package in 3D and get the optimal box size for your carrier.
+                See your package in 360° 3D, packed optimally for you & get the optimal box size for your carrier 
               </Text>
             </View>
           </View>
