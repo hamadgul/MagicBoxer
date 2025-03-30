@@ -13,6 +13,7 @@
     "@craftzdog/react-native-buffer": "^6.0.5",
     "@expo/vector-icons": "^14.0.4",
     "@react-native-async-storage/async-storage": "^1.23.1",
+    "@react-native-community/datetimepicker": "^8.3.0",
     "@react-native-community/masked-view": "^0.1.11",
     "@react-native-community/slider": "^4.5.5",
     "@react-native-picker/picker": "^2.9.0",
@@ -40,6 +41,7 @@
     "expo-three": "^8.0.0",
     "expo-updates": "~0.27.4",
     "expo-web-browser": "~14.0.2",
+    "jest-expo": "~52.0.6",
     "native-base": "^3.4.28",
     "react": "18.3.1",
     "react-dom": "18.3.1",
@@ -53,8 +55,7 @@
     "react-native-svg": "15.8.0",
     "react-native-web": "~0.19.13",
     "react-native-webview": "13.12.5",
-    "three": "^0.172.0",
-    "jest-expo": "~52.0.6"
+    "three": "^0.172.0"
   },
   "devDependencies": {
     "@babel/core": "^7.20.0",

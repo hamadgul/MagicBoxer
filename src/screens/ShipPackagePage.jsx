@@ -8,8 +8,10 @@ import {
   ScrollView,
   Alert,
   TextInput,
-  Keyboard
+  Keyboard,
+  Platform
 } from 'react-native';
+import DateTimePicker from '@react-native-community/datetimepicker';
 import axios from 'axios';
 import { getShippingEstimates } from '../services/shipping/shippingService';
 import { Ionicons } from '@expo/vector-icons';
@@ -31,6 +33,9 @@ export default function ShipPackagePage({ route, navigation }) {
   });
   const [fromZip, setFromZip] = useState('');
   const [toZip, setToZip] = useState('');
+  const [shipmentDate, setShipmentDate] = useState(new Date());
+  const [showDatePicker, setShowDatePicker] = useState(false);
+  const [formattedDate, setFormattedDate] = useState('');
 
   useEffect(() => {
     if (route.params?.package) {
@@ -58,6 +63,22 @@ export default function ShipPackagePage({ route, navigation }) {
       keyboardDidHideListener.remove();
     };
   }, []);
+
+  // Format date for display
+  useEffect(() => {
+    const formatDate = (date) => {
+      const options = { weekday: 'short', month: 'short', day: 'numeric', year: 'numeric' };
+      return date.toLocaleDateString('en-US', options);
+    };
+    setFormattedDate(formatDate(shipmentDate));
+  }, [shipmentDate]);
+
+  const onDateChange = (event, selectedDate) => {
+    setShowDatePicker(false);
+    if (selectedDate) {
+      setShipmentDate(selectedDate);
+    }
+  };
 
   const validateZipCode = (zip) => {
     return /^\d{5}$/.test(zip);
@@ -103,7 +124,8 @@ export default function ShipPackagePage({ route, navigation }) {
         {
           ...packageDetails,
           upsResult,
-          fedexResult
+          fedexResult,
+          shipmentDate: shipmentDate
         },
         fromZip,
         toZip
@@ -276,6 +298,27 @@ export default function ShipPackagePage({ route, navigation }) {
                   returnKeyType="done"
                 />
               </View>
+            </View>
+            
+            <View style={styles.datePickerContainer}>
+              <Text style={styles.label}>Shipment Date *</Text>
+              <TouchableOpacity 
+                style={styles.dateInput} 
+                onPress={() => setShowDatePicker(true)}
+              >
+                <Text style={styles.dateText}>{formattedDate}</Text>
+                <Ionicons name="calendar-outline" size={20} color="#64748b" />
+              </TouchableOpacity>
+              
+              {showDatePicker && (
+                <DateTimePicker
+                  value={shipmentDate}
+                  mode="date"
+                  display={Platform.OS === 'ios' ? 'spinner' : 'default'}
+                  onChange={onDateChange}
+                  minimumDate={new Date()}
+                />
+              )}
             </View>
           </View>
 
@@ -510,5 +553,24 @@ const styles = StyleSheet.create({
     marginLeft: 8,
     color: '#b91c1c',
     flex: 1,
+  },
+  datePickerContainer: {
+    marginTop: 16,
+  },
+  dateInput: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    backgroundColor: '#fff',
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: '#e2e8f0',
+    paddingHorizontal: 12,
+    paddingVertical: 12,
+    marginTop: 4,
+  },
+  dateText: {
+    color: '#1e293b',
+    fontSize: 16,
   },
 });

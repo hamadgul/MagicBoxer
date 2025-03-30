@@ -81,6 +81,11 @@ export const getUPSRates = async (packageDetails, fromZip, toZip) => {
     ];
 
     const requests = serviceOptions.map(service => {
+      // Format date for UPS API (YYYYMMDD format)
+      const formattedDate = packageDetails.shipmentDate ? 
+        packageDetails.shipmentDate.toISOString().split('T')[0].replace(/-/g, '') : 
+        new Date().toISOString().split('T')[0].replace(/-/g, '');
+        
       const payload = {
         RateRequest: {
           Request: {
@@ -101,6 +106,9 @@ export const getUPSRates = async (packageDetails, fromZip, toZip) => {
                 CountryCode: "US",
                 ResidentialAddressIndicator: service.Code === "03" || service.Code === "12" ? "true" : undefined
               }
+            },
+            ShipmentRatingOptions: {
+              PickupDate: formattedDate
             },
             Service: {
               Code: service.Code,

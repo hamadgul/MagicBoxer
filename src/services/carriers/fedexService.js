@@ -104,6 +104,11 @@ export const calculateFedExRates = async (packageDetails, fromZip, toZip) => {
       selectedBox: packagingType
     });
 
+    // Format date for FedEx API (YYYY-MM-DD format)
+    const formattedDate = packageDetails.shipmentDate ? 
+      packageDetails.shipmentDate.toISOString().split('T')[0] : 
+      new Date().toISOString().split('T')[0];
+      
     const payload = {
       accountNumber: {
         value: "740561073"
@@ -123,6 +128,7 @@ export const calculateFedExRates = async (packageDetails, fromZip, toZip) => {
           }
         },
         pickupType: "DROPOFF_AT_FEDEX_LOCATION",
+        shipDatestamp: formattedDate,
         requestedPackageLineItems: [{
           weight: {
             value: Math.max(Math.ceil(packageDetails.weight), 1),
