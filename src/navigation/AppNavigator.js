@@ -1,7 +1,7 @@
 import React from "react";
 import { createDrawerNavigator } from "@react-navigation/drawer";
 import { createNativeStackNavigator } from "@react-navigation/native-stack";
-import { Ionicons } from "@expo/vector-icons";
+import { Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
 import { View, Text, Image, StyleSheet, TouchableOpacity, SafeAreaView } from "react-native";
 import { DrawerContentScrollView, DrawerItemList } from '@react-navigation/drawer';
 import { DEV_BUILD_APP } from "../config/environment";
@@ -264,7 +264,15 @@ function AppNavigator() {
       name: "Display3D",
       component: Display3D,
       options: {
-        ...headerWithIcon('cube-outline', 'Optimal Box Size'),
+        headerTitle: () => (
+          <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'center' }}>
+            <View style={{ marginRight: 10 }}>
+              <MaterialCommunityIcons name="cube" size={28} color="#3B82F6" />
+            </View>
+            <Text style={{ color: '#64748B', fontSize: 18, fontWeight: '600' }}>Optimal Box Size</Text>
+          </View>
+        ),
+        headerRight: () => null,
         headerShown: true,
         gestureEnabled: true,
       }

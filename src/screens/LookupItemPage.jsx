@@ -99,7 +99,7 @@ const LookupItemPage = ({ navigation }) => {
             'Authorization': `Bearer ${apiKey}`
           },
           body: JSON.stringify({
-            model: 'gpt-4o-mini', // Using a more widely available model
+            model: 'gpt-4-turbo', // Using a more widely available model
             messages: [
               { role: 'system', content: systemMessage },
               { role: 'user', content: userPrompt }
