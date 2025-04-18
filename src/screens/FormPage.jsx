@@ -1117,10 +1117,46 @@ export default class FormPage extends Component {
                         style={[styles.input, styles.condensedInput, { 
                           flex: 1, 
                           paddingRight: 40,
-                          // Simplified approach - always remove bottom border and radius when suggestions are shown
-                          borderBottomWidth: this.state.showRecentItems ? 0 : 1,
-                          borderBottomLeftRadius: this.state.showRecentItems ? 0 : 8,
-                          borderBottomRightRadius: this.state.showRecentItems ? 0 : 8,
+                          // Only connect with suggestions if they're actually visible
+                          borderBottomWidth: (() => {
+                            // Check if we have filtered items to show
+                            const hasFilteredItems = this.state.recentSavedItems.some(item => {
+                              const itemName = item.itemName || item.name || '';
+                              const alreadyAdded = this.state.items.some(addedItem => 
+                                (addedItem.itemName || '').toLowerCase() === itemName.toLowerCase()
+                              );
+                              return !alreadyAdded;
+                            });
+                            
+                            // Only remove bottom border if we're showing recent items AND there are filtered items to show
+                            return this.state.showRecentItems && hasFilteredItems ? 0 : 1;
+                          })(),
+                          borderBottomLeftRadius: (() => {
+                            // Check if we have filtered items to show
+                            const hasFilteredItems = this.state.recentSavedItems.some(item => {
+                              const itemName = item.itemName || item.name || '';
+                              const alreadyAdded = this.state.items.some(addedItem => 
+                                (addedItem.itemName || '').toLowerCase() === itemName.toLowerCase()
+                              );
+                              return !alreadyAdded;
+                            });
+                            
+                            // Only remove radius if we're showing recent items AND there are filtered items to show
+                            return this.state.showRecentItems && hasFilteredItems ? 0 : 8;
+                          })(),
+                          borderBottomRightRadius: (() => {
+                            // Check if we have filtered items to show
+                            const hasFilteredItems = this.state.recentSavedItems.some(item => {
+                              const itemName = item.itemName || item.name || '';
+                              const alreadyAdded = this.state.items.some(addedItem => 
+                                (addedItem.itemName || '').toLowerCase() === itemName.toLowerCase()
+                              );
+                              return !alreadyAdded;
+                            });
+                            
+                            // Only remove radius if we're showing recent items AND there are filtered items to show
+                            return this.state.showRecentItems && hasFilteredItems ? 0 : 8;
+                          })(),
                           borderBottomColor: '#E2E8F0',
                           marginBottom: 0 // Remove bottom margin
                         }]}
