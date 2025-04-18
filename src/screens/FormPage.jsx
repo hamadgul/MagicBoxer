@@ -490,11 +490,44 @@ export default class FormPage extends Component {
       isLoading: false,
       filteredProducts: [],
       showSuggestions: false,
-      productList: [] // Initialize with empty array instead of defaultProductList
+      productList: [], // Initialize with empty array instead of defaultProductList
+      recentSavedItems: [], // Store recently saved items
+      showRecentItems: false,
+      flashScrollbar: false,
+      scrollViewRef: React.createRef(),
+      dimensionsFromSavedItem: false // Track if dimensions are from a saved item
     };
     this.inputRef = React.createRef();
   }
 
+  // Load saved items from SavedItems page for suggestions
+  loadSavedItemsForSuggestions = async () => {
+    try {
+      const savedItemsString = await AsyncStorage.getItem("savedItems");
+      if (savedItemsString) {
+        const savedItems = JSON.parse(savedItemsString);
+        
+        // Log the structure of the first saved item for debugging
+        if (savedItems.length > 0) {
+          console.log('First saved item structure:', JSON.stringify(savedItems[0]));
+        }
+        
+        // Get the 3 most recently added items for quick suggestions
+        const recentItems = [...savedItems]
+          .sort((a, b) => (b.timestamp || 0) - (a.timestamp || 0))
+          .slice(0, 3);
+          
+        this.setState({ recentSavedItems: recentItems });
+        console.log(`Loaded ${recentItems.length} saved items for suggestions`);
+      } else {
+        this.setState({ recentSavedItems: [] });
+      }
+    } catch (error) {
+      console.error("Error loading saved items for suggestions:", error);
+      this.setState({ recentSavedItems: [] });
+    }
+  };
+  
   loadCustomProducts = async () => {
     try {
       // Load custom products from AsyncStorage
@@ -514,29 +547,44 @@ export default class FormPage extends Component {
   };
 
   handleChange = (text) => {
+    // Check if backspace was pressed (text is shorter than current itemName)
+    const wasBackspacePressed = text.length < this.state.itemName.length;
+    
+    // If backspace was pressed and dimensions were from a saved item, reset the form
+    if (wasBackspacePressed && this.state.dimensionsFromSavedItem) {
+      // Clear the entire name field and reset form with a single backspace
+      this.setState({
+        itemName: "",
+        itemLength: "",
+        itemWidth: "",
+        itemHeight: "",
+        filteredProducts: [],
+        showSuggestions: false,
+        showRecentItems: true,
+        dimensionsFromSavedItem: false // Reset the tracking state
+      });
+      return;
+    }
+    
     this.setState({ itemName: text });
     
     if (!text.trim()) {
       this.setState({ 
         filteredProducts: [],
-        showSuggestions: false 
+        showSuggestions: false,
+        showRecentItems: true // Show recent items when input is empty
       });
       return;
     }
 
-    // Safely handle the case when productList is empty or undefined
-    const { productList = [] } = this.state;
-    
-    const results = productList.length > 0 ? 
-      productList.filter(product =>
-        product.name.toLowerCase().includes(text.toLowerCase())
-      ).slice(0, 5) : []; // Limit to 5 suggestions
-
+    // Deactivated product suggestions dropdown
+    // Just update the text without showing suggestions
     this.setState({ 
-      filteredProducts: results,
-      showSuggestions: results.length > 0
+      filteredProducts: [],
+      showSuggestions: false,
+      showRecentItems: false
     });
-  }
+  };
 
   handleProductSelect = (product) => {
     // Extract numeric values from dimension strings
@@ -577,12 +625,22 @@ export default class FormPage extends Component {
   componentDidMount() {
     this.loadItems();
     this.loadCustomProducts();
+    this.loadSavedItemsForSuggestions();
     
-    // Refresh custom products when the screen comes into focus
+    // Refresh data when the screen comes into focus
     this.focusListener = this.props.navigation.addListener(
       "focus",
-      this.loadCustomProducts
+      () => {
+        this.loadCustomProducts();
+        this.loadItems();
+        this.loadSavedItemsForSuggestions();
+        // Show recent items when the screen comes into focus
+        this.setState({ showRecentItems: true });
+      }
     );
+    
+    // Initialize with recent items visible
+    this.setState({ showRecentItems: true });
   }
   
   componentWillUnmount() {
@@ -637,6 +695,8 @@ export default class FormPage extends Component {
         quantity: 1,
         items: [], // Clear the list of items
         selectedItem: null,
+        dimensionsFromSavedItem: false, // Reset to make fields editable again
+        showRecentItems: true // Keep showing recent items
       });
     } catch (error) {
       Alert.alert("Error", `Failed to clear items: ${error.message}`);
@@ -712,6 +772,8 @@ export default class FormPage extends Component {
       itemHeight: "",
       itemLength: "",
       quantity: 1,
+      dimensionsFromSavedItem: false, // Reset to make fields editable again
+      showRecentItems: true // Keep showing recent items
     });
   };
 
@@ -1035,66 +1097,223 @@ export default class FormPage extends Component {
         >
           <TouchableWithoutFeedback onPress={() => {
             Keyboard.dismiss();
-            this.setState({ showSuggestions: false });
+            this.setState({ 
+              showSuggestions: false,
+              showRecentItems: false
+            });
           }}>
             <View style={styles.container}>
               <View style={styles.formContainer}>
                 <VStack space={2} width="100%">
                   <Text style={[styles.label, styles.condensedLabel]}>Name</Text>
                   <View style={{ position: 'relative', zIndex: 1 }}>
-                    <TextInput
-                      ref={this.inputRef}
-                      style={[styles.input, styles.condensedInput]}
-                      value={this.state.itemName}
-                      onChangeText={this.handleChange}
-                      maxLength={50}
-                      placeholder="MacBook, Xbox etc"
-                      placeholderTextColor={"#d3d3d3"}
-                      autoCorrect={false}
-                      spellCheck={false}
-                    />
-                    {this.state.showSuggestions && (
+                    <View style={{
+                      flexDirection: 'row',
+                      alignItems: 'center',
+                      position: 'relative'
+                    }}>
+                      <TextInput
+                        ref={this.inputRef}
+                        style={[styles.input, styles.condensedInput, { 
+                          flex: 1, 
+                          paddingRight: 40,
+                          // Simplified approach - always remove bottom border and radius when suggestions are shown
+                          borderBottomWidth: this.state.showRecentItems ? 0 : 1,
+                          borderBottomLeftRadius: this.state.showRecentItems ? 0 : 8,
+                          borderBottomRightRadius: this.state.showRecentItems ? 0 : 8,
+                          borderBottomColor: '#E2E8F0',
+                          marginBottom: 0 // Remove bottom margin
+                        }]}
+                        value={this.state.itemName}
+                        onChangeText={this.handleChange}
+                        onFocus={() => {
+                          // Show recent items when the field is focused
+                          if (!this.state.itemName.trim()) {
+                            this.setState({ 
+                              showRecentItems: true,
+                              showSuggestions: false
+                            });
+                          }
+                        }}
+                        maxLength={50}
+                        placeholder="MacBook, Xbox etc"
+                        placeholderTextColor={"#d3d3d3"}
+                        autoCorrect={false}
+                        spellCheck={false}
+                      />
+                      <TouchableOpacity 
+                        style={{
+                          position: 'absolute',
+                          right: 10,
+                          padding: 5,
+                        }}
+                        onPress={() => {
+                          // This will be implemented later as mentioned
+                          Alert.alert("Coming Soon", "Search functionality will be implemented in a future update.");
+                        }}
+                      >
+                        <Ionicons name="search" size={22} color="#64748B" />
+                      </TouchableOpacity>
+                    </View>
+                    
+                    {/* Recently saved items suggestions - positioned directly below the name field */}
+                    {this.state.showRecentItems && !this.state.showSuggestions && (() => {
+                      // Filter out items that already exist in the added items container
+                      const filteredItems = this.state.recentSavedItems.filter(item => {
+                        const itemName = item.itemName || item.name || '';
+                        
+                        // Check if this item already exists in the added items container
+                        const alreadyAdded = this.state.items.some(addedItem => 
+                          (addedItem.itemName || '').toLowerCase() === itemName.toLowerCase()
+                        );
+                        
+                        // Only show items that don't already exist in the added items container
+                        return !alreadyAdded;
+                      });
+                      
+                      // Only render the suggestions container if there are items to display
+                      return filteredItems.length > 0 && (
                       <View style={{
-                        position: 'absolute',
-                        top: '100%',
-                        left: 0,
-                        right: 0,
-                        backgroundColor: 'white',
+                        marginTop: -3, /* Connect directly to input field above */
+                        marginBottom: 8,
+                        paddingTop: 10, /* Increase top padding for better spacing */
+                        paddingBottom: 8,
+                        paddingHorizontal: 10,
+                        flexDirection: 'row',
+                        justifyContent: 'flex-start',
+                        alignItems: 'center',
+                        position: 'relative',
+                        zIndex: 1,
+                        backgroundColor: '#F8FAFC',
                         borderWidth: 1,
-                        borderColor: '#ddd',
-                        borderRadius: 4,
-                        maxHeight: 200,
-                        zIndex: 1000,
-                        elevation: 5,
-                        shadowColor: '#000',
-                        shadowOffset: { width: 0, height: 2 },
-                        shadowOpacity: 0.25,
-                        shadowRadius: 3.84,
+                        borderTopWidth: 0, /* No top border to connect with input */
+                        borderColor: '#E2E8F0',
+                        borderBottomLeftRadius: 8,
+                        borderBottomRightRadius: 8,
                       }}>
-                        <ScrollView>
-                          {this.state.filteredProducts.map((product) => (
+                        <Text style={{ 
+                          fontSize: 12, 
+                          color: '#64748B',
+                          marginRight: 8,
+                          fontWeight: '500'
+                        }}>Recent:</Text>
+                        {filteredItems.map((item) => (
                             <TouchableOpacity
-                              key={product.id}
+                              key={item.id}
                               style={{
-                                padding: 15,
-                                borderBottomWidth: 1,
-                                borderBottomColor: '#eee',
+                                backgroundColor: '#EBF5FF',
+                                paddingHorizontal: 12,
+                                paddingVertical: 6,
+                                borderRadius: 8,
+                                marginRight: 10,
+                                flexDirection: 'row',
+                                alignItems: 'center',
+                                justifyContent: 'space-between',
+                                height: 32,
+                                marginTop: 0,
+                                borderWidth: 1,
+                                borderColor: '#DBEAFE',
                               }}
-                              onPress={() => this.handleProductSelect(product)}
-                            >
-                              <Text style={{ fontSize: 16 }}>{product.name}</Text>
-                            </TouchableOpacity>
-                          ))}
-                        </ScrollView>
+                              onPress={() => {
+                                // Log the item to debug
+                                console.log('Selected saved item:', JSON.stringify(item));
+                              
+                              // Check if the item has itemName or name property
+                              const name = item.itemName || item.name || '';
+                              
+                              // Extract dimensions from the item based on the structure in SavedItemsPage
+                              let length = '';
+                              let width = '';
+                              let height = '';
+                              
+                              // Check if the item has dimensions object (as in SavedItemsPage)
+                              if (item.dimensions) {
+                                // Parse dimensions from strings like "12.00 inches"
+                                const extractNumber = (dimensionStr) => {
+                                  if (!dimensionStr) return '';
+                                  const match = dimensionStr.match(/([\d.]+)/);
+                                  if (!match) return '';
+                                  
+                                  // Convert to number and back to string to remove trailing zeros
+                                  const num = parseFloat(match[1]);
+                                  return num % 1 === 0 ? Math.floor(num).toString() : num.toString();
+                                };
+                                
+                                length = extractNumber(item.dimensions.length);
+                                width = extractNumber(item.dimensions.width);
+                                height = extractNumber(item.dimensions.height);
+                              } 
+                              // Check if dimensions are in the items array (as in packages)
+                              else if (item.items && item.items.length > 0) {
+                                const firstItem = item.items[0];
+                                if (firstItem.dimensions) {
+                                  const extractNumber = (dimensionStr) => {
+                                    if (!dimensionStr) return '';
+                                    const match = dimensionStr.match(/([\d.]+)/);
+                                    if (!match) return '';
+                                    
+                                    // Convert to number and back to string to remove trailing zeros
+                                    const num = parseFloat(match[1]);
+                                    return num % 1 === 0 ? Math.floor(num).toString() : num.toString();
+                                  };
+                                  
+                                  length = extractNumber(firstItem.dimensions.length);
+                                  width = extractNumber(firstItem.dimensions.width);
+                                  height = extractNumber(firstItem.dimensions.height);
+                                } else {
+                                  length = firstItem.itemLength || firstItem.length || '';
+                                  width = firstItem.itemWidth || firstItem.width || '';
+                                  height = firstItem.itemHeight || firstItem.height || '';
+                                }
+                              } 
+                              // Otherwise try direct properties
+                              else {
+                                length = item.itemLength || item.length || '';
+                                width = item.itemWidth || item.width || '';
+                                height = item.itemHeight || item.height || '';
+                              }
+                              
+                              console.log('Extracted dimensions:', { length, width, height });
+                              
+                              // Populate form with saved item dimensions
+                              this.setState({
+                                itemName: name,
+                                itemLength: length.toString(),
+                                itemWidth: width.toString(),
+                                itemHeight: height.toString(),
+                                showRecentItems: false,
+                                dimensionsFromSavedItem: true // Mark dimensions as coming from a saved item
+                              });
+                            }}
+                          >
+                            <Text style={{ 
+                              fontSize: 14, 
+                              color: '#0066FF',
+                              fontWeight: '500',
+                              marginRight: 4,
+                            }}>{item.name}</Text>
+                            <Ionicons name="arrow-forward-outline" size={14} color="#0066FF" />
+                          </TouchableOpacity>
+                        ))}
                       </View>
-                    )}
+                    );
+                    })()} 
                   </View>
+                </VStack>
+                
+                {/* Product suggestions dropdown has been deactivated */}
+                
+                {/* Add spacer when recent items are not shown or after adding items */}
+                {(!this.state.showRecentItems || this.state.itemName === "") && <View style={{ height: 16 }} />}
+                
+                <VStack space={2} width="100%">
                   <Text style={[styles.label, styles.condensedLabel]}>Length</Text>
                   <View style={[styles.input, styles.condensedInput, { 
                     flexDirection: 'row',
                     alignItems: 'center',
                     paddingVertical: 0,
                     paddingHorizontal: 0,
+                    backgroundColor: this.state.dimensionsFromSavedItem ? '#F8FAFC' : 'white',
                   }]}>
                     <TextInput
                       style={{
@@ -1102,17 +1321,19 @@ export default class FormPage extends Component {
                         height: '100%',
                         paddingHorizontal: 14,
                         fontSize: 15,
-                        color: '#334155',
+                        color: this.state.dimensionsFromSavedItem ? '#94A3B8' : '#334155',
+                        backgroundColor: 'transparent',
                       }}
                       value={this.state.itemLength}
                       onChangeText={(text) => this.setState({ itemLength: text })}
                       keyboardType="numeric"
                       maxLength={3}
+                      editable={!this.state.dimensionsFromSavedItem}
                     />
                     <Text style={{ 
                       paddingRight: 14,
                       fontSize: 15,
-                      color: '#64748B',
+                      color: this.state.dimensionsFromSavedItem ? '#94A3B8' : '#64748B',
                     }}>inches</Text>
                   </View>
                   <Text style={[styles.label, styles.condensedLabel]}>Width</Text>
@@ -1121,6 +1342,7 @@ export default class FormPage extends Component {
                     alignItems: 'center',
                     paddingVertical: 0,
                     paddingHorizontal: 0,
+                    backgroundColor: this.state.dimensionsFromSavedItem ? '#F8FAFC' : 'white',
                   }]}>
                     <TextInput
                       style={{
@@ -1128,17 +1350,19 @@ export default class FormPage extends Component {
                         height: '100%',
                         paddingHorizontal: 14,
                         fontSize: 15,
-                        color: '#334155',
+                        color: this.state.dimensionsFromSavedItem ? '#94A3B8' : '#334155',
+                        backgroundColor: 'transparent',
                       }}
                       value={this.state.itemWidth}
                       onChangeText={(text) => this.setState({ itemWidth: text })}
                       keyboardType="numeric"
                       maxLength={3}
+                      editable={!this.state.dimensionsFromSavedItem}
                     />
                     <Text style={{ 
                       paddingRight: 14,
                       fontSize: 15,
-                      color: '#64748B',
+                      color: this.state.dimensionsFromSavedItem ? '#94A3B8' : '#64748B',
                     }}>inches</Text>
                   </View>
                   <Text style={[styles.label, styles.condensedLabel]}>Height</Text>
@@ -1147,6 +1371,7 @@ export default class FormPage extends Component {
                     alignItems: 'center',
                     paddingVertical: 0,
                     paddingHorizontal: 0,
+                    backgroundColor: this.state.dimensionsFromSavedItem ? '#F8FAFC' : 'white',
                   }]}>
                     <TextInput
                       style={{
@@ -1154,17 +1379,19 @@ export default class FormPage extends Component {
                         height: '100%',
                         paddingHorizontal: 14,
                         fontSize: 15,
-                        color: '#334155',
+                        color: this.state.dimensionsFromSavedItem ? '#94A3B8' : '#334155',
+                        backgroundColor: 'transparent',
                       }}
                       value={this.state.itemHeight}
                       onChangeText={(text) => this.setState({ itemHeight: text })}
                       keyboardType="numeric"
                       maxLength={3}
+                      editable={!this.state.dimensionsFromSavedItem}
                     />
                     <Text style={{ 
                       paddingRight: 14,
                       fontSize: 15,
-                      color: '#64748B',
+                      color: this.state.dimensionsFromSavedItem ? '#94A3B8' : '#64748B',
                     }}>inches</Text>
                   </View>
                   <Text style={[styles.label, styles.condensedLabel]}>Quantity</Text>
