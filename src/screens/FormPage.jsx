@@ -14,14 +14,18 @@ import {
   KeyboardAvoidingView,
   Platform,
   ActivityIndicator,
+  BackHandler,
+  InteractionManager,
 } from "react-native";
 import { VStack } from "native-base";  
 import AsyncStorage from "@react-native-async-storage/async-storage";
+
 import { generateUUID } from "three/src/math/MathUtils";
 import { pack, createDisplay } from "../packing_algo/packing";
 import styles from "../theme/Styles";
 import { modalStyles } from "../theme/ModalStyles";
 import { Ionicons } from "@expo/vector-icons";
+
 var Buffer = require("@craftzdog/react-native-buffer").Buffer;
 
 
@@ -623,19 +627,173 @@ export default class FormPage extends Component {
   }
 
   componentDidMount() {
+    console.log("FormPage - componentDidMount");
     this.loadItems();
     this.loadCustomProducts();
     this.loadSavedItemsForSuggestions();
+    
+
     
     // Refresh data when the screen comes into focus
     this.focusListener = this.props.navigation.addListener(
       "focus",
       () => {
+        console.log("FormPage - focus event");
         this.loadCustomProducts();
         this.loadItems();
         this.loadSavedItemsForSuggestions();
         // Show recent items when the screen comes into focus
         this.setState({ showRecentItems: true });
+        
+
+        
+        // Set custom header left button (hamburger menu)
+        this.props.navigation.setOptions({
+          headerLeft: () => (
+            <TouchableOpacity
+              style={{ paddingLeft: 16 }}
+              onPress={this.handleMenuPress}
+              testID="custom-menu-button"
+            >
+              <Ionicons name="menu" size={24} color="#64748B" />
+            </TouchableOpacity>
+          )
+        });
+        
+        // Disable drawer gesture if there are items
+        if (this.state.items.length > 0) {
+          // Try to disable drawer gesture
+          try {
+            const drawerParent = this.props.navigation.getParent();
+            if (drawerParent && drawerParent.setOptions) {
+              drawerParent.setOptions({
+                swipeEnabled: false
+              });
+              console.log("FormPage - Disabled drawer gesture");
+            }
+          } catch (error) {
+            console.error("FormPage - Error disabling drawer gesture:", error);
+          }
+        } else {
+          // Enable drawer gesture
+          try {
+            const drawerParent = this.props.navigation.getParent();
+            if (drawerParent && drawerParent.setOptions) {
+              drawerParent.setOptions({
+                swipeEnabled: true
+              });
+              console.log("FormPage - Enabled drawer gesture");
+            }
+          } catch (error) {
+            console.error("FormPage - Error enabling drawer gesture:", error);
+          }
+        }
+      }
+    );
+    
+    // Add a direct hardware back button handler for Android
+    this.backHandler = BackHandler.addEventListener(
+      'hardwareBackPress',
+      () => {
+        console.log("FormPage - hardware back button pressed");
+        // If there are items in the container, show confirmation
+        if (this.state.items.length > 0) {
+          console.log("FormPage - showing alert for back button");
+          Alert.alert(
+            "Unsaved Changes",
+            "You have unsaved items in your package. What would you like to do?",
+            [
+              {
+                text: "Cancel",
+                style: "cancel",
+                onPress: () => {
+                  console.log("FormPage - user chose Cancel");
+                  // User decided to stay on the page
+                }
+              },
+              {
+                text: "Discard",
+                style: "destructive",
+                onPress: () => {
+                  console.log("FormPage - user chose Discard");
+                  // Clear items and continue with navigation
+                  this.clearItems();
+                  // Go back
+                  this.props.navigation.goBack();
+                }
+              },
+              {
+                text: "Save Package",
+                style: "default",
+                onPress: () => {
+                  console.log("FormPage - user chose Save Package");
+                  // Open the save package modal
+                  this.setState({ showSavePackageModal: true });
+                }
+              }
+            ],
+            { cancelable: false }
+          );
+          return true; // Prevents default back action
+        }
+        return false; // Allow default back action
+      }
+    );
+    
+    // Add a beforeRemove listener to catch navigation attempts
+    this.beforeRemoveListener = this.props.navigation.addListener(
+      'beforeRemove',
+      (e) => {
+        console.log("FormPage - beforeRemove event", e.data.action);
+        
+        // If there are no items, allow navigation
+        if (this.state.items.length === 0) {
+          console.log("FormPage - no items, allowing navigation");
+          return;
+        }
+        
+        // Prevent default navigation
+        e.preventDefault();
+        console.log("FormPage - prevented navigation");
+        
+        // Show confirmation dialog
+        Alert.alert(
+          "Unsaved Changes",
+          "You have unsaved items in your package. What would you like to do?",
+          [
+            {
+              text: "Cancel",
+              style: "cancel",
+              onPress: () => {
+                console.log("FormPage - user chose Cancel");
+                // User decided to stay on the page
+              }
+            },
+            {
+              text: "Discard",
+              style: "destructive",
+              onPress: () => {
+                console.log("FormPage - user chose Discard");
+                // Clear items and continue with navigation
+                this.clearItems();
+                // Continue with navigation
+                this.props.navigation.dispatch(e.data.action);
+              }
+            },
+            {
+              text: "Save Package",
+              style: "default",
+              onPress: () => {
+                console.log("FormPage - user chose Save Package");
+                // Store the navigation action for after saving
+                this.pendingNavigationAction = e.data.action;
+                // Open the save package modal
+                this.setState({ showSavePackageModal: true });
+              }
+            }
+          ],
+          { cancelable: false }
+        );
       }
     );
     
@@ -644,65 +802,156 @@ export default class FormPage extends Component {
   }
   
   componentWillUnmount() {
-    // Clean up the focus listener when component unmounts
+    console.log("FormPage - componentWillUnmount");
+    // Clean up all listeners when component unmounts
     if (this.focusListener) {
       this.focusListener();
     }
+    
+    if (this.backHandler) {
+      this.backHandler.remove();
+    }
+    
+    if (this.beforeRemoveListener) {
+      this.beforeRemoveListener();
+    }
+    
+    // Re-enable drawer gesture when leaving
+    try {
+      const drawerParent = this.props.navigation.getParent();
+      if (drawerParent && drawerParent.setOptions) {
+        drawerParent.setOptions({
+          swipeEnabled: true
+        });
+        console.log("FormPage - Re-enabled drawer gesture on unmount");
+      }
+    } catch (error) {
+      console.error("FormPage - Error re-enabling drawer gesture:", error);
+    }
+    
+    // Restore default header left button
+    this.props.navigation.setOptions({
+      headerLeft: undefined
+    });
   }
 
   // Load items from AsyncStorage
   loadItems = async () => {
     try {
-      const itemListString = await AsyncStorage.getItem("itemList");
-      if (itemListString) {
-        const deserializedItems = JSON.parse(
-          Buffer.from(itemListString, "base64").toString("utf8")
-        );
-        
-        // Ensure each item has replicatedNames with proper structure
-        const validatedItems = deserializedItems.map(item => {
-          if (!item.replicatedNames || !item.replicatedNames[0]?.id) {
-            const quantity = item.quantity || 1;
-            item.replicatedNames = Array.from({ length: quantity }, (_, i) => ({
-              name: item.itemName,
-              id: generateUUID(),
-              parentId: item.id
-            }));
-          }
-          return item;
-        });
-
-        this.setState({ items: validatedItems });
+      const itemsJson = await AsyncStorage.getItem("@items");
+      if (itemsJson) {
+        const loadedItems = JSON.parse(itemsJson);
+        this.setState({ items: loadedItems });
       }
     } catch (error) {
       console.error("Error loading items:", error);
       Alert.alert("Error", "Failed to load items.");
     }
   };
-
-  // Clear the items and reset form fields
+  
+  // Clear items from AsyncStorage
   clearItems = async () => {
     try {
-      // Clear the item list in AsyncStorage
-      await AsyncStorage.removeItem("itemList");
-
-      // Reset the state
+      await AsyncStorage.removeItem("@items");
+      console.log("Items cleared successfully");
       this.setState({
+        items: [],
         itemName: "",
         itemWidth: "",
         itemHeight: "",
         itemLength: "",
         quantity: 1,
-        items: [], // Clear the list of items
         selectedItem: null,
         dimensionsFromSavedItem: false, // Reset to make fields editable again
         showRecentItems: true // Keep showing recent items
+      }, () => {
+        // Re-enable drawer gesture after clearing items
+        try {
+          const drawerParent = this.props.navigation.getParent();
+          if (drawerParent && drawerParent.setOptions) {
+            drawerParent.setOptions({
+              swipeEnabled: true
+            });
+            console.log("FormPage - Re-enabled drawer gesture after clearing items");
+          }
+        } catch (error) {
+          console.error("FormPage - Error re-enabling drawer gesture:", error);
+        }
       });
     } catch (error) {
       Alert.alert("Error", `Failed to clear items: ${error.message}`);
     }
   };
+  
 
+  
+  // Handle menu button press
+  handleMenuPress = () => {
+    console.log("FormPage - handleMenuPress");
+    // If there are items in the package, show alert
+    if (this.state.items.length > 0) {
+      console.log("FormPage - showing alert for menu press");
+      Alert.alert(
+        "Unsaved Changes",
+        "You have unsaved items in your package. What would you like to do?",
+        [
+          {
+            text: "Cancel",
+            style: "cancel",
+            onPress: () => {
+              console.log("FormPage - user chose Cancel");
+              // User decided to stay on the page
+            }
+          },
+          {
+            text: "Discard",
+            style: "destructive",
+            onPress: () => {
+              console.log("FormPage - user chose Discard");
+              // Clear items and continue with navigation
+              this.clearItems();
+              // Re-enable drawer gesture
+              try {
+                const drawerParent = this.props.navigation.getParent();
+                if (drawerParent && drawerParent.setOptions) {
+                  drawerParent.setOptions({
+                    swipeEnabled: true
+                  });
+                  console.log("FormPage - Re-enabled drawer gesture after discard");
+                }
+              } catch (error) {
+                console.error("FormPage - Error re-enabling drawer gesture:", error);
+              }
+              // Open drawer
+              this.props.navigation.openDrawer();
+            }
+          },
+          {
+            text: "Save Package",
+            style: "default",
+            onPress: () => {
+              console.log("FormPage - user chose Save Package");
+              // Open the save package modal
+              this.setState({
+                showSavePackageModal: true,
+                pendingNavigationAction: 'openDrawer'
+              });
+            }
+          }
+        ],
+        { cancelable: false }
+      );
+    } else {
+      // Otherwise, open the drawer normally
+      console.log("FormPage - opening drawer");
+      this.props.navigation.openDrawer();
+    }
+  };
+  
+
+  
+
+  
   toggleSavePackageModal = () => {
     const { items } = this.state;
 
@@ -759,6 +1008,32 @@ export default class FormPage extends Component {
         showSavePackageModal: false,
         packageName: '' // Clear package name after saving
       });
+      
+      // Continue with navigation if there was a pending action
+      console.log("FormPage - handling pending navigation:", this.state.pendingNavigationAction);
+      if (this.state.pendingNavigationAction === 'openDrawer') {
+        console.log("FormPage - opening drawer after save");
+        // Re-enable drawer gesture
+        try {
+          const drawerParent = this.props.navigation.getParent();
+          if (drawerParent && drawerParent.setOptions) {
+            drawerParent.setOptions({
+              swipeEnabled: true
+            });
+            console.log("FormPage - Re-enabled drawer gesture after save");
+          }
+        } catch (error) {
+          console.error("FormPage - Error re-enabling drawer gesture:", error);
+        }
+        this.props.navigation.openDrawer();
+      } else if (this.pendingNavigationAction) {
+        console.log("FormPage - dispatching navigation action");
+        this.props.navigation.dispatch(this.pendingNavigationAction);
+        this.pendingNavigationAction = null;
+      }
+      
+      // Reset pending navigation
+      this.setState({ pendingNavigationAction: null });
     } catch (error) {
       // Catch and display any errors
       Alert.alert("Error", `Failed to save package: ${error.message}`);
@@ -1084,29 +1359,31 @@ export default class FormPage extends Component {
     );
   }
 
+
+  
   render() {
     return (
       <KeyboardAvoidingView
         behavior={Platform.OS === "ios" ? "padding" : "height"}
         style={{ flex: 1 }}
       >
-        <ScrollView 
-          style={{ flex: 1 }}
-          contentContainerStyle={{ flexGrow: 1 }}
-          keyboardShouldPersistTaps="handled"
-        >
-          <TouchableWithoutFeedback onPress={() => {
-            Keyboard.dismiss();
-            this.setState({ 
-              showSuggestions: false,
-              showRecentItems: false
-            });
-          }}>
-            <View style={styles.container}>
-              <View style={styles.formContainer}>
-                <VStack space={2} width="100%">
-                  <Text style={[styles.label, styles.condensedLabel]}>Name</Text>
-                  <View style={{ position: 'relative', zIndex: 1 }}>
+          <ScrollView 
+            style={{ flex: 1 }}
+            contentContainerStyle={{ flexGrow: 1 }}
+            keyboardShouldPersistTaps="handled"
+          >
+            <TouchableWithoutFeedback onPress={() => {
+              Keyboard.dismiss();
+              this.setState({ 
+                showSuggestions: false,
+                showRecentItems: false
+              });
+            }}>
+              <View style={styles.container}>
+                <View style={styles.formContainer}>
+                  <VStack space={2} width="100%">
+                    <Text style={[styles.label, styles.condensedLabel]}>Name</Text>
+                    <View style={{ position: 'relative', zIndex: 1 }}>
                     <View style={{
                       flexDirection: 'row',
                       alignItems: 'center',

@@ -6,6 +6,8 @@ import { View, Text, Image, StyleSheet, TouchableOpacity, SafeAreaView } from "r
 import { DrawerContentScrollView, DrawerItemList } from '@react-navigation/drawer';
 import { DEV_BUILD_APP } from "../config/environment";
 
+
+
 // Import the MagicBoxer icon without background
 import MagicBoxerIcon from "../assets/images/icon_nobg.png";
 
@@ -60,6 +62,8 @@ function CustomDrawerContent(props) {
     </View>
   );
 }
+
+
 
 // Drawer navigator to handle side menu for specific pages
 function DrawerNavigator() {
@@ -225,7 +229,8 @@ function DrawerNavigator() {
           shadowOpacity: 0.25,
           shadowRadius: 3.84,
           elevation: 5
-        }
+        },
+        swipeEnabled: true
       }}
     >
       {screens.map((screen) => (
@@ -355,6 +360,7 @@ function AppNavigator() {
         },
         headerTintColor: '#64748B',
         headerTitleAlign: 'center',
+
       }}
     >
       {screens.map((screen) => (
