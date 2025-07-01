@@ -108,7 +108,9 @@ export const getUPSRates = async (packageDetails, fromZip, toZip) => {
               }
             },
             ShipmentRatingOptions: {
-              PickupDate: formattedDate
+              PickupDate: formattedDate,
+              RateChartIndicator: "true",
+              UserLevelDiscountIndicator: "true"
             },
             Service: {
               Code: service.Code,
@@ -179,7 +181,13 @@ export const getUPSRates = async (packageDetails, fromZip, toZip) => {
         }
         return null;
       }).catch(error => {
-        console.log('Error getting UPS rate for', service.Description, ':', error.response?.data || error.message);
+        console.log('Error getting UPS rate for', service.Description, ':', JSON.stringify({
+          status: error.response?.status,
+          statusText: error.response?.statusText,
+          data: error.response?.data,
+          message: error.message,
+          requestPayload: payload
+        }, null, 2));
         return null;
       });
     });

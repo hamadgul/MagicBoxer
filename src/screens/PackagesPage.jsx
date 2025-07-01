@@ -543,16 +543,29 @@ export default class PackagesPage extends Component {
       }
 
       const updatedPackages = JSON.parse(updatedPackagesString);
-      const updatedPackage = updatedPackages[selectedPackage];
+      const packageData = updatedPackages[selectedPackage];
+      
+      // Handle both old and new package formats
+      let items = [];
+      if (packageData) {
+        // New format with dateCreated
+        if (typeof packageData === 'object' && !Array.isArray(packageData) && packageData.items) {
+          items = packageData.items;
+        }
+        // Old format (direct array)
+        else if (Array.isArray(packageData)) {
+          items = packageData;
+        }
+      }
 
-      if (!updatedPackage || updatedPackage.length === 0) {
+      if (!items || items.length === 0) {
         throw new Error(
           "Selected package not found in updated packages or package is empty"
         );
       }
 
       let itemsTotal = [];
-      updatedPackage.forEach((item) => {
+      items.forEach((item) => {
         if (!item || !Array.isArray(item.replicatedNames)) {
           console.warn("Invalid item or missing replicatedNames:", item);
           return;
@@ -590,7 +603,7 @@ export default class PackagesPage extends Component {
         itemsTotal: itemsDisplay,
         selectedBox: selectedBox,
         selectedCarrier: "No Carrier",
-        items: updatedPackage,
+        items: items,
         packageName: selectedPackage
       });
 
@@ -618,6 +631,37 @@ export default class PackagesPage extends Component {
       const itemWeight = parseFloat(item.itemWeight) || 0;
       return total + (itemWeight * (item.quantity || 1));
     }, 0).toFixed(2);
+  };
+
+  getItemsArray = (packageName) => {
+    const packageData = this.state.packages[packageName];
+    if (!packageData) return [];
+    
+    // Handle new format (with dateCreated)
+    if (typeof packageData === 'object' && !Array.isArray(packageData) && packageData.items) {
+      return packageData.items;
+    }
+    
+    // Handle old format (direct array)
+    if (Array.isArray(packageData)) {
+      return packageData;
+    }
+    
+    return [];
+  };
+  
+  getItemsCount = (packageName) => {
+    const items = this.getItemsArray(packageName);
+    return items.length;
+  };
+
+  calculateTotalItems = (packageName) => {
+    const items = this.getItemsArray(packageName);
+    return items.reduce((total, item) => {
+      // Count replicated items
+      const replicatedCount = item.replicatedNames ? item.replicatedNames.length : 0;
+      return total + (replicatedCount > 0 ? replicatedCount : 1);
+    }, 0);
   };
 
   startShakeAnimation = () => {
@@ -901,7 +945,7 @@ export default class PackagesPage extends Component {
                       </Text>
                     </View>
                     <FlatList
-                      data={selectedPackage ? packages[selectedPackage] : []}
+                      data={selectedPackage ? this.getItemsArray(selectedPackage) : []}
                       style={styles.flatListStyle}
                       contentContainerStyle={styles.flatListContainer}
                       keyExtractor={(item) => item.id}
@@ -988,7 +1032,7 @@ export default class PackagesPage extends Component {
 
                       <TouchableOpacity
                         style={[styles.footerButton, styles.shipButton]}
-                        onPress={() => this.handleShipPackage({ name: selectedPackage, items: packages[selectedPackage] })}
+                        onPress={() => this.handleShipPackage({ name: selectedPackage, items: this.getItemsArray(selectedPackage) })}
                       >
                         <Ionicons name="airplane" size={20} color="#fff" />
                         <Text style={styles.footerButtonText}>Shipping Estimate</Text>
@@ -1161,6 +1205,11 @@ export default class PackagesPage extends Component {
     const animatedStyle = {
       transform: [{ translateX: isEditing ? this.shakeAnimation : 0 }],
     };
+    
+    // Get package data and handle both old and new format
+    const packageData = this.state.packages[packageName];
+    const isNewFormat = packageData && typeof packageData === 'object' && !Array.isArray(packageData);
+    const dateCreated = isNewFormat ? packageData.dateCreated : null;
 
     return (
       <View key={packageName} style={styles.packageRow}>
@@ -1196,11 +1245,16 @@ export default class PackagesPage extends Component {
               ) : (
                 <Ionicons name="cube" size={20} color="#3B82F6" style={styles.packageIcon} />
               )}
-              <Text style={styles.packageName}>{packageName}</Text>
+              <View style={styles.packageNameContainer}>
+                <Text style={styles.packageName}>{packageName}</Text>
+                {dateCreated && (
+                  <Text style={styles.dateText}>Created: {dateCreated}</Text>
+                )}
+              </View>
             </View>
             <View style={styles.itemCountContainer}>
               <Text style={styles.itemCount}>
-                {this.state.packages[packageName].length} unique {this.state.packages[packageName].length === 1 ? 'item' : 'items'}
+                {this.getItemsCount(packageName)} unique {this.getItemsCount(packageName) === 1 ? 'item' : 'items'}
               </Text>
               <Text style={styles.totalItemCount}>
                 {this.calculateTotalItems(packageName)} total {this.calculateTotalItems(packageName) === 1 ? 'item' : 'items'}
@@ -1257,7 +1311,8 @@ export default class PackagesPage extends Component {
 
   calculateTotalItems = (packageName) => {
     // Calculate the total number of items including replicated items
-    return this.state.packages[packageName].reduce((total, item) => {
+    const items = this.getItemsArray(packageName);
+    return items.reduce((total, item) => {
       // Add the quantity or the number of replicated items
       return total + (item.quantity || (item.replicatedNames ? item.replicatedNames.length : 1));
     }, 0);
@@ -1426,9 +1481,18 @@ const styles = StyleSheet.create({
     padding: 16,
   },
   packageLeftContent: {
-    flexDirection: "row",
-    alignItems: "center",
+    flexDirection: 'row',
+    alignItems: 'center',
     flex: 1,
+  },
+  packageNameContainer: {
+    flex: 1,
+    justifyContent: 'center',
+  },
+  dateText: {
+    fontSize: 12,
+    color: '#64748B',
+    marginTop: 2,
   },
   packageIcon: {
     marginRight: 12,

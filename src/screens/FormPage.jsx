@@ -1014,8 +1014,18 @@ export default class FormPage extends Component {
         return;
       }
 
-      // Save the package
-      packages[packageName] = items;
+      // Get current date in MM/DD/YY format
+      const today = new Date();
+      const day = String(today.getDate()).padStart(2, '0');
+      const month = String(today.getMonth() + 1).padStart(2, '0'); // January is 0
+      const year = String(today.getFullYear()).slice(-2);
+      const dateCreated = `${month}/${day}/${year}`;
+
+      // Save the package with date information
+      packages[packageName] = {
+        items: items,
+        dateCreated: dateCreated
+      };
       await AsyncStorage.setItem("packages", JSON.stringify(packages));
 
       // Once saved successfully, alert success and clear items
