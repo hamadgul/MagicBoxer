@@ -698,10 +698,19 @@ export default class PackagesPage extends Component {
           >
             {Object.keys(packages).length === 0 ? (
               <View style={styles.emptyContainer}>
-                <Ionicons name="cube-outline" size={60} color="#CBD5E1" />
+                <View style={styles.emptyIconContainer}>
+                  <Ionicons name="cube-outline" size={80} color="#94A3B8" />
+                </View>
+                <Text style={styles.emptyTitle}>No Saved Packages</Text>
                 <Text style={styles.emptyText}>
-                  There are no saved packages. Go to the Create Package Page to start creating packages.
+                  Create and save packages to access them here for future shipments.
                 </Text>
+                <TouchableOpacity 
+                  style={styles.createPackageButton}
+                  onPress={() => this.props.navigation.navigate('Create Package')}
+                >
+                  <Text style={styles.createPackageButtonText}>Create Package</Text>
+                </TouchableOpacity>
               </View>
             ) : (
               Object.keys(packages).map(this.renderPackage)
@@ -1826,15 +1835,53 @@ const styles = StyleSheet.create({
     flex: 1,
     alignItems: 'center',
     justifyContent: 'center',
-    paddingTop: 100,
+    paddingTop: 80,
     paddingHorizontal: 40,
+  },
+  emptyIconContainer: {
+    width: 120,
+    height: 120,
+    borderRadius: 60,
+    backgroundColor: '#F1F5F9',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: 24,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 3,
+  },
+  emptyTitle: {
+    fontSize: 22,
+    fontWeight: '600',
+    color: '#334155',
+    marginBottom: 12,
+    textAlign: 'center',
   },
   emptyText: {
     fontSize: 16,
+    lineHeight: 24,
     color: '#64748B',
     textAlign: 'center',
-    marginTop: 20,
-    marginHorizontal: 'auto',
-    width: '80%',
+    marginBottom: 32,
+    width: '85%',
+  },
+  createPackageButton: {
+    backgroundColor: '#475569',
+    paddingVertical: 12,
+    paddingHorizontal: 24,
+    borderRadius: 8,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.2,
+    shadowRadius: 2,
+    elevation: 2,
+  },
+  createPackageButtonText: {
+    color: '#FFFFFF',
+    fontSize: 16,
+    fontWeight: '500',
+    textAlign: 'center',
   },
 });

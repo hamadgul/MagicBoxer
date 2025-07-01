@@ -457,10 +457,19 @@ export default class SavedItemsPage extends Component {
           >
             {savedItems.length === 0 ? (
               <View style={styles.emptyContainer}>
-                <Ionicons name="bookmark-outline" size={60} color="#CBD5E1" />
+                <View style={styles.emptyIconContainer}>
+                  <Ionicons name="bookmark-outline" size={80} color="#94A3B8" />
+                </View>
+                <Text style={styles.emptyTitle}>No Saved Items</Text>
                 <Text style={styles.emptyText}>
-                  Your saved items will appear here and can be accessed via the Name dropdown on the Create Package Page.
+                  Items you save will appear here and can be quickly accessed when creating packages.
                 </Text>
+                <TouchableOpacity 
+                  style={styles.createItemButton}
+                  onPress={() => this.setState({ showAddItemModal: true })}
+                >
+                  <Text style={styles.createItemButtonText}>Add New Item</Text>
+                </TouchableOpacity>
               </View>
             ) : (
               savedItems.map(item => this.renderItem(item))
@@ -809,16 +818,62 @@ const styles = StyleSheet.create({
     flex: 1,
     alignItems: 'center',
     justifyContent: 'center',
-    paddingTop: 100,
+    paddingTop: 80,
     paddingHorizontal: 40,
+  },
+  emptyIconContainer: {
+    width: 120,
+    height: 120,
+    borderRadius: 60,
+    backgroundColor: '#F1F5F9',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: 24,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 3,
+  },
+  emptyTitle: {
+    fontSize: 22,
+    fontWeight: '600',
+    color: '#334155',
+    marginBottom: 12,
+    textAlign: 'center',
   },
   emptyText: {
     fontSize: 16,
+    lineHeight: 24,
     color: '#64748B',
     textAlign: 'center',
-    marginTop: 20,
-    marginHorizontal: 'auto',
-    width: '80%',
+    marginBottom: 32,
+    width: '85%',
+  },
+  createItemButton: {
+    backgroundColor: '#475569',
+    paddingVertical: 12,
+    paddingHorizontal: 24,
+    borderRadius: 8,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.2,
+    shadowRadius: 2,
+    elevation: 2,
+  },
+  createItemButtonText: {
+    color: '#FFFFFF',
+    fontSize: 16,
+    fontWeight: '500',
+    textAlign: 'center',
+  },
+  emptyText: {
+    fontSize: 16,
+    lineHeight: 24,
+    color: '#64748B',
+    textAlign: 'center',
+    marginBottom: 32,
+    width: '85%',
   },
   itemRow: {
     flexDirection: 'row',
