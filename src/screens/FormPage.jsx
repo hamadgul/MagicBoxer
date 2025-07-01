@@ -496,7 +496,7 @@ export default class FormPage extends Component {
       showSuggestions: false,
       productList: [], // Initialize with empty array instead of defaultProductList
       recentSavedItems: [], // Store recently saved items
-      showRecentItems: false,
+      showRecentItems: true, // Start with recent items visible by default
       flashScrollbar: false,
       scrollViewRef: React.createRef(),
       dimensionsFromSavedItem: false // Track if dimensions are from a saved item
@@ -505,7 +505,13 @@ export default class FormPage extends Component {
   }
 
   // Load saved items from SavedItems page for suggestions
+  // Keep the original method for backward compatibility
   loadSavedItemsForSuggestions = async () => {
+    await this.loadSavedItemsAsync();
+  };
+  
+  // New method that returns a promise for better async handling
+  loadSavedItemsAsync = async () => {
     try {
       const savedItemsString = await AsyncStorage.getItem("savedItems");
       if (savedItemsString) {
@@ -516,19 +522,23 @@ export default class FormPage extends Component {
           console.log('First saved item structure:', JSON.stringify(savedItems[0]));
         }
         
-        // Get the 3 most recently added items for quick suggestions
+        // Get the 5 most recently added items for quick suggestions (increased from 3)
         const recentItems = [...savedItems]
           .sort((a, b) => (b.timestamp || 0) - (a.timestamp || 0))
-          .slice(0, 3);
-          
-        this.setState({ recentSavedItems: recentItems });
-        console.log(`Loaded ${recentItems.length} saved items for suggestions`);
+          .slice(0, 5);
+        
+        // Set the state with the loaded items and ensure showRecentItems is true
+        this.setState({ 
+          recentSavedItems: recentItems,
+          showRecentItems: true // Always show recent items when they're loaded
+        });
+        console.log(`Loaded ${recentItems.length} saved items for suggestions, showRecentItems set to true`);
       } else {
-        this.setState({ recentSavedItems: [] });
+        this.setState({ recentSavedItems: [], showRecentItems: false });
       }
     } catch (error) {
       console.error("Error loading saved items for suggestions:", error);
-      this.setState({ recentSavedItems: [] });
+      this.setState({ recentSavedItems: [], showRecentItems: false });
     }
   };
   
@@ -628,22 +638,33 @@ export default class FormPage extends Component {
 
   componentDidMount() {
     console.log("FormPage - componentDidMount");
-    this.loadItems();
-    this.loadCustomProducts();
-    this.loadSavedItemsForSuggestions();
     
-
+    // First load all data
+    Promise.all([
+      this.loadItems(),
+      this.loadCustomProducts(),
+      this.loadSavedItemsAsync() // New method that returns a promise
+    ]).then(() => {
+      // After all data is loaded, force update to ensure rendering
+      console.log("FormPage - All data loaded, forcing update");
+      this.setState({ showRecentItems: true });
+      this.forceUpdate();
+    });
     
     // Refresh data when the screen comes into focus
     this.focusListener = this.props.navigation.addListener(
       "focus",
       () => {
         console.log("FormPage - focus event");
-        this.loadCustomProducts();
-        this.loadItems();
-        this.loadSavedItemsForSuggestions();
-        // Show recent items when the screen comes into focus
-        this.setState({ showRecentItems: true });
+        Promise.all([
+          this.loadCustomProducts(),
+          this.loadItems(),
+          this.loadSavedItemsAsync()
+        ]).then(() => {
+          // After all data is loaded on focus, ensure recent items are shown
+          this.setState({ showRecentItems: true });
+          this.forceUpdate();
+        });
         
 
         
@@ -1470,7 +1491,8 @@ export default class FormPage extends Component {
                     </View>
                     
                     {/* Recently saved items suggestions - positioned directly below the name field */}
-                    {this.state.showRecentItems && !this.state.showSuggestions && (() => {
+                    {(() => {
+                      // Always evaluate this section, regardless of showRecentItems state
                       // Filter out items that already exist in the added items container
                       const filteredItems = this.state.recentSavedItems.filter(item => {
                         const itemName = item.itemName || item.name || '';
@@ -1484,8 +1506,17 @@ export default class FormPage extends Component {
                         return !alreadyAdded;
                       });
                       
+                      // Log visibility state for debugging
+                      console.log('Recent items render check - showRecentItems:', this.state.showRecentItems, 
+                                 'filteredItems:', filteredItems.length, 
+                                 'recentSavedItems:', this.state.recentSavedItems.length,
+                                 'showSuggestions:', this.state.showSuggestions);
+                      
                       // Only render the suggestions container if there are items to display
-                      return filteredItems.length > 0 && (
+                      // AND either showRecentItems is true OR the name field is empty
+                      return filteredItems.length > 0 && 
+                             (this.state.showRecentItems || this.state.itemName === '') && 
+                             !this.state.showSuggestions && (
                       <View style={{
                         marginTop: -3, /* Connect directly to input field above */
                         marginBottom: 8,

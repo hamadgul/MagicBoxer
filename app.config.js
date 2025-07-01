@@ -29,7 +29,11 @@ module.exports = {
       favicon: "./assets/favicon.png"
     },
     plugins: [
-      "expo-splash-screen"
+      "expo-splash-screen",
+      "expo-font",
+      "expo-mail-composer",
+      "expo-router",
+      "expo-web-browser"
     ],
     extra: {
       eas: {
