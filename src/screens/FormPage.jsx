@@ -482,6 +482,7 @@ export default class FormPage extends Component {
   constructor(props) {
     super(props);
     this.state = {
+      savedItemsSearchQuery: '',
       itemName: "",
       itemWidth: "",
       itemHeight: "",
@@ -673,7 +674,8 @@ export default class FormPage extends Component {
       'showAllSavedItemsModal',
       'allSavedItems',
       'recentSavedItems',
-      'showRecentItems'
+      'showRecentItems',
+      'savedItemsSearchQuery'
     ];
 
     return relevantStateKeys.some(key => this.state[key] !== nextState[key]);
@@ -1846,36 +1848,70 @@ export default class FormPage extends Component {
                 visible={this.state.showAllSavedItemsModal}
                 onRequestClose={this.hideAllSavedItemsModal}
               >
-                <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: 'rgba(0,0,0,0.5)' }}>
-                  <View style={{
-                    width: '90%',
-                    backgroundColor: 'white',
-                    borderRadius: 10,
-                    padding: 20,
+                <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
+                  <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: 'rgba(0,0,0,0.5)' }}>
+                      <View style={{
+                    width: '95%',
+                    maxHeight: '85%',
+                    backgroundColor: '#F8FAFC',
+                    borderRadius: 16,
+                    padding: 0,
                     shadowColor: '#000',
-                    shadowOffset: { width: 0, height: 2 },
-                    shadowOpacity: 0.25,
-                    shadowRadius: 4,
-                    elevation: 5,
-                  }}>
+                    shadowOffset: { width: 0, height: 5 },
+                    shadowOpacity: 0.1,
+                    shadowRadius: 15,
+                    elevation: 10,
+                  }}> 
                     <View style={{
                       flexDirection: 'row',
                       justifyContent: 'space-between',
                       alignItems: 'center',
-                      marginBottom: 15,
+                      padding: 20,
+                      borderBottomWidth: 1,
+                      borderBottomColor: '#E2E8F0',
                     }}>
                       <Text style={{
-                        fontSize: 18,
+                        fontSize: 20,
                         fontWeight: 'bold',
-                        color: '#334155'
-                      }}>All Saved Items</Text>
+                        color: '#1E293B'
+                      }}>Select an Item</Text>
                       <TouchableOpacity onPress={this.hideAllSavedItemsModal}>
                         <Ionicons name="close" size={24} color="#64748B" />
                       </TouchableOpacity>
                     </View>
                     
-                    <ScrollView style={{ maxHeight: '90%' }}>
-                      {this.state.allSavedItems && this.state.allSavedItems.map((item) => {
+                    <View style={{
+                      flexDirection: 'row',
+                      alignItems: 'center',
+                      backgroundColor: '#FFFFFF',
+                      borderRadius: 8,
+                      paddingHorizontal: 12,
+                      marginBottom: 15,
+                      borderWidth: 1,
+                      borderColor: '#E2E8F0',
+                    }}>
+                      <Ionicons name="search-outline" size={20} color="#94A3B8" style={{ marginRight: 8 }} />
+                      <TextInput
+                        style={{ 
+                          flex: 1, 
+                          height: 44,
+                          fontSize: 16,
+                          color: '#1E293B',
+                        }}
+                        placeholder="Search saved items..."
+                        placeholderTextColor="#94A3B8"
+                        value={this.state.savedItemsSearchQuery}
+                        onChangeText={(text) => this.setState({ savedItemsSearchQuery: text })}
+                      />
+                    </View>
+
+                    <ScrollView style={{ paddingHorizontal: 20 }} keyboardShouldPersistTaps="handled">
+                      {this.state.allSavedItems && this.state.allSavedItems
+                        .filter(item => {
+                          const itemName = (item.itemName || item.name || '').toLowerCase();
+                          return itemName.includes(this.state.savedItemsSearchQuery.toLowerCase());
+                        })
+                        .map((item) => {
                         const itemName = item.itemName || item.name || '';
                         const alreadyAdded = this.state.items.some(addedItem =>
                           (addedItem.itemName || '').toLowerCase() === itemName.toLowerCase()
@@ -1889,52 +1925,57 @@ export default class FormPage extends Component {
                             onPress={() => !alreadyAdded && this.selectSavedItem(item)}
                             disabled={alreadyAdded}
                             style={{
-                              paddingVertical: 12,
+                              flexDirection: 'row',
+                              justifyContent: 'space-between',
+                              alignItems: 'center',
+                              paddingVertical: 16,
                               borderBottomWidth: 1,
                               borderBottomColor: '#E2E8F0',
-                              opacity: alreadyAdded ? 0.5 : 1,
+                              opacity: alreadyAdded ? 0.4 : 1,
                             }}
                           >
-                            <Text style={{ fontSize: 16, color: '#1E293B', fontWeight: '500' }}>
-                              {itemName}
-                            </Text>
-                            <Text style={{ fontSize: 12, color: '#64748B', marginTop: 4 }}>
-                              {dimensions.length && dimensions.width && dimensions.height ?
-                                `L: ${parseFloat(dimensions.length)} W: ${parseFloat(dimensions.width)} H: ${parseFloat(dimensions.height)}` :
-                                'Dimensions not available'}
-                            </Text>
-                            {alreadyAdded && (
-                              <Text style={{ fontSize: 12, color: '#94A3B8', fontStyle: 'italic', marginTop: 2 }}>
-                                Already added to form
+                            <View>
+                              <Text style={{ fontSize: 16, color: '#1E293B', fontWeight: '600' }}>
+                                {itemName}
                               </Text>
+                              <Text style={{ fontSize: 13, color: '#64748B', marginTop: 4 }}>
+                                {dimensions.length && dimensions.width && dimensions.height ?
+                                  `L: ${parseFloat(dimensions.length)} W: ${parseFloat(dimensions.width)} H: ${parseFloat(dimensions.height)}` :
+                                  'No dimensions'}
+                              </Text>
+                            </View>
+                            {alreadyAdded ? (
+                              <Ionicons name="checkmark-circle" size={24} color="#22C55E" />
+                            ) : (
+                              <Ionicons name="chevron-forward" size={24} color="#94A3B8" />
                             )}
                           </TouchableOpacity>
                         );
                       })}
                     </ScrollView>
 
-                    <TouchableOpacity
-                      style={{
-                        marginTop: 15,
-                        paddingVertical: 12,
-                        backgroundColor: '#F1F5F9',
-                        borderRadius: 8,
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        borderWidth: 1,
-                        borderColor: '#E2E8F0',
-                      }}
+                    <View style={{ padding: 20, borderTopWidth: 1, borderTopColor: '#E2E8F0' }}>
+                      <TouchableOpacity
+                        style={{
+                          paddingVertical: 14,
+                          backgroundColor: '#0066FF',
+                          borderRadius: 12,
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                        }}
                       onPress={() => {
                         this.hideAllSavedItemsModal();
                         this.props.navigation.navigate('Lookup Item Dims');
                       }}
                     >
-                      <Text style={{ color: '#475569', fontWeight: '600', fontSize: 14 }}>
-                        Can't find your item? Use AI Search
-                      </Text>
-                    </TouchableOpacity>
-                  </View>
+                        <Text style={{ color: '#FFFFFF', fontWeight: 'bold', fontSize: 16 }}>
+                          Find with AI Search
+                        </Text>
+                      </TouchableOpacity>
+                    </View>
+                    </View>
                 </View>
+              </TouchableWithoutFeedback>
               </Modal>
 
               {this.state.showDetails && this.state.selectedItem && (
