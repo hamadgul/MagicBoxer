@@ -1521,7 +1521,7 @@ export default class FormPage extends Component {
                             justifyContent: 'center',
                             paddingHorizontal: 12,
                           }}
-                          onPress={this.showAllSavedItemsModal}
+                          onPress={() => this.setState({ savedItemsSearchQuery: this.state.itemName, showAllSavedItemsModal: true, showRecentItems: false })}
                         >
                           <Ionicons name="search" size={22} color="#64748B" />
                         </TouchableOpacity>
