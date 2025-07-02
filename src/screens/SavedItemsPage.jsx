@@ -129,7 +129,8 @@ export default class SavedItemsPage extends Component {
               length: `${length.toFixed(2)} inches`,
               width: `${width.toFixed(2)} inches`,
               height: `${height.toFixed(2)} inches`
-            }
+            },
+            timestamp: Date.now() // Update timestamp when editing to make it recent
           };
         }
         return item;
@@ -150,7 +151,8 @@ export default class SavedItemsPage extends Component {
           length: `${length.toFixed(2)} inches`,
           width: `${width.toFixed(2)} inches`,
           height: `${height.toFixed(2)} inches`
-        }
+        },
+        timestamp: Date.now() // Add timestamp for sorting by recency
       };
       
       // Add to state

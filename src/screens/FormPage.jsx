@@ -522,10 +522,10 @@ export default class FormPage extends Component {
           console.log('First saved item structure:', JSON.stringify(savedItems[0]));
         }
         
-        // Get the 5 most recently added items for quick suggestions (increased from 3)
+        // Get the 5 most recently added items for quick suggestions
         const recentItems = [...savedItems]
           .sort((a, b) => (b.timestamp || 0) - (a.timestamp || 0))
-          .slice(0, 5);
+          .slice(0, 5); // Limit to 5 most recent items
         
         // Set the state with the loaded items and ensure showRecentItems is true
         this.setState({ 
@@ -1504,17 +1504,21 @@ export default class FormPage extends Component {
                     {(() => {
                       // Always evaluate this section, regardless of showRecentItems state
                       // Filter out items that already exist in the added items container
-                      const filteredItems = this.state.recentSavedItems.filter(item => {
-                        const itemName = item.itemName || item.name || '';
-                        
-                        // Check if this item already exists in the added items container
-                        const alreadyAdded = this.state.items.some(addedItem => 
-                          (addedItem.itemName || '').toLowerCase() === itemName.toLowerCase()
-                        );
-                        
-                        // Only show items that don't already exist in the added items container
-                        return !alreadyAdded;
-                      });
+                      // and ensure newest items come first (by timestamp)
+                      const filteredItems = this.state.recentSavedItems
+                        .filter(item => {
+                          const itemName = item.itemName || item.name || '';
+                          
+                          // Check if this item already exists in the added items container
+                          const alreadyAdded = this.state.items.some(addedItem => 
+                            (addedItem.itemName || '').toLowerCase() === itemName.toLowerCase()
+                          );
+                          
+                          // Only show items that don't already exist in the added items container
+                          return !alreadyAdded;
+                        })
+                        // Make sure newest items come first by sorting again here
+                        .sort((a, b) => (b.timestamp || 0) - (a.timestamp || 0));
                       
                       // Log visibility state for debugging
                       console.log('Recent items render check - showRecentItems:', this.state.showRecentItems, 
@@ -1551,7 +1555,8 @@ export default class FormPage extends Component {
                           marginRight: 8,
                           fontWeight: '500'
                         }}>Recent:</Text>
-                        {filteredItems.map((item) => (
+                        {/* Display items in order (newest first) */}
+                        {[...filteredItems].map((item) => (
                             <TouchableOpacity
                               key={item.id}
                               style={{

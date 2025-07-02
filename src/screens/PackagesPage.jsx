@@ -1366,8 +1366,20 @@ export default class PackagesPage extends Component {
         return;
       }
       
+      // Make sure the package exists and has an items array
+      if (!packages[selectedPackage]) {
+        console.error('Selected package does not exist:', selectedPackage);
+        Alert.alert("Error", "The selected package could not be found.");
+        return;
+      }
+      
+      // Initialize items array if it doesn't exist
+      if (!packages[selectedPackage].items) {
+        packages[selectedPackage].items = [];
+      }
+      
       // Check if an item with the same name already exists in the package
-      const existingItem = packages[selectedPackage].find(
+      const existingItem = packages[selectedPackage].items.find(
         item => item.itemName.toLowerCase() === savedItem.name.toLowerCase()
       );
       
@@ -1424,7 +1436,14 @@ export default class PackagesPage extends Component {
       
       // Add the item to the package
       const updatedPackages = { ...packages };
-      updatedPackages[selectedPackage] = [...updatedPackages[selectedPackage], newItem];
+      
+      // Make sure we're adding to the items array
+      if (!updatedPackages[selectedPackage].items) {
+        updatedPackages[selectedPackage].items = [];
+      }
+      
+      // Add the new item to the items array
+      updatedPackages[selectedPackage].items.push(newItem);
       
       // Save to AsyncStorage
       await AsyncStorage.setItem("packages", JSON.stringify(updatedPackages));
