@@ -130,11 +130,11 @@ function DrawerNavigator() {
       }
     },
     {
-      name: "Lookup Item Dims",
+      name: "AI Item Search",
       component: LookupItemPage,
       options: {
-        ...headerWithIcon('search-outline', 'Lookup Item Dims'),
-        drawerLabel: "Lookup Item Dims",
+        ...headerWithIcon('search-outline', 'AI Item Search'),
+        drawerLabel: "AI Item Search",
         drawerIcon: ({ focused, color, size }) => (
           <Ionicons name="search-outline" size={size} color={color} />
         )

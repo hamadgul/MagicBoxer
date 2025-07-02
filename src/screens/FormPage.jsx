@@ -1849,148 +1849,168 @@ export default class FormPage extends Component {
                   <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
                   <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: 'rgba(0,0,0,0.5)' }}>
                       <View style={{
-                    width: '95%',
-                    maxHeight: '85%',
-                    backgroundColor: '#F8FAFC',
-                    borderRadius: 16,
-                    padding: 0,
-                    shadowColor: '#000',
-                    shadowOffset: { width: 0, height: 5 },
-                    shadowOpacity: 0.1,
-                    shadowRadius: 15,
-                    elevation: 10,
-                  }}> 
-                    <View style={{
-                      flexDirection: 'row',
-                      justifyContent: 'space-between',
-                      alignItems: 'center',
-                      padding: 20,
-                      borderBottomWidth: 1,
-                      borderBottomColor: '#E2E8F0',
-                    }}>
-                      <Text style={{
-                        fontSize: 20,
-                        fontWeight: 'bold',
-                        color: '#1E293B'
-                      }}>Select an Item</Text>
-                      <TouchableOpacity onPress={this.hideAllSavedItemsModal}>
-                        <Ionicons name="close" size={24} color="#64748B" />
-                      </TouchableOpacity>
-                    </View>
-                    
-                    <View style={{
-                      flexDirection: 'row',
-                      alignItems: 'center',
-                      backgroundColor: '#FFFFFF',
-                      borderRadius: 8,
-                      paddingHorizontal: 12,
-                      marginBottom: 15,
-                      borderWidth: 1,
-                      borderColor: '#E2E8F0',
-                    }}>
-                      <Ionicons name="search-outline" size={20} color="#94A3B8" style={{ marginRight: 8 }} />
-                      <TextInput
-                        style={{ 
-                          flex: 1, 
-                          height: 44,
-                          fontSize: 16,
-                          color: '#1E293B',
-                        }}
-                        placeholder="Search saved items..."
-                        placeholderTextColor="#94A3B8"
-                        value={this.state.savedItemsSearchQuery}
-                        onChangeText={(text) => this.setState({ savedItemsSearchQuery: text })}
-                      />
-                    </View>
+                        width: '95%',
+                        maxHeight: '85%',
+                        backgroundColor: '#F8FAFC',
+                        borderRadius: 16,
+                        shadowColor: '#000',
+                        shadowOffset: { width: 0, height: 5 },
+                        shadowOpacity: 0.1,
+                        shadowRadius: 15,
+                        elevation: 10,
+                      }}>
+                        <View style={{
+                          flexDirection: 'row',
+                          justifyContent: 'space-between',
+                          alignItems: 'center',
+                          padding: 20,
+                          borderBottomWidth: 1,
+                          borderBottomColor: '#E2E8F0',
+                        }}>
+                          <Text style={{
+                            fontSize: 20,
+                            fontWeight: 'bold',
+                            color: '#1E293B'
+                          }}>Select an Item</Text>
+                          <TouchableOpacity onPress={this.hideAllSavedItemsModal}>
+                            <Ionicons name="close" size={24} color="#64748B" />
+                          </TouchableOpacity>
+                        </View>
 
-                    <ScrollView style={{ paddingHorizontal: 20 }} keyboardShouldPersistTaps="handled">
-                      {this.state.allSavedItems && this.state.allSavedItems
-                        .filter(item => {
-                          const itemName = (item.itemName || item.name || '').toLowerCase();
-                          return itemName.includes(this.state.savedItemsSearchQuery.toLowerCase());
-                        })
-                        .map((item) => {
-                        const itemName = item.itemName || item.name || '';
-                        const alreadyAdded = this.state.items.some(addedItem =>
-                          (addedItem.itemName || '').toLowerCase() === itemName.toLowerCase()
-                        );
-                        
-                        const dimensions = item.dimensions || {};
+                        <View style={{ paddingHorizontal: 20, paddingTop: 15, paddingBottom: 15 }}>
+                          <View style={{
+                            flexDirection: 'row',
+                            alignItems: 'center',
+                            backgroundColor: '#FFFFFF',
+                            borderRadius: 8,
+                            paddingHorizontal: 12,
+                            borderWidth: 1,
+                            borderColor: '#E2E8F0',
+                          }}>
+                            <Ionicons name="search-outline" size={20} color="#94A3B8" style={{ marginRight: 8 }} />
+                            <TextInput
+                              style={{ 
+                                flex: 1, 
+                                height: 44,
+                                fontSize: 16,
+                                color: '#1E293B',
+                              }}
+                              placeholder="Search saved items..."
+                              placeholderTextColor="#94A3B8"
+                              value={this.state.savedItemsSearchQuery}
+                              onChangeText={(text) => this.setState({ savedItemsSearchQuery: text })}
+                            />
+                          </View>
+                        </View>
 
-                        return (
+                        <ScrollView 
+                          style={{ paddingHorizontal: 20 }} 
+                          contentContainerStyle={{ flexGrow: 1 }} 
+                          keyboardShouldPersistTaps="handled"
+                        >
+                          {(() => {
+                            const filteredItems = this.state.allSavedItems
+                              ? this.state.allSavedItems.filter(item => {
+                                  const itemName = (item.itemName || item.name || '').toLowerCase();
+                                  return itemName.includes(this.state.savedItemsSearchQuery.toLowerCase());
+                                })
+                              : [];
+
+                            if (filteredItems.length > 0) {
+                              return filteredItems.map((item) => {
+                                const itemName = item.itemName || item.name || '';
+                                const alreadyAdded = this.state.items.some(addedItem =>
+                                  (addedItem.itemName || '').toLowerCase() === itemName.toLowerCase()
+                                );
+                                const dimensions = item.dimensions || {};
+                                return (
+                                  <TouchableOpacity
+                                    key={item.id}
+                                    onPress={() => !alreadyAdded && this.selectSavedItem(item)}
+                                    disabled={alreadyAdded}
+                                    style={{
+                                      flexDirection: 'row',
+                                      justifyContent: 'space-between',
+                                      alignItems: 'center',
+                                      paddingVertical: 16,
+                                      borderBottomWidth: 1,
+                                      borderBottomColor: '#E2E8F0',
+                                      opacity: alreadyAdded ? 0.4 : 1,
+                                    }}
+                                  >
+                                    <View>
+                                      <Text style={{ fontSize: 16, color: '#1E293B', fontWeight: '600' }}>
+                                        {itemName}
+                                      </Text>
+                                      <View style={{ flexDirection: 'row', alignItems: 'center', marginTop: 6 }}>
+                                        {dimensions.length && dimensions.width && dimensions.height ? (
+                                          <>
+                                            <View style={{ flexDirection: 'row', alignItems: 'center', backgroundColor: '#E2E8F0', borderRadius: 12, paddingHorizontal: 8, paddingVertical: 4 }}>
+                                              <Text style={{ fontSize: 12, color: '#475569', fontWeight: '600', marginRight: 4 }}>L</Text>
+                                              <Text style={{ fontSize: 12, color: '#475569' }}>{parseFloat(dimensions.length)}</Text>
+                                            </View>
+                                            <Text style={{ marginHorizontal: 4, color: '#94A3B8', fontSize: 12 }}>x</Text>
+                                            <View style={{ flexDirection: 'row', alignItems: 'center', backgroundColor: '#E2E8F0', borderRadius: 12, paddingHorizontal: 8, paddingVertical: 4 }}>
+                                              <Text style={{ fontSize: 12, color: '#475569', fontWeight: '600', marginRight: 4 }}>W</Text>
+                                              <Text style={{ fontSize: 12, color: '#475569' }}>{parseFloat(dimensions.width)}</Text>
+                                            </View>
+                                            <Text style={{ marginHorizontal: 4, color: '#94A3B8', fontSize: 12 }}>x</Text>
+                                            <View style={{ flexDirection: 'row', alignItems: 'center', backgroundColor: '#E2E8F0', borderRadius: 12, paddingHorizontal: 8, paddingVertical: 4 }}>
+                                              <Text style={{ fontSize: 12, color: '#475569', fontWeight: '600', marginRight: 4 }}>H</Text>
+                                              <Text style={{ fontSize: 12, color: '#475569' }}>{parseFloat(dimensions.height)}</Text>
+                                            </View>
+                                          </>
+                                        ) : (
+                                          <Text style={{ fontSize: 13, color: '#94A3B8', fontStyle: 'italic' }}>
+                                            No dimensions
+                                          </Text>
+                                        )}
+                                      </View>
+                                    </View>
+                                    {alreadyAdded ? (
+                                      <Ionicons name="checkmark-circle" size={24} color="#22C55E" />
+                                    ) : (
+                                      <Ionicons name="chevron-forward" size={24} color="#94A3B8" />
+                                    )}
+                                  </TouchableOpacity>
+                                );
+                              });
+                            } else {
+                              return (
+                                <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
+                                  <Ionicons name="search-circle-outline" size={48} color="#CBD5E1" />
+                                  <Text style={{ fontSize: 18, fontWeight: '600', color: '#475569', marginTop: 16, textAlign: 'center' }}>
+                                    No Saved Items Found
+                                  </Text>
+                                  <Text style={{ fontSize: 15, color: '#64748B', marginTop: 8, textAlign: 'center', lineHeight: 22 }}>
+                                    Try a different search, or use the button below to find your item with AI Search.
+                                  </Text>
+                                </View>
+                              );
+                            }
+                          })()}
+                        </ScrollView>
+
+                        <View style={{ padding: 20, borderTopWidth: 1, borderTopColor: '#E2E8F0' }}>
                           <TouchableOpacity
-                            key={item.id}
-                            onPress={() => !alreadyAdded && this.selectSavedItem(item)}
-                            disabled={alreadyAdded}
                             style={{
-                              flexDirection: 'row',
-                              justifyContent: 'space-between',
+                              paddingVertical: 14,
+                              backgroundColor: '#0066FF',
+                              borderRadius: 12,
                               alignItems: 'center',
-                              paddingVertical: 16,
-                              borderBottomWidth: 1,
-                              borderBottomColor: '#E2E8F0',
-                              opacity: alreadyAdded ? 0.4 : 1,
+                              justifyContent: 'center',
+                            }}
+                            onPress={() => {
+                              this.hideAllSavedItemsModal();
+                              this.props.navigation.navigate('AI Item Search', { searchQuery: this.state.savedItemsSearchQuery });
                             }}
                           >
-                            <View>
-                              <Text style={{ fontSize: 16, color: '#1E293B', fontWeight: '600' }}>
-                                {itemName}
-                              </Text>
-                              <View style={{ flexDirection: 'row', alignItems: 'center', marginTop: 6 }}>
-                                {dimensions.length && dimensions.width && dimensions.height ? (
-                                  <>
-                                    <View style={{ flexDirection: 'row', alignItems: 'center', backgroundColor: '#E2E8F0', borderRadius: 12, paddingHorizontal: 8, paddingVertical: 4 }}>
-                                      <Text style={{ fontSize: 12, color: '#475569', fontWeight: '600', marginRight: 4 }}>L</Text>
-                                      <Text style={{ fontSize: 12, color: '#475569' }}>{parseFloat(dimensions.length)}</Text>
-                                    </View>
-                                    <Text style={{ marginHorizontal: 4, color: '#94A3B8', fontSize: 12 }}>x</Text>
-                                    <View style={{ flexDirection: 'row', alignItems: 'center', backgroundColor: '#E2E8F0', borderRadius: 12, paddingHorizontal: 8, paddingVertical: 4 }}>
-                                      <Text style={{ fontSize: 12, color: '#475569', fontWeight: '600', marginRight: 4 }}>W</Text>
-                                      <Text style={{ fontSize: 12, color: '#475569' }}>{parseFloat(dimensions.width)}</Text>
-                                    </View>
-                                    <Text style={{ marginHorizontal: 4, color: '#94A3B8', fontSize: 12 }}>x</Text>
-                                    <View style={{ flexDirection: 'row', alignItems: 'center', backgroundColor: '#E2E8F0', borderRadius: 12, paddingHorizontal: 8, paddingVertical: 4 }}>
-                                      <Text style={{ fontSize: 12, color: '#475569', fontWeight: '600', marginRight: 4 }}>H</Text>
-                                      <Text style={{ fontSize: 12, color: '#475569' }}>{parseFloat(dimensions.height)}</Text>
-                                    </View>
-                                  </>
-                                ) : (
-                                  <Text style={{ fontSize: 13, color: '#94A3B8', fontStyle: 'italic' }}>
-                                    No dimensions
-                                  </Text>
-                                )}
-                              </View>
-                            </View>
-                            {alreadyAdded ? (
-                              <Ionicons name="checkmark-circle" size={24} color="#22C55E" />
-                            ) : (
-                              <Ionicons name="chevron-forward" size={24} color="#94A3B8" />
-                            )}
+                            <Text style={{ color: '#FFFFFF', fontWeight: 'bold', fontSize: 16 }}>
+                              Find with AI Search
+                            </Text>
                           </TouchableOpacity>
-                        );
-                      })}
-                    </ScrollView>
-
-                    <View style={{ padding: 20, borderTopWidth: 1, borderTopColor: '#E2E8F0' }}>
-                      <TouchableOpacity
-                        style={{
-                          paddingVertical: 14,
-                          backgroundColor: '#0066FF',
-                          borderRadius: 12,
-                          alignItems: 'center',
-                          justifyContent: 'center',
-                        }}
-                      onPress={() => {
-                        this.hideAllSavedItemsModal();
-                        this.props.navigation.navigate('Lookup Item Dims', { searchQuery: this.state.savedItemsSearchQuery });
-                      }}
-                    >
-                        <Text style={{ color: '#FFFFFF', fontWeight: 'bold', fontSize: 16 }}>
-                          Find with AI Search
-                        </Text>
-                      </TouchableOpacity>
-                    </View>
-                    </View>
+                        </View>
+                      </View>
                 </View>
               </TouchableWithoutFeedback>
             </KeyboardAvoidingView>
