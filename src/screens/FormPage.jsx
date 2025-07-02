@@ -25,8 +25,9 @@ import { pack, createDisplay } from "../packing_algo/packing";
 import styles from "../theme/Styles";
 import { modalStyles } from "../theme/ModalStyles";
 import { Ionicons } from "@expo/vector-icons";
+import base64 from 'base-64';
 
-var Buffer = require("@craftzdog/react-native-buffer").Buffer;
+
 
 
 // Make sure ItemDetailsModal is exported correctly
@@ -1185,9 +1186,7 @@ export default class FormPage extends Component {
     );
     this.setState({ items: updatedItems });
     try {
-      const serializedItems = Buffer.from(
-        JSON.stringify(updatedItems)
-      ).toString("base64");
+      const serializedItems = base64.encode(JSON.stringify(updatedItems));
       await AsyncStorage.setItem("itemList", serializedItems);
       Alert.alert("Success", `${itemToDelete.itemName} was removed`);
     } catch (error) {
@@ -1197,9 +1196,7 @@ export default class FormPage extends Component {
 
   _storeData = async () => {
     try {
-      const serializedItems = Buffer.from(
-        JSON.stringify(this.state.items)
-      ).toString("base64");
+      const serializedItems = base64.encode(JSON.stringify(this.state.items));
       await AsyncStorage.setItem("itemList", serializedItems);
     } catch (error) {
       console.error(error);
@@ -1248,7 +1245,7 @@ export default class FormPage extends Component {
       let itemList = [];
       if (itemListString) {
         const deserializedItems = JSON.parse(
-          Buffer.from(itemListString, "base64").toString("utf8")
+          base64.decode(itemListString)
         );
         itemList = deserializedItems;
       }
@@ -1848,7 +1845,8 @@ export default class FormPage extends Component {
                 visible={this.state.showAllSavedItemsModal}
                 onRequestClose={this.hideAllSavedItemsModal}
               >
-                <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
+                <KeyboardAvoidingView behavior={Platform.OS === "ios" ? "padding" : "height"} style={{ flex: 1 }}>
+                  <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
                   <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: 'rgba(0,0,0,0.5)' }}>
                       <View style={{
                     width: '95%',
@@ -1995,7 +1993,8 @@ export default class FormPage extends Component {
                     </View>
                 </View>
               </TouchableWithoutFeedback>
-              </Modal>
+            </KeyboardAvoidingView>
+          </Modal>
 
               {this.state.showDetails && this.state.selectedItem && (
                 <ItemDetailsModal
