@@ -1783,7 +1783,7 @@ export default class FormPage extends Component {
                     {this.state.isLoading ? (
                       <ActivityIndicator color="white" />
                     ) : (
-                      <Text style={[styles.buttonText, { color: '#FFFFFF' }]}>Pack</Text>
+                      <Text style={[styles.buttonText, { color: '#FFFFFF' }]}>Test Pack</Text>
                     )}
                   </TouchableOpacity>
                 </View>

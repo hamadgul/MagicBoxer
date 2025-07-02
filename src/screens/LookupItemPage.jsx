@@ -54,6 +54,7 @@ const LookupItemPage = ({ navigation, route }) => {
 
   // Function to lookup item dimensions using OpenAI API
   const lookupItemDimensions = async () => {
+    Keyboard.dismiss();
     // Validate required fields
     if (!itemName.trim()) {
       setError('Item name is required');
@@ -147,7 +148,11 @@ const LookupItemPage = ({ navigation, route }) => {
         
         // Show a more user-friendly error if it's not just a missing API key
         if (apiError.message !== 'API_KEY_MISSING') {
+          if (apiError.message.includes('Response missing required dimension fields') || apiError.message.includes('Dimensions outside reasonable range')) {
+          setError('Our AI couldn’t find your item, try again with more details!');
+        } else {
           setError('Could not connect to the dimensions service. Using estimated dimensions instead.');
+        }
         }
         
         // Fallback to mock data if API fails
@@ -255,26 +260,26 @@ const LookupItemPage = ({ navigation, route }) => {
     try {
       // Parse the JSON response
       const parsedResponse = JSON.parse(response);
-      
-      // Validate the response has the expected fields
-      if (!parsedResponse.length || !parsedResponse.width || !parsedResponse.height) {
+
+      // Validate the response has the expected fields and they are not zero
+      if (parsedResponse.length == null || parsedResponse.width == null || parsedResponse.height == null ||
+          parseFloat(parsedResponse.length) <= 0 || parseFloat(parsedResponse.width) <= 0 || parseFloat(parsedResponse.height) <= 0) {
         throw new Error('Response missing required dimension fields');
       }
-      
+
       // Convert to numbers and ensure they're positive
       const length = Math.abs(parseFloat(parsedResponse.length));
       const width = Math.abs(parseFloat(parsedResponse.width));
       const height = Math.abs(parseFloat(parsedResponse.height));
-      
+
       // Get the official name
       const officialName = parsedResponse.officialName || itemName;
-      
-      // Validate dimensions are reasonable (not too small or large)
-      if (length > 1000 || width > 1000 || height > 1000 || 
-          length < 0.1 || width < 0.1 || height < 0.1) {
+
+      // Validate dimensions are reasonable (not too large)
+      if (length > 1000 || width > 1000 || height > 1000) {
         throw new Error('Dimensions outside reasonable range');
       }
-      
+
       return {
         length,
         width,
@@ -283,25 +288,20 @@ const LookupItemPage = ({ navigation, route }) => {
       };
     } catch (error) {
       console.error('Error parsing AI response:', error, response);
-      // Return default dimensions if parsing fails
-      return {
-        length: 10.0,
-        width: 8.0,
-        height: 4.0,
-        officialName: itemName
-      };
+      // Re-throw the error to be handled by the caller
+      throw error;
     }
   };
 
   // Function to save the item to AsyncStorage
   const saveItem = async () => {
     if (!result) return;
-    
+
     try {
       // Get existing saved items
       const savedItemsString = await AsyncStorage.getItem('savedItems');
       let savedItems = savedItemsString ? JSON.parse(savedItemsString) : [];
-      
+
       // Create new item with dimensions
       const newItem = {
         id: await generateUUID(),
