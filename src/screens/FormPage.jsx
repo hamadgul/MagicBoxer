@@ -251,6 +251,7 @@ export const ItemDetailsModal = ({
                         }
                         maxLength={20}
                       />
+                      {(editedItem.itemName.length > 0 || !showRecentItems) && <View style={{ height: 8 }} />}
                     </View>
                   ) : null}
                   
@@ -1467,33 +1468,30 @@ export default class FormPage extends Component {
                           ref={this.inputRef}
                           style={[styles.input, styles.condensedInput, { 
                             flex: 1, 
-                            paddingRight: 40,
+                            paddingRight: 45, // Space for the icon
                             borderBottomWidth: (() => {
-                              const hasFilteredItems = this.state.recentSavedItems.some(item => {
-                                const itemName = item.itemName || item.name || '';
-                                return !this.state.items.some(addedItem => 
-                                  (addedItem.itemName || '').toLowerCase() === itemName.toLowerCase()
-                                );
-                              });
-                              return this.state.showRecentItems && hasFilteredItems ? 0 : 1;
+                              const { recentSavedItems, items, showRecentItems, itemName } = this.state;
+                              const hasFilteredItems = recentSavedItems.filter(item => {
+                                const name = item.itemName || item.name || '';
+                                return !items.some(addedItem => (addedItem.itemName || '').toLowerCase() === name.toLowerCase());
+                              }).length > 0;
+                              return showRecentItems && hasFilteredItems && !itemName ? 0 : 1;
                             })(),
                             borderBottomLeftRadius: (() => {
-                              const hasFilteredItems = this.state.recentSavedItems.some(item => {
-                                const itemName = item.itemName || item.name || '';
-                                return !this.state.items.some(addedItem => 
-                                  (addedItem.itemName || '').toLowerCase() === itemName.toLowerCase()
-                                );
-                              });
-                              return this.state.showRecentItems && hasFilteredItems ? 0 : 8;
+                              const { recentSavedItems, items, showRecentItems, itemName } = this.state;
+                              const hasFilteredItems = recentSavedItems.filter(item => {
+                                const name = item.itemName || item.name || '';
+                                return !items.some(addedItem => (addedItem.itemName || '').toLowerCase() === name.toLowerCase());
+                              }).length > 0;
+                              return showRecentItems && hasFilteredItems && !itemName ? 0 : 8;
                             })(),
                             borderBottomRightRadius: (() => {
-                              const hasFilteredItems = this.state.recentSavedItems.some(item => {
-                                const itemName = item.itemName || item.name || '';
-                                return !this.state.items.some(addedItem => 
-                                  (addedItem.itemName || '').toLowerCase() === itemName.toLowerCase()
-                                );
-                              });
-                              return this.state.showRecentItems && hasFilteredItems ? 0 : 8;
+                              const { recentSavedItems, items, showRecentItems, itemName } = this.state;
+                              const hasFilteredItems = recentSavedItems.filter(item => {
+                                const name = item.itemName || item.name || '';
+                                return !items.some(addedItem => (addedItem.itemName || '').toLowerCase() === name.toLowerCase());
+                              }).length > 0;
+                              return showRecentItems && hasFilteredItems && !itemName ? 0 : 8;
                             })(),
                             borderBottomColor: '#E2E8F0',
                             marginBottom: 0
@@ -1517,88 +1515,88 @@ export default class FormPage extends Component {
                         <TouchableOpacity 
                           style={{
                             position: 'absolute',
-                            right: 10,
-                            padding: 5,
+                            right: 0,
+                            height: '100%',
+                            justifyContent: 'center',
+                            paddingHorizontal: 12,
                           }}
-                          onPress={() => {
-                            Alert.alert("Coming Soon", "Search functionality will be implemented in a future update.");
-                          }}
+                          onPress={this.showAllSavedItemsModal}
                         >
                           <Ionicons name="search" size={22} color="#64748B" />
                         </TouchableOpacity>
                       </View>
                       
                       {(() => {
-                        const { recentSavedItems, items, showRecentItems, itemName, showSuggestions, allSavedItems } = this.state;
+                        const { recentSavedItems, items, showRecentItems, itemName, showSuggestions } = this.state;
+                        
+                        if (!showRecentItems || itemName.length > 0 || showSuggestions) {
+                          return null;
+                        }
+
                         const filteredItems = recentSavedItems.filter(item => {
                           const name = item.itemName || item.name || '';
                           return !items.some(addedItem => (addedItem.itemName || '').toLowerCase() === name.toLowerCase());
                         });
 
-                        if (filteredItems.length === 0 || (!showRecentItems && itemName) || showSuggestions) {
+                        if (filteredItems.length === 0) {
                           return null;
                         }
 
                         return (
                           <View style={{
-                            marginTop: -1,
-                            marginBottom: 8,
-                            paddingVertical: 8,
-                            paddingHorizontal: 16,
+                            flexDirection: 'row',
+                            alignItems: 'center',
                             backgroundColor: '#F8FAFC',
                             borderWidth: 1,
-                            borderTopWidth: 0,
                             borderColor: '#E2E8F0',
+                            borderTopWidth: 0,
                             borderBottomLeftRadius: 8,
                             borderBottomRightRadius: 8,
+                            paddingLeft: 16,
+                            paddingVertical: 8,
+                            marginBottom: 8,
                           }}>
-                            <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
-                              <Text style={{ fontSize: 14, fontWeight: '600', color: '#475569' }}>
-                                Recent
-                              </Text>
-                              {allSavedItems.length > 5 && (
-                                <TouchableOpacity onPress={() => this.showAllSavedItemsModal()}>
-                                  <Ionicons name="ellipsis-horizontal" size={24} color="#64748B" />
-                                </TouchableOpacity>
-                              )}
+                            <Text style={{ fontSize: 14, fontWeight: '600', color: '#475569', marginRight: 8 }}>
+                              Recent:
+                            </Text>
+                            <View style={{ flex: 1 }}>
+                              <ScrollView
+                                horizontal
+                                showsHorizontalScrollIndicator={false}
+                                contentContainerStyle={{ paddingRight: 16 }}
+                              >
+                                {filteredItems.map((item) => (
+                                  <TouchableOpacity
+                                    key={item.id}
+                                    style={{
+                                      flexDirection: 'row',
+                                      alignItems: 'center',
+                                      backgroundColor: '#EFF6FF',
+                                      borderRadius: 16,
+                                      paddingVertical: 6,
+                                      paddingHorizontal: 12,
+                                      marginRight: 8,
+                                      borderWidth: 1,
+                                      borderColor: '#DBEAFE',
+                                    }}
+                                    onPress={() => this.selectSavedItem(item)}
+                                  >
+                                    <Text style={{ 
+                                      fontSize: 14, 
+                                      color: '#0066FF',
+                                      fontWeight: '500',
+                                    }}>{item.itemName || item.name || ''}</Text>
+                                  </TouchableOpacity>
+                                ))}
+                              </ScrollView>
                             </View>
-                            <ScrollView
-                              horizontal
-                              showsHorizontalScrollIndicator={false}
-                              contentContainerStyle={{ paddingRight: 20 }}
-                            >
-                              {filteredItems.map((item) => (
-                                <TouchableOpacity
-                                  key={item.id}
-                                  style={{
-                                    flexDirection: 'row',
-                                    alignItems: 'center',
-                                    backgroundColor: '#EFF6FF',
-                                    borderRadius: 16,
-                                    paddingVertical: 6,
-                                    paddingHorizontal: 12,
-                                    marginRight: 8,
-                                    borderWidth: 1,
-                                    borderColor: '#DBEAFE',
-                                  }}
-                                  onPress={() => this.selectSavedItem(item)}
-                                >
-                                  <Text style={{ 
-                                    fontSize: 14, 
-                                    color: '#0066FF',
-                                    fontWeight: '500',
-                                    marginRight: 4,
-                                  }}>{item.itemName || item.name || ''}</Text>
-                                  <Ionicons name="arrow-forward-outline" size={14} color="#0066FF" />
-                                </TouchableOpacity>
-                              ))}
-                            </ScrollView>
                           </View>
                         );
                       })()}
+                      {(this.state.itemName.length > 0 || !this.state.showRecentItems) && <View style={{ height: 8 }} />}
                     </View>
                     
-                    {(!this.state.showRecentItems || this.state.itemName === "") && <View style={{ height: 16 }} />}
+                    
                     
                     <VStack space={2} width="100%">
                       <Text style={[styles.label, styles.condensedLabel]}>Length</Text>
