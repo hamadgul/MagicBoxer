@@ -251,7 +251,6 @@ export const ItemDetailsModal = ({
                         }
                         maxLength={20}
                       />
-                      {(editedItem.itemName.length > 0 || !showRecentItems) && <View style={{ height: 8 }} />}
                     </View>
                   ) : null}
                   
@@ -1458,7 +1457,7 @@ export default class FormPage extends Component {
                 <View style={styles.formContainer}>
                 <VStack space={2} width="100%">
                     <Text style={[styles.label, styles.condensedLabel]}>Name</Text>
-                    <View style={{ position: 'relative', zIndex: 1 }}>
+                    <View style={{ position: 'relative', zIndex: 1, marginBottom: 8 }}>
                       <View style={{
                         flexDirection: 'row',
                         alignItems: 'center',
@@ -1554,7 +1553,6 @@ export default class FormPage extends Component {
                             borderBottomRightRadius: 8,
                             paddingLeft: 16,
                             paddingVertical: 8,
-                            marginBottom: 8,
                           }}>
                             <Text style={{ fontSize: 14, fontWeight: '600', color: '#475569', marginRight: 8 }}>
                               Recent:
@@ -1593,7 +1591,7 @@ export default class FormPage extends Component {
                           </View>
                         );
                       })()}
-                      {(this.state.itemName.length > 0 || !this.state.showRecentItems) && <View style={{ height: 8 }} />}
+
                     </View>
                     
                     
@@ -1914,6 +1912,27 @@ export default class FormPage extends Component {
                         );
                       })}
                     </ScrollView>
+
+                    <TouchableOpacity
+                      style={{
+                        marginTop: 15,
+                        paddingVertical: 12,
+                        backgroundColor: '#F1F5F9',
+                        borderRadius: 8,
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        borderWidth: 1,
+                        borderColor: '#E2E8F0',
+                      }}
+                      onPress={() => {
+                        this.hideAllSavedItemsModal();
+                        this.props.navigation.navigate('Lookup Item Dims');
+                      }}
+                    >
+                      <Text style={{ color: '#475569', fontWeight: '600', fontSize: 14 }}>
+                        Can't find your item? Use AI Search
+                      </Text>
+                    </TouchableOpacity>
                   </View>
                 </View>
               </Modal>
