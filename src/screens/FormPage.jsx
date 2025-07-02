@@ -1938,11 +1938,30 @@ export default class FormPage extends Component {
                               <Text style={{ fontSize: 16, color: '#1E293B', fontWeight: '600' }}>
                                 {itemName}
                               </Text>
-                              <Text style={{ fontSize: 13, color: '#64748B', marginTop: 4 }}>
-                                {dimensions.length && dimensions.width && dimensions.height ?
-                                  `L: ${parseFloat(dimensions.length)} W: ${parseFloat(dimensions.width)} H: ${parseFloat(dimensions.height)}` :
-                                  'No dimensions'}
-                              </Text>
+                              <View style={{ flexDirection: 'row', alignItems: 'center', marginTop: 6 }}>
+                                {dimensions.length && dimensions.width && dimensions.height ? (
+                                  <>
+                                    <View style={{ flexDirection: 'row', alignItems: 'center', backgroundColor: '#E2E8F0', borderRadius: 12, paddingHorizontal: 8, paddingVertical: 4 }}>
+                                      <Text style={{ fontSize: 12, color: '#475569', fontWeight: '600', marginRight: 4 }}>L</Text>
+                                      <Text style={{ fontSize: 12, color: '#475569' }}>{parseFloat(dimensions.length)}</Text>
+                                    </View>
+                                    <Text style={{ marginHorizontal: 4, color: '#94A3B8', fontSize: 12 }}>x</Text>
+                                    <View style={{ flexDirection: 'row', alignItems: 'center', backgroundColor: '#E2E8F0', borderRadius: 12, paddingHorizontal: 8, paddingVertical: 4 }}>
+                                      <Text style={{ fontSize: 12, color: '#475569', fontWeight: '600', marginRight: 4 }}>W</Text>
+                                      <Text style={{ fontSize: 12, color: '#475569' }}>{parseFloat(dimensions.width)}</Text>
+                                    </View>
+                                    <Text style={{ marginHorizontal: 4, color: '#94A3B8', fontSize: 12 }}>x</Text>
+                                    <View style={{ flexDirection: 'row', alignItems: 'center', backgroundColor: '#E2E8F0', borderRadius: 12, paddingHorizontal: 8, paddingVertical: 4 }}>
+                                      <Text style={{ fontSize: 12, color: '#475569', fontWeight: '600', marginRight: 4 }}>H</Text>
+                                      <Text style={{ fontSize: 12, color: '#475569' }}>{parseFloat(dimensions.height)}</Text>
+                                    </View>
+                                  </>
+                                ) : (
+                                  <Text style={{ fontSize: 13, color: '#94A3B8', fontStyle: 'italic' }}>
+                                    No dimensions
+                                  </Text>
+                                )}
+                              </View>
                             </View>
                             {alreadyAdded ? (
                               <Ionicons name="checkmark-circle" size={24} color="#22C55E" />
