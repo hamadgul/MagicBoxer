@@ -1984,7 +1984,7 @@ export default class FormPage extends Component {
                         }}
                       onPress={() => {
                         this.hideAllSavedItemsModal();
-                        this.props.navigation.navigate('Lookup Item Dims');
+                        this.props.navigation.navigate('Lookup Item Dims', { searchQuery: this.state.savedItemsSearchQuery });
                       }}
                     >
                         <Text style={{ color: '#FFFFFF', fontWeight: 'bold', fontSize: 16 }}>

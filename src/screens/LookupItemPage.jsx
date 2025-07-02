@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 // Try to import API key, but provide fallback mechanism
 let OPENAI_API_KEY;
 try {
@@ -27,14 +27,20 @@ import { Ionicons } from '@expo/vector-icons';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import Crypto from 'expo-crypto';
 
-const LookupItemPage = ({ navigation }) => {
-  const [itemName, setItemName] = useState('');
+const LookupItemPage = ({ navigation, route }) => {
+  const [itemName, setItemName] = useState(route.params?.searchQuery || '');
   const [itemYear, setItemYear] = useState('');
   const [itemType, setItemType] = useState('');
   const [itemBrand, setItemBrand] = useState('');
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState(null);
   const [error, setError] = useState('');
+
+  useEffect(() => {
+    if (route.params?.searchQuery) {
+      setItemName(route.params.searchQuery);
+    }
+  }, [route.params?.searchQuery]);
 
   // Function to generate a unique ID
   const generateUUID = async () => {
