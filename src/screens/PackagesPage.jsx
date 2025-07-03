@@ -409,11 +409,69 @@ export default class PackagesPage extends Component {
         replicatedNames: replicatedNames,
       };
 
-      const updatedPackage = packages[packageName].map((item) =>
-        item.id === updatedItem.id ? updatedItemWithReplications : item
-      );
+      // Log the package structure for debugging
+      console.log('Package structure:', {
+        packageName,
+        packageExists: !!packages[packageName],
+        packageType: packages[packageName] ? typeof packages[packageName] : 'undefined',
+        isArray: Array.isArray(packages[packageName])
+      });
+      
+      // Handle both old and new package formats
+      let packageItems = [];
+      let isNewFormat = false;
+      let dateCreated = null;
+      
+      if (packages[packageName]) {
+        // New format with dateCreated
+        if (typeof packages[packageName] === 'object' && !Array.isArray(packages[packageName]) && packages[packageName].items) {
+          packageItems = packages[packageName].items;
+          dateCreated = packages[packageName].dateCreated;
+          isNewFormat = true;
+          console.log('Using new package format with dateCreated:', dateCreated);
+        }
+        // Old format (direct array)
+        else if (Array.isArray(packages[packageName])) {
+          packageItems = packages[packageName];
+          console.log('Using old package format (array)');
+        } else {
+          console.error('Unknown package format:', packages[packageName]);
+          packageItems = [];
+        }
+      } else {
+        console.error('Package not found:', packageName);
+        packageItems = [];
+      }
+      
+      // Find if the item already exists in the package
+      const itemExists = packageItems.some(item => item.id === updatedItem.id);
+      
+      let updatedItems;
+      if (itemExists) {
+        // Update existing item
+        updatedItems = packageItems.map((item) =>
+          item.id === updatedItem.id ? updatedItemWithReplications : item
+        );
+      } else {
+        // Add as new item if it doesn't exist
+        updatedItems = [...packageItems, updatedItemWithReplications];
+      }
+      
+      // Preserve the package structure based on its format
+      let updatedPackageData;
+      if (isNewFormat) {
+        // Preserve the dateCreated and other properties in the new format
+        updatedPackageData = {
+          ...packages[packageName],
+          items: updatedItems,
+          dateCreated: dateCreated
+        };
+      } else {
+        // For old format, just use the array
+        updatedPackageData = updatedItems;
+      }
 
-      const updatedPackages = { ...packages, [packageName]: updatedPackage };
+      const updatedPackages = { ...packages, [packageName]: updatedPackageData };
 
       try {
         await AsyncStorage.setItem("packages", JSON.stringify(updatedPackages));
