@@ -1,5 +1,8 @@
 import 'react-native-gesture-handler';
 
+import { Buffer } from 'buffer';
+global.Buffer = Buffer;
+
 import React, { useCallback, useEffect, useState } from "react";
 import { Platform, StatusBar, StyleSheet, View, Text, Alert, LogBox } from "react-native";
 import * as SplashScreen from "expo-splash-screen";
