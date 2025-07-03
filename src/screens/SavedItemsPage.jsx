@@ -797,10 +797,10 @@ const styles = StyleSheet.create({
   scrollView: {
     flex: 1,
     padding: 16,
-    paddingBottom: 96,
+    paddingBottom: 16, // Reduced because we'll add more in contentContainerStyle
   },
   scrollViewContent: {
-    paddingBottom: 20,
+    paddingBottom: 100, // Increased padding to prevent overlap with FAB buttons
     paddingTop: 8,
   },
   scrollViewWithActionBar: {

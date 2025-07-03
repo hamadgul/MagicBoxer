@@ -37,6 +37,8 @@ const LookupItemPage = ({ navigation, route }) => {
   const [error, setError] = useState('');
   // Track if user came from FormPage
   const [fromFormPage, setFromFormPage] = useState(route.params?.fromFormPage || false);
+  // Reference to the ScrollView for automatic scrolling
+  const scrollViewRef = React.useRef(null);
 
   useEffect(() => {
     if (route.params?.searchQuery) {
@@ -147,8 +149,18 @@ const LookupItemPage = ({ navigation, route }) => {
         // Cache the result
         await AsyncStorage.setItem(`dimension_cache_${cacheKey}`, JSON.stringify(dimensions));
         
+        // Set the result
         setResult(dimensions);
         setLoading(false);
+        
+        // Automatically scroll to results after a short delay
+        setTimeout(() => {
+          if (scrollViewRef.current) {
+            scrollViewRef.current.scrollToEnd({ animated: true });
+          }
+        }, 300); // Short delay to ensure the results are rendered
+        
+        return;
       } catch (apiError) {
         console.error('API Error:', apiError);
         
@@ -253,6 +265,13 @@ const LookupItemPage = ({ navigation, route }) => {
         
         setResult(mockDimensions);
         setLoading(false);
+        
+        // Automatically scroll to results after a short delay
+        setTimeout(() => {
+          if (scrollViewRef.current) {
+            scrollViewRef.current.scrollToEnd({ animated: true });
+          }
+        }, 300); // Short delay to ensure the results are rendered
       }
     } catch (error) {
       console.error('Error looking up dimensions:', error);
@@ -412,6 +431,7 @@ const LookupItemPage = ({ navigation, route }) => {
         style={styles.keyboardAvoidingView}
       >
         <ScrollView 
+          ref={scrollViewRef}
           contentContainerStyle={styles.scrollContent}
           keyboardShouldPersistTaps="handled"
           showsVerticalScrollIndicator={true}
