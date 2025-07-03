@@ -1458,11 +1458,15 @@ export default class FormPage extends Component {
         style={[styles.horizontalItemButton]}
         onPress={() => this.openModal(item)}
       >
+        {item.quantity > 1 && (
+          <View style={styles.itemCountContainer}>
+            <Text style={styles.itemCount}>{item.quantity}</Text>
+          </View>
+        )}
         <View style={styles.horizontalItemContentContainer}>
           <View style={styles.horizontalItemNameContainer}>
             <Text style={[styles.buttonText, { color: '#64748B', textAlign: 'center' }]} numberOfLines={2}>
-              {item.itemName}{item.quantity > 1 ? `
-(×${item.quantity})` : ''}
+              {item.itemName}
             </Text>
           </View>
           <View style={styles.horizontalItemDimensions}>

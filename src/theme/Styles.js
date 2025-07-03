@@ -149,7 +149,7 @@ const styles = StyleSheet.create({
     padding: 12 * scale, // Slightly increased padding
     borderRadius: 12 * scale, // Increased border radius for a softer look
     marginHorizontal: 6 * scale,
-    height: 120 * scale,
+    height: 100 * scale,
     width: 150 * scale,
     shadowColor: "#64748B", // Changed shadow color to match text
     shadowOffset: {
@@ -189,6 +189,27 @@ const styles = StyleSheet.create({
     paddingVertical: 6 * scale,
     flex: 1,
     marginBottom: 6 * scale,
+    position: 'relative',
+  },
+  itemCountContainer: {
+    position: 'absolute',
+    right: 5 * scale,
+    top: 5 * scale,
+    backgroundColor: '#4A5568',
+    borderRadius: 10 * scale,
+    width: 20 * scale,
+    height: 20 * scale,
+    alignItems: 'center',
+    justifyContent: 'center',
+    overflow: 'hidden',
+    zIndex: 10,
+    elevation: 5,
+  },
+  itemCount: {
+    fontSize: 10 * scale,
+    fontWeight: 'bold',
+    color: 'white',
+    textAlign: 'center',
   },
   horizontalItemDimensions: {
     marginTop: 5 * scale,
