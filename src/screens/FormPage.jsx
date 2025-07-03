@@ -1,22 +1,25 @@
 // FormPage.js
 
-import React, { Component } from "react"; 
+import React, { Component } from 'react';
 import {
-  Alert,
-  Text,
-  TextInput,
   View,
-  Modal,
-  Keyboard,
-  TouchableWithoutFeedback,
+  Text,
   TouchableOpacity,
+  TextInput,
+  StyleSheet,
   ScrollView,
+  Alert,
+  Modal,
+  TouchableWithoutFeedback,
+  Keyboard,
   KeyboardAvoidingView,
   Platform,
   ActivityIndicator,
+  Dimensions,
+  ToastAndroid,
   BackHandler,
   InteractionManager,
-} from "react-native";
+} from 'react-native';
 import { VStack } from "native-base";  
 import AsyncStorage from "@react-native-async-storage/async-storage";
 
@@ -26,6 +29,9 @@ import styles from "../theme/Styles";
 import { modalStyles } from "../theme/ModalStyles";
 import { Ionicons } from "@expo/vector-icons";
 import base64 from 'base-64';
+
+const { width, height } = Dimensions.get('window');
+const scale = Math.min(width, height) / 375; // Base scale on iPhone 8 dimensions
 
 
 
@@ -1245,9 +1251,37 @@ export default class FormPage extends Component {
     return itemsTotal;
   }
 
+  clearItems = () => {
+    Alert.alert(
+      "Clear All Items",
+      "Are you sure you want to clear all items from this package?",
+      [
+        { text: "Cancel", style: "cancel" },
+        { 
+          text: "Clear", 
+          style: "destructive",
+          onPress: () => {
+            this.setState({ items: [] }, () => {
+              this._storeData();
+              // Platform-specific feedback
+              if (Platform.OS === 'android') {
+                ToastAndroid.show('All items cleared', ToastAndroid.SHORT);
+              }
+              // For iOS, we don't need a toast as the alert dismissal is feedback enough
+            });
+          } 
+        }
+      ]
+    );
+  }
+
   handleVisualize = async () => {
     if (this.state.items.length === 0) {
-      Alert.alert("No Items", "Please add at least one item before packing.");
+      Alert.alert(
+        "No items",
+        "Please add at least one item to visualize the packing.",
+        [{ text: "OK" }]
+      );
       return;
     }
 
@@ -1479,31 +1513,85 @@ export default class FormPage extends Component {
 
   renderItemsList = () => {
     const { items } = this.state;
+    const containerHeight = 160 * scale; // Fixed height for consistency
+    
+    // Calculate total quantity of all items
+    const totalQuantity = items.length > 0 ? items.reduce((sum, item) => sum + (item.quantity || 1), 0) : 0;
+    
+    // Common container style for consistent sizing
+    const containerStyle = {
+      height: containerHeight,
+      paddingBottom: 5 * scale,
+    };
+    
     if (items.length === 0) {
       return (
-        <View style={styles.emptyContainer}>
-          <Text style={styles.emptyText}>
-            No items added yet for this package.
-          </Text>
-          <Text style={styles.emptySubtext}>
-            Add items above and access saved packages on the side menu.
-          </Text>
+        <View style={containerStyle}>
+          {/* Header row with Total Items Counter and Clear Items button - same position as when items exist */}
+          <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingLeft: 20 * scale, paddingRight: 10 * scale, marginBottom: 5 * scale }}>
+            {/* Total Items Counter */}
+            <View style={styles.totalItemsContainer}>
+              <Ionicons name="cube-outline" size={14 * scale} color="white" />
+              <Text style={styles.totalItemsText}>0 items</Text>
+            </View>
+            
+            {/* Clear Items Button - disabled when empty */}
+            <TouchableOpacity 
+              style={[styles.clearItemsButton, { opacity: 0.5 }]}
+              disabled={true}
+            >
+              <Ionicons name="trash-outline" size={14 * scale} color="white" />
+              <Text style={styles.clearItemsText}>Clear</Text>
+            </TouchableOpacity>
+          </View>
+          
+          <View style={[styles.emptyContainer, { flex: 1 }]}>
+            <Text style={styles.emptyText}>
+              No items added yet for this package.
+            </Text>
+            <Text style={styles.emptySubtext}>
+              Add items above and access saved packages on the side menu.
+            </Text>
+          </View>
         </View>
       );
     }
 
     return (
-      <ScrollView 
-        horizontal={true}
-        showsHorizontalScrollIndicator={true}
-        contentContainerStyle={styles.horizontalCarouselContainer}
-        decelerationRate="fast"
-        snapToInterval={170} // Width of the item + margins
-        snapToAlignment="start"
-        showsVerticalScrollIndicator={false}
-      >
-        {items.map((item, index) => this.renderItem(item, index))}
-      </ScrollView>
+      <View style={containerStyle}>
+        {/* Header row with Total Items Counter and Clear Items button */}
+        <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingLeft: 20 * scale, paddingRight: 10 * scale, marginBottom: 5 * scale }}>
+          {/* Total Items Counter */}
+          <View style={styles.totalItemsContainer}>
+            <Ionicons name="cube-outline" size={14 * scale} color="white" />
+            <Text style={styles.totalItemsText}>
+              {totalQuantity} {totalQuantity === 1 ? 'item' : 'items'}
+            </Text>
+          </View>
+          
+          {/* Clear Items Button */}
+          <TouchableOpacity 
+            style={styles.clearItemsButton}
+            onPress={this.clearItems}
+          >
+            <Ionicons name="trash-outline" size={14 * scale} color="white" />
+            <Text style={styles.clearItemsText}>Clear</Text>
+          </TouchableOpacity>
+        </View>
+        
+        <ScrollView 
+          horizontal={true}
+          showsHorizontalScrollIndicator={true}
+          contentContainerStyle={[styles.horizontalCarouselContainer, { paddingBottom: 10 * scale }]}
+          decelerationRate="fast"
+          snapToInterval={170} // Width of the item + margins
+          snapToAlignment="start"
+          showsVerticalScrollIndicator={false}
+          style={{ flex: 1 }}
+        >
+          {items.map((item, index) => this.renderItem(item, index))}
+        </ScrollView>
+      </View>
     );
   }
 
