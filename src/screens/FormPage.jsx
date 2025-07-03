@@ -1745,7 +1745,7 @@ export default class FormPage extends Component {
                                       fontSize: 14, 
                                       color: '#0066FF',
                                       fontWeight: '500',
-                                    }}>{item.itemName || item.name || ''}</Text>
+                                    }}>{item.itemName || item.name || ''} <Text style={{ color: '#3B82F6' }}>↵</Text></Text>
                                   </TouchableOpacity>
                                 ))}
                               </ScrollView>
@@ -2133,7 +2133,7 @@ export default class FormPage extends Component {
                                     {alreadyAdded ? (
                                       <Ionicons name="checkmark-circle" size={24} color="#22C55E" />
                                     ) : (
-                                      <Ionicons name="chevron-forward" size={24} color="#94A3B8" />
+                                      <Text style={{ color: '#3B82F6', fontSize: 24 }}>↵</Text>
                                     )}
                                   </TouchableOpacity>
                                 );
