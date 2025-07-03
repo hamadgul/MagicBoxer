@@ -1434,7 +1434,7 @@ export default class FormPage extends Component {
       replicatedNames: replicatedNames,
     };
 
-    this.setState({ items: [...this.state.items, newItem] }, () => {
+    this.setState({ items: [newItem, ...this.state.items] }, () => {
       this._storeData();
     });
 
