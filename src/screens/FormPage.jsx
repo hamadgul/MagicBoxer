@@ -707,6 +707,19 @@ export default class FormPage extends Component {
           this.loadItems(),
           this.loadSavedItemsAsync()
         ]).then(() => {
+          // Check if we need to load a saved package
+          if (this.props.route.params?.loadPackage) {
+            const packageToLoad = this.props.route.params.loadPackage;
+            this.loadPackage(packageToLoad);
+          }
+          
+          // Check if we need to add a new item from AI Search
+          if (this.props.route.params?.newItem && this.props.route.params?.addToCurrentPackage) {
+            this.addItemFromAISearch(this.props.route.params.newItem);
+            // Clear the params to prevent re-adding on future focus events
+            this.props.navigation.setParams({ newItem: null, addToCurrentPackage: false });
+          }
+          
           // After all data is loaded on focus, ensure recent items are shown
           this.setState({ showRecentItems: true });
           this.forceUpdate();
@@ -1298,6 +1311,64 @@ export default class FormPage extends Component {
       this.setState({ isLoading: false });
       console.error(error);
       Alert.alert("Error", "An error occurred while retrieving the item list");
+    }
+  };
+
+  // Method to add an item received from AI Search page
+  addItemFromAISearch = (newItemData) => {
+    if (!newItemData) return;
+    
+    try {
+      const { itemName, itemLength, itemWidth, itemHeight, quantity = 1 } = newItemData;
+      
+      // Validate the item data
+      if (!itemName || !itemLength || !itemWidth || !itemHeight) {
+        console.error('Invalid item data received from AI Search');
+        return;
+      }
+      
+      // Check if an item with the same name already exists
+      const exists = this.state.items.some(item => item.itemName === itemName);
+      if (exists) {
+        Alert.alert(
+          "Duplicate Item", 
+          `An item named "${itemName}" already exists in your package.`,
+          [{ text: "OK" }]
+        );
+        return;
+      }
+      
+      // Create a new item with the data from AI Search
+      const id = generateUUID();
+      const replicatedNames = Array.from({ length: quantity }, (_, i) => ({
+        name: itemName,
+        id: generateUUID(),
+        parentId: id
+      }));
+      
+      const newItem = {
+        id: id,
+        itemName: itemName,
+        itemLength: parseFloat(itemLength),
+        itemWidth: parseFloat(itemWidth),
+        itemHeight: parseFloat(itemHeight),
+        selectedCarrier: this.state.selectedCarrier || "No Carrier", // Use current carrier or default
+        quantity: quantity,
+        replicatedNames: replicatedNames,
+      };
+      
+      // Add the item to the current package
+      this.setState({ 
+        items: [...this.state.items, newItem] 
+      }, () => {
+        this._storeData();
+      });
+      
+      // Show success message
+      Alert.alert("Success", `${itemName} has been added to your package`);
+    } catch (error) {
+      console.error('Error adding item from AI Search:', error);
+      Alert.alert("Error", "Failed to add item from AI Search");
     }
   };
 
@@ -2002,7 +2073,10 @@ export default class FormPage extends Component {
                             }}
                             onPress={() => {
                               this.hideAllSavedItemsModal();
-                              this.props.navigation.navigate('AI Item Search', { searchQuery: this.state.savedItemsSearchQuery });
+                              this.props.navigation.navigate('AI Item Search', { 
+                                searchQuery: this.state.savedItemsSearchQuery,
+                                fromFormPage: true // Flag to indicate navigation from FormPage
+                              });
                             }}
                           >
                             <Text style={{ color: '#FFFFFF', fontWeight: 'bold', fontSize: 16 }}>

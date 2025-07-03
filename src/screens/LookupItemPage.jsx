@@ -35,12 +35,18 @@ const LookupItemPage = ({ navigation, route }) => {
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState(null);
   const [error, setError] = useState('');
+  // Track if user came from FormPage
+  const [fromFormPage, setFromFormPage] = useState(route.params?.fromFormPage || false);
 
   useEffect(() => {
     if (route.params?.searchQuery) {
       setItemName(route.params.searchQuery);
     }
-  }, [route.params?.searchQuery]);
+    // Check if navigated from FormPage
+    if (route.params?.fromFormPage) {
+      setFromFormPage(true);
+    }
+  }, [route.params?.searchQuery, route.params?.fromFormPage]);
 
   // Function to generate a unique ID
   const generateUUID = async () => {
@@ -353,6 +359,39 @@ const LookupItemPage = ({ navigation, route }) => {
     }
   };
 
+  // Function to add item to current package on FormPage and navigate back
+  const saveToCurrentPackage = async () => {
+    if (!result) return;
+    
+    try {
+      // Create item in the format expected by FormPage
+      const newFormItem = {
+        itemName: result.officialName || itemName,
+        itemLength: result.length,
+        itemWidth: result.width,
+        itemHeight: result.height,
+        quantity: 1
+      };
+      
+      // Clear all inputs after successful addition
+      setItemName('');
+      setItemYear('');
+      setItemType('');
+      setItemBrand('');
+      setResult(null);
+      
+      // Navigate back to Create Package with the new item data
+      // FormPage will show its own confirmation
+      navigation.navigate('Create Package', {
+        newItem: newFormItem,
+        addToCurrentPackage: true
+      });
+    } catch (error) {
+      console.error('Error adding to current package:', error);
+      Alert.alert('Error', 'Failed to add item to current package.');
+    }
+  };
+
   // Function to update custom products data
   const updateProductsData = async (items) => {
     try {
@@ -490,13 +529,29 @@ const LookupItemPage = ({ navigation, route }) => {
                 Note: These dimensions are retrieved from available online resources.
               </Text>
               
-              <TouchableOpacity
-                style={styles.saveButton}
-                onPress={saveItem}
-              >
-                <Ionicons name="bookmark-outline" size={20} color="#FFFFFF" style={styles.buttonIcon} />
-                <Text style={styles.buttonText}>Save to My Items</Text>
-              </TouchableOpacity>
+              {/* Save buttons */}
+              {result && (
+                <View style={{ flexDirection: fromFormPage ? 'row' : 'column', justifyContent: 'space-between', gap: fromFormPage ? 10 : 0 }}>
+                  <TouchableOpacity
+                    style={[styles.saveButton, fromFormPage && { flex: 1 }]}
+                    onPress={saveItem}
+                  >
+                    <Ionicons name="bookmark-outline" size={20} color="#FFFFFF" style={styles.buttonIcon} />
+                    <Text style={styles.buttonText}>Save Item</Text>
+                  </TouchableOpacity>
+                  
+                  {/* Show "Save to current package" button only when navigating from FormPage */}
+                  {fromFormPage && (
+                    <TouchableOpacity
+                      style={[styles.saveButton, { flex: 1, backgroundColor: '#22C55E' }]}
+                      onPress={saveToCurrentPackage}
+                    >
+                      <Ionicons name="add-circle-outline" size={20} color="#FFFFFF" style={styles.buttonIcon} />
+                      <Text style={styles.buttonText}>Save to Current Package</Text>
+                    </TouchableOpacity>
+                  )}
+                </View>
+              )}
             </View>
           )}
         </ScrollView>
