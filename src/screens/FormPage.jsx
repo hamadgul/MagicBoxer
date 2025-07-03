@@ -1877,7 +1877,7 @@ export default class FormPage extends Component {
                           <Text style={modalStyles.modalTitle}>Save Package</Text>
                         </View>
                         <Text style={modalStyles.modalSubtitle}>
-                          Enter a name for your package to save it for future use
+                          Save your package to see realtime shipping estimates & 3D packing.
                         </Text>
                         <View style={modalStyles.inputContainer}>
                           <TextInput

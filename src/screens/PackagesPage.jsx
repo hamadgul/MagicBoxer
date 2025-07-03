@@ -1092,8 +1092,13 @@ export default class PackagesPage extends Component {
                         style={[styles.footerButton, styles.shipButton]}
                         onPress={() => this.handleShipPackage({ name: selectedPackage, items: this.getItemsArray(selectedPackage) })}
                       >
-                        <Ionicons name="airplane" size={20} color="#fff" />
-                        <Text style={styles.footerButtonText}>Shipping Estimate</Text>
+                        <View style={styles.buttonInnerContainer}>
+                          <Ionicons name="airplane" size={20} color="#fff" />
+                          <View style={styles.buttonTextContainer}>
+                            <Text style={styles.buttonTextLine}>Shipping</Text>
+                            <Text style={styles.buttonTextLine}>Estimate</Text>
+                          </View>
+                        </View>
                       </TouchableOpacity>
                     </View>
                   </View>
@@ -1892,6 +1897,23 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: '600',
     marginLeft: 8,
+  },
+  buttonInnerContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    width: '100%',
+  },
+  buttonTextContainer: {
+    marginLeft: 8,
+    alignItems: 'center',
+  },
+  buttonTextLine: {
+    color: '#fff',
+    fontSize: 16,
+    fontWeight: '600',
+    textAlign: 'center',
+    lineHeight: 20,
   },
   headerContainer: {
     flexDirection: 'row',
