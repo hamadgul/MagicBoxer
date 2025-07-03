@@ -1096,8 +1096,11 @@ export default class FormPage extends Component {
       // Once saved successfully, alert success and clear items
       Alert.alert("Success", "Package saved successfully.");
 
-      // Clear items after successful save
-      this.clearItems();
+      // Clear items after successful save without confirmation
+      this.clearItemsWithoutConfirmation();
+      
+      // Close the save package modal
+      this.setState({ showSavePackageModal: false, packageName: '' });
 
       // Close the modal and clear package name
       this.setState({ 
@@ -1251,6 +1254,15 @@ export default class FormPage extends Component {
     return itemsTotal;
   }
 
+  // Method to clear items without confirmation - used after saving a package
+  clearItemsWithoutConfirmation = () => {
+    this.setState({ items: [] }, () => {
+      this._storeData();
+      // No need for platform-specific feedback here as the save success alert is enough
+    });
+  }
+
+  // Method to clear items with confirmation - used when clicking the clear button
   clearItems = () => {
     Alert.alert(
       "Clear All Items",
