@@ -14,6 +14,7 @@ module.exports = {
     assetBundlePatterns: [
       "**/*"
     ],
+    jsEngine: "hermes",
     ios: {
       supportsTablet: true,
       bundleIdentifier: "com.magicboxer.app"

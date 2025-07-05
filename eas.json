@@ -20,10 +20,36 @@
       }
     },
     "production": {
-      "autoIncrement": true
+      "autoIncrement": true,
+      "ios": {
+        "image": "latest",
+        "resourceClass": "medium"
+      }
+    },
+    "testflight": {
+      "extends": "production",
+      "distribution": "store",
+      "ios": {
+        "buildConfiguration": "Release"
+      }
+    },
+    "simple": {
+      "distribution": "store",
+      "ios": {
+        "image": "latest",
+        "resourceClass": "medium",
+        "buildConfiguration": "Release"
+      }
     }
   },
   "submit": {
-    "production": {}
+    "production": {},
+    "testflight": {
+      "ios": {
+        "appleId": "hamad.gul@uconn.edu",
+        "ascAppId": "6748158837",
+        "appleTeamId": "XAA4WARCJ4"
+      }
+    }
   }
 }

@@ -1,10 +1,5 @@
-import 'react-native-gesture-handler';
-
-import { Buffer } from 'buffer';
-global.Buffer = Buffer;
-
-import React, { useCallback, useEffect, useState } from "react";
-import { Platform, StatusBar, StyleSheet, View, Text, Alert, LogBox } from "react-native";
+import React, { useCallback, useEffect, useState, useRef } from "react";
+import { Platform, StatusBar, StyleSheet, View, Text, Alert, LogBox, AppState } from "react-native";
 import * as SplashScreen from "expo-splash-screen";
 import * as Font from "expo-font";
 import AppNavigator from "./src/navigation/AppNavigator";
@@ -12,6 +7,7 @@ import { Ionicons } from "@expo/vector-icons";
 import { NativeBaseProvider } from 'native-base';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { NavigationContainer } from '@react-navigation/native';
+import ErrorBoundary from "./src/components/ErrorBoundary";
 
 // Ignore specific warnings that might be causing issues
 LogBox.ignoreLogs([
@@ -22,54 +18,74 @@ LogBox.ignoreLogs([
   'AsyncStorage has been extracted from react-native',
 ]);
 
-// Keep the splash screen visible while we fetch resources
-SplashScreen.preventAutoHideAsync();
+// Ensure splash screen stays visible until we're ready
+SplashScreen.preventAutoHideAsync().catch(() => {
+  /* ignore error */
+});
+
+// Track app state changes for better error detection
+const useAppStateListener = () => {
+  const appState = useRef(AppState.currentState);
+  
+  useEffect(() => {
+    const subscription = AppState.addEventListener('change', nextAppState => {
+      console.log('App State changed from', appState.current, 'to', nextAppState);
+      appState.current = nextAppState;
+    });
+
+    return () => {
+      subscription.remove();
+    };
+  }, []);
+
+  return appState.current;
+};
 
 export default function App() {
   const [appIsReady, setAppIsReady] = useState(false);
   const [hasError, setHasError] = useState(false);
   const [errorMessage, setErrorMessage] = useState('');
+  const [fontLoaded, setFontLoaded] = useState(false);
+  const currentAppState = useAppStateListener();
 
   // Set up global error handler
+  // Additional error logging for TestFlight builds
   useEffect(() => {
-    const errorHandler = (error, isFatal) => {
-      if (isFatal) {
-        setHasError(true);
-        setErrorMessage(error.message || 'Unknown error occurred');
-        console.error('FATAL ERROR:', error);
-      } else {
-        console.warn('NON-FATAL ERROR:', error);
-      }
-    };
-
-    // Set up the global error handler
-    if (global.ErrorUtils) {
-      const originalGlobalHandler = global.ErrorUtils.getGlobalHandler();
-      global.ErrorUtils.setGlobalHandler((error, isFatal) => {
-        errorHandler(error, isFatal);
-        originalGlobalHandler(error, isFatal);
-      });
-    }
-
+    console.log('App component mounted, current state:', currentAppState);
+    
     return () => {
-      // Restore original handler on cleanup
-      if (global.ErrorUtils) {
-        global.ErrorUtils.setGlobalHandler(global.ErrorUtils.getGlobalHandler());
-      }
+      console.log('App component will unmount');
     };
-  }, []);
+  }, [currentAppState]);
 
+  // Load fonts separately to isolate potential issues
   useEffect(() => {
+    async function loadFonts() {
+      try {
+        console.log('Loading fonts...');
+        await Font.loadAsync(Ionicons.font);
+        console.log('Fonts loaded successfully');
+        setFontLoaded(true);
+      } catch (e) {
+        console.error('Error loading fonts:', e);
+        setHasError(true);
+        setErrorMessage('Failed to load fonts: ' + (e.message || 'Unknown error'));
+      }
+    }
+    
+    loadFonts();
+  }, []);
+  
+  // Separate effect for other initialization tasks
+  useEffect(() => {
+    if (!fontLoaded) return;
+    
     async function prepare() {
       try {
         console.log('App initialization started');
         
-        // Pre-load fonts, make any API calls you need to do here
-        await Font.loadAsync(Ionicons.font);
-        console.log('Fonts loaded successfully');
+        // Any other initialization tasks here
         
-        // Shorter artificial delay
-        await new Promise(resolve => setTimeout(resolve, 500));
         console.log('App initialization completed');
       } catch (e) {
         console.error('Error during initialization:', e);
@@ -82,22 +98,32 @@ export default function App() {
     }
 
     prepare();
-  }, []);
+  }, [fontLoaded]);
 
   const onLayoutRootView = useCallback(async () => {
     if (appIsReady) {
       try {
-        await SplashScreen.hideAsync();
-        console.log('Splash screen hidden successfully');
+        // Add a longer delay before hiding splash screen to ensure UI is fully ready
+        // This helps prevent black screen issues in TestFlight
+        setTimeout(async () => {
+          try {
+            await SplashScreen.hideAsync();
+            console.log('Splash screen hidden successfully');
+          } catch (e) {
+            console.error('Error hiding splash screen:', e);
+          }
+        }, 300); // Increased delay for better reliability
       } catch (e) {
-        console.error('Error hiding splash screen:', e);
+        console.error('Error in onLayoutRootView:', e);
       }
     }
   }, [appIsReady]);
 
   // Show loading screen
   if (!appIsReady) {
-    return null;
+    // Return an empty view while loading
+    // This ensures we have something to render before the splash screen is hidden
+    return <View style={{ flex: 1, backgroundColor: "#c6c6c7" }} />;
   }
 
   // Show error screen if there was an error during initialization
@@ -117,18 +143,20 @@ export default function App() {
     );
   }
 
-  // Normal app rendering
+  // Normal app rendering with ErrorBoundary
   return (
-    <GestureHandlerRootView style={{ flex: 1 }}>
-      <NativeBaseProvider>
-        <NavigationContainer>
-          <View style={styles.container} onLayout={onLayoutRootView}>
-            <StatusBar barStyle="light-content" />
-            <AppNavigator />
-          </View>
-        </NavigationContainer>
-      </NativeBaseProvider>
-    </GestureHandlerRootView>
+    <ErrorBoundary>
+      <GestureHandlerRootView style={{ flex: 1 }}>
+        <NativeBaseProvider>
+          <NavigationContainer fallback={<View style={{ flex: 1, backgroundColor: "#c6c6c7" }} />}>
+            <View style={styles.container} onLayout={onLayoutRootView}>
+              <StatusBar barStyle="light-content" />
+              <AppNavigator />
+            </View>
+          </NavigationContainer>
+        </NativeBaseProvider>
+      </GestureHandlerRootView>
+    </ErrorBoundary>
   );
 }
 
