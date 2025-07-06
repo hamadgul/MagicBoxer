@@ -1776,7 +1776,7 @@ export default class FormPage extends Component {
                     <VStack space={2} width="100%">
                       <View style={{ flexDirection: 'row', alignItems: 'center' }}>
                         <Text style={[styles.label, styles.condensedLabel]}>Length</Text>
-                        <Ionicons name="resize-outline" size={16} color="#64748B" style={{ marginLeft: 4 }} />
+                        <Ionicons name="swap-horizontal-outline" size={16} color="#64748B" style={{ marginLeft: 4 }} />
                       </View>
                       <View style={[styles.input, styles.condensedInput, { 
                         flexDirection: 'row',
@@ -1808,7 +1808,7 @@ export default class FormPage extends Component {
                       </View>
                       <View style={{ flexDirection: 'row', alignItems: 'center' }}>
                         <Text style={[styles.label, styles.condensedLabel]}>Width</Text>
-                        <Ionicons name="swap-horizontal-outline" size={16} color="#64748B" style={{ marginLeft: 4 }} />
+                        <Ionicons name="resize-outline" size={16} color="#64748B" style={{ marginLeft: 4 }} />
                       </View>
                       <View style={[styles.input, styles.condensedInput, { 
                         flexDirection: 'row',
