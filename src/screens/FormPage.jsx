@@ -1412,6 +1412,9 @@ export default class FormPage extends Component {
       
       // Show success message
       Alert.alert("Success", `${itemName} has been added to your package`);
+      
+      // Clear the form fields after adding the item
+      this.resetForm();
     } catch (error) {
       console.error('Error adding item from AI Search:', error);
       Alert.alert("Error", "Failed to add item from AI Search");
