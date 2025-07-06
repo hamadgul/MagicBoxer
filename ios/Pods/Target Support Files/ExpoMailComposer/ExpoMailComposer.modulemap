@@ -1,0 +1,6 @@
+module ExpoMailComposer {
+  umbrella header "ExpoMailComposer-umbrella.h"
+
+  export *
+  module * { export * }
+}

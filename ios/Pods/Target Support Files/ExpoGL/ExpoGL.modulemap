@@ -1,0 +1,6 @@
+module ExpoGL {
+  umbrella header "ExpoGL-umbrella.h"
+
+  export *
+  module * { export * }
+}

@@ -1,0 +1,6 @@
+module Pods_MagicBoxer {
+  umbrella header "Pods-MagicBoxer-umbrella.h"
+
+  export *
+  module * { export * }
+}
