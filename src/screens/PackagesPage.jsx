@@ -524,24 +524,44 @@ export default class PackagesPage extends Component {
       const packageName = this.state.selectedPackage || this.tempPackageName;
       const { packages } = this.state;
       
-      if (!packageName || !packages[packageName]) {
-        Alert.alert("Error", "Could not find the package to update.");
+      if (!packageName) {
+        Alert.alert("Error", "Could not determine which package to update.");
         return;
       }
       
-      const updatedPackage = packages[packageName].filter(
+      if (!packages[packageName]) {
+        console.error(`Package '${packageName}' not found in packages:`, packages);
+        Alert.alert("Error", `Could not find the package '${packageName}' to update.`);
+        return;
+      }
+      
+      // Handle the package structure correctly - packages have an 'items' array
+      const packageData = packages[packageName];
+      
+      if (!packageData.items || !Array.isArray(packageData.items)) {
+        console.error(`Package '${packageName}' does not have a valid items array:`, packageData);
+        Alert.alert("Error", "The package data is corrupted. Please try reloading the app.");
+        return;
+      }
+      
+      // Filter out the item to delete
+      const updatedItems = packageData.items.filter(
         (item) => item.id !== itemToDelete.id
       );
 
       // Create a new packages object to ensure state updates properly
       const updatedPackages = { ...packages };
       
-      // If the updated package is empty, delete the entire package
-      if (updatedPackage.length === 0) {
+      // If the updated items array is empty, delete the entire package
+      if (updatedItems.length === 0) {
         delete updatedPackages[packageName];
       } else {
         // Otherwise, update the package with the remaining items
-        updatedPackages[packageName] = updatedPackage;
+        // Preserve other package properties like dateCreated
+        updatedPackages[packageName] = {
+          ...packageData,
+          items: updatedItems
+        };
       }
 
       // Update AsyncStorage and state
@@ -549,7 +569,7 @@ export default class PackagesPage extends Component {
         .then(() => {
           if (this.mounted) { // Safety check
             this.setState({ packages: updatedPackages }, () => {
-              if (updatedPackage.length === 0) {
+              if (updatedItems.length === 0) {
                 Alert.alert(
                   "Success",
                   `Package "${packageName}" was removed`
