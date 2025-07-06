@@ -65,12 +65,12 @@ const GettingStartedPage = ({ navigation }) => {
             </View>
             <Text style={styles.welcomeTitle}>
               Welcome to{'\n'}
-              <Text style={styles.brandName}>MagicBoxer</Text>
+              <Text style={styles.brandName}>SmartBox AI</Text>
             </Text>
           </View>
         </View>
 
-        {/* How MagicBoxer Works Section */}
+        {/* How SmartBox AI Works Section */}
         <View style={styles.section}>
           <Text style={styles.sectionHeader}>How It Works</Text>
           <Text style={styles.sectionSubtitle}>
@@ -333,7 +333,7 @@ const styles = StyleSheet.create({
     fontWeight: "600",
     textAlign: "center",
   },
-  // How MagicBoxer Works styles
+  // How SmartBox AI Works styles
 
   sectionTitleContainer: {
     flexDirection: 'row',

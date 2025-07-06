@@ -15,10 +15,10 @@ const PrivacyPolicyPage = ({ navigation }) => {
         {/* Introduction Section */}
         <View style={styles.section}>
           <Text style={styles.sectionText}>
-            Welcome to MagicBoxer! Your privacy is important to us. This Privacy
+            Welcome to SmartBox AI! Your privacy is important to us. This Privacy
             Policy explains how we collect, use, disclose, and safeguard your
-            information when you use our application, MagicBoxer. Please read
-            this Privacy Policy carefully. By using MagicBoxer, you agree to the
+            information when you use our application, SmartBox AI. Please read
+            this Privacy Policy carefully. By using SmartBox AI, you agree to the
             collection and use of information in accordance with this policy.
           </Text>
         </View>
@@ -27,7 +27,7 @@ const PrivacyPolicyPage = ({ navigation }) => {
         <View style={styles.section}>
           <Text style={styles.sectionHeader}>1. Information We Collect</Text>
           <Text style={styles.sectionText}>
-            MagicBoxer does not collect or store any personal information you
+            SmartBox AI does not collect or store any personal information you
             submit while using the app. The app processes data locally on your
             device and does not send, save, or share any of the data you input.
           </Text>
@@ -59,7 +59,7 @@ const PrivacyPolicyPage = ({ navigation }) => {
             2. How We Use Your Information
           </Text>
           <Text style={styles.sectionText}>
-            Given that MagicBoxer does not store any of your input data, the
+            Given that SmartBox AI does not store any of your input data, the
             limited information we collect is used solely to:
           </Text>
           <View style={styles.bulletContainer}>
@@ -100,7 +100,7 @@ const PrivacyPolicyPage = ({ navigation }) => {
           <Text style={styles.sectionHeader}>4. Data Security</Text>
           <Text style={styles.sectionText}>
             We are committed to protecting your information. However, because
-            MagicBoxer processes everything locally on your device and does not
+            SmartBox AI processes everything locally on your device and does not
             transmit or store any personal data, your information remains
             private and secure.
           </Text>
@@ -112,7 +112,7 @@ const PrivacyPolicyPage = ({ navigation }) => {
           <Text style={styles.sectionText}>
             As we do not collect or store personal data, there is no personal
             information for you to access, update, or delete. Your interactions
-            with MagicBoxer are entirely contained within your device.
+            with SmartBox AI are entirely contained within your device.
           </Text>
         </View>
 
@@ -120,7 +120,7 @@ const PrivacyPolicyPage = ({ navigation }) => {
         <View style={styles.section}>
           <Text style={styles.sectionHeader}>6. Third-Party Links</Text>
           <Text style={styles.sectionText}>
-            MagicBoxer may contain links to other websites or services that are
+            SmartBox AI may contain links to other websites or services that are
             not operated by us. If you click on a third-party link, you will be
             directed to that third party's site. We strongly advise you to
             review the Privacy Policy of every site you visit, as we have no

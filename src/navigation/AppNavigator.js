@@ -8,8 +8,8 @@ import { DEV_BUILD_APP } from "../config/environment";
 
 
 
-// Import the MagicBoxer icon without background
-import MagicBoxerIcon from "../assets/images/icon_nobg.png";
+// Import the SmartBox AI icon without background
+import SmartBoxAIIcon from "../assets/images/icon_nobg.png";
 
 // Import screens, make sure paths are correct
 import GettingStartedPage from "../screens/GettingStartedPage";
@@ -38,8 +38,8 @@ function CustomDrawerContent(props) {
       <View style={styles.drawerHeader}>
         <View style={styles.safeAreaPadding} />
         <View style={styles.logoContainer}>
-          <Image source={MagicBoxerIcon} style={styles.logoImage} />
-          <Text style={styles.logoText}>MagicBoxer</Text>
+          <Image source={SmartBoxAIIcon} style={styles.logoImage} />
+          <Text style={styles.logoText}>SmartBox AI</Text>
         </View>
         <View style={styles.divider} />
       </View>

@@ -1,7 +1,7 @@
 module.exports = {
   expo: {
-    name: "MagicBoxer",
-    slug: "magic-boxer",
+    name: "SmartBox AI",
+    slug: "smartbox-ai",
     version: "1.0.0",
     orientation: "portrait",
     icon: "./assets/icon.png",
@@ -17,14 +17,14 @@ module.exports = {
     jsEngine: "hermes",
     ios: {
       supportsTablet: true,
-      bundleIdentifier: "com.magicboxer.app"
+      bundleIdentifier: "com.smartboxai.app"
     },
     android: {
       adaptiveIcon: {
         foregroundImage: "./assets/adaptive-icon.png",
         backgroundColor: "#c6c6c7"
       },
-      package: "com.magicboxer.app"
+      package: "com.smartboxai.app"
     },
     web: {
       favicon: "./assets/favicon.png"

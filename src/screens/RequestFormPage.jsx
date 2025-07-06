@@ -26,7 +26,7 @@ const RequestFormPage = () => {
     const message = `Topic: ${topic}\nEmail: ${email}\nDescription: ${issueDescription}`;
     try {
       await MailComposer.composeAsync({
-        recipients: ['magicboxerapp@gmail.com'],
+        recipients: ['smartboxai@gmail.com'],
         subject: 'Bug/Feature Request',
         body: message,
       });

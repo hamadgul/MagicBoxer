@@ -1,8 +1,8 @@
 {
   "expo": {
     "newArchEnabled": true,
-    "name": "MagicBoxer-new",
-    "slug": "MagicBoxer-new",
+    "name": "SmartBox AI",
+    "slug": "smartbox-ai",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
