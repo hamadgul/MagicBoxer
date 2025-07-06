@@ -1774,7 +1774,10 @@ export default class FormPage extends Component {
                     
                     
                     <VStack space={2} width="100%">
-                      <Text style={[styles.label, styles.condensedLabel]}>Length</Text>
+                      <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                        <Text style={[styles.label, styles.condensedLabel]}>Length</Text>
+                        <Ionicons name="resize-outline" size={16} color="#64748B" style={{ marginLeft: 4 }} />
+                      </View>
                       <View style={[styles.input, styles.condensedInput, { 
                         flexDirection: 'row',
                         alignItems: 'center',
@@ -1803,7 +1806,10 @@ export default class FormPage extends Component {
                           color: this.state.dimensionsFromSavedItem ? '#94A3B8' : '#64748B',
                         }}>inches</Text>
                       </View>
-                      <Text style={[styles.label, styles.condensedLabel]}>Width</Text>
+                      <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                        <Text style={[styles.label, styles.condensedLabel]}>Width</Text>
+                        <Ionicons name="swap-horizontal-outline" size={16} color="#64748B" style={{ marginLeft: 4 }} />
+                      </View>
                       <View style={[styles.input, styles.condensedInput, { 
                         flexDirection: 'row',
                         alignItems: 'center',
@@ -1832,7 +1838,10 @@ export default class FormPage extends Component {
                           color: this.state.dimensionsFromSavedItem ? '#94A3B8' : '#64748B',
                         }}>inches</Text>
                       </View>
-                      <Text style={[styles.label, styles.condensedLabel]}>Height</Text>
+                      <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                        <Text style={[styles.label, styles.condensedLabel]}>Height</Text>
+                        <Ionicons name="arrow-up-outline" size={16} color="#64748B" style={{ marginLeft: 4 }} />
+                      </View>
                       <View style={[styles.input, styles.condensedInput, { 
                         flexDirection: 'row',
                         alignItems: 'center',
