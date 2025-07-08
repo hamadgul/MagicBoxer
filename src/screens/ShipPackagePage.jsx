@@ -24,6 +24,8 @@ export default function ShipPackagePage({ route, navigation }) {
   const [errors, setErrors] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
   const [isKeyboardVisible, setIsKeyboardVisible] = useState(false);
+  const [showUnavailableOptions, setShowUnavailableOptions] = useState(false);
+  const [showSavingsInfo, setShowSavingsInfo] = useState(false);
   const [packageDetails, setPackageDetails] = useState({
     weight: '',
     length: '',
@@ -180,10 +182,68 @@ export default function ShipPackagePage({ route, navigation }) {
   };
 
   const renderEstimate = ({ item }) => {
+    // Check if this is an error entry
+    const hasError = item.error !== undefined;
     const isUSPSMock = item.carrier === 'USPS' && item.isMockRate;
-  
+
+    // Format dimensions for display
+    const dimensions = item.dimensions || {};
+    const formattedDimensions = dimensions.length && dimensions.width && dimensions.height
+      ? `${dimensions.length}" × ${dimensions.width}" × ${dimensions.height}"`
+      : 'Dimensions not available';
+
+    // Determine if box is provided by carrier or customer using isCarrierBox flag
+    let isCarrierBox = item.isCarrierBox;
+    let boxTypeLabel = 'Customer Box';
+
+    if (isCarrierBox === undefined) {
+      // Fall back to checking box type if isCarrierBox flag is not available
+      if (item.carrier === 'UPS') {
+        // UPS packaging codes: 21-25 are UPS boxes, 02 is customer packaging
+        if (dimensions.boxType && dimensions.boxType.includes('UPS')) {
+          isCarrierBox = true;
+        }
+      } else if (item.carrier === 'FedEx') {
+        // FedEx boxes have specific types
+        const fedExBoxTypes = ['FEDEX_SMALL_BOX', 'FEDEX_MEDIUM_BOX', 'FEDEX_LARGE_BOX', 'FEDEX_EXTRA_LARGE_BOX'];
+        if (dimensions.boxType && (fedExBoxTypes.includes(dimensions.boxType) || dimensions.boxType.includes('FedEx'))) {
+          isCarrierBox = true;
+        }
+      } else if (item.carrier === 'USPS') {
+        // USPS boxes have specific types
+        if (dimensions.boxType && dimensions.boxType.includes('USPS')) {
+          isCarrierBox = true;
+        }
+      }
+    }
+
+    // Set box type label based on carrier and isCarrierBox flag
+    if (isCarrierBox) {
+      if (item.carrier === 'UPS') {
+        // Format UPS box type
+        if (dimensions.boxType === '21') boxTypeLabel = 'Carrier Provides: UPS Express Box - Small';
+        else if (dimensions.boxType === '22') boxTypeLabel = 'Carrier Provides: UPS Express Box - Medium';
+        else if (dimensions.boxType === '23') boxTypeLabel = 'Carrier Provides: UPS Express Box - Large';
+        else if (dimensions.boxType === '24') boxTypeLabel = 'Carrier Provides: UPS Express Box';
+        else if (dimensions.boxType === '25') boxTypeLabel = 'Carrier Provides: UPS Express Tube';
+        else boxTypeLabel = 'Carrier Provides: UPS Box';
+      } else if (item.carrier === 'FedEx') {
+        // Format FedEx box type
+        if (dimensions.boxType === 'FEDEX_SMALL_BOX') boxTypeLabel = 'Carrier Provides: FedEx Small Box';
+        else if (dimensions.boxType === 'FEDEX_MEDIUM_BOX') boxTypeLabel = 'Carrier Provides: FedEx Medium Box';
+        else if (dimensions.boxType === 'FEDEX_LARGE_BOX') boxTypeLabel = 'Carrier Provides: FedEx Large Box';
+        else if (dimensions.boxType === 'FEDEX_EXTRA_LARGE_BOX') boxTypeLabel = 'Carrier Provides: FedEx Extra Large Box';
+        else boxTypeLabel = 'Carrier Provides: FedEx Box';
+      } else if (item.carrier === 'USPS') {
+        boxTypeLabel = 'Carrier Provides: USPS Box';
+      }
+    }
+
     return (
-      <TouchableOpacity style={styles.estimateItem}>
+      <TouchableOpacity 
+        style={[styles.estimateItem, hasError && styles.errorEstimateItem]} 
+        disabled={hasError}
+      >
         <View style={styles.estimateHeader}>
           <View style={styles.carrierInfo}>
             <Text style={styles.carrierName}>{item.carrier}</Text>
@@ -191,17 +251,58 @@ export default function ShipPackagePage({ route, navigation }) {
               <Text style={styles.mockLabel}>(Estimated)</Text>
             )}
           </View>
-          <Text style={styles.price}>${item.price.toFixed(2)}</Text>
+          {!hasError ? (
+            <Text style={styles.price}>${item.price?.toFixed(2)}</Text>
+          ) : (
+            <Text style={styles.unavailableText}>Unavailable</Text>
+          )}
         </View>
+        
         <View style={styles.estimateDetails}>
           <Text style={styles.serviceName}>{item.service}</Text>
-          <Text style={styles.deliveryTime}>
-            Est. Delivery: {
-              typeof item.estimatedDays === 'string' 
-                ? `${item.estimatedDays} days` 
-                : `${item.estimatedDays} ${item.estimatedDays === 1 ? 'day' : 'days'}`
-            }
-          </Text>
+          {!hasError ? (
+            <Text style={styles.deliveryTime}>
+              Est. Delivery: {typeof item.estimatedDays === 'string' 
+                ? item.estimatedDays
+                : `${item.estimatedDays} ${item.estimatedDays === 1 ? 'day' : 'days'}`}
+            </Text>
+          ) : (
+            <View style={styles.errorContainer}>
+              <Ionicons name="alert-circle" size={16} color="#ef4444" style={styles.errorIcon} />
+              <Text style={styles.errorText}>
+                {item.carrier === 'UPS' && item.error.includes('Package Type is unavailable') 
+                  ? `This service is only available with your own packaging` 
+                  : item.error}
+              </Text>
+            </View>
+          )}
+        </View>
+        
+        <View style={styles.boxInfoContainer}>
+          <View style={[styles.boxTypeTag, isCarrierBox ? styles.carrierBoxTag : styles.customerBoxTag]}>
+            <Text style={styles.boxTypeText}>{boxTypeLabel}</Text>
+          </View>
+          
+          {isCarrierBox && (
+            <TouchableOpacity 
+              style={styles.savingsTag}
+              onPress={() => {
+                Alert.alert(
+                  'Carrier Box Savings',
+                  'Using carrier-provided packaging typically saves 10-15% compared to your own packaging. Carrier boxes are pre-approved for their services and may qualify for special rates. Actual savings may vary by service and destination.',
+                  [{ text: 'Got it', style: 'default' }]
+                );
+              }}
+            >
+              <Text style={styles.savingsText}>Save $3-8</Text>
+              <Ionicons name="information-circle" size={12} color="white" style={{marginLeft: 2}} />
+            </TouchableOpacity>
+          )}
+          
+          <View style={styles.boxInfoItem}>
+            <Ionicons name="cube-outline" size={16} color="#64748B" />
+            <Text style={styles.boxInfoText}>{formattedDimensions}</Text>
+          </View>
         </View>
       </TouchableOpacity>
     );
@@ -218,11 +319,31 @@ export default function ShipPackagePage({ route, navigation }) {
     }
 
     if (shippingEstimates.length > 0) {
+      // Count how many unavailable options exist
+      const unavailableOptions = shippingEstimates.filter(estimate => estimate.error).length;
+      
+      // Filter estimates based on showUnavailableOptions state
+      const filteredEstimates = showUnavailableOptions 
+        ? shippingEstimates 
+        : shippingEstimates.filter(estimate => !estimate.error);
+      
       return (
         <View style={styles.estimatesContainer} ref={estimatesSectionRef}>
-          <Text style={styles.sectionTitle}>Shipping Estimates</Text>
+          <View style={styles.estimatesHeader}>
+            <Text style={styles.sectionTitle}>Shipping Estimates</Text>
+          </View>
+          {unavailableOptions > 0 && (
+            <TouchableOpacity 
+              style={styles.toggleButton}
+              onPress={() => setShowUnavailableOptions(!showUnavailableOptions)}
+            >
+              <Text style={styles.toggleButtonText}>
+                {showUnavailableOptions ? 'Hide Unavailable Options' : `Show ${unavailableOptions} Unavailable Options`}
+              </Text>
+            </TouchableOpacity>
+          )}
           <View style={styles.estimatesList}>
-            {shippingEstimates.map((estimate, index) => (
+            {filteredEstimates.map((estimate, index) => (
               <View key={index}>
                 {renderEstimate({ item: estimate })}
               </View>
@@ -356,7 +477,49 @@ export default function ShipPackagePage({ route, navigation }) {
   );
 }
 
-const styles = StyleSheet.create({
+const styles = StyleSheet.create({  
+  errorEstimateItem: {
+    borderLeftWidth: 4,
+    borderLeftColor: '#ef4444',
+    backgroundColor: '#fef2f2',
+  },
+  unavailableText: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#ef4444',
+  },
+  errorText: {
+    color: '#ef4444',
+    fontSize: 14,
+    flex: 1,
+  },
+  errorContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginTop: 2,
+  },
+  errorIcon: {
+    marginRight: 6,
+  },
+  estimatesHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 10,
+  },
+  toggleButton: {
+    backgroundColor: '#e2e8f0',
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 16,
+    alignSelf: 'flex-start',
+    marginBottom: 10,
+  },
+  toggleButtonText: {
+    color: '#475569',
+    fontSize: 14,
+    fontWeight: '500',
+  },
   mainContainer: {
     flex: 1,
     backgroundColor: '#f8fafc',
@@ -492,6 +655,62 @@ const styles = StyleSheet.create({
   deliveryTime: {
     fontSize: 14,
     color: '#6b7280',
+    marginBottom: 8,
+  },
+  boxInfoContainer: {
+    marginTop: 8,
+    borderTopWidth: 1,
+    borderTopColor: '#f1f5f9',
+    paddingTop: 8,
+  },
+  boxTypeContainer: {
+    marginBottom: 4,
+    paddingHorizontal: 8,
+  },
+  boxInfoItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 6,
+  },
+  boxInfoText: {
+    fontSize: 14,
+    color: '#64748B',
+    marginLeft: 6,
+  },
+  boxTypeTag: {
+    alignSelf: 'flex-start',
+    paddingVertical: 4,
+    paddingHorizontal: 8,
+    borderRadius: 4,
+    marginTop: 4,
+  },
+  customerBoxTag: {
+    backgroundColor: '#e2e8f0',
+  },
+  carrierBoxTag: {
+    backgroundColor: '#dbeafe',
+    borderWidth: 1,
+    borderColor: '#93c5fd',
+  },
+  boxTypeText: {
+    fontSize: 12,
+    fontWeight: '500',
+    color: '#334155',
+  },
+  savingsTag: {
+    backgroundColor: '#10b981',
+    borderRadius: 4,
+    alignSelf: 'flex-start',
+    marginTop: 8,
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  savingsText: {
+    color: 'white',
+    fontSize: 10,
+    fontWeight: 'bold',
   },
   calculateButton: {
     backgroundColor: '#3b82f6',

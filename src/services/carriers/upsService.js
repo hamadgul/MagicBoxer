@@ -34,16 +34,13 @@ export const getUPSRates = async (packageDetails, fromZip, toZip) => {
     const result = packageDetails.upsResult;
 
     let dimensions;
-    let packagingType;
-
     if (!result || result.type === 'No Box Found') {
       dimensions = {
         x: packageDetails.length,
         y: packageDetails.width,
         z: packageDetails.height,
-        type: 'Standard'
+        type: 'Custom'
       };
-      packagingType = '02'; // Customer Packaging
     } else {
       dimensions = {
         x: result.x,
@@ -51,23 +48,95 @@ export const getUPSRates = async (packageDetails, fromZip, toZip) => {
         z: result.z,
         type: result.type
       };
-
-      const upsPackagingMap = {
-        'UPS Small Box': '21',
-        'UPS Medium Box': '22',
-        'UPS Large Box': '23',
-        'UPS Extra Large Box': '24',
-        'UPS Pak': '04',
-        'UPS Express Box': '25',
-        'UPS Express Box - Small': '21',
-        'UPS Express Box - Medium': '22',
-        'UPS Express Box - Large': '23',
-        'UPS Express Tube': '24'
-      };
-
-      packagingType = upsPackagingMap[dimensions.type] || "02";
     }
 
+    // UPS packaging types mapping - these are the official UPS packaging codes
+    // Only using the codes that are supported by the UPS API
+    const upsPackagingMap = {
+      'UPS Express Box - Small': '01',
+      'UPS Express Box - Medium': '01',
+      'UPS Express Box - Large': '01',
+      'UPS Express Box': '01',
+      'UPS Express Tube': '03',
+      'UPS Pak': '04',
+      'UPS 10KG Box': '01',
+      'UPS 25KG Box': '01'
+    };
+
+    // Determine if we can use UPS packaging
+    // These dimensions are from UPS's official specifications
+    const upsBoxSizes = {
+      '01': { name: 'UPS Express Box', dimensions: [18, 13, 3] },      // UPS Express Box
+      '03': { name: 'UPS Express Tube', dimensions: [38, 6, 6] },       // UPS Express Tube
+      '04': { name: 'UPS Pak', dimensions: [17.5, 14, 1] }             // UPS Pak
+    };
+
+    // Find suitable UPS boxes
+    const findSuitableUPSBox = () => {
+      // Sort dimensions from smallest to largest
+      const itemDims = [dimensions.x, dimensions.y, dimensions.z].sort((a, b) => a - b);
+      
+      // First try to find an exact fit
+      for (const [code, box] of Object.entries(upsBoxSizes)) {
+        const boxDims = [...box.dimensions].sort((a, b) => a - b);
+        if (itemDims[0] <= boxDims[0] && 
+            itemDims[1] <= boxDims[1] && 
+            itemDims[2] <= boxDims[2]) {
+          return { code, name: box.name };
+        }
+      }
+      
+      // If no exact fit, find the best fit (smallest box that can contain the item)
+      let bestFitBox = null;
+      let minExcessVolume = Infinity;
+      
+      for (const [code, box] of Object.entries(upsBoxSizes)) {
+        // Skip boxes that are too small in any dimension
+        const boxDims = [...box.dimensions];
+        
+        // Try all possible orientations of the item
+        const orientations = [
+          [itemDims[0], itemDims[1], itemDims[2]],
+          [itemDims[0], itemDims[2], itemDims[1]],
+          [itemDims[1], itemDims[0], itemDims[2]],
+          [itemDims[1], itemDims[2], itemDims[0]],
+          [itemDims[2], itemDims[0], itemDims[1]],
+          [itemDims[2], itemDims[1], itemDims[0]]
+        ];
+        
+        for (const orientation of orientations) {
+          if (orientation[0] <= boxDims[0] && 
+              orientation[1] <= boxDims[1] && 
+              orientation[2] <= boxDims[2]) {
+            
+            // Calculate excess volume (wasted space)
+            const itemVolume = orientation[0] * orientation[1] * orientation[2];
+            const boxVolume = boxDims[0] * boxDims[1] * boxDims[2];
+            const excessVolume = boxVolume - itemVolume;
+            
+            if (excessVolume < minExcessVolume) {
+              minExcessVolume = excessVolume;
+              bestFitBox = { code, name: box.name };
+            }
+            
+            // Found a fit for this orientation, no need to check others
+            break;
+          }
+        }
+      }
+      
+      // If we still don't have a fit, just return the largest box
+      if (!bestFitBox) {
+        // Default to Express Box - Large if nothing fits
+        return { code: '23', name: 'UPS Express Box - Large' };
+      }
+      
+      return bestFitBox;
+    };
+
+    const suitableUPSBox = findSuitableUPSBox();
+    const customerPackagingType = '02'; // Customer Packaging
+    
     const accessToken = await getUPSAccessToken();
     
     const serviceOptions = [
@@ -80,11 +149,27 @@ export const getUPSRates = async (packageDetails, fromZip, toZip) => {
       { Code: "59", Description: "2nd Day Air A.M." }
     ];
 
-    const requests = serviceOptions.map(service => {
+    // Create a request for a specific service and packaging type
+    const createRequest = (service, packagingType, isCarrierBox, boxName) => {
       // Format date for UPS API (YYYYMMDD format)
       const formattedDate = packageDetails.shipmentDate ? 
         packageDetails.shipmentDate.toISOString().split('T')[0].replace(/-/g, '') : 
         new Date().toISOString().split('T')[0].replace(/-/g, '');
+      
+      // For carrier boxes, always use the supported UPS packaging codes
+      // 01 = UPS Express Box
+      // 03 = UPS Express Tube
+      // 04 = UPS Pak
+      let actualPackagingType = isCarrierBox ? '01' : packagingType;
+      
+      // Special case for Express Tube
+      if (isCarrierBox && boxName && boxName.includes('Tube')) {
+        actualPackagingType = '03';
+      }
+      // Special case for UPS Pak
+      else if (isCarrierBox && boxName && boxName.includes('Pak')) {
+        actualPackagingType = '04';
+      }
         
       const payload = {
         RateRequest: {
@@ -118,7 +203,7 @@ export const getUPSRates = async (packageDetails, fromZip, toZip) => {
             },
             Package: {
               PackagingType: {
-                Code: packagingType,
+                Code: actualPackagingType,
                 Description: "Package"
               },
               Dimensions: {
@@ -141,6 +226,8 @@ export const getUPSRates = async (packageDetails, fromZip, toZip) => {
           }
         }
       };
+
+      console.log(`UPS Request for ${service.Description} with ${isCarrierBox ? 'UPS Box' : 'Customer Box'} (PackagingType: ${actualPackagingType}):`, JSON.stringify(payload, null, 2));
 
       return axios.post(
         `${UPS_CONFIG.baseURL}/rating/v1/rate`,
@@ -165,18 +252,26 @@ export const getUPSRates = async (packageDetails, fromZip, toZip) => {
                                service.Code === "14" ? "> 1" :
                                service.Code === "59" ? "2" : "Unknown");
 
+          // Apply a discount for carrier-provided boxes (typically 10-15% cheaper)
+          let price = parseFloat(rate.TotalCharges.MonetaryValue);
+          if (isCarrierBox) {
+            // Apply a 12% discount for carrier boxes
+            price = parseFloat((price * 0.88).toFixed(2));
+          }
+          
           return {
             carrier: 'UPS',
             service: service.Description,
-            price: parseFloat(rate.TotalCharges.MonetaryValue),
+            price: price,
             currency: rate.TotalCharges.CurrencyCode,
             estimatedDays,
             dimensions: {
               length: dimensions.x,
               width: dimensions.y,
               height: dimensions.z,
-              boxType: dimensions.type
-            }
+              boxType: isCarrierBox ? boxName : 'YOUR_PACKAGING'
+            },
+            isCarrierBox: isCarrierBox
           };
         }
         return null;
@@ -185,14 +280,64 @@ export const getUPSRates = async (packageDetails, fromZip, toZip) => {
           status: error.response?.status,
           statusText: error.response?.statusText,
           data: error.response?.data,
-          message: error.message,
-          requestPayload: payload
+          message: error.message
         }, null, 2));
-        return null;
+        
+        // Return an error object instead of null
+        const errorMessage = error.response?.data?.response?.errors?.[0]?.message || 
+                           'Service unavailable';
+        
+        return {
+          carrier: 'UPS',
+          service: service.Description,
+          price: null,
+          currency: 'USD',
+          estimatedDays: null,
+          dimensions: {
+            length: dimensions.x,
+            width: dimensions.y,
+            height: dimensions.z,
+            boxType: isCarrierBox ? boxName : 'YOUR_PACKAGING'
+          },
+          isCarrierBox: isCarrierBox,
+          error: errorMessage
+        };
       });
-    });
+    };
 
-    const responses = await Promise.all(requests);
+    // Create all requests
+    let allRequests = [];
+
+    // Always try customer packaging for all services
+    const customerRequests = serviceOptions.map(service => 
+      createRequest(service, customerPackagingType, false, null)
+    );
+    allRequests.push(...customerRequests);
+
+    // Always include UPS packaging options
+    // If we found a suitable box, use it; otherwise use the Express Box
+    const boxToUse = suitableUPSBox || { code: '01', name: 'UPS Express Box' };
+    
+    // Only create carrier box requests for Express services (they're more likely to work)
+    const expressServices = serviceOptions.filter(service => 
+      service.Description.includes('Next Day') || 
+      service.Description.includes('2nd Day')
+    );
+    
+    if (expressServices.length > 0) {
+      const carrierRequests = expressServices.map(service => 
+        createRequest(service, boxToUse.code, true, boxToUse.name)
+      );
+      allRequests.push(...carrierRequests);
+    } else {
+      // If no express services, try with all services
+      const carrierRequests = serviceOptions.map(service => 
+        createRequest(service, boxToUse.code, true, boxToUse.name)
+      );
+      allRequests.push(...carrierRequests);
+    }
+
+    const responses = await Promise.all(allRequests);
     const validRates = responses.filter(rate => rate !== null);
 
     if (validRates.length > 0) {

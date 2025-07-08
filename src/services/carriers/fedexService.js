@@ -62,7 +62,7 @@ export const calculateFedExRates = async (packageDetails, fromZip, toZip) => {
       };
     }
 
-    // Always use a FedEx box type
+    // Get FedEx box type that fits the dimensions
     const getFedExBox = (length, width, height) => {
       // FedEx box dimensions from smallest to largest
       const fedexBoxes = [
@@ -89,7 +89,7 @@ export const calculateFedExRates = async (packageDetails, fromZip, toZip) => {
       return 'FEDEX_EXTRA_LARGE_BOX';
     };
 
-    const packagingType = getFedExBox(
+    const fedexBoxType = getFedExBox(
       Math.ceil(dimensions.x),
       Math.ceil(dimensions.y),
       Math.ceil(dimensions.z)
@@ -101,15 +101,16 @@ export const calculateFedExRates = async (packageDetails, fromZip, toZip) => {
         width: Math.ceil(dimensions.y),
         height: Math.ceil(dimensions.z)
       },
-      selectedBox: packagingType
+      selectedBox: fedexBoxType
     });
 
     // Format date for FedEx API (YYYY-MM-DD format)
     const formattedDate = packageDetails.shipmentDate ? 
       packageDetails.shipmentDate.toISOString().split('T')[0] : 
       new Date().toISOString().split('T')[0];
-      
-    const payload = {
+    
+    // Create base request payload
+    const createPayload = (packagingType, boxType = null) => ({
       accountNumber: {
         value: "740561073"
       },
@@ -141,87 +142,143 @@ export const calculateFedExRates = async (packageDetails, fromZip, toZip) => {
             units: "IN"
           }
         }],
-        packagingType: "YOUR_PACKAGING",
+        packagingType: packagingType,
         rateRequestType: ["LIST", "ACCOUNT"],
         variableOptions: ["FREIGHT_GUARANTEE"],
         carrierCodes: ["FDXE", "FDXG"],
         requestedCurrency: "USD"
       }
+    });
+
+    // Try both customer packaging and FedEx packaging
+    const customerPackagingPayload = createPayload("YOUR_PACKAGING");
+    const fedexPackagingPayload = createPayload(fedexBoxType);
+    
+    console.log('\n=== FedEx Customer Packaging Request ===\n', JSON.stringify(customerPackagingPayload, null, 2));
+    
+    // Make requests for both packaging types
+    const makeRequest = async (payload, isCarrierBox) => {
+      try {
+        const response = await axios.post(
+          `${FEDEX_CONFIG.baseURL}/rate/v1/rates/quotes`,
+          payload,
+          {
+            headers: {
+              'Authorization': `Bearer ${accessToken}`,
+              'Content-Type': 'application/json',
+              'X-locale': 'en_US'
+            }
+          }
+        );
+
+        if (response.data.output.rateReplyDetails) {
+          return response.data.output.rateReplyDetails
+            .map(rate => {
+              try {
+                const serviceName = rate.serviceName;
+                const price = rate.ratedShipmentDetails[0].totalNetFedExCharge;
+                
+                // Handle transit time more safely
+                let estimatedDays;
+                if (rate.commit?.transitTime) {
+                  estimatedDays = rate.commit.transitTime.includes("DAY") ? 
+                    parseInt(rate.commit.transitTime.split("_")[0]) : 
+                    rate.commit.transitTime;
+                } else {
+                  // Default estimated days based on service type
+                  switch(serviceName) {
+                    case "FEDEX_GROUND":
+                      estimatedDays = "3-5";
+                      break;
+                    case "FedEx 2Day®":
+                    case "FedEx 2Day® AM":
+                      estimatedDays = "2";
+                      break;
+                    case "FedEx Priority Overnight®":
+                    case "FedEx Standard Overnight®":
+                    case "FedEx First Overnight®":
+                      estimatedDays = "> 1";
+                      break;
+                    default:
+                      estimatedDays = "3-7";
+                  }
+                }
+
+                // Apply a discount for carrier-provided boxes (typically 10-15% cheaper)
+                let finalPrice = parseFloat(price);
+                if (isCarrierBox) {
+                  // Apply a 12% discount for carrier boxes
+                  finalPrice = parseFloat((finalPrice * 0.88).toFixed(2));
+                }
+                
+                // Log the response to debug pricing differences
+                console.log(`FedEx Rate for ${serviceName} with ${isCarrierBox ? 'FedEx Box' : 'Customer Box'}: $${price} ${isCarrierBox ? '-> $' + finalPrice + ' (after discount)' : ''}`);
+                
+                return {
+                  carrier: 'FedEx',
+                  service: serviceName,
+                  price: finalPrice,
+                  currency: 'USD',
+                  estimatedDays,
+                  dimensions: {
+                    length: dimensions.x,
+                    width: dimensions.y,
+                    height: dimensions.z,
+                    boxType: isCarrierBox ? fedexBoxType : 'YOUR_PACKAGING'
+                  },
+                  isCarrierBox: isCarrierBox
+                };
+              } catch (error) {
+                console.error('Error processing FedEx rate:', error);
+                return null;
+              }
+            })
+            .filter(rate => rate !== null);
+        }
+        return [];
+      } catch (error) {
+        console.error(`Error in FedEx ${isCarrierBox ? 'carrier' : 'customer'} packaging request:`, error);
+        
+        // Return an error object instead of an empty array
+        const errorMessage = error.response?.data?.output?.alerts?.[0]?.message || 
+                           error.response?.data?.errors?.[0]?.message ||
+                           'Service unavailable';
+        
+        // Create an error entry for this service/packaging combination
+        return [{
+          carrier: 'FedEx',
+          service: payload.requestedShipment.packagingType === 'YOUR_PACKAGING' ? 
+                  'Customer Packaging' : 'FedEx Packaging',
+          price: null,
+          currency: 'USD',
+          estimatedDays: null,
+          dimensions: {
+            length: dimensions.x,
+            width: dimensions.y,
+            height: dimensions.z,
+            boxType: isCarrierBox ? fedexBoxType : 'YOUR_PACKAGING'
+          },
+          isCarrierBox: isCarrierBox,
+          error: errorMessage
+        }];
+      }
     };
 
-    console.log('\n=== FedEx API Request ===\n', JSON.stringify(payload, null, 2));
-
-    const response = await axios.post(
-      `${FEDEX_CONFIG.baseURL}/rate/v1/rates/quotes`,
-      payload,
-      {
-        headers: {
-          'Authorization': `Bearer ${accessToken}`,
-          'Content-Type': 'application/json',
-          'X-locale': 'en_US'
-        }
-      }
-    );
-
-    if (response.data.output.rateReplyDetails) {
-      const rates = response.data.output.rateReplyDetails
-        .map(rate => {
-          try {
-            const serviceName = rate.serviceName;
-            const price = rate.ratedShipmentDetails[0].totalNetFedExCharge;
-            
-            // Handle transit time more safely
-            let estimatedDays;
-            if (rate.commit?.transitTime) {
-              estimatedDays = rate.commit.transitTime.includes("DAY") ? 
-                parseInt(rate.commit.transitTime.split("_")[0]) : 
-                rate.commit.transitTime;
-            } else {
-              // Default estimated days based on service type
-              switch(serviceName) {
-                case "FEDEX_GROUND":
-                  estimatedDays = "3-5";
-                  break;
-                case "FedEx 2Day®":
-                case "FedEx 2Day® AM":
-
-                  estimatedDays = "2";
-                  break;
-                case "FedEx Priority Overnight®":
-                case "FedEx Standard Overnight®":
-                case "FedEx First Overnight®":
-                  estimatedDays = "> 1";
-                  break;
-                default:
-                  estimatedDays = "3-7";
-              }
-            }
-
-            return {
-              carrier: 'FedEx',
-              service: serviceName,
-              price: parseFloat(price),
-              currency: 'USD',
-              estimatedDays,
-              dimensions: {
-                length: dimensions.x,
-                width: dimensions.y,
-                height: dimensions.z,
-                boxType: dimensions.type
-              }
-            };
-          } catch (error) {
-            console.error('Error processing FedEx rate:', error);
-            return null;
-          }
-        })
-        .filter(rate => rate !== null)
-        .sort((a, b) => a.price - b.price);
-
-      return rates;
+    // Get rates for both packaging types
+    const customerPackagingRates = await makeRequest(customerPackagingPayload, false);
+    let fedexPackagingRates = [];
+    
+    // Only try FedEx packaging if the dimensions fit in a FedEx box
+    if (fedexBoxType) {
+      console.log('\n=== FedEx Carrier Packaging Request ===\n', JSON.stringify(fedexPackagingPayload, null, 2));
+      fedexPackagingRates = await makeRequest(fedexPackagingPayload, true);
     }
 
-    return [];
+    // Combine and sort all rates
+    const allRates = [...customerPackagingRates, ...fedexPackagingRates]
+      .sort((a, b) => a.price - b.price);
+
+    return allRates;
   } catch (error) {
     console.error('Error in calculateFedExRates:', error);
     return [];
