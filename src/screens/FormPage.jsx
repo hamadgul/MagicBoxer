@@ -1566,7 +1566,8 @@ export default class FormPage extends Component {
               No items added yet for this package.
             </Text>
             <Text style={styles.emptySubtext}>
-              Add items above and access saved packages on the side menu.
+              Add items to create your package.
+              View shipping rates & 3D packing in Saved Packages.
             </Text>
           </View>
         </View>
