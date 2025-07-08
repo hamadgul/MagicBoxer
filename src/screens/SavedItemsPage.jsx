@@ -15,12 +15,15 @@ import {
   Keyboard,
   Platform,
   KeyboardAvoidingView,
+  ActivityIndicator,
 } from "react-native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { Ionicons } from "@expo/vector-icons";
 import { modalStyles } from "../theme/ModalStyles";
 import * as FileSystem from 'expo-file-system';
 import * as Crypto from 'expo-crypto';
+import * as DocumentPicker from 'expo-document-picker';
+import * as Sharing from 'expo-sharing';
 
 export default class SavedItemsPage extends Component {
   state = {
@@ -36,6 +39,9 @@ export default class SavedItemsPage extends Component {
     selectionMode: false, // Flag to determine if we're in bulk selection mode
     selectedItems: [], // Array of selected item IDs
     showDeleteConfirmModal: false, // Flag to show delete confirmation modal
+    isImporting: false, // Flag to show importing indicator
+    showImportModal: false, // Flag to show import confirmation modal
+    importPreview: [], // Preview of items to be imported
   };
 
   constructor(props) {
@@ -283,12 +289,6 @@ export default class SavedItemsPage extends Component {
     );
   };
 
-;
-
-
-
-
-
   openEditModal = (item) => {
     // Extract numeric values from dimensions
     const lengthValue = parseFloat(item.dimensions.length.split(' ')[0]);
@@ -321,8 +321,8 @@ export default class SavedItemsPage extends Component {
       return Math.floor(value).toString();
     }
     
-    // Otherwise return with decimal places (trim trailing zeros)
-    return value.toString().replace(/\.?0+$/, '');
+    // Otherwise, return with up to 2 decimal places
+    return value.toFixed(2);
   };
   
   toggleItemSelection = (itemId) => {
@@ -347,6 +347,219 @@ export default class SavedItemsPage extends Component {
     }));
   };
 
+  // CSV Import functionality
+  handleImportPress = () => {
+    this.setState({ showImportModal: true, importPreview: [] });
+  };
+  
+  pickCSVFile = async () => {
+    try {
+      const result = await DocumentPicker.getDocumentAsync({
+        type: 'text/csv',
+        copyToCacheDirectory: true
+      });
+      
+      if (result.canceled) {
+        console.log('User cancelled file picking');
+        return;
+      }
+      
+      // Process the CSV file
+      this.setState({ isImporting: true });
+      await this.processCSVFile(result.assets[0].uri);
+      
+    } catch (error) {
+      console.error('Error picking CSV file:', error);
+      Alert.alert('Error', 'Failed to select CSV file. Please try again.');
+      this.setState({ isImporting: false });
+    }
+  };
+  
+  processCSVFile = async (fileUri) => {
+    try {
+      // Read the file content
+      const fileContent = await FileSystem.readAsStringAsync(fileUri);
+      
+      // Parse CSV content
+      const items = this.parseCSV(fileContent);
+      
+      if (items.length === 0) {
+        Alert.alert('Error', 'No valid items found in the CSV file. Please check the format.');
+        this.setState({ isImporting: false });
+        return;
+      }
+      
+      // Update state with preview
+      this.setState({ 
+        importPreview: items,
+        isImporting: false 
+      });
+      
+    } catch (error) {
+      console.error('Error processing CSV file:', error);
+      Alert.alert('Error', 'Failed to process CSV file. Please check the format.');
+      this.setState({ isImporting: false });
+    }
+  };
+  
+  downloadSampleCSV = async () => {
+    try {
+      // Path to the sample CSV file
+      const fileName = 'magicboxer_sample_items.csv';
+      const samplePath = `${FileSystem.documentDirectory}${fileName}`;
+      
+      // Sample CSV content with proper line endings
+      const sampleContent = 'Name,Length,Width,Height\r\nSmall Box,10,8,6\r\nMedium Box,14,12,10\r\nLarge Box,20,16,12\r\nFlat Mailer,12,9,0.5\r\nTube Mailer,24,3,3';
+      
+      // Write the sample file
+      await FileSystem.writeAsStringAsync(samplePath, sampleContent);
+      
+      // Share the file
+      const result = await Sharing.shareAsync(samplePath, {
+        mimeType: 'text/csv',
+        dialogTitle: 'Save Sample CSV Template',
+        UTI: 'public.comma-separated-values-text'
+      });
+      
+      console.log('CSV file shared:', result);
+      
+    } catch (error) {
+      console.error('Error sharing sample CSV:', error);
+      Alert.alert('Error', 'Failed to download sample CSV file.');
+    }
+  };
+  
+  parseCSV = (csvContent) => {
+    // Simple CSV parser
+    const lines = csvContent.split('\n');
+    if (lines.length <= 1) {
+      return [];
+    }
+    
+    // Get headers (first line)
+    const headers = lines[0].split(',').map(header => header.trim().toLowerCase());
+    
+    // Check if required headers exist
+    const requiredHeaders = ['name', 'length', 'width', 'height'];
+    const missingHeaders = requiredHeaders.filter(header => !headers.includes(header));
+    
+    if (missingHeaders.length > 0) {
+      Alert.alert('Error', `CSV file is missing required headers: ${missingHeaders.join(', ')}`);
+      return [];
+    }
+    
+    // Get indices for each required column
+    const nameIndex = headers.indexOf('name');
+    const lengthIndex = headers.indexOf('length');
+    const widthIndex = headers.indexOf('width');
+    const heightIndex = headers.indexOf('height');
+    
+    // Parse data rows
+    const items = [];
+    for (let i = 1; i < lines.length; i++) {
+      const line = lines[i].trim();
+      if (!line) continue; // Skip empty lines
+      
+      const values = line.split(',').map(value => value.trim());
+      
+      // Validate row has enough columns
+      if (values.length < Math.max(nameIndex, lengthIndex, widthIndex, heightIndex) + 1) {
+        console.warn(`Skipping row ${i} due to insufficient columns`);
+        continue;
+      }
+      
+      const name = values[nameIndex];
+      const length = parseFloat(values[lengthIndex]);
+      const width = parseFloat(values[widthIndex]);
+      const height = parseFloat(values[heightIndex]);
+      
+      // Validate data
+      if (!name || isNaN(length) || isNaN(width) || isNaN(height) || 
+          length <= 0 || width <= 0 || height <= 0) {
+        console.warn(`Skipping row ${i} due to invalid data:`, { name, length, width, height });
+        continue;
+      }
+      
+      items.push({
+        name,
+        length: length.toFixed(2),
+        width: width.toFixed(2),
+        height: height.toFixed(2)
+      });
+    }
+    
+    return items;
+  };
+  
+  handleImportItems = async () => {
+    const { importPreview, savedItems } = this.state;
+    
+    if (importPreview.length === 0) {
+      return;
+    }
+    
+    this.setState({ isImporting: true });
+    
+    try {
+      // Check for duplicate names
+      const existingNames = new Set(savedItems.map(item => item.name.toLowerCase()));
+      const newItems = [];
+      const duplicates = [];
+      
+      // Process each item
+      for (const item of importPreview) {
+        if (existingNames.has(item.name.toLowerCase())) {
+          duplicates.push(item.name);
+          continue;
+        }
+        
+        // Create new item with proper format
+        const newItem = {
+          id: await Crypto.randomUUID(),
+          name: item.name,
+          dimensions: {
+            length: `${item.length} inches`,
+            width: `${item.width} inches`,
+            height: `${item.height} inches`
+          },
+          timestamp: Date.now()
+        };
+        
+        newItems.push(newItem);
+        existingNames.add(item.name.toLowerCase());
+      }
+      
+      // Update state with new items
+      const updatedItems = [...savedItems, ...newItems];
+      
+      this.setState({
+        savedItems: updatedItems,
+        showImportModal: false,
+        importPreview: [],
+        isImporting: false
+      }, async () => {
+        // Save to AsyncStorage
+        await AsyncStorage.setItem("savedItems", JSON.stringify(updatedItems));
+        
+        // Update custom products data
+        await this.updateProductsData(updatedItems);
+        
+        // Show results
+        if (duplicates.length > 0) {
+          const message = `Imported ${newItems.length} items. Skipped ${duplicates.length} duplicate items.`;
+          Alert.alert('Import Complete', message);
+        } else {
+          Alert.alert('Import Complete', `Successfully imported ${newItems.length} items.`);
+        }
+      });
+      
+    } catch (error) {
+      console.error('Error importing items:', error);
+      Alert.alert('Error', 'Failed to import items. Please try again.');
+      this.setState({ isImporting: false });
+    }
+  };
+  
   deleteSelectedItems = async () => {
     const { savedItems, selectedItems } = this.state;
     
@@ -412,7 +625,14 @@ export default class SavedItemsPage extends Component {
       itemName,
       itemLength,
       itemWidth,
-      itemHeight
+      itemHeight,
+      isEditing,
+      selectionMode,
+      selectedItems,
+      showDeleteConfirmModal,
+      isImporting,
+      showImportModal,
+      importPreview
     } = this.state;
 
     return (
@@ -771,18 +991,114 @@ export default class SavedItemsPage extends Component {
           {/* Add item FAB */}
           <TouchableOpacity
             style={[styles.fab, styles.addFab]}
-            onPress={() => this.setState({ showAddItemModal: true })}
+            onPress={() => this.setState({ showAddItemModal: true, isEditing: false, itemName: "", itemLength: "", itemWidth: "", itemHeight: "" })}
           >
             <Ionicons name="add" size={30} color="white" />
           </TouchableOpacity>
           
-          {/* Selection mode FAB */}
+          {/* Import CSV FAB */}
           <TouchableOpacity
-            style={[styles.fab, styles.selectFab]}
-            onPress={this.toggleSelectionMode}
+            style={[styles.fab, styles.importFab]}
+            onPress={this.handleImportPress}
           >
-            <Ionicons name={this.state.selectionMode ? "close" : "list"} size={26} color="white" />
+            <Ionicons name="cloud-upload-outline" size={24} color="white" />
           </TouchableOpacity>
+          
+          {/* Selection Mode FAB */}
+          {savedItems.length > 0 && (
+            <TouchableOpacity
+              style={[styles.fab, styles.selectFab]}
+              onPress={() => this.setState({ selectionMode: !selectionMode, selectedItems: [] })}
+            >
+              <Ionicons name={selectionMode ? "close" : "list"} size={26} color="white" />
+            </TouchableOpacity>
+          )}
+          
+          {/* Import Modal */}
+          <Modal
+            visible={showImportModal}
+            transparent={true}
+            animationType="fade"
+            onRequestClose={() => this.setState({ showImportModal: false })}
+          >
+            <TouchableWithoutFeedback onPress={() => this.setState({ showImportModal: false })}>
+              <View style={styles.modalOverlay}>
+                <TouchableWithoutFeedback onPress={(e) => e.stopPropagation()}>
+                  <View style={styles.importModalContainer}>
+                    <Text style={styles.importModalTitle}>Import Items from CSV</Text>
+                    
+                    {isImporting ? (
+                      <View style={styles.loadingContainer}>
+                        <ActivityIndicator size="large" color="#3B82F6" />
+                        <Text style={styles.loadingText}>Processing CSV file...</Text>
+                      </View>
+                    ) : (
+                      <>
+                        <Text style={styles.modalSubtitle}>
+                          {importPreview.length > 0 
+                            ? `Found ${importPreview.length} items to import.` 
+                            : 'Preview of items to import will appear here.'}
+                        </Text>
+                        
+                        {importPreview.length > 0 && (
+                          <View style={styles.previewContainer}>
+                            {importPreview.slice(0, 3).map((item, index) => (
+                              <View key={`${item.name}-${index}`} style={styles.previewItem}>
+                                <Text style={styles.previewItemName}>{item.name}</Text>
+                                <Text style={styles.previewItemDimensions}>
+                                  {item.length}" × {item.width}" × {item.height}"
+                                </Text>
+                              </View>
+                            ))}
+                            {importPreview.length > 3 && (
+                              <Text style={styles.moreItemsText}>
+                                +{importPreview.length - 3} more items
+                              </Text>
+                            )}
+                          </View>
+                        )}
+                        
+                        <View style={styles.modalButtonsRow}>
+                          <TouchableOpacity
+                            style={[styles.modalButton, styles.cancelButton]}
+                            onPress={() => this.setState({ showImportModal: false, importPreview: [] })}
+                          >
+                            <Text style={styles.cancelButtonText}>Cancel</Text>
+                          </TouchableOpacity>
+                          
+                          <TouchableOpacity
+                            style={[styles.modalButton, styles.importButton, importPreview.length === 0 && styles.disabledButton]}
+                            onPress={this.handleImportItems}
+                            disabled={importPreview.length === 0}
+                          >
+                            <Text style={styles.importButtonText}>Import {importPreview.length} {importPreview.length === 1 ? 'Item' : 'Items'}</Text>
+                          </TouchableOpacity>
+                        </View>
+                        
+                        <View style={styles.fileButtonsContainer}>
+                        <TouchableOpacity
+                          style={styles.selectFileButton}
+                          onPress={this.pickCSVFile}
+                        >
+                          <Ionicons name="document-attach-outline" size={20} color="#3B82F6" />
+                          <Text style={styles.selectFileButtonText}>Select CSV File</Text>
+                        </TouchableOpacity>
+                        
+                        <TouchableOpacity
+                          style={styles.downloadSampleButton}
+                          onPress={this.downloadSampleCSV}
+                        >
+                          <Ionicons name="download-outline" size={18} color="#64748B" />
+                          <Text style={styles.downloadSampleText}>Download Sample</Text>
+                        </TouchableOpacity>
+                      </View>
+                      </>
+                    )}
+                  </View>
+                </TouchableWithoutFeedback>
+              </View>
+            </TouchableWithoutFeedback>
+          </Modal>
         </View>
       </TouchableWithoutFeedback>
     );
@@ -971,6 +1287,11 @@ const styles = StyleSheet.create({
     bottom: 20,
     backgroundColor: '#64748B',
   },
+  importFab: {
+    right: 20,
+    bottom: 100, // Increased distance from the add item FAB
+    backgroundColor: '#10B981', // Green color for import
+  },
   selectedItem: {
     backgroundColor: '#EFF6FF',
   },
@@ -1023,6 +1344,180 @@ const styles = StyleSheet.create({
   deleteButtonText: {
     color: 'white',
     fontWeight: '600',
+    textAlign: 'center',
+  },
+  loadingContainer: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    padding: 20,
+  },
+  loadingText: {
+    marginTop: 10,
+    fontSize: 16,
+    color: '#64748B',
+  },
+  importInfoText: {
+    fontSize: 16,
+    color: '#64748B',
+    marginBottom: 15,
+    textAlign: 'center',
+  },
+  moreItemsText: {
+    textAlign: 'center',
+    padding: 8,
+    color: '#64748B',
+    fontStyle: 'italic',
+  },
+  previewContainer: {
+    marginBottom: 20,
+    backgroundColor: '#F1F5F9',
+    borderRadius: 12,
+    overflow: 'hidden',
+    padding: 12,
+    borderWidth: 1,
+    borderColor: '#E2E8F0',
+  },
+  previewItem: {
+    backgroundColor: 'white',
+    padding: 12,
+    borderRadius: 10,
+    marginBottom: 10,
+    borderWidth: 1,
+    borderColor: '#E2E8F0',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.05,
+    shadowRadius: 2,
+    elevation: 1,
+  },
+  previewItemName: {
+    fontSize: 16,
+    fontWeight: '500',
+    color: '#334155',
+  },
+  previewItemDimensions: {
+    fontSize: 14,
+    color: '#64748B',
+    marginTop: 4,
+  },
+  moreItemsText: {
+    fontSize: 14,
+    color: '#64748B',
+    fontStyle: 'italic',
+    textAlign: 'center',
+    padding: 8,
+  },
+  modalButtonsRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    width: '100%',
+    marginBottom: 15,
+  },
+  modalButton: {
+    borderRadius: 8,
+    padding: 10,
+    minWidth: '45%',
+    alignItems: 'center',
+    justifyContent: 'center',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.1,
+    shadowRadius: 2,
+    elevation: 2,
+  },
+  cancelButton: {
+    backgroundColor: '#F1F5F9',
+    borderWidth: 1,
+    borderColor: '#E2E8F0',
+  },
+  importButton: {
+    backgroundColor: '#3B82F6',
+  },
+  disabledButton: {
+    backgroundColor: '#94A3B8',
+    opacity: 0.7,
+  },
+  cancelButtonText: {
+    color: '#64748B',
+    fontWeight: '600',
+    fontSize: 14,
+  },
+  importButtonText: {
+    color: 'white',
+    fontWeight: '600',
+    fontSize: 14,
+  },
+  selectFileButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    padding: 10,
+    borderWidth: 1,
+    borderColor: '#3B82F6',
+    borderRadius: 8,
+    backgroundColor: '#EFF6FF',
+  },
+  selectFileButtonText: {
+    marginLeft: 8,
+    color: '#3B82F6',
+    fontWeight: '600',
+    fontSize: 14,
+  },
+  fileButtonsContainer: {
+    width: '100%',
+    marginTop: 15,
+    gap: 12,
+  },
+  downloadSampleButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    padding: 10,
+    borderWidth: 1,
+    borderColor: '#64748B',
+    borderRadius: 8,
+    backgroundColor: '#F1F5F9',
+  },
+  downloadSampleText: {
+    marginLeft: 8,
+    color: '#64748B',
+    fontWeight: '600',
+    fontSize: 14,
+  },
+  modalSubtitle: {
+    fontSize: 16,
+    color: '#64748B',
+    marginBottom: 16,
+    textAlign: 'center',
+  },
+  modalOverlay: {
+    position: 'absolute',
+    top: 0,
+    bottom: 0,
+    left: 0,
+    right: 0,
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  importModalContainer: {
+    width: '85%',
+    maxWidth: 350,
+    backgroundColor: 'white',
+    borderRadius: 16,
+    padding: 20,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 5,
+    elevation: 8,
+    alignSelf: 'center',
+  },
+  importModalTitle: {
+    fontSize: 20,
+    fontWeight: '700',
+    color: '#334155',
+    marginBottom: 12,
     textAlign: 'center',
   },
 });
