@@ -1702,17 +1702,17 @@ export default class PackagesPage extends Component {
       console.log('Using dimensions:', dimensions);
       
       // Convert saved item format to package item format
-      const itemId = await generateUUID();
+      const itemId = await this.generateUUID();
       const newItem = {
         id: itemId,
         itemName: savedItem.name,
-        itemLength: parseItemDimension(dimensions.length),
-        itemWidth: parseItemDimension(dimensions.width),
-        itemHeight: parseItemDimension(dimensions.height),
+        itemLength: this.parseItemDimension(dimensions.length),
+        itemWidth: this.parseItemDimension(dimensions.width),
+        itemHeight: this.parseItemDimension(dimensions.height),
         quantity: 1,
         replicatedNames: [{
           name: savedItem.name,
-          id: await generateUUID(),
+          id: await this.generateUUID(),
           parentId: itemId
         }]
       };
