@@ -37,6 +37,12 @@ export default function ShipPackagePage({ route, navigation }) {
   const [shipmentDate, setShipmentDate] = useState(new Date());
   const [showDatePicker, setShowDatePicker] = useState(false);
   const [formattedDate, setFormattedDate] = useState('');
+  
+  // New optional fields
+  const [isResidential, setIsResidential] = useState(true);
+  const [insuranceValue, setInsuranceValue] = useState('');
+  const [signatureRequired, setSignatureRequired] = useState(false);
+  const [showAdvancedOptions, setShowAdvancedOptions] = useState(false);
 
   useEffect(() => {
     if (route.params?.package) {
@@ -126,7 +132,10 @@ export default function ShipPackagePage({ route, navigation }) {
           ...packageDetails,
           upsResult,
           fedexResult,
-          shipmentDate: shipmentDate
+          shipmentDate: shipmentDate,
+          isResidential: isResidential,
+          insuranceValue: insuranceValue ? parseFloat(insuranceValue) : undefined,
+          signatureRequired: signatureRequired
         },
         fromZip,
         toZip
@@ -442,6 +451,80 @@ export default function ShipPackagePage({ route, navigation }) {
                 />
               )}
             </View>
+            
+            {/* Residential/Commercial Address Selection - Required */}
+            <View style={styles.addressTypeContainer}>
+              <Text style={styles.label}>Address Type *</Text>
+              <View style={styles.addressTypeOptions}>
+                <TouchableOpacity 
+                  style={[styles.addressTypeOption, isResidential && styles.selectedAddressType]}
+                  onPress={() => setIsResidential(true)}
+                >
+                  <Ionicons 
+                    name={isResidential ? "radio-button-on" : "radio-button-off"} 
+                    size={20} 
+                    color={isResidential ? "#3b82f6" : "#64748b"} 
+                  />
+                  <Text style={[styles.addressTypeText, isResidential && styles.selectedAddressTypeText]}>Residential</Text>
+                </TouchableOpacity>
+                <TouchableOpacity 
+                  style={[styles.addressTypeOption, !isResidential && styles.selectedAddressType]}
+                  onPress={() => setIsResidential(false)}
+                >
+                  <Ionicons 
+                    name={!isResidential ? "radio-button-on" : "radio-button-off"} 
+                    size={20} 
+                    color={!isResidential ? "#3b82f6" : "#64748b"} 
+                  />
+                  <Text style={[styles.addressTypeText, !isResidential && styles.selectedAddressTypeText]}>Commercial</Text>
+                </TouchableOpacity>
+              </View>
+            </View>
+            
+            {/* Advanced Options Toggle */}
+            <TouchableOpacity 
+              style={styles.advancedOptionsToggle}
+              onPress={() => setShowAdvancedOptions(!showAdvancedOptions)}
+            >
+              <Text style={styles.advancedOptionsText}>Advanced Options</Text>
+              <Ionicons 
+                name={showAdvancedOptions ? "chevron-up" : "chevron-down"} 
+                size={20} 
+                color="#64748b" 
+              />
+            </TouchableOpacity>
+            
+            {/* Advanced Options Section */}
+            {showAdvancedOptions && (
+              <View style={styles.advancedOptionsContainer}>
+                <View style={styles.advancedOption}>
+                  <Text style={styles.label}>Declared Value/Insurance ($)</Text>
+                  <TextInput
+                    style={styles.input}
+                    value={insuranceValue}
+                    onChangeText={setInsuranceValue}
+                    placeholder="0.00"
+                    placeholderTextColor="#64748b"
+                    keyboardType="decimal-pad"
+                  />
+                </View>
+                
+                <View style={styles.advancedOption}>
+                  <Text style={styles.label}>Delivery Options</Text>
+                  <TouchableOpacity 
+                    style={styles.signatureOption}
+                    onPress={() => setSignatureRequired(!signatureRequired)}
+                  >
+                    <Ionicons 
+                      name={signatureRequired ? "checkbox" : "square-outline"} 
+                      size={20} 
+                      color={signatureRequired ? "#3b82f6" : "#64748b"} 
+                    />
+                    <Text style={styles.signatureText}>Signature Required</Text>
+                  </TouchableOpacity>
+                </View>
+              </View>
+            )}
           </View>
 
           <TouchableOpacity 
@@ -672,12 +755,12 @@ const styles = StyleSheet.create({
   boxInfoItem: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginBottom: 6,
+    marginTop: 8,
   },
   boxInfoText: {
-    fontSize: 14,
+    fontSize: 12,
     color: '#64748B',
-    marginLeft: 6,
+    marginLeft: 4,
   },
   boxTypeTag: {
     alignSelf: 'flex-start',
@@ -792,5 +875,66 @@ const styles = StyleSheet.create({
   dateText: {
     color: '#1e293b',
     fontSize: 16,
+  },
+  addressTypeContainer: {
+    marginTop: 16,
+  },
+  addressTypeOptions: {
+    flexDirection: 'row',
+    marginTop: 8,
+  },
+  addressTypeOption: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: 8,
+    paddingHorizontal: 16,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: '#e2e8f0',
+    marginRight: 12,
+  },
+  selectedAddressType: {
+    borderColor: '#3b82f6',
+    backgroundColor: '#eff6ff',
+  },
+  addressTypeText: {
+    marginLeft: 8,
+    fontSize: 14,
+    color: '#64748b',
+  },
+  selectedAddressTypeText: {
+    color: '#3b82f6',
+    fontWeight: '500',
+  },
+  advancedOptionsToggle: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingVertical: 12,
+    marginTop: 16,
+    borderTopWidth: 1,
+    borderBottomWidth: 1,
+    borderColor: '#e2e8f0',
+  },
+  advancedOptionsText: {
+    fontSize: 16,
+    fontWeight: '500',
+    color: '#334155',
+  },
+  advancedOptionsContainer: {
+    marginTop: 16,
+  },
+  advancedOption: {
+    marginBottom: 16,
+  },
+  signatureOption: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginTop: 8,
+  },
+  signatureText: {
+    marginLeft: 8,
+    fontSize: 14,
+    color: '#334155',
   },
 });

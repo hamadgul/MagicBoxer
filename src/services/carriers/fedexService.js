@@ -125,7 +125,7 @@ export const calculateFedExRates = async (packageDetails, fromZip, toZip) => {
           address: {
             postalCode: toZip,
             countryCode: "US",
-            residential: true
+            residential: packageDetails.isResidential !== false
           }
         },
         pickupType: "DROPOFF_AT_FEDEX_LOCATION",
@@ -140,7 +140,23 @@ export const calculateFedExRates = async (packageDetails, fromZip, toZip) => {
             width: Math.ceil(dimensions.y),
             height: Math.ceil(dimensions.z),
             units: "IN"
-          }
+          },
+          // Add insurance value if provided
+          ...(packageDetails.insuranceValue ? {
+            declaredValue: {
+              amount: packageDetails.insuranceValue,
+              currency: "USD"
+            }
+          } : {}),
+          // Add signature option if required
+          ...(packageDetails.signatureRequired ? {
+            specialServicesRequested: {
+              specialServiceTypes: ["SIGNATURE_OPTION"],
+              signatureOptionDetail: {
+                optionType: "DIRECT"
+              }
+            }
+          } : {})
         }],
         packagingType: packagingType,
         rateRequestType: ["LIST", "ACCOUNT"],
@@ -159,6 +175,8 @@ export const calculateFedExRates = async (packageDetails, fromZip, toZip) => {
     // Make requests for both packaging types
     const makeRequest = async (payload, isCarrierBox) => {
       try {
+        console.log(`Attempting FedEx request for ${isCarrierBox ? 'carrier' : 'customer'} packaging...`);
+        
         const response = await axios.post(
           `${FEDEX_CONFIG.baseURL}/rate/v1/rates/quotes`,
           payload,
@@ -167,11 +185,12 @@ export const calculateFedExRates = async (packageDetails, fromZip, toZip) => {
               'Authorization': `Bearer ${accessToken}`,
               'Content-Type': 'application/json',
               'X-locale': 'en_US'
-            }
+            },
+            timeout: 10000 // 10 second timeout
           }
         );
 
-        if (response.data.output.rateReplyDetails) {
+        if (response.data && response.data.output && response.data.output.rateReplyDetails) {
           return response.data.output.rateReplyDetails
             .map(rate => {
               try {
@@ -239,31 +258,18 @@ export const calculateFedExRates = async (packageDetails, fromZip, toZip) => {
       } catch (error) {
         console.error(`Error in FedEx ${isCarrierBox ? 'carrier' : 'customer'} packaging request:`, error);
         
-        // Return an error object instead of an empty array
-        const errorMessage = error.response?.data?.output?.alerts?.[0]?.message || 
-                           error.response?.data?.errors?.[0]?.message ||
-                           'Service unavailable';
-        
-        // Create an error entry for this service/packaging combination
+        // Return an error object instead of empty array
         return [{
           carrier: 'FedEx',
           service: payload.requestedShipment.packagingType === 'YOUR_PACKAGING' ? 
                   'Customer Packaging' : 'FedEx Packaging',
-          price: null,
-          currency: 'USD',
-          estimatedDays: null,
-          dimensions: {
-            length: dimensions.x,
-            width: dimensions.y,
-            height: dimensions.z,
-            boxType: isCarrierBox ? fedexBoxType : 'YOUR_PACKAGING'
-          },
-          isCarrierBox: isCarrierBox,
-          error: errorMessage
+          error: error.response && error.response.status === 503 ? 
+                 'FedEx service temporarily unavailable. Please try again later.' : 
+                 'Unable to get FedEx rates at this time.'
         }];
       }
     };
-
+    
     // Get rates for both packaging types
     const customerPackagingRates = await makeRequest(customerPackagingPayload, false);
     let fedexPackagingRates = [];

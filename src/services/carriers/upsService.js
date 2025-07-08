@@ -189,7 +189,7 @@ export const getUPSRates = async (packageDetails, fromZip, toZip) => {
               Address: {
                 PostalCode: toZip,
                 CountryCode: "US",
-                ResidentialAddressIndicator: service.Code === "03" || service.Code === "12" ? "true" : undefined
+                ResidentialAddressIndicator: packageDetails.isResidential === false ? undefined : "true"
               }
             },
             ShipmentRatingOptions: {
@@ -204,12 +204,11 @@ export const getUPSRates = async (packageDetails, fromZip, toZip) => {
             Package: {
               PackagingType: {
                 Code: actualPackagingType,
-                Description: "Package"
+                Description: boxName || "Package"
               },
               Dimensions: {
                 UnitOfMeasurement: {
-                  Code: "IN",
-                  Description: "Inches"
+                  Code: "IN"
                 },
                 Length: Math.ceil(dimensions.x).toString(),
                 Width: Math.ceil(dimensions.y).toString(),
@@ -217,11 +216,30 @@ export const getUPSRates = async (packageDetails, fromZip, toZip) => {
               },
               PackageWeight: {
                 UnitOfMeasurement: {
-                  Code: "LBS",
-                  Description: "Pounds"
+                  Code: "LBS"
                 },
                 Weight: Math.max(Math.ceil(packageDetails.weight), 1).toString()
-              }
+              },
+              // Add insurance value if provided
+              ...(packageDetails.insuranceValue ? {
+                PackageServiceOptions: {
+                  DeclaredValue: {
+                    CurrencyCode: "USD",
+                    MonetaryValue: packageDetails.insuranceValue.toString()
+                  },
+                  ...(packageDetails.signatureRequired ? {
+                    DeliveryConfirmation: {
+                      DCISType: "2", // Signature Required
+                    }
+                  } : {})
+                }
+              } : packageDetails.signatureRequired ? {
+                PackageServiceOptions: {
+                  DeliveryConfirmation: {
+                    DCISType: "2", // Signature Required
+                  }
+                }
+              } : {})
             }
           }
         }
