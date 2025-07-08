@@ -741,6 +741,10 @@ export default class SavedItemsPage extends Component {
       <TouchableWithoutFeedback 
         onPress={() => {
           Keyboard.dismiss();
+          // Close the FAB menu if it's open when tapping outside
+          if (this.state.isFabMenuOpen) {
+            this.toggleFabMenu();
+          }
         }}>
         <View style={styles.container}>
           {/* Selection mode action bar at the top */}
@@ -1094,7 +1098,10 @@ export default class SavedItemsPage extends Component {
           {/* Main FAB */}
           <TouchableOpacity
             style={[styles.fab, styles.mainFab]}
-            onPress={this.toggleFabMenu}
+            onPress={(e) => {
+              e.stopPropagation();
+              this.toggleFabMenu();
+            }}
           >
             <Animated.View
               style={{
@@ -1125,7 +1132,10 @@ export default class SavedItemsPage extends Component {
           >
             <TouchableOpacity
               style={styles.menuButton}
-              onPress={this.handleAddItemPress}
+              onPress={(e) => {
+                e.stopPropagation();
+                this.handleAddItemPress();
+              }}
             >
               <View style={[styles.menuButtonIcon, { backgroundColor: '#3B82F6' }]}>
                 <Ionicons name="create-outline" size={20} color="white" />
@@ -1149,7 +1159,10 @@ export default class SavedItemsPage extends Component {
           >
             <TouchableOpacity
               style={styles.menuButton}
-              onPress={this.handleImportPress}
+              onPress={(e) => {
+                e.stopPropagation();
+                this.handleImportPress();
+              }}
             >
               <View style={[styles.menuButtonIcon, { backgroundColor: '#10B981' }]}>
                 <Ionicons name="cloud-upload-outline" size={20} color="white" />
