@@ -40,6 +40,8 @@ export default class PackagesPage extends Component {
     savedItems: [],
     savedItemsSearchQuery: '',
     allSavedItems: [], // Store all saved items
+    // Search functionality for packages
+    searchQuery: '',
     // Bulk selection state
     selectionMode: false,
     selectedPackages: [],
@@ -808,9 +810,77 @@ export default class PackagesPage extends Component {
         }}
       >
         <View style={styles.container}>
+          {/* Search bar */}
+          {Object.keys(packages).length > 0 && (
+            <View style={styles.searchBarContainer}>
+              <View style={styles.searchInputContainer}>
+                <Ionicons name="search-outline" size={20} color="#94A3B8" style={{ marginRight: 8 }} />
+                <TextInput
+                  style={styles.searchInput}
+                  placeholder="Search packages by name..."
+                  placeholderTextColor="#94A3B8"
+                  value={this.state.searchQuery}
+                  onChangeText={(text) => this.setState({ searchQuery: text })}
+                  clearButtonMode={Platform.OS === 'ios' ? 'never' : 'while-editing'}
+                  returnKeyType="search"
+                  autoCapitalize="none"
+                  autoCorrect={false}
+                />
+                {this.state.searchQuery ? (
+                  <TouchableOpacity 
+                    onPress={() => this.setState({ searchQuery: "" })}
+                    style={styles.clearButton}
+                    hitSlop={{ top: 10, right: 10, bottom: 10, left: 10 }}
+                  >
+                    <Ionicons name="close-circle" size={20} color="#94A3B8" />
+                  </TouchableOpacity>
+                ) : null}
+              </View>
+              
+              {/* Search results count */}
+              {this.state.searchQuery.trim() !== "" && (
+                <Text style={styles.searchResultsCount}>
+                  {Object.keys(this.getFilteredPackages()).length} {Object.keys(this.getFilteredPackages()).length === 1 ? "package" : "packages"} found
+                </Text>
+              )}
+            </View>
+          )}
+          
+          {/* Selection mode action bar */}
+          {this.state.selectionMode && (
+            <View style={styles.selectionActionBar}>
+              <Text style={styles.selectedCountText}>
+                {this.state.selectedPackages.length} package(s) selected
+              </Text>
+              
+              <View style={styles.selectionActionButtons}>
+                <TouchableOpacity
+                  style={[styles.actionButton, styles.cancelSelectionButton]}
+                  onPress={this.cancelSelection}
+                >
+                  <Text style={styles.cancelButtonText}>Cancel</Text>
+                </TouchableOpacity>
+                
+                <TouchableOpacity
+                  style={[styles.actionButton, styles.actionDeleteButton]}
+                  onPress={() => {
+                    if (this.state.selectedPackages.length > 0) {
+                      this.setState({ showDeleteConfirmModal: true });
+                    } else {
+                      Alert.alert("No Packages Selected", "Please select at least one package to delete.");
+                    }
+                  }}
+                  disabled={this.state.selectedPackages.length === 0}
+                >
+                  <Text style={styles.deleteButtonText}>Delete</Text>
+                </TouchableOpacity>
+              </View>
+            </View>
+          )}
+          
           <ScrollView 
-            style={[styles.scrollView, this.state.selectionMode && { marginTop: 60 }]}
-            contentContainerStyle={styles.scrollViewContent}
+            style={[styles.scrollView]}
+            contentContainerStyle={[styles.scrollViewContent, this.state.searchQuery.trim() !== "" && styles.scrollViewWithSearch]}
           >
             {Object.keys(packages).length === 0 ? (
               <View style={styles.emptyContainer}>
@@ -828,8 +898,16 @@ export default class PackagesPage extends Component {
                   <Text style={styles.createPackageButtonText}>Create Package</Text>
                 </TouchableOpacity>
               </View>
+            ) : this.state.searchQuery.trim() !== "" && Object.keys(this.getFilteredPackages()).length === 0 ? (
+              <View style={styles.emptySearchContainer}>
+                <Ionicons name="search" size={50} color="#CBD5E1" />
+                <Text style={styles.emptySearchTitle}>No Matching Packages</Text>
+                <Text style={styles.emptySearchText}>
+                  No packages match your search query. Try a different search term.
+                </Text>
+              </View>
             ) : (
-              Object.keys(packages).map(this.renderPackage)
+              Object.keys(this.state.searchQuery.trim() !== "" ? this.getFilteredPackages() : packages).map(this.renderPackage)
             )}
           </ScrollView>
 
@@ -1342,37 +1420,7 @@ export default class PackagesPage extends Component {
 
 
 
-          {/* Selection mode action bar at the top */}
-          {this.state.selectionMode && (
-            <View style={styles.selectionActionBar}>
-              <Text style={styles.selectedCountText}>
-                {this.state.selectedPackages.length} package(s) selected
-              </Text>
-              
-              <View style={styles.selectionActionButtons}>
-                <TouchableOpacity
-                  style={[styles.actionButton, styles.cancelSelectionButton]}
-                  onPress={this.cancelSelection}
-                >
-                  <Text style={styles.cancelButtonText}>Cancel</Text>
-                </TouchableOpacity>
-                
-                <TouchableOpacity
-                  style={[styles.actionButton, styles.actionDeleteButton]}
-                  onPress={() => {
-                    if (this.state.selectedPackages.length > 0) {
-                      this.setState({ showDeleteConfirmModal: true });
-                    } else {
-                      Alert.alert("No Packages Selected", "Please select at least one package to delete.");
-                    }
-                  }}
-                  disabled={this.state.selectedPackages.length === 0}
-                >
-                  <Text style={styles.deleteButtonText}>Delete</Text>
-                </TouchableOpacity>
-              </View>
-            </View>
-          )}
+
           
           <TouchableOpacity
             style={[styles.fab, styles.selectFab]}
@@ -1638,23 +1686,6 @@ export default class PackagesPage extends Component {
         return;
       }
       
-      // Generate a unique ID for the new item
-      const generateUUID = async () => {
-        try {
-          return await Crypto.randomUUID();
-        } catch (error) {
-          // Fallback for older devices
-          return 'item-' + Math.random().toString(36).substring(2, 15);
-        }
-      };
-      
-      // Parse dimensions from the saved item format (e.g., "5.00 inches" -> 5)
-      const parseItemDimension = (dimensionStr) => {
-        if (!dimensionStr) return 0;
-        const match = dimensionStr.match(/([\d.]+)/);
-        return match ? parseFloat(match[1]) : 0;
-      };
-      
       // Extract dimensions based on the nested structure
       let dimensions = {};
       if (savedItem.items && savedItem.items.length > 0 && savedItem.items[0].dimensions) {
@@ -1719,9 +1750,109 @@ export default class PackagesPage extends Component {
       Alert.alert("Error", "Failed to add item to package.");
     }
   };
+
+  // Generate a unique ID for the new item
+  generateUUID = async () => {
+    try {
+      return await Crypto.randomUUID();
+    } catch (error) {
+      // Fallback for older devices
+      return 'item-' + Math.random().toString(36).substring(2, 15);
+    }
+  };
+  
+  // Parse dimensions from the saved item format (e.g., "5.00 inches" -> 5)
+  parseItemDimension = (dimensionStr) => {
+    if (!dimensionStr) return 0;
+    const match = dimensionStr.match(/([\d.]+)/);
+    return match ? parseFloat(match[1]) : 0;
+  };
+  
+  // Filter packages based on search query (name only)
+  getFilteredPackages = () => {
+    const { packages, searchQuery } = this.state;
+    
+    if (!searchQuery || !searchQuery.trim()) {
+      return packages;
+    }
+    
+    const query = searchQuery.toLowerCase().trim();
+    const filteredPackages = {};
+    
+    Object.keys(packages).forEach(packageName => {
+      if (packageName.toLowerCase().includes(query)) {
+        filteredPackages[packageName] = packages[packageName];
+      }
+    });
+    
+    return filteredPackages;
+  };
 }
 
 const styles = StyleSheet.create({
+  // Search bar styles
+  searchBarContainer: {
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    backgroundColor: "#f5f5f5",
+    borderBottomWidth: 1,
+    borderBottomColor: "#E2E8F0",
+    zIndex: 1,
+  },
+  searchInputContainer: {
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: "#FFFFFF",
+    borderRadius: 8,
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    borderWidth: 1,
+    borderColor: "#E2E8F0",
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.1,
+    shadowRadius: 2,
+    elevation: 2,
+  },
+  searchInput: {
+    flex: 1,
+    fontSize: 16,
+    color: "#334155",
+    paddingVertical: 4,
+  },
+  clearButton: {
+    padding: 4,
+  },
+  searchResultsCount: {
+    fontSize: 14,
+    color: "#64748B",
+    marginTop: 8,
+    marginLeft: 4,
+    fontStyle: "italic",
+  },
+  emptySearchContainer: {
+    flex: 1,
+    alignItems: "center",
+    justifyContent: "center",
+    paddingTop: 80,
+    paddingHorizontal: 40,
+  },
+  emptySearchTitle: {
+    fontSize: 20,
+    fontWeight: "600",
+    color: "#334155",
+    marginTop: 16,
+    marginBottom: 8,
+  },
+  emptySearchText: {
+    fontSize: 16,
+    color: "#64748B",
+    textAlign: "center",
+    marginBottom: 24,
+  },
+  scrollViewWithSearch: {
+    paddingTop: 10, // Add a bit of padding when search is active
+  },
   container: {
     flex: 1,
     backgroundColor: "#f5f5f5",
@@ -1968,11 +2099,7 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.1,
     shadowRadius: 2,
     marginBottom: 8,
-    zIndex: 10,
-    position: 'absolute',
-    top: 0,
-    left: 0,
-    right: 0,
+    marginTop: 8,
   },
   selectedCountText: {
     fontSize: 16,

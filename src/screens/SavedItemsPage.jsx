@@ -44,6 +44,7 @@ export default class SavedItemsPage extends Component {
     showImportModal: false, // Flag to show import confirmation modal
     importPreview: [], // Preview of items to be imported
     isFabMenuOpen: false, // Flag to track if the FAB menu is open
+    searchQuery: "", // Search query for filtering saved items
   };
 
   // Animation values
@@ -305,10 +306,23 @@ export default class SavedItemsPage extends Component {
   };
 
   openEditModal = (item) => {
+    // Get dimensions from either direct or nested structure
+    let dimensions = null;
+    if (item.dimensions) {
+      dimensions = item.dimensions;
+    } else if (item.items && item.items.length > 0 && item.items[0].dimensions) {
+      dimensions = item.items[0].dimensions;
+    }
+    
+    if (!dimensions) {
+      Alert.alert("Error", "Could not find dimensions for this item.");
+      return;
+    }
+    
     // Extract numeric values from dimensions
-    const lengthValue = parseFloat(item.dimensions.length.split(' ')[0]);
-    const widthValue = parseFloat(item.dimensions.width.split(' ')[0]);
-    const heightValue = parseFloat(item.dimensions.height.split(' ')[0]);
+    const lengthValue = parseFloat(dimensions.length.toString().split(' ')[0]);
+    const widthValue = parseFloat(dimensions.width.toString().split(' ')[0]);
+    const heightValue = parseFloat(dimensions.height.toString().split(' ')[0]);
     
     this.setState({
       showAddItemModal: true,
@@ -322,24 +336,37 @@ export default class SavedItemsPage extends Component {
   };
 
   // Helper function to format dimension values without unnecessary decimal places
-  formatDimension = (dimension) => {
-    if (!dimension) return "0";
+  formatDimension = (value) => {
+    if (!value) return "0";
     
-    // Extract the numeric part
-    const numericPart = dimension.split(' ')[0];
-    
-    // Convert to number and check if it's an integer
-    const value = parseFloat(numericPart);
+    // Extract numeric part from the dimension string
+    const numericPart = value.toString().replace(/[^0-9.]/g, '');
+    const numericValue = parseFloat(numericPart);
     
     // If it's a whole number, return without decimal places
-    if (value % 1 === 0) {
-      return Math.floor(value).toString();
+    if (numericValue % 1 === 0) {
+      return Math.floor(numericValue).toString();
     }
     
     // Otherwise, return with up to 2 decimal places
-    return value.toFixed(2);
+    return numericValue.toFixed(2);
   };
-  
+
+  // Filter saved items based on search query (name only)
+  getFilteredItems = () => {
+    const { savedItems, searchQuery } = this.state;
+    
+    if (!searchQuery.trim()) {
+      return savedItems;
+    }
+    
+    const query = searchQuery.toLowerCase().trim();
+    return savedItems.filter(item => {
+      // Check if the item name matches the query
+      return item.name.toLowerCase().includes(query);
+    });
+  };
+
   toggleItemSelection = (itemId) => {
     this.setState(prevState => {
       const selectedItems = [...prevState.selectedItems];
@@ -691,6 +718,14 @@ export default class SavedItemsPage extends Component {
     const { selectionMode, selectedItems } = this.state;
     const isSelected = selectedItems.includes(item.id);
     
+    // Get dimensions from either direct or nested structure
+    let dimensions = null;
+    if (item.dimensions) {
+      dimensions = item.dimensions;
+    } else if (item.items && item.items.length > 0 && item.items[0].dimensions) {
+      dimensions = item.items[0].dimensions;
+    }
+    
     return (
       <View key={item.id} style={styles.itemRow}>
         <View style={styles.itemContainer}>
@@ -711,9 +746,13 @@ export default class SavedItemsPage extends Component {
               )}
               <Text style={styles.itemName}>{item.name}</Text>
             </View>
-            <Text style={styles.itemDimensions}>
-              {this.formatDimension(item.dimensions.length)}L × {this.formatDimension(item.dimensions.width)}W × {this.formatDimension(item.dimensions.height)}H
-            </Text>
+            {dimensions ? (
+              <Text style={styles.itemDimensions}>
+                {this.formatDimension(dimensions.length)}L × {this.formatDimension(dimensions.width)}W × {this.formatDimension(dimensions.height)}H
+              </Text>
+            ) : (
+              <Text style={styles.itemDimensions}>Dimensions not available</Text>
+            )}
           </TouchableOpacity>
         </View>
       </View>
@@ -747,6 +786,40 @@ export default class SavedItemsPage extends Component {
           }
         }}>
         <View style={styles.container}>
+          {/* Search bar */}
+          <View style={styles.searchBarContainer}>
+            <View style={styles.searchInputContainer}>
+              <Ionicons name="search-outline" size={20} color="#94A3B8" style={{ marginRight: 8 }} />
+              <TextInput
+                style={styles.searchInput}
+                placeholder="Search by name..."
+                placeholderTextColor="#94A3B8"
+                value={this.state.searchQuery}
+                onChangeText={(text) => this.setState({ searchQuery: text })}
+                clearButtonMode={Platform.OS === 'ios' ? 'never' : 'while-editing'}
+                returnKeyType="search"
+                autoCapitalize="none"
+                autoCorrect={false}
+              />
+              {this.state.searchQuery ? (
+                <TouchableOpacity 
+                  onPress={() => this.setState({ searchQuery: "" })}
+                  style={styles.clearButton}
+                  hitSlop={{ top: 10, right: 10, bottom: 10, left: 10 }}
+                >
+                  <Ionicons name="close-circle" size={20} color="#94A3B8" />
+                </TouchableOpacity>
+              ) : null}
+            </View>
+            
+            {/* Search results count */}
+            {this.state.searchQuery.trim() !== "" && (
+              <Text style={styles.searchResultsCount}>
+                {this.getFilteredItems().length} {this.getFilteredItems().length === 1 ? "item" : "items"} found
+              </Text>
+            )}
+          </View>
+          
           {/* Selection mode action bar at the top */}
           {this.state.selectionMode && (
             <View style={styles.selectionActionBar}>
@@ -781,7 +854,11 @@ export default class SavedItemsPage extends Component {
           
           <ScrollView 
             style={styles.scrollView}
-            contentContainerStyle={[styles.scrollViewContent, this.state.selectionMode && styles.scrollViewWithActionBar]}
+            contentContainerStyle={[
+              styles.scrollViewContent, 
+              this.state.selectionMode && styles.scrollViewWithActionBar,
+              this.state.searchQuery.trim() !== "" && styles.scrollViewWithSearch
+            ]}
           >
             {savedItems.length === 0 ? (
               <View style={styles.emptyContainer}>
@@ -800,7 +877,17 @@ export default class SavedItemsPage extends Component {
                 </TouchableOpacity>
               </View>
             ) : (
-              savedItems.map(item => this.renderItem(item))
+              this.getFilteredItems().length === 0 && this.state.searchQuery ? (
+                <View style={styles.emptySearchContainer}>
+                  <Ionicons name="search" size={60} color="#94A3B8" />
+                  <Text style={styles.emptySearchTitle}>No Results Found</Text>
+                  <Text style={styles.emptySearchText}>
+                    No items match your search "{this.state.searchQuery}"
+                  </Text>
+                </View>
+              ) : (
+                this.getFilteredItems().map(item => this.renderItem(item))
+              )
             )}
           </ScrollView>
 
@@ -1279,6 +1366,65 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: "#f5f5f5",
   },
+  searchBarContainer: {
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    backgroundColor: "#f5f5f5",
+    borderBottomWidth: 1,
+    borderBottomColor: "#E2E8F0",
+    zIndex: 1,
+  },
+  searchInputContainer: {
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: "#FFFFFF",
+    borderRadius: 8,
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    borderWidth: 1,
+    borderColor: "#E2E8F0",
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.1,
+    shadowRadius: 2,
+    elevation: 2,
+  },
+  searchInput: {
+    flex: 1,
+    fontSize: 16,
+    color: "#334155",
+    paddingVertical: 4,
+  },
+  clearButton: {
+    padding: 4,
+  },
+  searchResultsCount: {
+    fontSize: 14,
+    color: "#64748B",
+    marginTop: 8,
+    marginLeft: 4,
+    fontStyle: "italic",
+  },
+  emptySearchContainer: {
+    flex: 1,
+    alignItems: "center",
+    justifyContent: "center",
+    padding: 20,
+    marginTop: 40,
+  },
+  emptySearchTitle: {
+    fontSize: 20,
+    fontWeight: "600",
+    color: "#334155",
+    marginTop: 16,
+    marginBottom: 8,
+  },
+  emptySearchText: {
+    fontSize: 16,
+    color: "#64748B",
+    textAlign: "center",
+    marginBottom: 20,
+  },
   scrollView: {
     flex: 1,
     padding: 16,
@@ -1289,7 +1435,10 @@ const styles = StyleSheet.create({
     paddingTop: 8,
   },
   scrollViewWithActionBar: {
-    paddingTop: 0,
+    paddingTop: 8, // Reduced padding to match PackagesPage spacing
+  },
+  scrollViewWithSearch: {
+    paddingTop: 10, // Add a bit of padding when search is active
   },
   headerContainer: {
     flexDirection: 'row',
