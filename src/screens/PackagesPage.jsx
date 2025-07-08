@@ -2,11 +2,11 @@ import React, { Component } from "react";
 import {
   View,
   Text,
+  StyleSheet,
   TouchableOpacity,
   ScrollView,
   Alert,
   Modal,
-  StyleSheet,
   FlatList,
   TextInput,
   TouchableWithoutFeedback,
@@ -15,6 +15,7 @@ import {
   Keyboard,
   Platform,
   BackHandler,
+  KeyboardAvoidingView,
 } from "react-native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { Ionicons } from "@expo/vector-icons"; 
@@ -37,6 +38,8 @@ export default class PackagesPage extends Component {
     editingPackage: null,
     showSavedItemsModal: false,
     savedItems: [],
+    savedItemsSearchQuery: '',
+    allSavedItems: [], // Store all saved items
     // Bulk selection state
     selectionMode: false,
     selectedPackages: [],
@@ -67,6 +70,14 @@ export default class PackagesPage extends Component {
   componentDidMount() {
     console.log('PackagesPage mounted');
     this.fetchPackages();
+    this.loadSavedItems();
+    
+    // Set up navigation focus listener to reload data when screen comes into focus
+    this.focusListener = this.props.navigation.addListener('focus', () => {
+      console.log('PackagesPage focused, reloading data...');
+      this.fetchPackages();
+      this.loadSavedItems();
+    });
     
     // Reset any stuck state when the component mounts
     this.setState({
@@ -150,19 +161,11 @@ export default class PackagesPage extends Component {
       });
     }
     
-    this.focusListener = this.props.navigation.addListener(
-      "focus",
-      () => {
-        this.fetchPackages();
-        this.fetchSavedItems();
-      }
-    );
-    
     // Set mounted flag for safety checks
     this.mounted = true;
     
     // Initial fetch of saved items
-    this.fetchSavedItems();
+    this.loadSavedItems();
   }
 
   componentWillUnmount() {
@@ -208,31 +211,38 @@ export default class PackagesPage extends Component {
     }
   };
 
-  fetchSavedItems = async () => {
+  loadSavedItems = async () => {
     try {
-      console.log('Fetching saved items...');
+      console.log('Loading saved items...');
       const savedItemsString = await AsyncStorage.getItem("savedItems");
       
       if (!savedItemsString) {
         console.log('No saved items found in storage');
-        this.setState({ savedItems: [] });
+        this.setState({ savedItems: [], allSavedItems: [] });
         return;
       }
       
       try {
         const savedItems = JSON.parse(savedItemsString);
         console.log('Saved items loaded successfully:', savedItems);
-        this.setState({ savedItems }, () => {
+        
+        // Sort items by timestamp, newest first
+        const sortedItems = savedItems.sort((a, b) => (b.timestamp || 0) - (a.timestamp || 0));
+        
+        this.setState({ 
+          savedItems: sortedItems,
+          allSavedItems: sortedItems 
+        }, () => {
           console.log('Saved items state updated:', this.state.savedItems);
         });
       } catch (parseError) {
         console.error('Error parsing saved items JSON:', parseError);
-        this.setState({ savedItems: [] });
+        this.setState({ savedItems: [], allSavedItems: [] });
         Alert.alert("Error", "There was a problem loading your saved items.");
       }
     } catch (error) {
       console.error("Error loading saved items:", error);
-      this.setState({ savedItems: [] });
+      this.setState({ savedItems: [], allSavedItems: [] });
       Alert.alert("Error", "Failed to load saved items.");
     }
   };
@@ -278,26 +288,6 @@ export default class PackagesPage extends Component {
       Alert.alert("Error", "Package name cannot be empty.");
       return;
     }
-    if (packages[newPackageName]) {
-      Alert.alert("Error", "A package with this name already exists.");
-      return;
-    }
-
-    // Rename the package in the state and AsyncStorage
-    packages[newPackageName] = packages[selectedPackage];
-    delete packages[selectedPackage];
-
-    this.setState(
-      { packages, renamePackageModal: false, newPackageName: "" },
-      async () => {
-        try {
-          await AsyncStorage.setItem("packages", JSON.stringify(packages));
-          Alert.alert("Success", "Package renamed successfully.");
-        } catch (error) {
-          Alert.alert("Error", "Failed to rename package.");
-        }
-      }
-    );
   };
 
   openPackageDetails = (packageName) => {
@@ -310,7 +300,6 @@ export default class PackagesPage extends Component {
     this.setState({
       showPackageModal: false,
       showDetailsModal: false,
-      selectedPackage: null,
       selectedItem: null,
       showOptionsModal: false,
       showSavedItemsModal: false
@@ -793,6 +782,8 @@ export default class PackagesPage extends Component {
   };
 
   render() {
+    console.log('Rendering PackagesPage, showSavedItemsModal:', this.state.showSavedItemsModal);
+    
     const {
       packages,
       showOptionsModal,
@@ -803,6 +794,9 @@ export default class PackagesPage extends Component {
       showDetailsModal,
       selectedItem,
       isEditMode,
+      showSavedItemsModal,
+      allSavedItems,
+      savedItemsSearchQuery
     } = this.state;
 
     return (
@@ -1050,47 +1044,9 @@ export default class PackagesPage extends Component {
 
                     <TouchableOpacity
                       style={[styles.addItemPlaceholder, { alignSelf: 'center' }]}
-                      onPress={async () => {
-                        try {
-                          const savedItemsString = await AsyncStorage.getItem("savedItems");
-                          const items = savedItemsString ? JSON.parse(savedItemsString) : [];
-                          
-                          if (items.length === 0) {
-                            Alert.alert(
-                              "No Saved Items", 
-                              "You don't have any saved items yet. Go to the Saved Items page to create some items first.",
-                              [
-                                { text: "Cancel", style: "cancel" },
-                                { 
-                                  text: "Go to Saved Items", 
-                                  onPress: () => {
-                                    this.closePackageModal();
-                                    this.props.navigation.navigate("My Saved Items");
-                                  }
-                                }
-                              ]
-                            );
-                            return;
-                          }
-                          
-                          // Create a list of saved items for selection
-                          const buttons = items.map((item, index) => ({
-                            text: item.name,
-                            onPress: () => this.handleAddSavedItemToPackage(item)
-                          }));
-                          
-                          // Add a cancel button
-                          buttons.push({ text: "Cancel", style: "cancel" });
-                          
-                          // Show the alert with saved items as buttons
-                          Alert.alert(
-                            "Select a Saved Item",
-                            "Choose an item to add to your package:",
-                            buttons
-                          );
-                        } catch (error) {
-                          Alert.alert("Error", "Failed to load saved items: " + error.message);
-                        }
+                      onPress={() => {
+                        console.log('Add from saved items button pressed');
+                        this.showSavedItemsSelector();
                       }}
                       activeOpacity={0.6}
                     >
@@ -1128,65 +1084,213 @@ export default class PackagesPage extends Component {
           </Modal>
 
           {/* Saved Items Modal */}
+          {console.log('Modal visible state:', this.state.showSavedItemsModal)}
+          {console.log('allSavedItems length:', this.state.allSavedItems?.length)}
           <Modal
-            visible={this.state.showSavedItemsModal}
-            transparent={true}
             animationType="slide"
-            onRequestClose={() => this.setState({ showSavedItemsModal: false })}
+            transparent={true}
+            visible={this.state.showSavedItemsModal}
+            onRequestClose={() => {
+              this.setState({ showSavedItemsModal: false }, () => {
+                // After a short delay, show the package modal again
+                setTimeout(() => {
+                  this.setState({ showPackageModal: true });
+                }, 300);
+              });
+            }}
           >
-            <TouchableWithoutFeedback onPress={() => this.setState({ showSavedItemsModal: false })}>
-              <View style={styles.modalOverlay}>
-                <TouchableWithoutFeedback onPress={(e) => e.stopPropagation()}>
-                  <View style={styles.modalContent}>
-                    <View style={[modalStyles.modalHeader, { justifyContent: 'space-between' }]}>
-                      <Text style={modalStyles.modalTitle}>Select Saved Item</Text>
-                      <TouchableOpacity
-                        onPress={() => this.setState({ showSavedItemsModal: false })}
-                        style={{ padding: 8 }}
-                      >
-                        <Ionicons name="close" size={24} color="#fff" />
+            <KeyboardAvoidingView behavior={Platform.OS === "ios" ? "padding" : "height"} style={{ flex: 1 }}>
+              <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
+                <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: 'rgba(0,0,0,0.5)' }}>
+                  <View style={{
+                    width: '95%',
+                    maxHeight: '85%',
+                    backgroundColor: '#F8FAFC',
+                    borderRadius: 16,
+                    shadowColor: '#000',
+                    shadowOffset: { width: 0, height: 5 },
+                    shadowOpacity: 0.1,
+                    shadowRadius: 15,
+                    elevation: 10,
+                  }}>
+                    <View style={{
+                      flexDirection: 'row',
+                      justifyContent: 'space-between',
+                      alignItems: 'center',
+                      padding: 20,
+                      borderBottomWidth: 1,
+                      borderBottomColor: '#E2E8F0',
+                    }}>
+                      <Text style={{
+                        fontSize: 20,
+                        fontWeight: 'bold',
+                        color: '#1E293B'
+                      }}>Select an Item</Text>
+                      <TouchableOpacity onPress={() => {
+                        this.setState({ showSavedItemsModal: false }, () => {
+                          // After a short delay, show the package modal again
+                          setTimeout(() => {
+                            this.setState({ showPackageModal: true });
+                          }, 300);
+                        });
+                      }}>
+                        <Ionicons name="close" size={24} color="#64748B" />
                       </TouchableOpacity>
                     </View>
-                    
-                    {this.state.savedItems.length === 0 ? (
-                      <View style={styles.emptyContainer}>
-                        <Ionicons name="bookmark-outline" size={60} color="#CBD5E1" />
-                        <Text style={styles.emptyText}>
-                          You don't have any saved items yet. Create them in the My Saved Items page.
-                        </Text>
+
+                    <View style={{ paddingHorizontal: 20, paddingTop: 15, paddingBottom: 15 }}>
+                      <View style={{
+                        flexDirection: 'row',
+                        alignItems: 'center',
+                        backgroundColor: '#FFFFFF',
+                        borderRadius: 8,
+                        paddingHorizontal: 12,
+                        borderWidth: 1,
+                        borderColor: '#E2E8F0',
+                      }}>
+                        <Ionicons name="search-outline" size={20} color="#94A3B8" style={{ marginRight: 8 }} />
+                        <TextInput
+                          style={{ 
+                            flex: 1, 
+                            height: 44,
+                            fontSize: 16,
+                            color: '#1E293B',
+                          }}
+                          placeholder="Search saved items..."
+                          placeholderTextColor="#94A3B8"
+                          value={this.state.savedItemsSearchQuery}
+                          onChangeText={(text) => this.setState({ savedItemsSearchQuery: text })}
+                        />
                       </View>
-                    ) : (
-                      <FlatList
-                        data={this.state.savedItems}
-                        style={styles.flatListStyle}
-                        contentContainerStyle={styles.flatListContainer}
-                        keyExtractor={(item) => item.id}
-                        renderItem={({ item }) => (
-                          <TouchableOpacity
-                            style={styles.itemContainer}
-                            onPress={() => this.handleAddSavedItemToPackage(item)}
-                          >
-                            <View style={{ width: "100%" }}>
-                              <Text style={styles.itemText}>{item.name}</Text>
-                              <Text style={styles.itemDimensions}>
-                                {item.dimensions.length.split(' ')[0]}L × {item.dimensions.width.split(' ')[0]}W × {item.dimensions.height.split(' ')[0]}H
+                    </View>
+
+                    <ScrollView 
+                      style={{ paddingHorizontal: 20 }} 
+                      contentContainerStyle={{ flexGrow: 1 }} 
+                      keyboardShouldPersistTaps="handled"
+                    >
+                      {(() => {
+                        // Log the structure of saved items for debugging
+                        console.log('All saved items structure:', JSON.stringify(this.state.allSavedItems));
+                        
+                        const filteredItems = this.state.allSavedItems
+                          ? this.state.allSavedItems.filter(item => {
+                              const itemName = (item.name || '').toLowerCase();
+                              return itemName.includes(this.state.savedItemsSearchQuery.toLowerCase());
+                            })
+                          : [];
+
+                        if (filteredItems.length > 0) {
+                          return filteredItems.map((item) => {
+                            const itemName = item.name || '';
+                            // Check if the item is already in the package
+                            const alreadyAdded = this.state.packages[this.state.selectedPackage]?.items?.some(addedItem =>
+                              (addedItem.itemName || '').toLowerCase() === itemName.toLowerCase()
+                            ) || false;
+                            
+                            // Extract dimensions from the first item in the items array if it exists
+                            // This follows the nested structure mentioned in the memory
+                            let dimensions = {};
+                            if (item.items && item.items.length > 0 && item.items[0].dimensions) {
+                              dimensions = item.items[0].dimensions;
+                            } else if (item.dimensions) {
+                              dimensions = item.dimensions;
+                            }
+                            return (
+                              <TouchableOpacity
+                                key={item.id}
+                                onPress={() => !alreadyAdded && this.handleAddSavedItemToPackage(item)}
+                                disabled={alreadyAdded}
+                                style={{
+                                  flexDirection: 'row',
+                                  justifyContent: 'space-between',
+                                  alignItems: 'center',
+                                  paddingVertical: 16,
+                                  borderBottomWidth: 1,
+                                  borderBottomColor: '#E2E8F0',
+                                  opacity: alreadyAdded ? 0.4 : 1,
+                                }}
+                              >
+                                <View>
+                                  <Text style={{ fontSize: 16, color: '#1E293B', fontWeight: '600' }}>
+                                    {itemName}
+                                  </Text>
+                                  <View style={{ flexDirection: 'row', alignItems: 'center', marginTop: 6 }}>
+                                    {dimensions.length && dimensions.width && dimensions.height ? (
+                                      <>
+                                        <View style={{ flexDirection: 'row', alignItems: 'center', backgroundColor: '#E2E8F0', borderRadius: 12, paddingHorizontal: 8, paddingVertical: 4 }}>
+                                          <Text style={{ fontSize: 12, color: '#475569', fontWeight: '600', marginRight: 4 }}>L</Text>
+                                          <Text style={{ fontSize: 12, color: '#475569' }}>{parseFloat(dimensions.length)}</Text>
+                                        </View>
+                                        <Text style={{ marginHorizontal: 4, color: '#94A3B8', fontSize: 12 }}>x</Text>
+                                        <View style={{ flexDirection: 'row', alignItems: 'center', backgroundColor: '#E2E8F0', borderRadius: 12, paddingHorizontal: 8, paddingVertical: 4 }}>
+                                          <Text style={{ fontSize: 12, color: '#475569', fontWeight: '600', marginRight: 4 }}>W</Text>
+                                          <Text style={{ fontSize: 12, color: '#475569' }}>{parseFloat(dimensions.width)}</Text>
+                                        </View>
+                                        <Text style={{ marginHorizontal: 4, color: '#94A3B8', fontSize: 12 }}>x</Text>
+                                        <View style={{ flexDirection: 'row', alignItems: 'center', backgroundColor: '#E2E8F0', borderRadius: 12, paddingHorizontal: 8, paddingVertical: 4 }}>
+                                          <Text style={{ fontSize: 12, color: '#475569', fontWeight: '600', marginRight: 4 }}>H</Text>
+                                          <Text style={{ fontSize: 12, color: '#475569' }}>{parseFloat(dimensions.height)}</Text>
+                                        </View>
+                                      </>
+                                    ) : (
+                                      <Text style={{ fontSize: 13, color: '#94A3B8', fontStyle: 'italic' }}>
+                                        No dimensions
+                                      </Text>
+                                    )}
+                                  </View>
+                                </View>
+                                {alreadyAdded ? (
+                                  <Ionicons name="checkmark-circle" size={24} color="#22C55E" />
+                                ) : (
+                                  <Text style={{ color: '#3B82F6', fontSize: 24 }}>↵</Text>
+                                )}
+                              </TouchableOpacity>
+                            );
+                          });
+                        } else {
+                          return (
+                            <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
+                              <Ionicons name="search-circle-outline" size={48} color="#CBD5E1" />
+                              <Text style={{ fontSize: 18, fontWeight: '600', color: '#475569', marginTop: 16, textAlign: 'center' }}>
+                                No Saved Items Found
+                              </Text>
+                              <Text style={{ fontSize: 15, color: '#64748B', marginTop: 8, textAlign: 'center', lineHeight: 22 }}>
+                                Try a different search, or use the button below to find your item with AI Search.
                               </Text>
                             </View>
-                          </TouchableOpacity>
-                        )}
-                      />
-                    )}
-                    
-                    <TouchableOpacity
-                      style={[modalStyles.button, modalStyles.cancelButton, { alignSelf: 'center', marginTop: 16, marginBottom: 8 }]}
-                      onPress={() => this.setState({ showSavedItemsModal: false })}
-                    >
-                      <Text style={modalStyles.buttonText}>Cancel</Text>
-                    </TouchableOpacity>
+                          );
+                        }
+                      })()}
+                    </ScrollView>
+
+                    <View style={{ padding: 20, borderTopWidth: 1, borderTopColor: '#E2E8F0' }}>
+                      <TouchableOpacity
+                        style={{
+                          paddingVertical: 14,
+                          backgroundColor: '#0066FF',
+                          borderRadius: 12,
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                        }}
+                        onPress={() => {
+                          this.setState({ showSavedItemsModal: false });
+                          this.props.navigation.navigate('AI Item Search', { 
+                            searchQuery: this.state.savedItemsSearchQuery,
+                            fromPackagesPage: true, // Flag to indicate navigation from PackagesPage
+                            selectedPackage: this.state.selectedPackage // Pass the selected package name
+                          });
+                        }}
+                      >
+                        <Text style={{ color: '#FFFFFF', fontWeight: 'bold', fontSize: 16 }}>
+                          Find with AI Search
+                        </Text>
+                      </TouchableOpacity>
+                    </View>
                   </View>
-                </TouchableWithoutFeedback>
-              </View>
-            </TouchableWithoutFeedback>
+                </View>
+              </TouchableWithoutFeedback>
+            </KeyboardAvoidingView>
           </Modal>
 
           {/* Completely separate modal rendering from state updates */}
@@ -1439,6 +1543,58 @@ export default class PackagesPage extends Component {
     }
   };
   
+  showSavedItemsSelector = async () => {
+    console.log('showSavedItemsSelector called');
+    try {
+      const savedItemsString = await AsyncStorage.getItem("savedItems");
+      console.log('Saved items from AsyncStorage:', savedItemsString);
+      const items = savedItemsString ? JSON.parse(savedItemsString) : [];
+      console.log('Parsed items:', items);
+      
+      if (items.length === 0) {
+        console.log('No saved items found');
+        Alert.alert(
+          "No Saved Items", 
+          "You don't have any saved items yet. Go to the Saved Items page to create some items first.",
+          [
+            { text: "Cancel", style: "cancel" },
+            { 
+              text: "Go to Saved Items", 
+              onPress: () => {
+                this.closePackageModal();
+                this.props.navigation.navigate("My Saved Items");
+              }
+            }
+          ]
+        );
+        return;
+      }
+      
+      // Sort items by timestamp, newest first
+      const sortedItems = items.sort((a, b) => (b.timestamp || 0) - (a.timestamp || 0));
+      console.log('Sorted items:', sortedItems);
+      
+      // First close the package modal, then show the saved items modal
+      // This prevents having nested modals which can cause visibility issues
+      console.log('Closing package modal before showing saved items modal');
+      this.setState({
+        showPackageModal: false,
+        allSavedItems: sortedItems,
+        savedItemsSearchQuery: ''
+      }, () => {
+        // After package modal is closed, show the saved items modal
+        setTimeout(() => {
+          this.setState({ showSavedItemsModal: true }, () => {
+            console.log('State updated, modal should be visible:', this.state.showSavedItemsModal);
+          });
+        }, 300); // Small delay to ensure the first modal is fully closed
+      });
+    } catch (error) {
+      console.error('Error loading saved items:', error);
+      Alert.alert("Error", "Failed to load saved items: " + error.message);
+    }
+  };
+
   handleAddSavedItemToPackage = async (savedItem) => {
     try {
       console.log('Adding saved item to package:', savedItem);
@@ -1499,14 +1655,29 @@ export default class PackagesPage extends Component {
         return match ? parseFloat(match[1]) : 0;
       };
       
+      // Extract dimensions based on the nested structure
+      let dimensions = {};
+      if (savedItem.items && savedItem.items.length > 0 && savedItem.items[0].dimensions) {
+        // If the saved item has a nested items array with dimensions
+        dimensions = savedItem.items[0].dimensions;
+      } else if (savedItem.dimensions) {
+        // Fallback to top-level dimensions if available
+        dimensions = savedItem.dimensions;
+      } else {
+        // Default empty dimensions if none found
+        dimensions = { length: '0', width: '0', height: '0' };
+      }
+      
+      console.log('Using dimensions:', dimensions);
+      
       // Convert saved item format to package item format
       const itemId = await generateUUID();
       const newItem = {
         id: itemId,
         itemName: savedItem.name,
-        itemLength: parseItemDimension(savedItem.dimensions.length),
-        itemWidth: parseItemDimension(savedItem.dimensions.width),
-        itemHeight: parseItemDimension(savedItem.dimensions.height),
+        itemLength: parseItemDimension(dimensions.length),
+        itemWidth: parseItemDimension(dimensions.width),
+        itemHeight: parseItemDimension(dimensions.height),
         quantity: 1,
         replicatedNames: [{
           name: savedItem.name,
@@ -1531,10 +1702,15 @@ export default class PackagesPage extends Component {
       // Save to AsyncStorage
       await AsyncStorage.setItem("packages", JSON.stringify(updatedPackages));
       
-      // Update state
+      // Update state - close saved items modal and reopen package modal
       this.setState({
         packages: updatedPackages,
         showSavedItemsModal: false
+      }, () => {
+        // After a short delay, show the package modal again
+        setTimeout(() => {
+          this.setState({ showPackageModal: true });
+        }, 300);
       });
       
       Alert.alert("Success", `${savedItem.name} added to ${selectedPackage}.`);
