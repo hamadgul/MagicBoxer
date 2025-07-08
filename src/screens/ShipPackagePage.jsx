@@ -294,7 +294,9 @@ export default function ShipPackagePage({ route, navigation }) {
                 );
               }}
             >
-              <Text style={styles.savingsText}>Save $3-8</Text>
+              <Text style={styles.savingsText}>
+                Save ${Math.round(item.price * 0.10)}-${Math.round(item.price * 0.15)}
+              </Text>
               <Ionicons name="information-circle" size={12} color="white" style={{marginLeft: 2}} />
             </TouchableOpacity>
           )}
