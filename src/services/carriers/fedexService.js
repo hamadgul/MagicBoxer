@@ -64,12 +64,12 @@ export const calculateFedExRates = async (packageDetails, fromZip, toZip) => {
 
     // Get FedEx box type that fits the dimensions
     const getFedExBox = (length, width, height) => {
-      // FedEx box dimensions from smallest to largest
+      // FedEx box dimensions from smallest to largest (length, width, height in inches)
       const fedexBoxes = [
-        { type: 'FEDEX_SMALL_BOX', dimensions: [10.875, 12.375, 1.5] },
-        { type: 'FEDEX_MEDIUM_BOX', dimensions: [11.5, 13.25, 2.375] },
-        { type: 'FEDEX_LARGE_BOX', dimensions: [17.5, 12, 3] },
-        { type: 'FEDEX_EXTRA_LARGE_BOX', dimensions: [20, 20, 12] }
+        { type: 'FEDEX_SMALL_BOX', dimensions: [12.375, 10.875, 8.375] }, // FedEx Small Box
+        { type: 'FEDEX_MEDIUM_BOX', dimensions: [13.25, 11.5, 10.9] },      // FedEx Medium Box
+        { type: 'FEDEX_LARGE_BOX', dimensions: [17.5, 12.375, 10.9] },      // FedEx Large Box
+        { type: 'FEDEX_EXTRA_LARGE_BOX', dimensions: [23.625, 17.375, 12.5] } // FedEx Extra Large Box
       ];
 
       // Sort dimensions from smallest to largest
@@ -175,18 +175,18 @@ export const calculateFedExRates = async (packageDetails, fromZip, toZip) => {
     // Make requests for both packaging types
     const makeRequest = async (payload, isCarrierBox) => {
       try {
-        console.log(`Attempting FedEx request for ${isCarrierBox ? 'carrier' : 'customer'} packaging...`);
+        console.log(`Making FedEx request for ${isCarrierBox ? 'carrier' : 'customer'} packaging...`);
         
         const response = await axios.post(
           `${FEDEX_CONFIG.baseURL}/rate/v1/rates/quotes`,
           payload,
           {
             headers: {
-              'Authorization': `Bearer ${accessToken}`,
               'Content-Type': 'application/json',
+              'Authorization': `Bearer ${accessToken}`,
               'X-locale': 'en_US'
             },
-            timeout: 10000 // 10 second timeout
+            timeout: 30000 // Increase timeout to 30 seconds
           }
         );
 
@@ -223,15 +223,11 @@ export const calculateFedExRates = async (packageDetails, fromZip, toZip) => {
                   }
                 }
 
-                // Apply a discount for carrier-provided boxes (typically 10-15% cheaper)
-                let finalPrice = parseFloat(price);
-                if (isCarrierBox) {
-                  // Apply a 12% discount for carrier boxes
-                  finalPrice = parseFloat((finalPrice * 0.88).toFixed(2));
-                }
+                // Use the exact price from the API without any modifications
+                const finalPrice = parseFloat(price);
                 
-                // Log the response to debug pricing differences
-                console.log(`FedEx Rate for ${serviceName} with ${isCarrierBox ? 'FedEx Box' : 'Customer Box'}: $${price} ${isCarrierBox ? '-> $' + finalPrice + ' (after discount)' : ''}`);
+                // Log the response to debug pricing
+                console.log(`FedEx Rate for ${serviceName} with ${isCarrierBox ? 'FedEx Box' : 'Customer Box'}: $${finalPrice}`);
                 
                 return {
                   carrier: 'FedEx',

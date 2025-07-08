@@ -270,12 +270,11 @@ export const getUPSRates = async (packageDetails, fromZip, toZip) => {
                                service.Code === "14" ? "> 1" :
                                service.Code === "59" ? "2" : "Unknown");
 
-          // Apply a discount for carrier-provided boxes (typically 10-15% cheaper)
-          let price = parseFloat(rate.TotalCharges.MonetaryValue);
-          if (isCarrierBox) {
-            // Apply a 12% discount for carrier boxes
-            price = parseFloat((price * 0.88).toFixed(2));
-          }
+          // Use the exact price from the API without any modifications
+          const price = parseFloat(rate.TotalCharges.MonetaryValue);
+          
+          // Log the response to debug pricing
+          console.log(`UPS Rate for ${service.Description} with ${isCarrierBox ? boxName : 'Customer Box'}: $${price}`);
           
           return {
             carrier: 'UPS',

@@ -204,8 +204,16 @@ export default function ShipPackagePage({ route, navigation }) {
     // Determine if box is provided by carrier or customer using isCarrierBox flag
     let isCarrierBox = item.isCarrierBox;
     let boxTypeLabel = 'Customer Box';
+    
+    // Check if this estimate has both packaging options available
+    const hasBothOptions = item.bothPackagingOptions === true;
+    
+    // Debug log to check if bothPackagingOptions is being set correctly
+    if (item.bothPackagingOptions) {
+      console.log(`Found item with both packaging options: ${item.carrier} ${item.service}`);
+    }
 
-    if (isCarrierBox === undefined) {
+    if (isCarrierBox === undefined && !hasBothOptions) {
       // Fall back to checking box type if isCarrierBox flag is not available
       if (item.carrier === 'UPS') {
         // UPS packaging codes: 21-25 are UPS boxes, 02 is customer packaging
@@ -227,7 +235,9 @@ export default function ShipPackagePage({ route, navigation }) {
     }
 
     // Set box type label based on carrier and isCarrierBox flag
-    if (isCarrierBox) {
+    if (hasBothOptions) {
+      boxTypeLabel = 'Both packaging options available';
+    } else if (isCarrierBox) {
       if (item.carrier === 'UPS') {
         // Format UPS box type
         if (dimensions.boxType === '21') boxTypeLabel = 'Carrier Provides: UPS Express Box - Small';
@@ -246,6 +256,27 @@ export default function ShipPackagePage({ route, navigation }) {
       } else if (item.carrier === 'USPS') {
         boxTypeLabel = 'Carrier Provides: USPS Box';
       }
+    }
+
+    // For consolidated estimates with both options, get the carrier box type
+    if (hasBothOptions && item.carrierBoxType) {
+      // Format carrier box type for display
+      let carrierBoxTypeDisplay = item.carrierBoxType;
+      
+      if (item.carrier === 'FedEx') {
+        if (item.carrierBoxType === 'FEDEX_SMALL_BOX') carrierBoxTypeDisplay = 'FedEx Small Box';
+        else if (item.carrierBoxType === 'FEDEX_MEDIUM_BOX') carrierBoxTypeDisplay = 'FedEx Medium Box';
+        else if (item.carrierBoxType === 'FEDEX_LARGE_BOX') carrierBoxTypeDisplay = 'FedEx Large Box';
+        else if (item.carrierBoxType === 'FEDEX_EXTRA_LARGE_BOX') carrierBoxTypeDisplay = 'FedEx Extra Large Box';
+      } else if (item.carrier === 'UPS') {
+        if (item.carrierBoxType === '21') carrierBoxTypeDisplay = 'UPS Express Box - Small';
+        else if (item.carrierBoxType === '22') carrierBoxTypeDisplay = 'UPS Express Box - Medium';
+        else if (item.carrierBoxType === '23') carrierBoxTypeDisplay = 'UPS Express Box - Large';
+        else if (item.carrierBoxType === '24') carrierBoxTypeDisplay = 'UPS Express Box';
+        else if (item.carrierBoxType === '25') carrierBoxTypeDisplay = 'UPS Express Tube';
+      }
+      
+      boxTypeLabel = `Options: Your box or ${carrierBoxTypeDisplay}`;
     }
 
     return (
@@ -288,11 +319,33 @@ export default function ShipPackagePage({ route, navigation }) {
         </View>
         
         <View style={styles.boxInfoContainer}>
-          <View style={[styles.boxTypeTag, isCarrierBox ? styles.carrierBoxTag : styles.customerBoxTag]}>
-            <Text style={styles.boxTypeText}>{boxTypeLabel}</Text>
+          <View style={[styles.boxTypeTag, 
+            hasBothOptions ? styles.bothOptionsTag : (isCarrierBox ? styles.carrierBoxTag : styles.customerBoxTag)
+          ]}>
+            <Text style={[styles.boxTypeText, hasBothOptions && styles.bothOptionsText]}>{boxTypeLabel}</Text>
           </View>
           
-          {isCarrierBox && (
+          {/* Show savings information for all estimates with both packaging options */}
+          {item.bothPackagingOptions && (
+            <TouchableOpacity 
+              style={styles.savingsTag}
+              onPress={() => {
+                Alert.alert(
+                  'Packaging Options Comparison',
+                  `Using carrier-provided packaging typically saves 10-15% compared to your own packaging. Carrier boxes are pre-approved for their services and may qualify for special rates. Actual savings may vary by service and destination.`,
+                  [{ text: 'Got it', style: 'default' }]
+                );
+              }}
+            >
+              <Text style={styles.savingsText}>
+                Save $3-$5
+              </Text>
+              <Ionicons name="information-circle" size={12} color="white" style={{marginLeft: 2}} />
+            </TouchableOpacity>
+          )}
+          
+          {/* Show traditional savings message for non-consolidated carrier box estimates */}
+          {!hasBothOptions && isCarrierBox && (
             <TouchableOpacity 
               style={styles.savingsTag}
               onPress={() => {
@@ -777,10 +830,20 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: '#93c5fd',
   },
+  bothOptionsTag: {
+    backgroundColor: '#818cf8', // Indigo-400 - more visible background
+    borderWidth: 1,
+    borderColor: '#4f46e5', // Indigo-600 - stronger border
+    paddingHorizontal: 8, // Add more padding for better visibility
+  },
   boxTypeText: {
     fontSize: 12,
     fontWeight: '500',
     color: '#334155',
+  },
+  bothOptionsText: {
+    color: '#ffffff', // White text for better contrast on darker background
+    fontWeight: '600',
   },
   savingsTag: {
     backgroundColor: '#10b981',
