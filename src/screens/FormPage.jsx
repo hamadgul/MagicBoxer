@@ -502,6 +502,7 @@ export default class FormPage extends Component {
       isLoading: false,
       filteredProducts: [],
       showSuggestions: false,
+      nameInputFocused: false,
       productList: [], // Initialize with empty array instead of defaultProductList
       recentSavedItems: [], // Store recently saved items
       allSavedItems: [], // Store all saved items
@@ -1683,8 +1684,8 @@ export default class FormPage extends Component {
                             }
                           }}
                           maxLength={50}
-                          placeholder="MacBook, Xbox etc"
-                          placeholderTextColor={"#d3d3d3"}
+                          placeholder="Enter item name (MacBook, Xbox etc)"
+                          placeholderTextColor={"#94A3B8"}
                           autoCorrect={false}
                           spellCheck={false}
                         />
