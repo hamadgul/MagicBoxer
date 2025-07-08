@@ -36,13 +36,22 @@ export default class SavedItemsPage extends Component {
     itemWidth: "",
     itemHeight: "",
     isEditing: false, // Flag to determine if we're adding or editing an item
+    currentItemId: null,
     selectionMode: false, // Flag to determine if we're in bulk selection mode
     selectedItems: [], // Array of selected item IDs
     showDeleteConfirmModal: false, // Flag to show delete confirmation modal
     isImporting: false, // Flag to show importing indicator
     showImportModal: false, // Flag to show import confirmation modal
     importPreview: [], // Preview of items to be imported
+    isFabMenuOpen: false, // Flag to track if the FAB menu is open
   };
+
+  // Animation values
+  fabRotation = new Animated.Value(0);
+  addItemFabScale = new Animated.Value(0);
+  importFabScale = new Animated.Value(0);
+  addItemFabOpacity = new Animated.Value(0);
+  importFabOpacity = new Animated.Value(0);
 
   constructor(props) {
     super(props);
@@ -67,6 +76,12 @@ export default class SavedItemsPage extends Component {
   componentDidMount() {
     console.log('SavedItemsPage mounted');
     this.fetchSavedItems();
+    
+    // Initialize FAB animations
+    this.addItemFabScale.setValue(0);
+    this.importFabScale.setValue(0);
+    this.addItemFabOpacity.setValue(0);
+    this.importFabOpacity.setValue(0);
     
     this.focusListener = this.props.navigation.addListener(
       "focus",
@@ -348,8 +363,95 @@ export default class SavedItemsPage extends Component {
   };
 
   // CSV Import functionality
+  toggleFabMenu = () => {
+    const { isFabMenuOpen } = this.state;
+    
+    // Toggle the menu state
+    this.setState({ isFabMenuOpen: !isFabMenuOpen });
+    
+    // Animate the main FAB rotation
+    Animated.timing(this.fabRotation, {
+      toValue: isFabMenuOpen ? 0 : 1,
+      duration: 300,
+      easing: Easing.bezier(0.4, 0.0, 0.2, 1),
+      useNativeDriver: true,
+    }).start();
+    
+    // Animate the secondary FABs
+    if (!isFabMenuOpen) {
+      // Opening the menu
+      Animated.stagger(100, [
+        Animated.parallel([
+          Animated.timing(this.addItemFabScale, {
+            toValue: 1,
+            duration: 200,
+            easing: Easing.bezier(0.4, 0.0, 0.2, 1),
+            useNativeDriver: true,
+          }),
+          Animated.timing(this.addItemFabOpacity, {
+            toValue: 1,
+            duration: 200,
+            useNativeDriver: true,
+          }),
+        ]),
+        Animated.parallel([
+          Animated.timing(this.importFabScale, {
+            toValue: 1,
+            duration: 200,
+            easing: Easing.bezier(0.4, 0.0, 0.2, 1),
+            useNativeDriver: true,
+          }),
+          Animated.timing(this.importFabOpacity, {
+            toValue: 1,
+            duration: 200,
+            useNativeDriver: true,
+          }),
+        ]),
+      ]).start();
+    } else {
+      // Closing the menu
+      Animated.parallel([
+        Animated.timing(this.addItemFabScale, {
+          toValue: 0,
+          duration: 200,
+          easing: Easing.bezier(0.4, 0.0, 0.2, 1),
+          useNativeDriver: true,
+        }),
+        Animated.timing(this.addItemFabOpacity, {
+          toValue: 0,
+          duration: 200,
+          useNativeDriver: true,
+        }),
+        Animated.timing(this.importFabScale, {
+          toValue: 0,
+          duration: 200,
+          easing: Easing.bezier(0.4, 0.0, 0.2, 1),
+          useNativeDriver: true,
+        }),
+        Animated.timing(this.importFabOpacity, {
+          toValue: 0,
+          duration: 200,
+          useNativeDriver: true,
+        }),
+      ]).start();
+    }
+  };
+  
+  handleAddItemPress = () => {
+    this.setState({ 
+      showAddItemModal: true, 
+      isEditing: false, 
+      itemName: "", 
+      itemLength: "", 
+      itemWidth: "", 
+      itemHeight: "" 
+    });
+    this.toggleFabMenu(); // Close the menu after selecting an option
+  };
+  
   handleImportPress = () => {
     this.setState({ showImportModal: true, importPreview: [] });
+    this.toggleFabMenu(); // Close the menu after selecting an option
   };
   
   pickCSVFile = async () => {
@@ -988,21 +1090,75 @@ export default class SavedItemsPage extends Component {
 
 
 
-          {/* Add item FAB */}
+          
+          {/* Main FAB */}
           <TouchableOpacity
-            style={[styles.fab, styles.addFab]}
-            onPress={() => this.setState({ showAddItemModal: true, isEditing: false, itemName: "", itemLength: "", itemWidth: "", itemHeight: "" })}
+            style={[styles.fab, styles.mainFab]}
+            onPress={this.toggleFabMenu}
           >
-            <Ionicons name="add" size={30} color="white" />
+            <Animated.View
+              style={{
+                transform: [
+                  {
+                    rotate: this.fabRotation.interpolate({
+                      inputRange: [0, 1],
+                      outputRange: ['0deg', '45deg']
+                    })
+                  }
+                ]
+              }}
+            >
+              <Ionicons name="add" size={30} color="white" />
+            </Animated.View>
           </TouchableOpacity>
           
-          {/* Import CSV FAB */}
-          <TouchableOpacity
-            style={[styles.fab, styles.importFab]}
-            onPress={this.handleImportPress}
+          {/* Add item FAB (animated) */}
+          <Animated.View
+            style={{
+              position: 'absolute',
+              right: 20,
+              bottom: 100,
+              opacity: this.addItemFabOpacity,
+              transform: [{ scale: this.addItemFabScale }],
+              zIndex: 2,
+            }}
           >
-            <Ionicons name="cloud-upload-outline" size={24} color="white" />
-          </TouchableOpacity>
+            <TouchableOpacity
+              style={styles.menuButton}
+              onPress={this.handleAddItemPress}
+            >
+              <View style={[styles.menuButtonIcon, { backgroundColor: '#3B82F6' }]}>
+                <Ionicons name="create-outline" size={20} color="white" />
+              </View>
+              <View style={styles.menuButtonTextContainer}>
+                <Text style={styles.menuButtonText}>Add Item</Text>
+              </View>
+            </TouchableOpacity>
+          </Animated.View>
+          
+          {/* Import CSV FAB (animated) */}
+          <Animated.View
+            style={{
+              position: 'absolute',
+              right: 20,
+              bottom: 160,
+              opacity: this.importFabOpacity,
+              transform: [{ scale: this.importFabScale }],
+              zIndex: 2,
+            }}
+          >
+            <TouchableOpacity
+              style={styles.menuButton}
+              onPress={this.handleImportPress}
+            >
+              <View style={[styles.menuButtonIcon, { backgroundColor: '#10B981' }]}>
+                <Ionicons name="cloud-upload-outline" size={20} color="white" />
+              </View>
+              <View style={styles.menuButtonTextContainer}>
+                <Text style={styles.menuButtonText}>Import CSV</Text>
+              </View>
+            </TouchableOpacity>
+          </Animated.View>
           
           {/* Selection Mode FAB */}
           {savedItems.length > 0 && (
@@ -1252,10 +1408,73 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.25,
     shadowRadius: 3.84,
   },
-  addFab: {
+  mainFab: {
     right: 20,
     bottom: 20,
     backgroundColor: '#3B82F6',
+    zIndex: 3,
+  },
+  secondaryFab: {
+    right: 20,
+    width: 140,
+    height: 45,
+    borderRadius: 22.5,
+  },
+  addItemFab: {
+    bottom: 100,
+    backgroundColor: '#3B82F6',
+  },
+  importItemFab: {
+    bottom: 170,
+    backgroundColor: '#10B981',
+  },
+  fabTouchable: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    width: '100%',
+    height: '100%',
+  },
+  fabLabel: {
+    color: 'white',
+    marginLeft: 8,
+    fontWeight: '600',
+    fontSize: 14,
+    textAlign: 'center',
+  },
+  menuButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: 'white',
+    borderRadius: 25,
+    paddingVertical: 8,
+    paddingHorizontal: 8,
+    paddingRight: 16,
+    elevation: 4,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.2,
+    shadowRadius: 3,
+    width: 140,
+    justifyContent: 'flex-start',
+  },
+  menuButtonIcon: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginRight: 8,
+  },
+  menuButtonTextContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  menuButtonText: {
+    color: '#334155',
+    fontWeight: '600',
+    fontSize: 14,
   },
   modalTitle: {
     fontSize: 18,
