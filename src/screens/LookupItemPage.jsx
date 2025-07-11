@@ -47,8 +47,17 @@ const LookupItemPage = ({ navigation, route }) => {
     // Check if navigated from FormPage
     if (route.params?.fromFormPage) {
       setFromFormPage(true);
+      
+      // Add a small delay to ensure layout is ready
+      setTimeout(() => {
+        if (scrollViewRef.current) {
+          // Force layout recalculation by scrolling slightly
+          scrollViewRef.current.scrollTo({ y: 1, animated: false });
+          scrollViewRef.current.scrollTo({ y: 0, animated: false });
+        }
+      }, 300);
     }
-  }, [route.params?.searchQuery, route.params?.fromFormPage]);
+  }, [route.params]);
 
   // Function to generate a unique ID
   const generateUUID = async () => {
@@ -590,7 +599,7 @@ const styles = StyleSheet.create({
   },
   scrollContent: {
     padding: 16,
-    paddingBottom: 40,
+    paddingBottom: 100, // Significantly increased bottom padding to ensure instruction container is fully visible
   },
   header: {
     flexDirection: 'row',
@@ -764,10 +773,10 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     padding: 16,
     marginHorizontal: 16,
-    marginTop: 16,
-    marginBottom: 16,
+    marginTop: 20,
+    marginBottom: 40, // Significantly increased bottom margin for better visibility
     flexDirection: 'row',
-    alignItems: 'center',
+    alignItems: 'flex-start', // Better handles multi-line text
     borderLeftWidth: 3,
     borderLeftColor: '#3B82F6',
     shadowColor: '#000',
@@ -784,6 +793,23 @@ const styles = StyleSheet.create({
     color: '#334155',
     flex: 1,
     lineHeight: 22,
+  },
+  fixedInstructionContainer: {
+    backgroundColor: '#F0F9FF',
+    borderRadius: 12,
+    padding: 16,
+    marginHorizontal: 16,
+    marginBottom: 16,
+    marginTop: 8,
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    borderLeftWidth: 3,
+    borderLeftColor: '#3B82F6',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.1,
+    shadowRadius: 2,
+    elevation: 2,
   },
 });
 
