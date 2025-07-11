@@ -1733,10 +1733,10 @@ export default class FormPage extends Component {
                             borderBottomRightRadius: 8,
                             paddingLeft: 16,
                             paddingRight: 16,
-                            paddingVertical: 12,
+                            paddingVertical: 10,
                             marginTop: -1,
                           }}>
-                            <Text style={{ fontSize: 14, fontWeight: '600', color: '#475569', marginRight: 8 }}>
+                            <Text style={{ fontSize: 13, fontWeight: '600', color: '#475569', marginRight: 8 }}>
                               Recent:
                             </Text>
                             <View style={{ flex: 1 }}>
@@ -1752,9 +1752,9 @@ export default class FormPage extends Component {
                                       flexDirection: 'row',
                                       alignItems: 'center',
                                       backgroundColor: '#EFF6FF',
-                                      borderRadius: 16,
-                                      paddingVertical: 10,
-                                      paddingHorizontal: 16,
+                                      borderRadius: 14,
+                                      paddingVertical: 8,
+                                      paddingHorizontal: 12,
                                       marginRight: 8,
                                       borderWidth: 1,
                                       borderColor: '#DBEAFE',
@@ -1762,7 +1762,7 @@ export default class FormPage extends Component {
                                     onPress={() => this.selectSavedItem(item)}
                                   >
                                     <Text style={{ 
-                                      fontSize: 14, 
+                                      fontSize: 13, 
                                       color: '#0066FF',
                                       fontWeight: '500',
                                     }}>{item.itemName || item.name || ''} <Text style={{ color: '#3B82F6' }}>↵</Text></Text>
@@ -1781,7 +1781,6 @@ export default class FormPage extends Component {
                     <VStack space={2} width="100%">
                       <View style={{ flexDirection: 'row', alignItems: 'center' }}>
                         <Text style={[styles.label, styles.condensedLabel]}>Length</Text>
-                        <Ionicons name="swap-horizontal-outline" size={16} color="#64748B" style={{ marginLeft: 4 }} />
                       </View>
                       <View style={[styles.input, styles.condensedInput, { 
                         flexDirection: 'row',
@@ -1813,7 +1812,6 @@ export default class FormPage extends Component {
                       </View>
                       <View style={{ flexDirection: 'row', alignItems: 'center' }}>
                         <Text style={[styles.label, styles.condensedLabel]}>Width</Text>
-                        <Ionicons name="resize-outline" size={16} color="#64748B" style={{ marginLeft: 4 }} />
                       </View>
                       <View style={[styles.input, styles.condensedInput, { 
                         flexDirection: 'row',
@@ -1845,7 +1843,6 @@ export default class FormPage extends Component {
                       </View>
                       <View style={{ flexDirection: 'row', alignItems: 'center' }}>
                         <Text style={[styles.label, styles.condensedLabel]}>Height</Text>
-                        <Ionicons name="arrow-up-outline" size={16} color="#64748B" style={{ marginLeft: 4 }} />
                       </View>
                       <View style={[styles.input, styles.condensedInput, { 
                         flexDirection: 'row',
