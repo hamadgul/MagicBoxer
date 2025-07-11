@@ -335,7 +335,8 @@ const styles = StyleSheet.create({
   bottomButtonContainer: {
     flexDirection: "row",
     justifyContent: "space-between",
-    paddingHorizontal: 5 * scale,
+    paddingHorizontal: 0,
+    marginHorizontal: 0,
     backgroundColor: '#fff',
     marginTop: -12 * scale,
     paddingBottom: 20 * scale,
