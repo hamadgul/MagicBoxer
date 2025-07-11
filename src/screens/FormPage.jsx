@@ -1547,7 +1547,7 @@ export default class FormPage extends Component {
           <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingLeft: 20 * scale, paddingRight: 10 * scale, marginBottom: 5 * scale }}>
             {/* Total Items Counter */}
             <View style={styles.totalItemsContainer}>
-              <Ionicons name="cube-outline" size={14 * scale} color="white" />
+              <Ionicons name="cube-outline" size={14 * scale} color="#3B82F6" />
               <Text style={styles.totalItemsText}>0 items</Text>
             </View>
             
@@ -1556,7 +1556,7 @@ export default class FormPage extends Component {
               style={[styles.clearItemsButton, { opacity: 0.5 }]}
               disabled={true}
             >
-              <Ionicons name="trash-outline" size={14 * scale} color="white" />
+              <Ionicons name="trash-outline" size={14 * scale} color="#EF4444" />
               <Text style={styles.clearItemsText}>Clear</Text>
             </TouchableOpacity>
           </View>
@@ -1580,7 +1580,7 @@ export default class FormPage extends Component {
         <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingLeft: 20 * scale, paddingRight: 10 * scale, marginBottom: 5 * scale }}>
           {/* Total Items Counter */}
           <View style={styles.totalItemsContainer}>
-            <Ionicons name="cube-outline" size={14 * scale} color="white" />
+            <Ionicons name="cube-outline" size={14 * scale} color="#3B82F6" />
             <Text style={styles.totalItemsText}>
               {totalQuantity} {totalQuantity === 1 ? 'item' : 'items'}
             </Text>
@@ -1591,7 +1591,7 @@ export default class FormPage extends Component {
             style={styles.clearItemsButton}
             onPress={this.clearItems}
           >
-            <Ionicons name="trash-outline" size={14 * scale} color="white" />
+            <Ionicons name="trash-outline" size={14 * scale} color="#EF4444" />
             <Text style={styles.clearItemsText}>Clear</Text>
           </TouchableOpacity>
         </View>
@@ -1647,7 +1647,7 @@ export default class FormPage extends Component {
                           style={[styles.input, styles.condensedInput, { 
                             flex: 1, 
                             paddingRight: 45, // Space for the icon
-                            paddingVertical: 12, // Consistent vertical padding
+                            paddingVertical: 8, // Adjusted vertical padding
                             borderBottomWidth: (() => {
                               const { recentSavedItems, items, showRecentItems, itemName } = this.state;
                               const hasFilteredItems = recentSavedItems.filter(item => {
