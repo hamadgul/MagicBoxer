@@ -1544,7 +1544,7 @@ export default class FormPage extends Component {
       return (
         <View style={containerStyle}>
           {/* Header row with Total Items Counter and Clear Items button - same position as when items exist */}
-          <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingLeft: 20 * scale, paddingRight: 10 * scale, marginBottom: 5 * scale }}>
+          <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingLeft: 10 * scale, paddingRight: 10 * scale, marginBottom: 5 * scale }}>
             {/* Total Items Counter */}
             <View style={styles.totalItemsContainer}>
               <Ionicons name="cube-outline" size={14 * scale} color="#3B82F6" />
@@ -1577,7 +1577,7 @@ export default class FormPage extends Component {
     return (
       <View style={containerStyle}>
         {/* Header row with Total Items Counter and Clear Items button */}
-        <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingLeft: 20 * scale, paddingRight: 10 * scale, marginBottom: 5 * scale }}>
+        <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingLeft: 10 * scale, paddingRight: 10 * scale, marginBottom: 5 * scale }}>
           {/* Total Items Counter */}
           <View style={styles.totalItemsContainer}>
             <Ionicons name="cube-outline" size={14 * scale} color="#3B82F6" />
