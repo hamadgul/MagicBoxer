@@ -504,6 +504,7 @@ export default class FormPage extends Component {
       filteredProducts: [],
       showSuggestions: false,
       nameInputFocused: false,
+      hasMatchingRecentItems: true, // Track if there are matching recent items
       productList: [], // Initialize with empty array instead of defaultProductList
       recentSavedItems: [], // Store recently saved items
       allSavedItems: [], // Store all saved items
@@ -623,6 +624,7 @@ export default class FormPage extends Component {
         filteredProducts: [],
         showSuggestions: false,
         showRecentItems: true,
+        hasMatchingRecentItems: true, // Reset to true when clearing
         dimensionsFromSavedItem: false, // Reset the tracking state
         showAllSavedItemsModal: false
       });
@@ -635,17 +637,34 @@ export default class FormPage extends Component {
       this.setState({ 
         filteredProducts: [],
         showSuggestions: false,
-        showRecentItems: true // Show recent items when input is empty
+        showRecentItems: true, // Show recent items when input is empty
+        hasMatchingRecentItems: true // All items match when input is empty
       });
       return;
     }
+
+    // Check if there are any matching recent items for the current text
+    const { recentSavedItems, items } = this.state;
+    const searchText = text.toLowerCase().trim();
+    
+    // Filter out items already in the container and then check for matches
+    const availableItems = recentSavedItems.filter(item => {
+      const name = item.itemName || item.name || '';
+      return !items.some(addedItem => (addedItem.itemName || '').toLowerCase() === name.toLowerCase());
+    });
+    
+    const hasMatches = availableItems.some(item => {
+      const name = (item.itemName || item.name || '').toLowerCase();
+      return name.includes(searchText);
+    });
 
     // Keep recent items visible while typing to show filtered results
     // This allows the filtering in the render method to work
     this.setState({ 
       filteredProducts: [],
       showSuggestions: false,
-      showRecentItems: true // Keep recent items visible to show filtered results
+      showRecentItems: true, // Keep recent items visible to show filtered results
+      hasMatchingRecentItems: hasMatches // Update whether we have matching items
     });
   };
 
@@ -1651,29 +1670,69 @@ export default class FormPage extends Component {
                             paddingVertical: 8, // Adjusted vertical padding
                             borderBottomWidth: (() => {
                               const { recentSavedItems, items, showRecentItems, itemName } = this.state;
-                              const hasFilteredItems = recentSavedItems.filter(item => {
+                              // First check if there are any available items (not already in container)
+                              let availableItems = recentSavedItems.filter(item => {
                                 const name = item.itemName || item.name || '';
                                 return !items.some(addedItem => (addedItem.itemName || '').toLowerCase() === name.toLowerCase());
-                              }).length > 0;
-                              return showRecentItems && hasFilteredItems && !itemName ? 0 : 1;
+                              });
+                              
+                              // Then check if any of those match the current search text
+                              if (itemName.trim().length > 0) {
+                                const searchText = itemName.toLowerCase().trim();
+                                const hasMatchingItems = availableItems.some(item => {
+                                  const name = (item.itemName || item.name || '').toLowerCase();
+                                  return name.includes(searchText);
+                                });
+                                // Only connect if we have actual matching items
+                                return showRecentItems && hasMatchingItems ? 0 : 1;
+                              }
+                              
+                              // If no search text, connect if we have any available items
+                              return showRecentItems && availableItems.length > 0 ? 0 : 1;
                             })(),
                             borderBottomLeftRadius: (() => {
                               const { recentSavedItems, items, showRecentItems, itemName } = this.state;
-                              const hasFilteredItems = recentSavedItems.filter(item => {
+                              // First check if there are any available items (not already in container)
+                              let availableItems = recentSavedItems.filter(item => {
                                 const name = item.itemName || item.name || '';
                                 return !items.some(addedItem => (addedItem.itemName || '').toLowerCase() === name.toLowerCase());
-                              }).length > 0;
-                              // Remove !itemName check to maintain connection while typing
-                              return showRecentItems && hasFilteredItems ? 0 : 8;
+                              });
+                              
+                              // Then check if any of those match the current search text
+                              if (itemName.trim().length > 0) {
+                                const searchText = itemName.toLowerCase().trim();
+                                const hasMatchingItems = availableItems.some(item => {
+                                  const name = (item.itemName || item.name || '').toLowerCase();
+                                  return name.includes(searchText);
+                                });
+                                // Only connect if we have actual matching items
+                                return showRecentItems && hasMatchingItems ? 0 : 8;
+                              }
+                              
+                              // If no search text, connect if we have any available items
+                              return showRecentItems && availableItems.length > 0 ? 0 : 8;
                             })(),
                             borderBottomRightRadius: (() => {
                               const { recentSavedItems, items, showRecentItems, itemName } = this.state;
-                              const hasFilteredItems = recentSavedItems.filter(item => {
+                              // First check if there are any available items (not already in container)
+                              let availableItems = recentSavedItems.filter(item => {
                                 const name = item.itemName || item.name || '';
                                 return !items.some(addedItem => (addedItem.itemName || '').toLowerCase() === name.toLowerCase());
-                              }).length > 0;
-                              // Remove !itemName check to maintain connection while typing
-                              return showRecentItems && hasFilteredItems ? 0 : 8;
+                              });
+                              
+                              // Then check if any of those match the current search text
+                              if (itemName.trim().length > 0) {
+                                const searchText = itemName.toLowerCase().trim();
+                                const hasMatchingItems = availableItems.some(item => {
+                                  const name = (item.itemName || item.name || '').toLowerCase();
+                                  return name.includes(searchText);
+                                });
+                                // Only connect if we have actual matching items
+                                return showRecentItems && hasMatchingItems ? 0 : 8;
+                              }
+                              
+                              // If no search text, connect if we have any available items
+                              return showRecentItems && availableItems.length > 0 ? 0 : 8;
                             })(),
                             borderBottomColor: '#E2E8F0',
                             marginBottom: 0
