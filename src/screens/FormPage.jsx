@@ -1515,7 +1515,7 @@ export default class FormPage extends Component {
         )}
         <View style={styles.horizontalItemContentContainer}>
           <View style={styles.horizontalItemNameContainer}>
-            <Text style={[styles.buttonText, { color: '#64748B', textAlign: 'center' }]} numberOfLines={2}>
+            <Text style={[styles.buttonText, { color: '#64748B', textAlign: 'center' }]} numberOfLines={2} ellipsizeMode="tail">
               {item.itemName}
             </Text>
           </View>

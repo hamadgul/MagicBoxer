@@ -143,6 +143,7 @@ const styles = StyleSheet.create({
     fontWeight: "600",
     textAlign: 'center',
     letterSpacing: 0.2, // Added letter spacing for better readability
+    flexShrink: 1, // Allow text to shrink if needed
   },
   savePackageButtonText: {
     color: "#0066FF",
@@ -175,7 +176,7 @@ const styles = StyleSheet.create({
     borderRadius: 12 * scale, // Increased border radius for a softer look
     marginHorizontal: 6 * scale,
     height: 100 * scale,
-    width: 150 * scale,
+    width: 160 * scale,
     shadowColor: "#64748B", // Changed shadow color to match text
     shadowOffset: {
       width: 0,
@@ -210,11 +211,12 @@ const styles = StyleSheet.create({
   horizontalItemNameContainer: {
     alignItems: 'center',
     justifyContent: 'center',
-    paddingHorizontal: 8 * scale,
+    paddingHorizontal: 6 * scale,
     paddingVertical: 6 * scale,
     flex: 1,
     marginBottom: 6 * scale,
     position: 'relative',
+    minHeight: 40 * scale,
   },
   itemCountContainer: {
     position: 'absolute',
