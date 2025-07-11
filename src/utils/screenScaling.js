@@ -1,4 +1,4 @@
-import { Dimensions } from 'react-native';
+import { Dimensions, Platform } from 'react-native';
 import { useMemo } from 'react';
 
 // Base dimensions for iPhone 14 Pro
@@ -66,4 +66,10 @@ export const scaleAspectRatio = (width, height) => {
     width: scaledWidth,
     height: scaledWidth * aspectRatio
   };
+};
+
+// Detect if the current device is an iPad
+export const isIpad = () => {
+  const { width, height } = Dimensions.get('window');
+  return Platform.OS === 'ios' && Math.min(width, height) >= 768;
 };

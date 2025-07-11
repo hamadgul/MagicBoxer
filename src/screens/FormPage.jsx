@@ -25,6 +25,7 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 
 import { generateUUID } from "three/src/math/MathUtils";
 import { pack, createDisplay } from "../packing_algo/packing";
+import { isIpad } from "../utils/screenScaling";
 import styles from "../theme/Styles";
 import { modalStyles } from "../theme/ModalStyles";
 import { Ionicons } from "@expo/vector-icons";
@@ -1601,7 +1602,7 @@ export default class FormPage extends Component {
           showsHorizontalScrollIndicator={true}
           contentContainerStyle={[styles.horizontalCarouselContainer, { paddingBottom: 10 * scale }]}
           decelerationRate="fast"
-          snapToInterval={170} // Width of the item + margins
+          snapToInterval={isIpad() ? 216 * scale : 172 * scale} // Width of the item + margins (200 + 16 for iPad)
           snapToAlignment="start"
           showsVerticalScrollIndicator={false}
           style={{ flex: 1 }}

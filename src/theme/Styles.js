@@ -1,6 +1,7 @@
 // styles.js
 
 import { StyleSheet, Dimensions, Platform } from "react-native";
+import { isIpad } from "../utils/screenScaling";
 
 const { width, height } = Dimensions.get('window');
 
@@ -172,19 +173,19 @@ const styles = StyleSheet.create({
   },
   horizontalItemButton: {
     backgroundColor: '#E2E8F0', // Slightly darker gray background
-    padding: 12 * scale, // Slightly increased padding
-    borderRadius: 12 * scale, // Increased border radius for a softer look
-    marginHorizontal: 6 * scale,
-    height: 100 * scale,
-    width: 160 * scale,
+    padding: isIpad() ? 14 * scale : 12 * scale, // More padding on iPad
+    borderRadius: isIpad() ? 14 * scale : 12 * scale, // Larger border radius on iPad
+    marginHorizontal: isIpad() ? 8 * scale : 6 * scale, // More margin on iPad
+    height: isIpad() ? 120 * scale : 100 * scale, // Significantly taller on iPad
+    width: isIpad() ? 200 * scale : 160 * scale, // Significantly wider on iPad
     shadowColor: "#64748B", // Changed shadow color to match text
     shadowOffset: {
       width: 0,
-      height: 2, // Slightly increased shadow height
+      height: isIpad() ? 3 : 2, // Stronger shadow on iPad
     },
-    shadowOpacity: 0.15, // Slightly increased shadow opacity
-    shadowRadius: 5, // Increased shadow radius for a softer shadow
-    elevation: 3, // Slightly increased elevation
+    shadowOpacity: isIpad() ? 0.2 : 0.15, // Stronger shadow on iPad
+    shadowRadius: isIpad() ? 7 : 5, // Larger shadow radius on iPad
+    elevation: isIpad() ? 4 : 3, // Higher elevation on iPad
     justifyContent: 'center',
     alignItems: 'center',
     borderWidth: 1, // Added subtle border
