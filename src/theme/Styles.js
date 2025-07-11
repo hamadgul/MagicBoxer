@@ -3,7 +3,30 @@
 import { StyleSheet, Dimensions, Platform } from "react-native";
 
 const { width, height } = Dimensions.get('window');
-const scale = Math.min(width, height) / 375; // Base scale on iPhone 8 dimensions
+
+// Device-agnostic responsive scaling
+// Instead of using a single reference device (iPhone 8), we use breakpoints
+// to determine appropriate scaling for different device sizes
+const getResponsiveScale = () => {
+  const shortestDimension = Math.min(width, height);
+  
+  // Breakpoints for different device sizes
+  if (shortestDimension <= 320) { // Small phones (iPhone SE 1st gen, etc)
+    return 0.85;
+  } else if (shortestDimension <= 350) { // Medium-small phones
+    return 0.9;
+  } else if (shortestDimension <= 400) { // Medium phones (iPhone X, 11, etc)
+    return 1.0; // Base scale
+  } else if (shortestDimension <= 480) { // Large phones (iPhone Plus models, etc)
+    return 1.05;
+  } else if (shortestDimension <= 768) { // Small tablets
+    return 1.1;
+  } else { // Large tablets
+    return 1.15;
+  }
+};
+
+const scale = getResponsiveScale();
 
 const styles = StyleSheet.create({
   container: {
