@@ -1104,7 +1104,7 @@ export default class Display3D extends Component {
             {this.renderCustomSlider()}
           </View>
         </View>
-        <View style={[styles.topContainer, { paddingTop: scaleHeight(15) }, isBoxCollapsed && styles.collapsedTopContainer]}>
+        <View style={[styles.topContainer, isBoxCollapsed && styles.collapsedTopContainer]}>
           <View style={styles.boxWrapper}>
             <View style={[styles.boxDimensionsContainer, isBoxCollapsed && styles.collapsedBox]}>
               <View style={styles.boxHeaderContainer}>
