@@ -38,49 +38,51 @@ const styles = StyleSheet.create({
     paddingBottom: 16 * scale,
   },
   label: {
-    fontSize: 14 * scale,
-    fontWeight: "600",
-    color: "#334155",
-    marginBottom: 2 * scale,
+    fontSize: 13 * scale, // Reduced font size
+    fontWeight: "500", // iOS typically uses medium weight (500) for form labels
+    color: "#8E8E93", // iOS system gray color
+    marginBottom: 3 * scale, // Reduced spacing between label and input
+    letterSpacing: -0.24, // iOS text typically has slightly tighter letter spacing
   },
   condensedLabel: {
-    marginBottom: 1 * scale,
+    marginBottom: 4 * scale,
     fontSize: 13 * scale,
-    fontWeight: "600",
-    color: "#334155",
+    fontWeight: "400", // iOS uses regular weight for smaller labels
+    color: "#8E8E93", // iOS system gray color
+    letterSpacing: -0.08, // Subtle letter spacing adjustment
   },
   input: {
-    height: 42 * scale,
+    height: 38 * scale, // Reduced height for more compact appearance
     borderWidth: 1,
-    borderColor: '#E2E8F0',
-    paddingHorizontal: 14 * scale,
-    paddingVertical: 8 * scale,
-    borderRadius: 8 * scale,
-    backgroundColor: '#F8FAFC',
+    borderColor: '#D1D1D6', // iOS standard border color
+    paddingHorizontal: 12 * scale,
+    paddingVertical: 8 * scale, // Reduced padding
+    borderRadius: 10 * scale, // iOS uses more rounded corners
+    backgroundColor: '#FFFFFF', // iOS inputs typically have white background
     shadowColor: "#000",
     shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.06,
-    shadowRadius: 4,
-    elevation: 2,
-    color: '#334155',
-    fontSize: 15 * scale,
+    shadowOpacity: 0.05, // Subtle shadow
+    shadowRadius: 2,
+    elevation: 1,
+    color: '#000000', // iOS uses black text for inputs
+    fontSize: 15 * scale, // Reduced font size
   },
   condensedInput: {
-    height: 40 * scale,
-    marginBottom: 8 * scale,
+    height: 36 * scale, // Even more compact height for condensed inputs
+    marginBottom: 8 * scale, // Reduced spacing between inputs
     borderWidth: 1,
-    borderColor: '#E2E8F0',
-    paddingHorizontal: 14 * scale,
-    paddingVertical: 6 * scale,
-    borderRadius: 8 * scale,
-    backgroundColor: '#FFFFFF',
+    borderColor: '#D1D1D6', // iOS standard border color
+    paddingHorizontal: 12 * scale,
+    paddingVertical: 6 * scale, // Reduced padding
+    borderRadius: 10 * scale, // iOS uses more rounded corners
+    backgroundColor: '#FFFFFF', // iOS inputs typically have white background
     shadowColor: "#000",
     shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.06,
-    shadowRadius: 4,
-    elevation: 2,
-    color: '#334155',
-    fontSize: 14 * scale,
+    shadowOpacity: 0.05, // Subtle shadow
+    shadowRadius: 2,
+    elevation: 1,
+    color: '#000000', // iOS uses black text for inputs
+    fontSize: 15 * scale, // Reduced font size
   },
   buttonContainer: {
     flexDirection: "row",

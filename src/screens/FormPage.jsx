@@ -1636,7 +1636,7 @@ export default class FormPage extends Component {
               <View style={styles.container}>
                 <View style={styles.formContainer}>
                 <VStack space={2} width="100%">
-                    <Text style={[styles.label, styles.condensedLabel]}>Name</Text>
+                    <Text style={[styles.label]}>Name</Text>
                     <View style={{ position: 'relative', zIndex: 1, marginBottom: 8 }}>
                       <View style={{
                         flexDirection: 'row',
@@ -1687,7 +1687,7 @@ export default class FormPage extends Component {
                             }
                           }}
                           maxLength={50}
-                          placeholder="Enter item name (MacBook, Xbox etc)"
+                          placeholder=""
                           placeholderTextColor={"#94A3B8"}
                           autoCorrect={false}
                           spellCheck={false}
@@ -1781,7 +1781,7 @@ export default class FormPage extends Component {
                     
                     <VStack space={2} width="100%">
                       <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-                        <Text style={[styles.label, styles.condensedLabel]}>Length</Text>
+                        <Text style={[styles.label]}>Length</Text>
                       </View>
                       <View style={[styles.input, styles.condensedInput, { 
                         flexDirection: 'row',
@@ -1812,7 +1812,7 @@ export default class FormPage extends Component {
                         }}>inches</Text>
                       </View>
                       <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-                        <Text style={[styles.label, styles.condensedLabel]}>Width</Text>
+                        <Text style={[styles.label]}>Width</Text>
                       </View>
                       <View style={[styles.input, styles.condensedInput, { 
                         flexDirection: 'row',
@@ -1843,7 +1843,7 @@ export default class FormPage extends Component {
                         }}>inches</Text>
                       </View>
                       <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-                        <Text style={[styles.label, styles.condensedLabel]}>Height</Text>
+                        <Text style={[styles.label]}>Height</Text>
                       </View>
                       <View style={[styles.input, styles.condensedInput, { 
                         flexDirection: 'row',
@@ -1873,7 +1873,7 @@ export default class FormPage extends Component {
                           color: this.state.dimensionsFromSavedItem ? '#94A3B8' : '#64748B',
                         }}>inches</Text>
                       </View>
-                      <Text style={[styles.label, styles.condensedLabel]}>Quantity</Text>
+                      <Text style={[styles.label]}>Quantity</Text>
                       <View style={{ 
                         flexDirection: 'row', 
                         alignItems: 'center',
