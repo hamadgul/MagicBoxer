@@ -1726,18 +1726,30 @@ export default class FormPage extends Component {
                           <View style={{
                             flexDirection: 'row',
                             alignItems: 'center',
-                            backgroundColor: '#F8FAFC',
+                            backgroundColor: '#FFFFFF',
                             borderWidth: 1,
-                            borderColor: '#E2E8F0',
+                            borderColor: '#D1D1D6', // Match iOS input border color
                             borderTopWidth: 0,
-                            borderBottomLeftRadius: 8,
-                            borderBottomRightRadius: 8,
+                            borderBottomLeftRadius: 10, // Match iOS input border radius
+                            borderBottomRightRadius: 10, // Match iOS input border radius
                             paddingLeft: 16,
                             paddingRight: 16,
                             paddingVertical: 10,
                             marginTop: -1,
+                            // Add shadow for better visual connection
+                            shadowColor: '#000',
+                            shadowOffset: { width: 0, height: 2 },
+                            shadowOpacity: 0.05,
+                            shadowRadius: 3,
+                            elevation: 2,
                           }}>
-                            <Text style={{ fontSize: 13, fontWeight: '600', color: '#475569', marginRight: 8 }}>
+                            <Text style={{ 
+                              fontSize: 13, 
+                              fontWeight: '500', 
+                              color: Platform.OS === 'ios' ? '#8E8E93' : '#475569', // iOS system gray color
+                              marginRight: 8,
+                              letterSpacing: -0.08 // iOS subtle letter spacing
+                            }}>
                               Recent:
                             </Text>
                             <View style={{ flex: 1 }}>
@@ -1752,21 +1764,28 @@ export default class FormPage extends Component {
                                     style={{
                                       flexDirection: 'row',
                                       alignItems: 'center',
-                                      backgroundColor: '#EFF6FF',
-                                      borderRadius: 14,
-                                      paddingVertical: 8,
+                                      backgroundColor: Platform.OS === 'ios' ? '#E5E5EA' : '#EFF6FF', // iOS system light gray background
+                                      borderRadius: Platform.OS === 'ios' ? 16 : 14, // iOS uses more rounded corners
+                                      paddingVertical: 6,
                                       paddingHorizontal: 12,
                                       marginRight: 8,
-                                      borderWidth: 1,
+                                      borderWidth: Platform.OS === 'ios' ? 0 : 1, // iOS chips typically don't have borders
                                       borderColor: '#DBEAFE',
+                                      // Add subtle shadow for iOS
+                                      ...(Platform.OS === 'ios' ? {
+                                        shadowColor: '#000',
+                                        shadowOffset: { width: 0, height: 1 },
+                                        shadowOpacity: 0.1,
+                                        shadowRadius: 1,
+                                      } : {})
                                     }}
                                     onPress={() => this.selectSavedItem(item)}
                                   >
                                     <Text style={{ 
                                       fontSize: 13, 
-                                      color: '#0066FF',
+                                      color: Platform.OS === 'ios' ? '#007AFF' : '#0066FF', // iOS blue
                                       fontWeight: '500',
-                                    }}>{item.itemName || item.name || ''} <Text style={{ color: '#3B82F6' }}>↵</Text></Text>
+                                    }}>{item.itemName || item.name || ''} <Text style={{ color: Platform.OS === 'ios' ? '#007AFF' : '#3B82F6' }}>↵</Text></Text>
                                   </TouchableOpacity>
                                 ))}
                               </ScrollView>
