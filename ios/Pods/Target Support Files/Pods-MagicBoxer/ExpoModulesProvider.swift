@@ -11,6 +11,7 @@ import ExpoAsset
 import ExpoBlur
 import EXConstants
 import ExpoCrypto
+import ExpoDocumentPicker
 import EASClient
 import ExpoFileSystem
 import ExpoFont
@@ -20,6 +21,7 @@ import ExpoKeepAwake
 import ExpoLinking
 import ExpoMailComposer
 import ExpoHead
+import ExpoSharing
 import ExpoSplashScreen
 import ExpoSymbols
 import ExpoSystemUI
@@ -35,6 +37,7 @@ public class ExpoModulesProvider: ModulesProvider {
       BlurViewModule.self,
       ConstantsModule.self,
       CryptoModule.self,
+      DocumentPickerModule.self,
       EASClientModule.self,
       FileSystemModule.self,
       FileSystemNextModule.self,
@@ -46,6 +49,7 @@ public class ExpoModulesProvider: ModulesProvider {
       ExpoLinkingModule.self,
       MailComposerModule.self,
       ExpoHeadModule.self,
+      SharingModule.self,
       SplashScreenModule.self,
       SymbolModule.self,
       ExpoSystemUIModule.self,

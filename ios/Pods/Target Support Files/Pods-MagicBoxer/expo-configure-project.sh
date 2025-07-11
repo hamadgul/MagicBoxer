@@ -48,4 +48,4 @@ with_node \
   --target "/Users/hamadgul/Projects/MagicBoxer/ios/Pods/Target Support Files/Pods-MagicBoxer/ExpoModulesProvider.swift" \
   --entitlement "/Users/hamadgul/Projects/MagicBoxer/ios/MagicBoxer/MagicBoxer.entitlements" \
   --platform "apple" \
-  --packages "expo" "expo-asset" "expo-blur" "expo-constants" "expo-crypto" "expo-eas-client" "expo-file-system" "expo-font" "expo-gl" "expo-haptics" "expo-keep-awake" "expo-linking" "expo-mail-composer" "expo-router" "expo-splash-screen" "expo-symbols" "expo-system-ui" "expo-updates" "expo-web-browser"
+  --packages "expo" "expo-asset" "expo-blur" "expo-constants" "expo-crypto" "expo-document-picker" "expo-eas-client" "expo-file-system" "expo-font" "expo-gl" "expo-haptics" "expo-keep-awake" "expo-linking" "expo-mail-composer" "expo-router" "expo-sharing" "expo-splash-screen" "expo-symbols" "expo-system-ui" "expo-updates" "expo-web-browser"

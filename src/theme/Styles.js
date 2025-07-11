@@ -9,9 +9,9 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: "#fff",
-    paddingHorizontal: 12 * scale,
-    paddingTop: 0,
-    paddingBottom: 12 * scale,
+    paddingHorizontal: 16 * scale,
+    paddingTop: 16 * scale,
+    paddingBottom: 16 * scale,
   },
   label: {
     fontSize: 14 * scale,
@@ -299,9 +299,9 @@ const styles = StyleSheet.create({
     paddingVertical: 8 * scale,
   },
   formContainer: {
-    paddingBottom: 8 * scale,
     backgroundColor: '#fff',
-    padding: 8 * scale,
+    paddingHorizontal: 16 * scale,
+    paddingVertical: 16 * scale,
     borderRadius: 10 * scale,
     marginTop: 0,
     marginBottom: 6 * scale,

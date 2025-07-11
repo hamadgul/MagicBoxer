@@ -246,7 +246,7 @@ export const ItemDetailsModal = ({
                             borderWidth: 1,
                             borderColor: '#E2E8F0',
                             paddingVertical: 8,
-                            paddingHorizontal: 12,
+                            paddingHorizontal: 16,
                             fontSize: 16,
                             color: '#334155',
                             height: 42,
@@ -1647,6 +1647,7 @@ export default class FormPage extends Component {
                           style={[styles.input, styles.condensedInput, { 
                             flex: 1, 
                             paddingRight: 45, // Space for the icon
+                            paddingVertical: 12, // Consistent vertical padding
                             borderBottomWidth: (() => {
                               const { recentSavedItems, items, showRecentItems, itemName } = this.state;
                               const hasFilteredItems = recentSavedItems.filter(item => {
@@ -1696,7 +1697,7 @@ export default class FormPage extends Component {
                             right: 0,
                             height: '100%',
                             justifyContent: 'center',
-                            paddingHorizontal: 12,
+                            paddingHorizontal: 16,
                           }}
                           onPress={() => this.setState({ savedItemsSearchQuery: this.state.itemName, showAllSavedItemsModal: true, showRecentItems: false })}
                         >
@@ -1731,7 +1732,9 @@ export default class FormPage extends Component {
                             borderBottomLeftRadius: 8,
                             borderBottomRightRadius: 8,
                             paddingLeft: 16,
-                            paddingVertical: 8,
+                            paddingRight: 16,
+                            paddingVertical: 12,
+                            marginTop: -1,
                           }}>
                             <Text style={{ fontSize: 14, fontWeight: '600', color: '#475569', marginRight: 8 }}>
                               Recent:
@@ -1750,8 +1753,8 @@ export default class FormPage extends Component {
                                       alignItems: 'center',
                                       backgroundColor: '#EFF6FF',
                                       borderRadius: 16,
-                                      paddingVertical: 6,
-                                      paddingHorizontal: 12,
+                                      paddingVertical: 10,
+                                      paddingHorizontal: 16,
                                       marginRight: 8,
                                       borderWidth: 1,
                                       borderColor: '#DBEAFE',
@@ -2066,13 +2069,13 @@ export default class FormPage extends Component {
                           </TouchableOpacity>
                         </View>
 
-                        <View style={{ paddingHorizontal: 20, paddingTop: 15, paddingBottom: 15 }}>
+                        <View style={{ paddingHorizontal: 16, paddingVertical: 16 }}>
                           <View style={{
                             flexDirection: 'row',
                             alignItems: 'center',
                             backgroundColor: '#FFFFFF',
                             borderRadius: 8,
-                            paddingHorizontal: 12,
+                            paddingHorizontal: 16,
                             borderWidth: 1,
                             borderColor: '#E2E8F0',
                           }}>
@@ -2093,7 +2096,7 @@ export default class FormPage extends Component {
                         </View>
 
                         <ScrollView 
-                          style={{ paddingHorizontal: 20 }} 
+                          style={{ paddingHorizontal: 16 }} 
                           contentContainerStyle={{ flexGrow: 1 }} 
                           keyboardShouldPersistTaps="handled"
                         >
@@ -2180,7 +2183,7 @@ export default class FormPage extends Component {
                           })()}
                         </ScrollView>
 
-                        <View style={{ padding: 20, borderTopWidth: 1, borderTopColor: '#E2E8F0' }}>
+                        <View style={{ padding: 16, borderTopWidth: 1, borderTopColor: '#E2E8F0' }}>
                           <TouchableOpacity
                             style={{
                               paddingVertical: 14,
