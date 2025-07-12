@@ -888,6 +888,17 @@ export default class SavedItemsPage extends Component {
                   <Text style={styles.emptySearchText}>
                     No items match your search "{this.state.searchQuery}"
                   </Text>
+                  <TouchableOpacity
+                    style={styles.searchWithAIButton}
+                    onPress={() => {
+                      this.props.navigation.navigate('AI Item Search', {
+                        searchQuery: this.state.searchQuery
+                      });
+                    }}
+                  >
+                    <Ionicons name="flash-outline" size={18} color="white" style={styles.buttonIcon} />
+                    <Text style={styles.searchWithAIButtonText}>Search with AI</Text>
+                  </TouchableOpacity>
                 </View>
               ) : (
                 this.getFilteredItems().map(item => this.renderItem(item))
@@ -1976,5 +1987,28 @@ const styles = StyleSheet.create({
     } : {
       elevation: 2,
     }),
+  },
+  searchWithAIButton: {
+    backgroundColor: '#007AFF', // iOS blue
+    borderRadius: 25,
+    paddingVertical: 12,
+    paddingHorizontal: 20,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginTop: 20,
+    ...(Platform.OS === 'ios' ? {
+      shadowColor: '#000',
+      shadowOffset: { width: 0, height: 2 },
+      shadowOpacity: 0.2,
+      shadowRadius: 3,
+    } : {
+      elevation: 3,
+    }),
+  },
+  searchWithAIButtonText: {
+    color: 'white',
+    fontWeight: '600',
+    fontSize: 16,
   },
 });
