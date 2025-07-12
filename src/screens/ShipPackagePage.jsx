@@ -388,15 +388,7 @@ export default function ShipPackagePage({ route, navigation }) {
             <Text style={styles.boxInfoText}>{formattedDimensions}</Text>
           </View>
           
-          {/* Show original 3D packing dimensions for USPS if available */}
-          {item.carrier === 'USPS' && dimensions.originalDimensions && (
-            <View style={styles.boxInfoItem}>
-              <Ionicons name="information-circle-outline" size={16} color="#64748B" />
-              <Text style={styles.boxInfoText}>
-                Optimized box: {dimensions.originalDimensions.length}" × {dimensions.originalDimensions.width}" × {dimensions.originalDimensions.height}"
-              </Text>
-            </View>
-          )}
+          {/* Original 3D packing dimensions removed as requested */}
         </View>
       </TouchableOpacity>
     );

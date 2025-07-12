@@ -13,7 +13,7 @@ const USPS_CONFIG = {
 const USPS_MAIL_CLASSES = {
   PRIORITY_MAIL: 'PRIORITY_MAIL',
   PRIORITY_MAIL_EXPRESS: 'PRIORITY_MAIL_EXPRESS',
-  FIRST_CLASS_PACKAGE: 'FIRST-CLASS_PACKAGE_SERVICE',
+  FIRST_CLASS_PACKAGE: 'FIRST_CLASS_PACKAGE_SERVICE', // Fixed hyphen to underscore
   GROUND_ADVANTAGE: 'USPS_GROUND_ADVANTAGE'
 };
 
@@ -203,20 +203,32 @@ export const determineRateIndicator = (mailClass, length, width, height, weight,
   if ([CONTAINER_TYPES.SM_FLAT_RATE_BOX, 
        CONTAINER_TYPES.MD_FLAT_RATE_BOX, 
        CONTAINER_TYPES.LG_FLAT_RATE_BOX].includes(containerType)) {
-    return 'FP'; // Flat Rate Package code
+    // Use valid rate indicators from the enum
+    if (mailClass === USPS_MAIL_CLASSES.PRIORITY_MAIL) {
+      return 'FR'; // Flat Rate for Priority Mail
+    } else if (mailClass === USPS_MAIL_CLASSES.PRIORITY_MAIL_EXPRESS) {
+      return 'PA'; // Priority Mail Express
+    }
+    return 'FR'; // Default to FR for flat rate
   }
   
   // Check if using a flat rate envelope
   if ([CONTAINER_TYPES.FLAT_RATE_ENVELOPE, 
        CONTAINER_TYPES.FLAT_RATE_LEGAL_ENVELOPE, 
        CONTAINER_TYPES.FLAT_RATE_PADDED_ENVELOPE].includes(containerType)) {
-    return 'FE'; // Flat Rate Envelope code
+    // Use valid rate indicators from the enum
+    if (mailClass === USPS_MAIL_CLASSES.PRIORITY_MAIL) {
+      return 'FR'; // Flat Rate for Priority Mail
+    } else if (mailClass === USPS_MAIL_CLASSES.PRIORITY_MAIL_EXPRESS) {
+      return 'PA'; // Priority Mail Express
+    }
+    return 'FR'; // Default to FR for flat rate
   }
   
   // Check if using a regional rate box
   if ([CONTAINER_TYPES.REGIONAL_RATE_BOX_A, 
        CONTAINER_TYPES.REGIONAL_RATE_BOX_B].includes(containerType)) {
-    return 'RG'; // Regional Rate code
+    return 'RP'; // Regional Priority (valid in enum)
   }
   
   // For variable containers, determine based on dimensions
@@ -227,26 +239,27 @@ export const determineRateIndicator = (mailClass, length, width, height, weight,
     // Check if package qualifies for cubic pricing
     // Cubic pricing applies to packages up to 0.5 cubic feet
     if (volume <= 864 && mailClass === USPS_MAIL_CLASSES.PRIORITY_MAIL) { // 0.5 cubic feet = 864 cubic inches
-      // Use cubic tier based on volume
+      // Use cubic tier based on volume - these are valid in the enum
       if (volume <= 216) { // 0.125 cubic feet
-        return 'C1';
+        return 'C1'; // Cubic Tier 1 - valid in enum
       } else if (volume <= 432) { // 0.25 cubic feet
-        return 'C2';
+        return 'C2'; // Cubic Tier 2 - valid in enum
       } else {
-        return 'C3'; // up to 0.5 cubic feet
+        return 'C3'; // Cubic Tier 3 - valid in enum (up to 0.5 cubic feet)
       }
     }
   }
   
-  // Default to a valid retail pricing code from the enum
+  // Default to a valid retail pricing code from the USPS API v3 enum list
+  // Valid values include: 3D,3N,3R,5D,BA,BB,BM,C1,C2,C3,C4,C5,CP,CM,DC,DE,DF,DN,DR,E4,E6,E7,FA,FB,FE,FP,FS,LC,LF,LL,LO,LS,NP,O1,O2,O3,O4,O5,O6,O7,OS,P5,P6,P7,P8,P9,Q6,Q7,Q8,Q9,Q0,PA,PL,PM,PR,SB,SN,SP,SR
   if (mailClass === USPS_MAIL_CLASSES.PRIORITY_MAIL) {
-    return 'PM'; // Priority Mail
+    return 'PR'; // Priority Mail (PR is valid in the enum)
   } else if (mailClass === USPS_MAIL_CLASSES.PRIORITY_MAIL_EXPRESS) {
-    return 'PE'; // Priority Mail Express
+    return 'PA'; // Priority Mail Express (PA is valid in the enum)
   } else if (mailClass === USPS_MAIL_CLASSES.FIRST_CLASS_PACKAGE) {
-    return 'FC'; // First Class
+    return 'FS'; // First Class Service (FS is valid in the enum)
   } else if (mailClass === USPS_MAIL_CLASSES.GROUND_ADVANTAGE) {
-    return 'CP'; // Commercial Plus (safe default)
+    return 'CP'; // Commercial Plus (CP is valid in the enum)
   }
   
   // Fallback to Commercial Plus pricing
@@ -403,14 +416,67 @@ export const calculateUSPSRates = async (packageDetails, fromZip, toZip) => {
     const girth = 2 * (width + height);
     const lengthPlusGirth = length + girth;
 
-    // USPS has a maximum length + girth of 130 inches for most mail classes
+    // Check size limits for each mail class
+    const mailClassSizeLimits = {
+      [USPS_MAIL_CLASSES.PRIORITY_MAIL_EXPRESS]: {
+        maxLength: 108,
+        maxLengthPlusGirth: 130,
+        maxWeight: 70 // pounds
+      },
+      [USPS_MAIL_CLASSES.PRIORITY_MAIL]: {
+        maxLength: 108,
+        maxLengthPlusGirth: 130,
+        maxWeight: 70 // pounds
+      },
+      [USPS_MAIL_CLASSES.FIRST_CLASS_PACKAGE]: {
+        maxLength: 22,
+        maxLengthPlusGirth: 108,
+        maxWeight: 13 // ounces (0.8125 pounds)
+      },
+      [USPS_MAIL_CLASSES.GROUND_ADVANTAGE]: {
+        maxLength: 108,
+        maxLengthPlusGirth: 130,
+        maxWeight: 70 // pounds
+      }
+    };
+    
+    // Track which mail classes exceed size limits
+    const oversizedMailClasses = [];
+    
+    // Check if package exceeds overall USPS maximum size
     if (lengthPlusGirth > 130) {
-      console.log(`Package exceeds USPS maximum size (length + girth = ${lengthPlusGirth}")`);
+      console.log(`Package exceeds USPS maximum size (length + girth = ${lengthPlusGirth}")`);      
       return [{
         carrier: 'USPS',
         service: 'USPS Shipping',
-        error: 'Package exceeds USPS maximum size limits.'
+        error: 'Package exceeds USPS maximum size limits (130" length + girth).'
       }];
+    }
+    
+    // Check each mail class for size limits
+    Object.keys(mailClassSizeLimits).forEach(mailClass => {
+      const limits = mailClassSizeLimits[mailClass];
+      if (length > limits.maxLength) {
+        console.log(`Package length ${length}" exceeds ${mailClass} maximum length ${limits.maxLength}".`);
+        oversizedMailClasses.push(mailClass);
+      }
+      if (lengthPlusGirth > limits.maxLengthPlusGirth) {
+        console.log(`Package length + girth ${lengthPlusGirth}" exceeds ${mailClass} maximum length + girth ${limits.maxLengthPlusGirth}".`);
+        if (!oversizedMailClasses.includes(mailClass)) {
+          oversizedMailClasses.push(mailClass);
+        }
+      }
+      if (packageWeight > limits.maxWeight) {
+        console.log(`Package weight ${packageWeight} lbs exceeds ${mailClass} maximum weight ${limits.maxWeight} lbs.`);
+        if (!oversizedMailClasses.includes(mailClass)) {
+          oversizedMailClasses.push(mailClass);
+        }
+      }
+    });
+    
+    // Log oversized mail classes
+    if (oversizedMailClasses.length > 0) {
+      console.log('Oversized mail classes:', oversizedMailClasses);
     }
 
     // Add special services if needed
@@ -453,6 +519,16 @@ export const calculateUSPSRates = async (packageDetails, fromZip, toZip) => {
     for (const mailClass of mailClasses) {
       try {
         console.log(`Processing mail class: ${mailClass}`);
+        
+        // Skip mail classes that exceed size limits
+        if (oversizedMailClasses.includes(mailClass)) {
+          console.log(`Skipping ${mailClass} due to size limits`);
+          errors.push({
+            mailClass,
+            error: "Package size exceeds maximum allowed for mail class"
+          });
+          continue;
+        }
         
         // Determine container type based on mail class and package dimensions
         let mailClassContainerType = containerType;
