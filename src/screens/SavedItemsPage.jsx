@@ -1368,36 +1368,32 @@ export default class SavedItemsPage extends Component {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#f5f5f5",
+    backgroundColor: "#F2F2F7", // iOS system background color
   },
   searchBarContainer: {
     paddingHorizontal: 16,
     paddingVertical: 12,
-    backgroundColor: "#f5f5f5",
-    borderBottomWidth: 1,
-    borderBottomColor: "#E2E8F0",
+    backgroundColor: "#F2F2F7", // iOS system background color
+    borderBottomWidth: 0.5, // Thinner border for iOS
+    borderBottomColor: "#C6C6C8", // iOS border color
     zIndex: 1,
   },
   searchInputContainer: {
     flexDirection: "row",
     alignItems: "center",
-    backgroundColor: "#FFFFFF",
-    borderRadius: 8,
+    backgroundColor: "#E5E5EA", // iOS search bar background
+    borderRadius: 10, // iOS search bar radius
     paddingHorizontal: 12,
     paddingVertical: 8,
-    borderWidth: 1,
-    borderColor: "#E2E8F0",
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.1,
-    shadowRadius: 2,
-    elevation: 2,
+    borderWidth: 0, // No border for iOS search
+    marginHorizontal: 4,
   },
   searchInput: {
     flex: 1,
-    fontSize: 16,
-    color: "#334155",
+    fontSize: 17, // iOS standard font size
+    color: "#000000", // iOS text color
     paddingVertical: 4,
+    fontWeight: '400',
   },
   clearButton: {
     padding: 4,
@@ -1491,20 +1487,16 @@ const styles = StyleSheet.create({
     width: '85%',
   },
   createItemButton: {
-    backgroundColor: '#475569',
+    backgroundColor: '#007AFF', // iOS blue
     paddingVertical: 12,
     paddingHorizontal: 24,
-    borderRadius: 8,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.2,
-    shadowRadius: 2,
-    elevation: 2,
+    borderRadius: 10, // iOS button radius
+    overflow: 'hidden',
   },
   createItemButtonText: {
     color: '#FFFFFF',
-    fontSize: 16,
-    fontWeight: '500',
+    fontSize: 17, // iOS button text size
+    fontWeight: '600', // iOS button text weight
     textAlign: 'center',
   },
   emptyText: {
@@ -1523,19 +1515,24 @@ const styles = StyleSheet.create({
   itemContainer: {
     flex: 1,
     backgroundColor: 'white',
-    borderRadius: 12,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 8,
-    elevation: 3,
+    borderRadius: 10, // iOS card radius
+    marginHorizontal: 2, // Slight margin for iOS feel
     overflow: 'hidden',
+    ...(Platform.OS === 'ios' ? {
+      shadowColor: '#000',
+      shadowOffset: { width: 0, height: 1 },
+      shadowOpacity: 0.15,
+      shadowRadius: 4,
+    } : {
+      elevation: 2,
+    }),
   },
   item: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
     padding: 16,
+    minHeight: 60, // Consistent height for iOS list items
   },
   itemLeftContent: {
     flexDirection: 'row',
@@ -1546,8 +1543,9 @@ const styles = StyleSheet.create({
     marginRight: 10,
   },
   itemName: {
-    fontSize: 16,
+    fontSize: 17, // iOS standard font size
     fontWeight: '500',
+    color: '#000000', // iOS text color
     color: '#1E293B',
     flex: 1,
   },
@@ -1678,28 +1676,25 @@ const styles = StyleSheet.create({
     backgroundColor: '#10B981', // Green color for import
   },
   selectedItem: {
-    backgroundColor: '#EFF6FF',
+    backgroundColor: '#E5F2FF', // iOS selection color
+    borderWidth: 1, // Thinner border for iOS
+    borderColor: '#007AFF', // iOS blue
   },
   selectionActionBar: {
-    width: '100%',
-    backgroundColor: 'white',
-    padding: 16,
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    borderBottomWidth: 1,
-    borderBottomColor: '#E2E8F0',
-    elevation: 4,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 2,
-    marginBottom: 8,
+    backgroundColor: '#F2F2F7', // iOS system background
+    paddingVertical: 12,
+    paddingHorizontal: 16,
+    borderBottomWidth: 0.5, // Thinner iOS border
+    borderBottomColor: '#C6C6C8', // iOS border color
+    zIndex: 1,
   },
   selectedCountText: {
-    fontSize: 16,
-    color: '#64748B',
+    fontSize: 17, // iOS text size
     fontWeight: '500',
+    color: '#000000', // iOS text color
   },
   selectionActionButtons: {
     flexDirection: 'row',
@@ -1707,29 +1702,31 @@ const styles = StyleSheet.create({
   actionButton: {
     paddingVertical: 10,
     paddingHorizontal: 16,
-    borderRadius: 8,
+    borderRadius: 10, // iOS button radius
     marginLeft: 8,
     alignItems: 'center',
     justifyContent: 'center',
     minWidth: 80,
   },
   actionDeleteButton: {
-    backgroundColor: '#EF4444',
+    backgroundColor: '#FF3B30', // iOS red
     paddingHorizontal: 20,
   },
   cancelSelectionButton: {
-    backgroundColor: '#F1F5F9',
+    backgroundColor: '#E5E5EA', // iOS light gray
     paddingHorizontal: 20,
   },
   cancelButtonText: {
-    color: '#64748B',
+    color: '#007AFF', // iOS blue
     fontWeight: '600',
     textAlign: 'center',
+    fontSize: 17, // iOS button text size
   },
   deleteButtonText: {
     color: 'white',
     fontWeight: '600',
     textAlign: 'center',
+    fontSize: 17, // iOS button text size
   },
   loadingContainer: {
     alignItems: 'center',
@@ -1781,9 +1778,9 @@ const styles = StyleSheet.create({
     color: '#334155',
   },
   previewItemDimensions: {
-    fontSize: 14,
-    color: '#64748B',
-    marginTop: 4,
+    fontSize: 15, // iOS secondary text size
+    color: '#8E8E93', // iOS secondary text color
+    marginLeft: 30,
   },
   moreItemsText: {
     fontSize: 14,
@@ -1904,5 +1901,80 @@ const styles = StyleSheet.create({
     color: '#334155',
     marginBottom: 12,
     textAlign: 'center',
+  },
+  fabActionButton: {
+    backgroundColor: '#007AFF', // iOS blue
+    width: 48,
+    height: 48,
+    borderRadius: 24,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: 16,
+    ...(Platform.OS === 'ios' ? {
+      shadowColor: '#000',
+      shadowOffset: { width: 0, height: 2 },
+      shadowOpacity: 0.2,
+      shadowRadius: 3,
+    } : {
+      elevation: 5,
+    }),
+  },
+  fabContainer: {
+    position: 'absolute',
+    right: 20,
+    bottom: 30, // More bottom padding for iOS
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  fabButton: {
+    backgroundColor: '#007AFF', // iOS blue
+    width: 56,
+    height: 56,
+    borderRadius: 28,
+    alignItems: 'center',
+    justifyContent: 'center',
+    zIndex: 1,
+    ...(Platform.OS === 'ios' ? {
+      shadowColor: '#000',
+      shadowOffset: { width: 0, height: 2 },
+      shadowOpacity: 0.2,
+      shadowRadius: 3,
+    } : {
+      elevation: 5,
+    }),
+  },
+  modalCancelButton: {
+    backgroundColor: "#F2F2F7", // iOS light gray
+    borderRadius: 10, // iOS button radius
+    padding: 12,
+    alignItems: "center",
+    marginTop: 12,
+    borderWidth: 0, // No border for iOS buttons
+  },
+  modalCancelButtonText: {
+    color: "#007AFF", // iOS blue
+    fontWeight: "600",
+    fontSize: 17, // iOS button text size
+  },
+  modalButtonText: {
+    color: "white",
+    fontWeight: "600",
+    fontSize: 17, // iOS button text size
+  },
+  fabActionLabel: {
+    position: 'absolute',
+    right: 64,
+    backgroundColor: '#1C1C1E', // iOS dark background
+    paddingVertical: 6,
+    paddingHorizontal: 12,
+    borderRadius: 8, // iOS rounded corners
+    ...(Platform.OS === 'ios' ? {
+      shadowColor: '#000',
+      shadowOffset: { width: 0, height: 1 },
+      shadowOpacity: 0.2,
+      shadowRadius: 2,
+    } : {
+      elevation: 2,
+    }),
   },
 });
