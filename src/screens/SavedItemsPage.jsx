@@ -833,14 +833,33 @@ export default class SavedItemsPage extends Component {
               
               <View style={styles.selectionActionButtons}>
                 <TouchableOpacity
-                  style={[styles.actionButton, styles.cancelSelectionButton]}
+                  style={{
+                    backgroundColor: '#E5E5EA',
+                    paddingVertical: 10,
+                    paddingHorizontal: 20,
+                    borderRadius: 8,
+                    marginLeft: 8,
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    minWidth: 80,
+                  }}
                   onPress={this.toggleSelectionMode}
                 >
                   <Text style={styles.cancelButtonText}>Cancel</Text>
                 </TouchableOpacity>
                 
                 <TouchableOpacity
-                  style={[styles.actionButton, styles.actionDeleteButton]}
+                  style={{
+                    backgroundColor: '#FF3B30',
+                    paddingVertical: 10,
+                    paddingHorizontal: 20,
+                    borderRadius: 8,
+                    marginLeft: 8,
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    minWidth: 80,
+                    opacity: this.state.selectedItems.length === 0 ? 0.5 : 1
+                  }}
                   onPress={() => {
                     if (this.state.selectedItems.length > 0) {
                       this.setState({ showDeleteConfirmModal: true });
@@ -1692,20 +1711,22 @@ const styles = StyleSheet.create({
     borderColor: '#007AFF', // iOS blue
   },
   selectionActionBar: {
+    width: '100%',
+    backgroundColor: '#F2F2F7', // iOS system background
+    padding: 16,
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    backgroundColor: '#F2F2F7', // iOS system background
-    paddingVertical: 12,
-    paddingHorizontal: 16,
     borderBottomWidth: 0.5, // Thinner iOS border
     borderBottomColor: '#C6C6C8', // iOS border color
+    marginBottom: 8,
+    marginTop: 0,
     zIndex: 1,
   },
   selectedCountText: {
     fontSize: 17, // iOS text size
-    fontWeight: '500',
     color: '#000000', // iOS text color
+    fontWeight: '500',
   },
   selectionActionButtons: {
     flexDirection: 'row',
@@ -1713,7 +1734,7 @@ const styles = StyleSheet.create({
   actionButton: {
     paddingVertical: 10,
     paddingHorizontal: 16,
-    borderRadius: 10, // iOS button radius
+    borderRadius: 8, // iOS button radius
     marginLeft: 8,
     alignItems: 'center',
     justifyContent: 'center',
@@ -1726,7 +1747,10 @@ const styles = StyleSheet.create({
   cancelSelectionButton: {
     backgroundColor: '#E5E5EA', // iOS light gray
     paddingHorizontal: 20,
+    borderRadius: 8,
   },
+
+
   cancelButtonText: {
     color: '#007AFF', // iOS blue
     fontWeight: '600',

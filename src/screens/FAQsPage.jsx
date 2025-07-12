@@ -23,8 +23,11 @@ const FAQsPage = ({ navigation }) => {
   const Header = () => (
     <View style={styles.headerContainer}>
       <View style={styles.headerContent}>
-        <Text style={styles.headerTitle}>Frequently Asked Questions</Text>
-        <Text style={styles.headerSubtitle}>Find answers to common questions</Text>
+        <Ionicons name="help-circle" size={40} color="#FFFFFF" style={styles.headerIcon} />
+        <Text style={styles.headerTitle}>Help Center</Text>
+        <Text style={styles.headerSubtitle}>Find answers to common questions about SmartBox AI</Text>
+        <View style={styles.headerDivider} />
+        <Text style={styles.headerVersion}>Version 1.2.0 • July 2025</Text>
       </View>
     </View>
   );
@@ -36,14 +39,26 @@ const FAQsPage = ({ navigation }) => {
 
   const faqs = [
     {
-      question: "How should I measure an item that can be folded?",
-      answer: "Measure it in the folded state, as you plan to pack it.",
-      icon: "cube-outline"
+      question: "How should I measure item dimensions correctly?",
+      answer: "MagicBoxer uses a standardized approach: Length is the longest side, Width is the second longest side, and Height is the shortest side. Look for the information icon (ⓘ) next to the Length field in the Create Package form for a visual guide.",
+      icon: "ruler-outline"
+    },
+    {
+      question: "Can't find the dimensions for an item?",
+      answer: "Use our AI-powered dimension lookup! When searching for an item in the Saved Items page with no results, click 'Search with AI'. You can also access this feature directly from the navigation menu.",
+      redirectText: "Try the AI Lookup feature",
+      redirectPage: "LookupItemPage",
+      icon: "flash-outline"
     },
     {
       question: "How can I see a 360° view of the box and items?",
-      answer: "Use finger gestures to rotate around the box. Use the slider to remove items and view the box and items from all angles.",
+      answer: "Use finger gestures to rotate around the box. Use the slider to remove items and view the box and items from all angles. The 3D view now has improved scaling for all device sizes.",
       icon: "sync"
+    },
+    {
+      question: "How do I save items for future use?",
+      answer: "After entering item dimensions, tap 'Add to Container'. Then tap 'Save Package' and give your package a name. All items in that package will be saved individually and available in the 'Saved Items' section for future use.",
+      icon: "bookmark-outline"
     },
     {
       question: "Where do the box sizes come from?",
@@ -53,9 +68,9 @@ const FAQsPage = ({ navigation }) => {
       icon: "cube"
     },
     {
-      question: "What items is this app best for?",
-      answer: "Most items! However, it's not ideal for small documents or papers.",
-      icon: "apps"
+      question: "What happens if I try to leave the form with unsaved items?",
+      answer: "The app will detect this and show a confirmation dialog with options to save your work, discard changes, or cancel navigation. This prevents accidental data loss.",
+      icon: "alert-circle-outline"
     },
     {
       question: "Are the displayed prices for shipping or the box?",
@@ -69,16 +84,21 @@ const FAQsPage = ({ navigation }) => {
       icon: "copy"
     },
     {
+      question: "How do I delete or rename a package?",
+      answer: "Long press the package on the Saved Packages page to get options to rename or delete it. You can also select multiple packages by entering selection mode.",
+      icon: "create"
+    },
+    {
+      question: "Can I import or export my saved items?",
+      answer: "Yes! On the Saved Items page, use the floating action button (+ icon) to access import and export options. This allows you to back up your data or transfer it between devices.",
+      icon: "swap-horizontal-outline"
+    },
+    {
       question: "What is your privacy policy?",
       answer: "View our privacy policy here.",
       redirectText: "Privacy Policy",
       redirectPage: "Privacy Policy",
       icon: "shield-checkmark"
-    },
-    {
-      question: "How do I delete or rename a package?",
-      answer: "Long press the package on the Saved Packages page to get options to rename or delete it.",
-      icon: "create"
     },
     {
       question: "Where can I report a bug or request a feature?",
@@ -137,11 +157,12 @@ const FAQsPage = ({ navigation }) => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#F5F7FA",
+    backgroundColor: "#F2F2F7", // iOS system background color
   },
   headerContainer: {
-    backgroundColor: '#4A90E2',
-    paddingVertical: 24,
+    backgroundColor: '#007AFF', // iOS blue
+    paddingTop: 30,
+    paddingBottom: 24,
     paddingHorizontal: 20,
     borderBottomLeftRadius: 25,
     borderBottomRightRadius: 25,
@@ -157,6 +178,9 @@ const styles = StyleSheet.create({
   headerContent: {
     alignItems: 'center',
   },
+  headerIcon: {
+    marginBottom: 12,
+  },
   headerTitle: {
     fontSize: 28,
     fontWeight: '700',
@@ -168,6 +192,18 @@ const styles = StyleSheet.create({
   headerSubtitle: {
     fontSize: 16,
     color: 'rgba(255, 255, 255, 0.9)',
+    textAlign: 'center',
+    paddingHorizontal: 20,
+  },
+  headerDivider: {
+    height: 1,
+    width: 60,
+    backgroundColor: 'rgba(255, 255, 255, 0.5)',
+    marginVertical: 12,
+  },
+  headerVersion: {
+    fontSize: 14,
+    color: 'rgba(255, 255, 255, 0.8)',
     textAlign: 'center',
   },
   scrollView: {
@@ -183,7 +219,7 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.1,
     shadowRadius: 8,
     elevation: 3,
-    borderWidth: 1,
+    borderWidth: Platform.OS === 'ios' ? 0 : 1, // No border on iOS
     borderColor: "#EDF2F7",
   },
   faqItemExpanded: {
@@ -220,14 +256,19 @@ const styles = StyleSheet.create({
   redirectLink: {
     flexDirection: "row",
     alignItems: "center",
-    marginTop: 8,
+    marginTop: 12,
     paddingTop: 8,
+    backgroundColor: '#F0F9FF',
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    borderRadius: 8,
+    alignSelf: 'flex-start',
   },
   redirectText: {
-    color: "#3B82F6",
+    color: "#007AFF", // iOS blue
     fontSize: 15,
     fontWeight: "500",
-    marginRight: 4,
+    marginRight: 6,
   },
 });
 
