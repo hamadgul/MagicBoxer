@@ -541,13 +541,11 @@ export default class FormPage extends Component {
 
         this.setState({
           allSavedItems: sortedItems,
-          recentSavedItems: sortedItems.slice(0, 5),
+          recentSavedItems: sortedItems, // Show all saved items instead of limiting to 5
           showRecentItems: true,
         });
         console.log(
-          `Loaded ${sortedItems.length} total saved items, with ${
-            sortedItems.slice(0, 5).length
-          } recent items.`
+          `Loaded ${sortedItems.length} total saved items, showing all in recent bar.`
         );
       } else {
         this.setState({ recentSavedItems: [], showRecentItems: false });
@@ -1822,7 +1820,7 @@ export default class FormPage extends Component {
                               marginRight: 8,
                               letterSpacing: -0.08 // iOS subtle letter spacing
                             }}>
-                              Recent:
+                              Saved:
                             </Text>
                             <View style={{ flex: 1 }}>
                               <ScrollView
