@@ -30,6 +30,7 @@ import styles from "../theme/Styles";
 import { modalStyles } from "../theme/ModalStyles";
 import { Ionicons } from "@expo/vector-icons";
 import base64 from 'base-64';
+import * as Haptics from 'expo-haptics';
 
 const { width, height } = Dimensions.get('window');
 const scale = Math.min(width, height) / 375; // Base scale on iPhone 8 dimensions
@@ -1981,6 +1982,7 @@ export default class FormPage extends Component {
                             marginRight: 8,
                           }}
                           onPress={() => {
+                            Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
                             const currentQuantity = parseInt(this.state.quantity) || 0;
                             if (currentQuantity > 1) {
                               this.setState({ quantity: currentQuantity - 1 });
@@ -2022,6 +2024,7 @@ export default class FormPage extends Component {
                             marginLeft: 8,
                           }}
                           onPress={() => {
+                            Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
                             const currentQuantity = parseInt(this.state.quantity) || 0;
                             this.setState({ quantity: currentQuantity + 1 });
                           }}
@@ -2032,7 +2035,10 @@ export default class FormPage extends Component {
                     </VStack>
                     <TouchableOpacity
                       style={styles.submitButton}
-                      onPress={this.handleSubmit}
+                      onPress={() => {
+                        Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                        this.handleSubmit();
+                      }}
                     >
                       <Text style={[styles.buttonText, { color: '#FFFFFF' }]}>Add item</Text>
                     </TouchableOpacity>
@@ -2051,13 +2057,19 @@ export default class FormPage extends Component {
                 <View style={styles.bottomButtonContainer}>
                   <TouchableOpacity
                     style={styles.savePackageButton}
-                    onPress={this.toggleSavePackageModal}
+                    onPress={() => {
+                      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+                      this.toggleSavePackageModal();
+                    }}
                   >
                     <Text style={styles.savePackageButtonText}>Save Package</Text>
                   </TouchableOpacity>
                   <TouchableOpacity
                     style={styles.packButton}
-                    onPress={this.handleVisualize}
+                    onPress={() => {
+                      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+                      this.handleVisualize();
+                    }}
                     disabled={this.state.isLoading}
                   >
                     {this.state.isLoading ? (
@@ -2102,13 +2114,19 @@ export default class FormPage extends Component {
                         <View style={modalStyles.modalButtonContainer}>
                           <TouchableOpacity
                             style={[modalStyles.button, modalStyles.cancelButton]}
-                            onPress={this.toggleSavePackageModal}
+                            onPress={() => {
+                              Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                              this.toggleSavePackageModal();
+                            }}
                           >
                             <Text style={modalStyles.buttonText}>Cancel</Text>
                           </TouchableOpacity>
                           <TouchableOpacity
                             style={[modalStyles.button, modalStyles.applyButton]}
-                            onPress={this.handleSavePackage}
+                            onPress={() => {
+                              Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+                              this.handleSavePackage();
+                            }}
                           >
                             <Text style={modalStyles.buttonText}>Save</Text>
                           </TouchableOpacity>
