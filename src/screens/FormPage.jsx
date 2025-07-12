@@ -625,7 +625,8 @@ export default class FormPage extends Component {
         showRecentItems: true,
         hasMatchingRecentItems: true, // Reset to true when clearing
         dimensionsFromSavedItem: false, // Reset the tracking state
-        showAllSavedItemsModal: false
+        showAllSavedItemsModal: false,
+        showDimensionsTooltip: false
       });
       return;
     }
@@ -702,7 +703,8 @@ export default class FormPage extends Component {
       'allSavedItems',
       'recentSavedItems',
       'showRecentItems',
-      'savedItemsSearchQuery'
+      'savedItemsSearchQuery',
+      'showDimensionsTooltip'
     ];
 
     return relevantStateKeys.some(key => this.state[key] !== nextState[key]);
@@ -1869,8 +1871,14 @@ export default class FormPage extends Component {
                     
                     
                     <VStack space={2} width="100%">
-                      <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                      <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
                         <Text style={[styles.label]}>Length</Text>
+                        <TouchableOpacity 
+                          onPress={() => this.setState({ showDimensionsTooltip: true })}
+                          style={{ padding: 5 }}
+                        >
+                          <Ionicons name="information-circle-outline" size={20} color="#007AFF" />
+                        </TouchableOpacity>
                       </View>
                       <View style={[styles.input, styles.condensedInput, { 
                         flexDirection: 'row',
@@ -2328,6 +2336,98 @@ export default class FormPage extends Component {
                   showBackButton={false}
                 />
               )}
+              
+              {/* Dimensions Tooltip Modal */}
+              <Modal
+                animationType="fade"
+                transparent={true}
+                visible={this.state.showDimensionsTooltip || false}
+                onRequestClose={() => this.setState({ showDimensionsTooltip: false })}
+              >
+                <TouchableWithoutFeedback onPress={() => this.setState({ showDimensionsTooltip: false })}>
+                  <View style={{
+                    flex: 1,
+                    justifyContent: 'center',
+                    alignItems: 'center',
+                    backgroundColor: 'rgba(0,0,0,0.5)',
+                  }}>
+                    <TouchableWithoutFeedback>
+                      <View style={{
+                        backgroundColor: 'white',
+                        borderRadius: 15,
+                        padding: 20,
+                        alignItems: 'center',
+                        shadowColor: '#000',
+                        shadowOffset: { width: 0, height: 2 },
+                        shadowOpacity: 0.25,
+                        shadowRadius: 4,
+                        elevation: 5,
+                        width: '80%',
+                        maxWidth: 350,
+                      }}>
+                        <Text style={{ fontSize: 20, fontWeight: '600', color: '#000', marginBottom: 20, textAlign: 'center' }}>How to Measure</Text>
+                          
+                        <View style={{ width: '100%', marginBottom: 20 }}>
+                          <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 16 }}>
+                            <View style={{ width: 28, height: 28, borderRadius: 14, backgroundColor: '#007AFF', justifyContent: 'center', alignItems: 'center', marginRight: 12 }}>
+                              <Ionicons name="resize-outline" size={18} color="#FFFFFF" />
+                            </View>
+                            <View>
+                              <Text style={{ fontSize: 16, fontWeight: '600', color: '#000' }}>Length:</Text>
+                              <Text style={{ fontSize: 15, color: '#555', marginTop: 2 }}>Longest side</Text>
+                            </View>
+                          </View>
+                          
+                          <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 16 }}>
+                            <View style={{ width: 28, height: 28, borderRadius: 14, backgroundColor: '#007AFF', justifyContent: 'center', alignItems: 'center', marginRight: 12 }}>
+                              <Ionicons name="resize-outline" size={18} color="#FFFFFF" />
+                            </View>
+                            <View>
+                              <Text style={{ fontSize: 16, fontWeight: '600', color: '#000' }}>Width:</Text>
+                              <Text style={{ fontSize: 15, color: '#555', marginTop: 2 }}>Second longest side</Text>
+                            </View>
+                          </View>
+                          
+                          <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 16 }}>
+                            <View style={{ width: 28, height: 28, borderRadius: 14, backgroundColor: '#007AFF', justifyContent: 'center', alignItems: 'center', marginRight: 12 }}>
+                              <Ionicons name="resize-outline" size={18} color="#FFFFFF" />
+                            </View>
+                            <View>
+                              <Text style={{ fontSize: 16, fontWeight: '600', color: '#000' }}>Height:</Text>
+                              <Text style={{ fontSize: 15, color: '#555', marginTop: 2 }}>Shortest side</Text>
+                            </View>
+                          </View>
+                        </View>
+                        
+                        <View style={{ backgroundColor: '#F2F2F7', padding: 12, borderRadius: 10, marginBottom: 20, width: '100%' }}>
+                          <Text style={{ fontSize: 14, color: '#555', textAlign: 'center', lineHeight: 20 }}>
+                            For best packing results, measure the item in its natural orientation and enter dimensions from longest to shortest side.
+                          </Text>
+                        </View>
+                        
+                        <TouchableOpacity
+                          style={{
+                            backgroundColor: '#007AFF',
+                            borderRadius: 25,
+                            paddingVertical: 12,
+                            paddingHorizontal: 24,
+                            elevation: 2,
+                            minWidth: 120,
+                            alignItems: 'center',
+                            shadowColor: '#000',
+                            shadowOffset: { width: 0, height: 1 },
+                            shadowOpacity: 0.2,
+                            shadowRadius: 1.5,
+                          }}
+                          onPress={() => this.setState({ showDimensionsTooltip: false })}
+                        >
+                          <Text style={{ color: 'white', fontWeight: '600', fontSize: 16 }}>Got it</Text>
+                        </TouchableOpacity>
+                      </View>
+                    </TouchableWithoutFeedback>
+                  </View>
+                </TouchableWithoutFeedback>
+              </Modal>
             </View>
           </TouchableWithoutFeedback>
         </ScrollView>
