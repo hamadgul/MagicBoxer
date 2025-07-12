@@ -1,0 +1,903 @@
+import axios from 'axios';
+
+const USPS_CONFIG = {
+  clientId: 's48Bvc4Ky0di0O5la1LHF8dcgdcBNqLV',
+  clientSecret: 'IupGg3UhoQt37R9A',
+  apiBaseUrl: 'https://apis.usps.com',
+  tokenEndpoint: '/oauth2/v3/token',
+  ratesEndpoint: '/prices/v3/base-rates/search',
+  dimDivisor: 166
+};
+
+// USPS Mail Class Constants
+const USPS_MAIL_CLASSES = {
+  PRIORITY_MAIL: 'PRIORITY_MAIL',
+  PRIORITY_MAIL_EXPRESS: 'PRIORITY_MAIL_EXPRESS',
+  FIRST_CLASS_PACKAGE: 'FIRST-CLASS_PACKAGE_SERVICE',
+  GROUND_ADVANTAGE: 'USPS_GROUND_ADVANTAGE'
+};
+
+// USPS Container Types
+const CONTAINER_TYPES = {
+  VARIABLE: 'VARIABLE',
+  FLAT_RATE_ENVELOPE: 'FLAT_RATE_ENVELOPE',
+  FLAT_RATE_LEGAL_ENVELOPE: 'FLAT_RATE_LEGAL_ENVELOPE',
+  FLAT_RATE_PADDED_ENVELOPE: 'FLAT_RATE_PADDED_ENVELOPE',
+  SM_FLAT_RATE_BOX: 'SM_FLAT_RATE_BOX',
+  MD_FLAT_RATE_BOX: 'MD_FLAT_RATE_BOX',
+  LG_FLAT_RATE_BOX: 'LG_FLAT_RATE_BOX',
+  REGIONAL_RATE_BOX_A: 'REGIONAL_RATE_BOX_A',
+  REGIONAL_RATE_BOX_B: 'REGIONAL_RATE_BOX_B'
+};
+
+// USPS Processing Categories
+const PROCESSING_CATEGORIES = {
+  MACHINABLE: 'MACHINABLE',
+  IRREGULAR: 'IRREGULAR',
+  NONMACHINABLE: 'NONMACHINABLE'
+};
+
+// USPS Content Types
+const CONTENT_TYPES = {
+  HAZMAT: 'HAZMAT',
+  LIVES: 'LIVES',
+  PERISHABLE: 'PERISHABLE',
+  FRAGILE: 'FRAGILE',
+  MERCHANDISE: 'MERCHANDISE'
+};
+
+// USPS Extra Services
+const EXTRA_SERVICES = {
+  SIGNATURE_CONFIRMATION: 'SIGNATURE_CONFIRMATION',
+  INSURANCE: 'INSURANCE',
+  REGISTERED_MAIL: 'REGISTERED_MAIL',
+  CERTIFIED_MAIL: 'CERTIFIED_MAIL',
+  RETURN_RECEIPT: 'RETURN_RECEIPT'
+};
+
+/**
+ * Get an access token from USPS API using OAuth 2.0 Client Credentials flow
+ * @returns {Promise<string>} Access token
+ */
+export const getUSPSAccessToken = async () => {
+  try {
+    console.log('Getting USPS access token...');
+    const response = await axios.post(
+      `${USPS_CONFIG.apiBaseUrl}/oauth2/v3/token`,
+      {
+        client_id: USPS_CONFIG.clientId,
+        client_secret: USPS_CONFIG.clientSecret,
+        grant_type: 'client_credentials'
+      },
+      {
+        headers: {
+          'Content-Type': 'application/json'
+        }
+      }
+    );
+    
+    console.log('USPS token received successfully');
+    return response.data.access_token;
+  } catch (error) {
+    console.error('Error getting USPS access token:', error.response?.data || error.message);
+    throw error;
+  }
+};
+
+/**
+ * Calculate zone based on ZIP code difference (fallback for when API doesn't provide zone)
+ * @param {string} fromZip Origin ZIP code
+ * @param {string} toZip Destination ZIP code
+ * @returns {number} Estimated zone
+ */
+/**
+ * Calculate zone based on ZIP code difference (fallback for when API doesn't provide zone)
+ * @param {string} fromZip Origin ZIP code
+ * @param {string} toZip Destination ZIP code
+ * @returns {number} Estimated zone
+ */
+const calculateZone = (fromZip, toZip) => {
+  const zipDiff = Math.abs(parseInt(fromZip, 10) - parseInt(toZip, 10));
+  if (zipDiff < 1000) return 2;
+  if (zipDiff < 2000) return 3;
+  if (zipDiff < 3000) return 4;
+  if (zipDiff < 4000) return 5;
+  if (zipDiff < 5000) return 6;
+  if (zipDiff < 6000) return 7;
+  return 8;
+};
+
+/**
+ * Calculate dimensional weight based on volume and dimensional divisor
+ * @param {number} volume Volume in cubic inches
+ * @param {number} dimDivisor Dimensional divisor (166 for USPS)
+ * @returns {number} Dimensional weight in pounds
+ */
+const calculateDimWeight = (volume, dimDivisor) => {
+  return (volume / dimDivisor);
+};
+
+/**
+ * Calculate estimated delivery days based on zone and service type
+ * @param {number} zone Shipping zone
+ * @param {number} serviceDaysFactor Factor to adjust delivery days by service type
+ * @returns {number} Estimated delivery days
+ */
+const calculateEstimatedDays = (zone, serviceDaysFactor) => {
+  const baseDeliveryDays = { 2: 1, 3: 2, 4: 3, 5: 4, 6: 5, 7: 6, 8: 7 };
+  return Math.ceil(baseDeliveryDays[zone] * serviceDaysFactor);
+};
+
+/**
+ * Calculate shipping price based on base rate, weight, and zone
+ * @param {number} baseRate Base shipping rate
+ * @param {number} billableWeight Billable weight in pounds
+ * @param {number} zone Shipping zone
+ * @returns {number} Calculated shipping price
+ */
+const calculatePrice = (baseRate, billableWeight, zone) => {
+  const weightRate = 0.65;
+  const zoneMultiplier = 0.1;
+  const fuelSurcharge = 1.15;
+  const handlingFee = 3.0;
+
+  let price = baseRate;
+  price += billableWeight * weightRate;
+  price *= 1 + (zone - 1) * zoneMultiplier;
+  price *= fuelSurcharge;
+  price += handlingFee;
+
+  return Math.round(price * 100) / 100;
+};
+
+/**
+ * Determine the appropriate processing category based on package dimensions
+ * @param {number} length Length in inches
+ * @param {number} width Width in inches
+ * @param {number} height Height in inches
+ * @param {number} weight Weight in ounces
+ * @returns {string} Processing category value for USPS API
+ */
+const determineProcessingCategory = (length, width, height, weight) => {
+  // Convert dimensions to ensure they are numbers
+  length = parseFloat(length);
+  width = parseFloat(width);
+  height = parseFloat(height);
+  weight = parseFloat(weight);
+  
+  // Sort dimensions from largest to smallest
+  const dimensions = [length, width, height].sort((a, b) => b - a);
+  const [longest, middle, shortest] = dimensions;
+  
+  // Check if it's letter-sized (based on USPS DMM standards)
+  if (longest <= 11.5 && middle <= 6.125 && shortest <= 0.25 && 
+      longest >= 5 && middle >= 3.5 && shortest >= 0.007) {
+    // Check aspect ratio for letters (length divided by height between 1.3 and 2.5)
+    const aspectRatio = longest / middle;
+    if (aspectRatio >= 1.3 && aspectRatio <= 2.5) {
+      return PROCESSING_CATEGORIES.MACHINABLE;
+    }
+  }
+  
+  // Check if it's flat-sized
+  if ((longest > 11.5 || middle > 6.125 || shortest > 0.25) && 
+      longest <= 15 && middle <= 12 && shortest <= 0.75) {
+    return PROCESSING_CATEGORIES.FLATS;
+  }
+  
+  // Check if it's machinable parcel
+  // Machinable parcels must:
+  // - Not exceed 27 inches in length, or 17 inches in width, or 17 inches in height
+  // - Not less than 6 inches long, 3 inches high, 1/4 inch thick
+  // - Not exceed 25 pounds
+  if (longest <= 27 && middle <= 17 && shortest >= 0.25 && 
+      longest >= 6 && middle >= 3 && weight <= 400) { // 25 pounds = 400 oz
+    return PROCESSING_CATEGORIES.MACHINABLE;
+  }
+  
+  // If it doesn't meet machinable criteria, it's nonstandard
+  return PROCESSING_CATEGORIES.NONSTANDARD;
+};
+
+/**
+ * Determine the appropriate rate indicator based on mail class and package dimensions
+ * @param {string} mailClass USPS mail class
+ * @param {number} length Length in inches
+ * @param {number} width Width in inches
+ * @param {number} height Height in inches
+ * @param {number} weight Weight in ounces
+ * @param {string} containerType Container type
+ * @returns {string} Rate indicator value for USPS API
+ */
+const determineRateIndicator = (mailClass, length, width, height, weight, containerType) => {
+  // Convert dimensions to ensure they are numbers
+  length = parseFloat(length);
+  width = parseFloat(width);
+  height = parseFloat(height);
+  weight = parseFloat(weight);
+  
+  // Calculate cubic size (length × width × height / 1728)
+  const cubicSize = (length * width * height) / 1728;
+  
+  // For Priority Mail Express
+  if (mailClass === USPS_MAIL_CLASSES.PRIORITY_MAIL_EXPRESS) {
+    // Flat Rate Envelope
+    if (containerType === CONTAINER_TYPES.FLAT_RATE_ENVELOPE) {
+      return 'E4';
+    }
+    // Legal Flat Rate Envelope
+    if (containerType === CONTAINER_TYPES.FLAT_RATE_LEGAL_ENVELOPE) {
+      return 'E6';
+    }
+    // Default for Priority Mail Express
+    return 'PA';
+  }
+  
+  // For Priority Mail
+  if (mailClass === USPS_MAIL_CLASSES.PRIORITY_MAIL) {
+    // Small Flat Rate Box
+    if (containerType === CONTAINER_TYPES.SM_FLAT_RATE_BOX) {
+      return 'FS';
+    }
+    // Medium Flat Rate Box
+    if (containerType === CONTAINER_TYPES.MD_FLAT_RATE_BOX) {
+      return 'FB';
+    }
+    // Large Flat Rate Box
+    if (containerType === CONTAINER_TYPES.LG_FLAT_RATE_BOX) {
+      return 'PL';
+    }
+    // Flat Rate Envelope
+    if (containerType === CONTAINER_TYPES.FLAT_RATE_ENVELOPE) {
+      return 'FE';
+    }
+    // Legal Flat Rate Envelope
+    if (containerType === CONTAINER_TYPES.FLAT_RATE_LEGAL_ENVELOPE) {
+      return 'FA';
+    }
+    // Padded Flat Rate Envelope
+    if (containerType === CONTAINER_TYPES.FLAT_RATE_PADDED_ENVELOPE) {
+      return 'FP';
+    }
+    
+    // Cubic pricing tiers for Priority Mail
+    if (cubicSize <= 0.1) {
+      return 'C1';
+    } else if (cubicSize <= 0.2) {
+      return 'C2';
+    } else if (cubicSize <= 0.3) {
+      return 'C3';
+    } else if (cubicSize <= 0.4) {
+      return 'C4';
+    } else if (cubicSize <= 0.5) {
+      return 'C5';
+    }
+    
+    // Oversized
+    if (length > 22 || width > 18 || height > 15 || weight > 320) { // 20 pounds = 320 oz
+      return 'OS';
+    }
+    
+    // Default for Priority Mail
+    return 'CP';
+  }
+  
+  // For First-Class Package Service
+  if (mailClass === USPS_MAIL_CLASSES.FIRST_CLASS_PACKAGE) {
+    return 'SP'; // Single Piece
+  }
+  
+  // For USPS Ground Advantage
+  if (mailClass === USPS_MAIL_CLASSES.GROUND_ADVANTAGE) {
+    // Oversized
+    if (length > 22 || width > 18 || height > 15 || weight > 320) { // 20 pounds = 320 oz
+      return 'OS';
+    }
+    return 'SP'; // Single Piece
+  }
+  
+  // Default fallback
+  return 'SP';
+};
+
+/**
+ * Calculate USPS shipping rates using the USPS API
+ * @param {Object} packageDetails Package details including dimensions and weight
+ * @param {string} fromZip Origin ZIP code
+ * @param {string} toZip Destination ZIP code
+ * @returns {Promise<Array>} Array of shipping rate options
+ */
+export const calculateUSPSRates = async (packageDetails, fromZip, toZip) => {
+  try {
+    console.log('USPS Service - From ZIP:', fromZip);
+    console.log('USPS Service - To ZIP:', toZip);
+    
+    // Get dimensions from packageDetails or use UPS/FedEx results if available
+    let length, width, height;
+    
+    if (packageDetails.length && packageDetails.width && packageDetails.height) {
+      // Use dimensions from packageDetails
+      length = parseFloat(packageDetails.length);
+      width = parseFloat(packageDetails.width);
+      height = parseFloat(packageDetails.height);
+      console.log('USPS Service - Using dimensions from packageDetails:', { length, width, height });
+    } else {
+      // Default dimensions if none are provided
+      length = 12; // 12 inches
+      width = 9;   // 9 inches
+      height = 6;  // 6 inches
+      console.log('USPS Service - Using default dimensions:', { length, width, height });
+    }
+    
+    // Get weight and convert to ounces if needed
+    let packageWeight = parseFloat(packageDetails.weight || 0);
+    if (packageDetails.weightUnit === 'lb') {
+      packageWeight = packageWeight * 16; // Convert pounds to ounces
+    }
+    
+    // Log additional fields
+    if (packageDetails.isResidential !== undefined) {
+      console.log('USPS Address Type:', packageDetails.isResidential ? 'Residential' : 'Commercial');
+    }
+    
+    // Get OAuth access token
+    const accessToken = await getUSPSAccessToken();
+    
+    // Format date for API request (YYYY-MM-DD format)
+    const formattedDate = packageDetails.shipmentDate ? 
+      packageDetails.shipmentDate.toISOString().split('T')[0] : 
+      new Date().toISOString().split('T')[0];
+    
+    // Determine the appropriate processing category based on package dimensions
+    const processingCategory = determineProcessingCategory(
+      length, 
+      width, 
+      height, 
+      packageWeight
+    );
+    
+    // Find the best-fit USPS box for the package dimensions
+    const findSuitableUSPSBox = (length, width, height) => {
+      // Define USPS box dimensions (length, width, height in inches)
+      const uspsBoxes = [
+        { type: CONTAINER_TYPES.SM_FLAT_RATE_BOX, name: 'USPS Small Flat Rate Box', dimensions: [8.625, 5.375, 1.625] },
+        { type: CONTAINER_TYPES.MD_FLAT_RATE_BOX, name: 'USPS Medium Flat Rate Box (1)', dimensions: [11, 8.5, 5.5] },
+        { type: CONTAINER_TYPES.MD_FLAT_RATE_BOX, name: 'USPS Medium Flat Rate Box (2)', dimensions: [13.625, 11.875, 3.375] },
+        { type: CONTAINER_TYPES.LG_FLAT_RATE_BOX, name: 'USPS Large Flat Rate Box (1)', dimensions: [12, 12, 5.5] },
+        { type: CONTAINER_TYPES.LG_FLAT_RATE_BOX, name: 'USPS Large Flat Rate Box (2)', dimensions: [23.6875, 11.75, 3] },
+        { type: CONTAINER_TYPES.FLAT_RATE_ENVELOPE, name: 'USPS Flat Rate Envelope', dimensions: [12.5, 9.5, 0.5] },
+        { type: CONTAINER_TYPES.FLAT_RATE_PADDED_ENVELOPE, name: 'USPS Padded Flat Rate Envelope', dimensions: [12.5, 9.5, 1] }
+      ];
+      
+      // Sort item dimensions from smallest to largest
+      const itemDims = [length, width, height].sort((a, b) => a - b);
+      console.log('Sorted item dimensions:', itemDims);
+      
+      // Find the smallest box that fits the item
+      let bestFitBox = null;
+      let minExcessVolume = Infinity;
+      
+      for (const box of uspsBoxes) {
+        // Try all possible orientations of the item
+        const boxDims = [...box.dimensions].sort((a, b) => a - b);
+        
+        // Check if the item fits in this box
+        if (itemDims[0] <= boxDims[0] && 
+            itemDims[1] <= boxDims[1] && 
+            itemDims[2] <= boxDims[2]) {
+          
+          // Calculate excess volume (wasted space)
+          const itemVolume = itemDims[0] * itemDims[1] * itemDims[2];
+          const boxVolume = boxDims[0] * boxDims[1] * boxDims[2];
+          const excessVolume = boxVolume - itemVolume;
+          
+          if (excessVolume < minExcessVolume) {
+            minExcessVolume = excessVolume;
+            bestFitBox = box;
+          }
+        }
+      }
+      
+      if (bestFitBox) {
+        console.log(`Found suitable USPS box: ${bestFitBox.name}`);
+        return bestFitBox;
+      }
+      
+      console.log('No suitable USPS box found, using variable container');
+      return { type: CONTAINER_TYPES.VARIABLE, name: 'Your Packaging', dimensions: [length, width, height] };
+    };
+    
+    // Find the best-fit USPS box
+    const bestFitBox = findSuitableUSPSBox(length, width, height);
+    const containerType = bestFitBox.type;
+    
+    console.log(`Selected container type: ${containerType} (${bestFitBox.name})`);
+    
+    // For packages that don't fit in standard boxes, use variable container type
+    if (containerType === CONTAINER_TYPES.VARIABLE) {
+      console.log('Package requires variable sizing - using customer packaging');
+    }
+    
+    // Create the initial payload with all required fields
+    const payload = {
+      originZIPCode: fromZip,
+      destinationZIPCode: toZip,
+      length: bestFitBox.type === CONTAINER_TYPES.VARIABLE ? length : bestFitBox.dimensions[0],
+      width: bestFitBox.type === CONTAINER_TYPES.VARIABLE ? width : bestFitBox.dimensions[1],
+      height: bestFitBox.type === CONTAINER_TYPES.VARIABLE ? height : bestFitBox.dimensions[2],
+      weight: packageWeight,
+      mailClass: '', // Will be set for each mail class
+      containerType: containerType,
+      processingCategory: processingCategory,
+      contentType: CONTENT_TYPES.MERCHANDISE,
+      destinationEntryFacilityType: 'NONE',
+      entryFacility: 'OTHER',
+      surchargeFlagsString: '',
+      priceType: 'RETAIL',
+      includePostage: true,
+      includeExtraServices: true,
+      includeAllRateCategories: false,
+      includeCommitments: true
+    };
+    
+    // Store the box information for later use
+    const boxInfo = {
+      type: bestFitBox.type,
+      name: bestFitBox.name,
+      isCarrierBox: bestFitBox.type !== CONTAINER_TYPES.VARIABLE
+    };
+    
+    // Ensure dimensions are within USPS limits
+    const girth = 2 * (payload.width + payload.height);
+    const lengthPlusGirth = payload.length + girth;
+
+    // USPS has a maximum length + girth of 130 inches for most mail classes
+    if (lengthPlusGirth > 130) {
+      console.log(`Package exceeds USPS maximum size (length + girth = ${lengthPlusGirth}")`);
+      return [{
+        carrier: 'USPS',
+        service: 'USPS Shipping',
+        error: 'Package exceeds USPS maximum size limits.'
+      }];
+    }
+
+    // Add special services if needed
+    if (packageDetails.signatureRequired || packageDetails.insuranceValue) {
+      payload.extraServices = [];
+
+      if (packageDetails.signatureRequired) {
+        payload.extraServices.push({
+          extraServiceCode: 'SIGNATURE_CONFIRMATION'
+        });
+      }
+      
+      if (packageDetails.insuranceValue) {
+        payload.extraServices.push({
+          extraServiceCode: 'INSURANCE',
+          declaredValue: parseFloat(packageDetails.insuranceValue)
+        });
+      }
+    }
+    
+    // Define mail classes to try
+    const mailClasses = [
+      USPS_MAIL_CLASSES.PRIORITY_MAIL,
+      USPS_MAIL_CLASSES.PRIORITY_MAIL_EXPRESS,
+      USPS_MAIL_CLASSES.FIRST_CLASS_PACKAGE,
+      USPS_MAIL_CLASSES.GROUND_ADVANTAGE
+    ];
+    
+    // Array to store all rates
+    const allRates = [];
+    const errors = [];
+    
+    // Try each mail class
+    const basePayload = { ...payload };
+    
+    for (const mailClass of mailClasses) {
+      try {
+        // Use the best-fit box information for this mail class
+        let mailClassPayload = { ...payload, mailClass };
+        
+        // For Priority Mail, we can use the best-fit box if it's a flat rate box
+        if (mailClass === USPS_MAIL_CLASSES.PRIORITY_MAIL) {
+          // If we found a suitable flat rate box, use it
+          if (boxInfo.isCarrierBox && [
+              CONTAINER_TYPES.SM_FLAT_RATE_BOX,
+              CONTAINER_TYPES.MD_FLAT_RATE_BOX,
+              CONTAINER_TYPES.LG_FLAT_RATE_BOX
+            ].includes(boxInfo.type)) {
+            mailClassPayload.containerType = boxInfo.type;
+            console.log(`Using ${boxInfo.name} for Priority Mail`);
+          }
+          // Otherwise use variable for custom dimensions
+          else {
+            mailClassPayload.containerType = CONTAINER_TYPES.VARIABLE;
+            console.log('Using variable container for Priority Mail');
+          }
+        }
+        // For Priority Mail Express, we can also use flat rate options
+        else if (mailClass === USPS_MAIL_CLASSES.PRIORITY_MAIL_EXPRESS) {
+          // If we found a suitable flat rate envelope, use it
+          if (boxInfo.isCarrierBox && [
+              CONTAINER_TYPES.FLAT_RATE_ENVELOPE,
+              CONTAINER_TYPES.FLAT_RATE_PADDED_ENVELOPE
+            ].includes(boxInfo.type)) {
+            mailClassPayload.containerType = boxInfo.type;
+            console.log(`Using ${boxInfo.name} for Priority Mail Express`);
+          }
+          // Otherwise use variable for custom dimensions
+          else {
+            mailClassPayload.containerType = CONTAINER_TYPES.VARIABLE;
+            console.log('Using variable container for Priority Mail Express');
+          }
+        }
+        // For First Class Package and Ground Advantage, always use variable container
+        else {
+          mailClassPayload.containerType = CONTAINER_TYPES.VARIABLE;
+          console.log(`Using variable container for ${mailClass}`);
+        }
+        
+        // Add rate indicator based on mail class and container type
+        try {
+          mailClassPayload.rateIndicator = determineRateIndicator(
+            mailClass,
+            mailClassPayload.length,
+            mailClassPayload.width,
+            mailClassPayload.height,
+            mailClassPayload.weight,
+            mailClassPayload.containerType
+          );
+          
+          console.log(`Trying USPS mail class: ${mailClass}`);
+          
+          try {
+          // Get the USPS access token
+          const accessToken = await getUSPSAccessToken();
+          
+          // Make the API call to USPS Rates API
+          console.log(`Sending request to USPS API for ${mailClass}:`, 
+            JSON.stringify(mailClassPayload, null, 2));
+          
+          // Store current dimensions for reference in response mapping
+          const currentDimensions = {
+            length: mailClassPayload.length,
+            width: mailClassPayload.width,
+            height: mailClassPayload.height,
+            containerType: mailClassPayload.containerType
+          };
+          
+          const response = await axios.post(
+            `${USPS_CONFIG.apiBaseUrl}/prices/v3/base-rates/search`,
+            mailClassPayload,
+            {
+              headers: {
+                'Authorization': `Bearer ${accessToken}`,
+                'Content-Type': 'application/json',
+                'Accept': 'application/json'
+              }
+            }
+          );
+          
+          // Log successful response
+          console.log(`USPS API response for ${mailClass}:`, JSON.stringify(response.data, null, 2));
+          
+          // Process the response
+          // The API returns rates in the 'rates' array, not 'baseRates'
+          if (response.data && response.data.rates && response.data.rates.length > 0) {
+            console.log(`Found ${response.data.rates.length} rates for ${mailClass}`);
+            
+            // Map response to our standard format
+            const rates = response.data.rates.map(rate => {
+              // Use the same service name mapping as above
+              let serviceName;
+              switch (mailClass) {
+                case USPS_MAIL_CLASSES.PRIORITY_MAIL_EXPRESS:
+                  serviceName = 'USPS Priority Mail Express';
+                  break;
+                case USPS_MAIL_CLASSES.PRIORITY_MAIL:
+                  serviceName = 'USPS Priority Mail';
+                  break;
+                case USPS_MAIL_CLASSES.FIRST_CLASS_PACKAGE:
+                  serviceName = 'USPS First-Class Package';
+                  break;
+                case USPS_MAIL_CLASSES.GROUND_ADVANTAGE:
+                  serviceName = 'USPS Ground Advantage';
+                  break;
+                default:
+                  serviceName = `USPS ${mailClass.replace(/_/g, ' ')}`;
+              }
+              
+              // Use the same estimated days mapping as above
+              let estimatedDays;
+              switch (mailClass) {
+                case USPS_MAIL_CLASSES.PRIORITY_MAIL_EXPRESS:
+                  estimatedDays = '1-2';
+                  break;
+                case USPS_MAIL_CLASSES.PRIORITY_MAIL:
+                  estimatedDays = '2-3';
+                  break;
+                case USPS_MAIL_CLASSES.FIRST_CLASS_PACKAGE:
+                  estimatedDays = '2-5';
+                  break;
+                case USPS_MAIL_CLASSES.GROUND_ADVANTAGE:
+                  estimatedDays = '3-5';
+                  break;
+                default:
+                  estimatedDays = '3-7';
+              }
+              
+              // Determine box type name based on container type
+              let boxTypeName;
+              if (mailClassPayload.containerType === CONTAINER_TYPES.VARIABLE) {
+                boxTypeName = 'Your Packaging';
+              } else if (boxInfo.isCarrierBox) {
+                boxTypeName = boxInfo.name;
+              } else {
+                boxTypeName = 'USPS Box';
+              }
+              
+              return {
+                carrier: 'USPS',
+                service: serviceName,
+                price: parseFloat(rate.price),
+                estimatedDays: estimatedDays,
+                dimensions: {
+                  length: mailClassPayload.length,
+                  width: mailClassPayload.width,
+                  height: mailClassPayload.height,
+                  boxType: mailClassPayload.containerType,
+                  boxTypeName: boxTypeName
+                },
+                isCarrierBox: boxInfo.isCarrierBox,
+                specialServices: {
+                  insurance: !!packageDetails.insuranceValue,
+                  signature: !!packageDetails.signatureRequired
+                }
+              };
+            });
+            
+            allRates.push(...rates);
+          }
+        } catch (error) {
+          // Log detailed error information
+          if (error.response?.data) {
+            console.log(`Error getting rates for ${mailClass}:`, JSON.stringify(error.response.data, null, 2));
+            
+            // Add retry logic for Priority Mail with flat rate boxes if we get a size error
+            if (error.response?.data?.error?.message?.includes('size') && 
+                mailClass === USPS_MAIL_CLASSES.PRIORITY_MAIL && 
+                mailClassPayload.containerType !== CONTAINER_TYPES.VARIABLE) {
+              
+              console.log('Retrying Priority Mail with variable container type');
+              
+              try {
+                // Create a new payload with VARIABLE container type
+                const retryPayload = { 
+                  ...basePayload,
+                  mailClass: mailClass,
+                  containerType: CONTAINER_TYPES.VARIABLE
+                };
+                
+                // Update rate indicator for the new container type
+                retryPayload.rateIndicator = determineRateIndicator(
+                  mailClass,
+                  retryPayload.length,
+                  retryPayload.width,
+                  retryPayload.height,
+                  retryPayload.weight,
+                  CONTAINER_TYPES.VARIABLE
+                );
+                
+                console.log(`Sending retry request to USPS API for ${mailClass} with VARIABLE container:`, 
+                  JSON.stringify(retryPayload, null, 2));
+                
+                // Make the API call to USPS Rates API
+                const retryResponse = await axios.post(
+                  `${USPS_CONFIG.apiBaseUrl}/prices/v3/base-rates/search`,
+                  retryPayload,
+                  {
+                    headers: {
+                      'Authorization': `Bearer ${accessToken}`,
+                      'Content-Type': 'application/json',
+                      'Accept': 'application/json'
+                    }
+                  }
+                );
+                
+                // Process the retry response
+                if (retryResponse.data && retryResponse.data.rates && retryResponse.data.rates.length > 0) {
+                  console.log(`Retry successful! Found ${retryResponse.data.rates.length} rates for ${mailClass}`);
+                  
+                  // Map response to our standard format (same as the main response handling)
+                  const rates = retryResponse.data.rates.map(rate => {
+                    // Use the same service name mapping as above
+                    let serviceName;
+                    switch (mailClass) {
+                      case USPS_MAIL_CLASSES.PRIORITY_MAIL_EXPRESS:
+                        serviceName = 'USPS Priority Mail Express';
+                        break;
+                      case USPS_MAIL_CLASSES.PRIORITY_MAIL:
+                        serviceName = 'USPS Priority Mail';
+                        break;
+                      case USPS_MAIL_CLASSES.FIRST_CLASS_PACKAGE:
+                        serviceName = 'USPS First-Class Package';
+                        break;
+                      case USPS_MAIL_CLASSES.GROUND_ADVANTAGE:
+                        serviceName = 'USPS Ground Advantage';
+                        break;
+                      default:
+                        serviceName = `USPS ${mailClass.replace(/_/g, ' ')}`;
+                    }
+                    
+                    // Use the same estimated days mapping as above
+                    let estimatedDays;
+                    switch (mailClass) {
+                      case USPS_MAIL_CLASSES.PRIORITY_MAIL_EXPRESS:
+                        estimatedDays = '1-2';
+                        break;
+                      case USPS_MAIL_CLASSES.PRIORITY_MAIL:
+                        estimatedDays = '2-3';
+                        break;
+                      case USPS_MAIL_CLASSES.FIRST_CLASS_PACKAGE:
+                        estimatedDays = '2-5';
+                        break;
+                      case USPS_MAIL_CLASSES.GROUND_ADVANTAGE:
+                        estimatedDays = '3-5';
+                        break;
+                      default:
+                        estimatedDays = '3-7';
+                    }
+                    
+                    // Store current payload reference for this scope
+                    const currentRetryPayload = retryPayload;
+                    
+                    return {
+                      carrier: 'USPS',
+                      service: serviceName,
+                      price: parseFloat(rate.price),
+                      estimatedDays: estimatedDays,
+                      dimensions: {
+                        length: currentRetryPayload.length,
+                        width: currentRetryPayload.width,
+                        height: currentRetryPayload.height,
+                        boxType: CONTAINER_TYPES.VARIABLE,
+                        boxTypeName: 'Your Packaging'
+                      },
+                      isCarrierBox: false,
+                      specialServices: {
+                        insurance: !!packageDetails.insuranceValue,
+                        signature: !!packageDetails.signatureRequired
+                      }
+                    };
+                  });
+                  
+                  allRates.push(...rates);
+                  return; // Skip adding to errors since we recovered
+                }
+              } catch (retryError) {
+                console.log(`Retry for ${mailClass} failed:`, retryError.message);
+              }
+            }
+          } else {
+            console.log(`Error getting rates for ${mailClass}:`, error.message);
+          }
+        );
+        
+        // Process the retry response
+        if (retryResponse.data && retryResponse.data.rates && retryResponse.data.rates.length > 0) {
+          console.log(`Retry successful! Found ${retryResponse.data.rates.length} rates for ${mailClass}`);
+          
+          // Map response to our standard format (same as the main response handling)
+          const rates = retryResponse.data.rates.map(rate => {
+            // Use the same service name mapping as above
+            let serviceName;
+            switch (mailClass) {
+              case USPS_MAIL_CLASSES.PRIORITY_MAIL_EXPRESS:
+                serviceName = 'USPS Priority Mail Express';
+                break;
+              case USPS_MAIL_CLASSES.PRIORITY_MAIL:
+                serviceName = 'USPS Priority Mail';
+                break;
+              case USPS_MAIL_CLASSES.FIRST_CLASS_PACKAGE:
+                serviceName = 'USPS First-Class Package';
+                break;
+              case USPS_MAIL_CLASSES.GROUND_ADVANTAGE:
+                serviceName = 'USPS Ground Advantage';
+                break;
+              default:
+                serviceName = `USPS ${mailClass.replace(/_/g, ' ')}`;
+            }
+            
+            // Use the same estimated days mapping as above
+            let estimatedDays;
+            switch (mailClass) {
+              case USPS_MAIL_CLASSES.PRIORITY_MAIL_EXPRESS:
+                estimatedDays = '1-2';
+                break;
+              case USPS_MAIL_CLASSES.PRIORITY_MAIL:
+                estimatedDays = '2-3';
+                break;
+              case USPS_MAIL_CLASSES.FIRST_CLASS_PACKAGE:
+                estimatedDays = '2-5';
+                break;
+              case USPS_MAIL_CLASSES.GROUND_ADVANTAGE:
+                estimatedDays = '3-5';
+                break;
+              default:
+                estimatedDays = '3-7';
+            }
+            
+            // Store current payload reference for this scope
+            const currentRetryPayload = retryPayload;
+            
+            return {
+              carrier: 'USPS',
+              service: serviceName,
+              price: parseFloat(rate.price),
+              estimatedDays: estimatedDays,
+              dimensions: {
+                length: currentRetryPayload.length,
+                width: currentRetryPayload.width,
+                height: currentRetryPayload.height,
+                boxType: CONTAINER_TYPES.VARIABLE,
+                boxTypeName: 'Your Packaging'
+              },
+              isCarrierBox: false,
+              specialServices: {
+                insurance: !!packageDetails.insuranceValue,
+                signature: !!packageDetails.signatureRequired
+              }
+            };
+          });
+          
+          allRates.push(...rates);
+          return; // Skip adding to errors since we recovered
+        }
+      } catch (retryError) {
+        console.log(`Retry for ${mailClass} failed:`, retryError.message);
+      }
+    }
+  } else {
+    console.log(`Error getting rates for ${mailClass}:`, error.message);
+    if (allRates.length > 0) {
+      console.log(`Successfully retrieved ${allRates.length} USPS rates across ${mailClasses.length} mail classes`);
+      
+      // Sort rates by price (lowest first)
+      allRates.sort((a, b) => a.price - b.price);
+      
+      // Log the rates we're returning
+      console.log('Returning USPS rates:', JSON.stringify(allRates.map(r => ({ 
+        service: r.service, 
+        price: r.price,
+        estimatedDays: r.estimatedDays,
+        isCarrierBox: r.isCarrierBox
+      })), null, 2));
+      
+      return allRates;
+    } else {
+      console.log('No valid USPS rates found for any mail class');
+      if (errors.length > 0) {
+        console.error('USPS rate errors:', JSON.stringify(errors, null, 2));
+      }
+      
+      // Return an error message instead of fallback rates
+      return [{
+        carrier: 'USPS',
+        service: 'USPS Shipping',
+        error: errors.length > 0 
+          ? `USPS API Error: ${errors[0].error}` 
+          : 'No USPS shipping rates available for this package.'
+      }];
+    }
+  } catch (error) {
+    console.error('Error in calculateUSPSRates:', error.response?.data || error.message);
+    
+    // Return an error object instead of empty array
+    return [{
+      carrier: 'USPS',
+      service: 'USPS Shipping',
+      error: error.response?.data?.message || 'Unable to get USPS rates at this time.'
+    }];
+  }
+};

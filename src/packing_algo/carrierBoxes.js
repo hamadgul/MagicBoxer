@@ -1,6 +1,52 @@
 // Generate the box sizes for the specific carrier
 function carrierBoxes(carrier) {
   switch (carrier) {
+    case "USPS":
+      return [
+        // USPS Priority Mail Flat Rate Boxes
+        [12.5, 9.5, 5.375, "USPS Small Flat Rate Box", "Flat Rate"],
+        [11.875, 3.375, 13.625, "USPS Medium Flat Rate Box 1", "Flat Rate"],
+        [11, 8.5, 5.5, "USPS Medium Flat Rate Box 2", "Flat Rate"],
+        [12.25, 12, 5.5, "USPS Large Flat Rate Box", "Flat Rate"],
+        [23.6875, 11.75, 3, "USPS Board Game Flat Rate Box", "Flat Rate"],
+        
+        // USPS Priority Mail Regional Rate Boxes
+        [10.125, 7.125, 5, "USPS Regional Rate Box A1", "Regional Rate"],
+        [10.9375, 8.6875, 2.75, "USPS Regional Rate Box A2", "Regional Rate"],
+        [12.25, 10.5, 5.5, "USPS Regional Rate Box B1", "Regional Rate"],
+        [14.375, 11.875, 2.75, "USPS Regional Rate Box B2", "Regional Rate"],
+        
+        // USPS Priority Mail Express Boxes
+        [11.625, 8.375, 5.375, "USPS Priority Mail Express Box", "Express"],
+        [13.625, 11.875, 3.375, "USPS Priority Mail Express Box 2", "Express"],
+        
+        // USPS Priority Mail Envelopes
+        [12.5, 9.5, 0.5, "USPS Priority Mail Envelope", "Flat Rate Envelope"],
+        [15, 9.5, 0.5, "USPS Priority Mail Legal Envelope", "Flat Rate Envelope"],
+        [12.5, 9.5, 0.75, "USPS Priority Mail Padded Envelope", "Flat Rate Envelope"],
+        [15, 9.5, 0.75, "USPS Priority Mail Legal Padded Envelope", "Flat Rate Envelope"],
+        
+        // USPS Priority Mail Express Envelopes
+        [12.5, 9.5, 0.5, "USPS Priority Mail Express Envelope", "Express Envelope"],
+        [15, 9.5, 0.5, "USPS Priority Mail Express Legal Envelope", "Express Envelope"],
+        [12.5, 9.5, 0.75, "USPS Priority Mail Express Padded Envelope", "Express Envelope"],
+        
+        // USPS First-Class Package Service
+        [9, 6, 0.25, "USPS First-Class Envelope", "First-Class"],
+        [10, 7, 0.5, "USPS First-Class Package", "First-Class"],
+        [12, 8, 0.75, "USPS First-Class Large Package", "First-Class"],
+        
+        // USPS Media Mail Boxes
+        [11, 8.5, 5.5, "USPS Media Mail Box - Small", "Media Mail"],
+        [12, 12, 5.5, "USPS Media Mail Box - Medium", "Media Mail"],
+        [14, 12, 8, "USPS Media Mail Box - Large", "Media Mail"],
+        
+        // USPS Variable Size Boxes (for custom dimensions)
+        [12, 12, 12, "USPS Variable Size - Small", "Variable"],
+        [18, 18, 18, "USPS Variable Size - Medium", "Variable"],
+        [24, 24, 24, "USPS Variable Size - Large", "Variable"],
+        [30, 30, 30, "USPS Variable Size - Extra Large", "Variable"]
+      ];
     case "No Carrier":
       return [
         // Small Boxes

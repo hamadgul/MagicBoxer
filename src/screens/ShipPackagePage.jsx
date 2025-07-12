@@ -124,6 +124,12 @@ export default function ShipPackagePage({ route, navigation }) {
       // Get optimal box dimensions using packing algorithm for each carrier
       const upsResult = pack(itemList, 'UPS');
       const fedexResult = pack(itemList, 'FedEx');
+      const uspsResult = pack(itemList, 'USPS');
+      
+      // Detailed logging for packing results
+      console.log('UPS packing result:', JSON.stringify(upsResult, null, 2));
+      console.log('FedEx packing result:', JSON.stringify(fedexResult, null, 2));
+      console.log('USPS packing result:', JSON.stringify(uspsResult, null, 2));
       
       // Get shipping estimates directly
 
@@ -132,6 +138,7 @@ export default function ShipPackagePage({ route, navigation }) {
           ...packageDetails,
           upsResult,
           fedexResult,
+          uspsResult,
           shipmentDate: shipmentDate,
           isResidential: isResidential,
           insuranceValue: insuranceValue ? parseFloat(insuranceValue) : undefined,
@@ -197,9 +204,22 @@ export default function ShipPackagePage({ route, navigation }) {
 
     // Format dimensions for display
     const dimensions = item.dimensions || {};
-    const formattedDimensions = dimensions.length && dimensions.width && dimensions.height
-      ? `${dimensions.length}" × ${dimensions.width}" × ${dimensions.height}"`
-      : 'Dimensions not available';
+    let formattedDimensions;
+    if (item.carrier === 'USPS' && dimensions.originalDimensions) {
+      // Show the actual dimensions used for the API request
+      formattedDimensions = dimensions.length && dimensions.width && dimensions.height
+        ? `${dimensions.length}" × ${dimensions.width}" × ${dimensions.height}"`
+        : 'Dimensions not available';
+        
+      // Log both sets of dimensions for debugging
+      console.log('USPS shipping card - API dimensions:', { length: dimensions.length, width: dimensions.width, height: dimensions.height });
+      console.log('USPS shipping card - Original packing dimensions:', dimensions.originalDimensions);
+    } else {
+      // For other carriers or if no original dimensions, just show the dimensions
+      formattedDimensions = dimensions.length && dimensions.width && dimensions.height
+        ? `${dimensions.length}" × ${dimensions.width}" × ${dimensions.height}"`
+        : 'Dimensions not available';
+    }
 
     // Determine if box is provided by carrier or customer using isCarrierBox flag
     let isCarrierBox = item.isCarrierBox;
@@ -367,6 +387,16 @@ export default function ShipPackagePage({ route, navigation }) {
             <Ionicons name="cube-outline" size={16} color="#64748B" />
             <Text style={styles.boxInfoText}>{formattedDimensions}</Text>
           </View>
+          
+          {/* Show original 3D packing dimensions for USPS if available */}
+          {item.carrier === 'USPS' && dimensions.originalDimensions && (
+            <View style={styles.boxInfoItem}>
+              <Ionicons name="information-circle-outline" size={16} color="#64748B" />
+              <Text style={styles.boxInfoText}>
+                Optimized box: {dimensions.originalDimensions.length}" × {dimensions.originalDimensions.width}" × {dimensions.originalDimensions.height}"
+              </Text>
+            </View>
+          )}
         </View>
       </TouchableOpacity>
     );
