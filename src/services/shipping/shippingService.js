@@ -16,10 +16,20 @@ export const getShippingEstimates = async (packageDetails, fromZip, toZip) => {
     const estimates = [];
     const errors = [];
 
-    // Get USPS mock rates
-    console.log('\n=== Getting USPS Mock Rates ===');
-    const uspsRates = calculateUSPSRates(packageDetails, fromZip, toZip);
-    estimates.push(...uspsRates);
+    // Get real USPS rates from API
+    console.log('\n=== Getting USPS API Rates ===');
+    try {
+      const uspsRates = await calculateUSPSRates(packageDetails, fromZip, toZip);
+      if (Array.isArray(uspsRates)) {
+        estimates.push(...uspsRates);
+      }
+    } catch (uspsError) {
+      console.error("USPS API Error:", uspsError);
+      errors.push({
+        carrier: 'USPS',
+        message: uspsError.message || 'Failed to get USPS rates'
+      });
+    }
 
     // Get real UPS rates from API
     console.log('\n=== Getting UPS API Rates ===');

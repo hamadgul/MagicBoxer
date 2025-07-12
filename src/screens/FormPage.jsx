@@ -1797,7 +1797,7 @@ export default class FormPage extends Component {
                           <View style={{
                             flexDirection: 'row',
                             alignItems: 'center',
-                            backgroundColor: '#FFFFFF',
+                            backgroundColor: '#F2F2F7', // Light gray background to distinguish from input field
                             borderWidth: 1,
                             borderColor: '#D1D1D6', // Match iOS input border color
                             borderTopWidth: 0,
@@ -1807,10 +1807,10 @@ export default class FormPage extends Component {
                             paddingRight: 16,
                             paddingVertical: 10,
                             marginTop: -1,
-                            // Add shadow for better visual connection
+                            // Add subtle gradient effect
                             shadowColor: '#000',
                             shadowOffset: { width: 0, height: 2 },
-                            shadowOpacity: 0.05,
+                            shadowOpacity: 0.08,
                             shadowRadius: 3,
                             elevation: 2,
                           }}>
