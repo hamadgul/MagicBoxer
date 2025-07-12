@@ -20,6 +20,7 @@ import {
 import * as THREE from "three";
 import { Dropdown } from "react-native-element-dropdown";
 import AntDesign from "@expo/vector-icons/AntDesign";
+import Ionicons from "@expo/vector-icons/Ionicons";
 import { pack, createDisplay } from "../packing_algo/packing";
 import { isSpecialSize, getScale } from "../utils/boxSizes";
 import { setupScene, setupCamera, setupRenderer, createBoxMesh } from "../utils/renderUtils";
@@ -35,11 +36,14 @@ const CARRIER_URLS = Object.freeze({
   "Flat Rates Start at": "https://wwwapps.ups.com/ctc/request?loc=en_US"
 });
 
-// Memoize PriceText component
+// Modified PriceText component with improved tooltip
 const PriceText = React.memo(({ carrier, priceText }) => {
   if (!priceText) {
     return <Text style={styles.text}>Price not available</Text>;
   }
+
+  // Clean up the price text if it contains "Box Only Price:"
+  const cleanedPriceText = priceText.replace("Box Only Price:", "Box Price:");
 
   const handlePress = () => {
     const url = Object.entries(CARRIER_URLS).find(([key]) => priceText.includes(key))?.[1];
@@ -49,13 +53,31 @@ const PriceText = React.memo(({ carrier, priceText }) => {
   };
 
   const isClickable = Object.keys(CARRIER_URLS).some(key => priceText.includes(key));
+  
+  const showTooltipAlert = () => {
+    Alert.alert(
+      "Box Price Information",
+      "This is the price for the box only. For actual shipping rates, go to Saved Packages, select your package, and tap \"Shipping Estimates\".",
+      [{ text: "OK", style: "default" }],
+      { cancelable: true }
+    );
+  };
 
-  return isClickable ? (
-    <TouchableOpacity onPress={handlePress}>
-      <Text style={[styles.text, styles.linkText]}>{priceText}</Text>
-    </TouchableOpacity>
-  ) : (
-    <Text style={styles.text}>{priceText}</Text>
+  return (
+    <View style={styles.priceContainer}>
+      <View style={{flexDirection: 'row', alignItems: 'center'}}>
+        {isClickable ? (
+          <TouchableOpacity onPress={handlePress}>
+            <Text style={[styles.text, styles.linkText]}>{cleanedPriceText}</Text>
+          </TouchableOpacity>
+        ) : (
+          <Text style={styles.text}>{cleanedPriceText}</Text>
+        )}
+        <TouchableOpacity onPress={showTooltipAlert} style={styles.tooltipIconContainer}>
+          <Ionicons name="information-circle" size={16} color="#007AFF" />
+        </TouchableOpacity>
+      </View>
+    </View>
   );
 });
 
@@ -1128,59 +1150,60 @@ export default class Display3D extends Component {
                     opacity: this.state.boxContentHeight,
                     height: this.state.boxContentHeight.interpolate({
                       inputRange: [0, 1],
-                      outputRange: [0, 140],
+                      outputRange: [0, 155],
                     }),
                   },
                 ]}
               >
-                
-                <Text style={styles.boxDetails}>
-                  {selectedBox.dimensions[0]}L x {selectedBox.dimensions[1]}W x{" "}
-                  {selectedBox.dimensions[2]}H
-                </Text>
-                <Text style={styles.text}>{selectedBox.finalBoxType}</Text>
-                <PriceText carrier={selectedCarrier} priceText={selectedBox.priceText} />
-                <View style={styles.carrierDropdownContainer}>
-                  <Dropdown
-                    style={styles.input}
-                    data={carriers}
-                    labelField="label"
-                    valueField="value"
-                    placeholder="Select Carrier"
-                    value={selectedCarrier}
-                    onChange={(item) => this.updateVisualsBasedOnCarrier(item.value)}
-                    renderLeftIcon={() => (
-                      <AntDesign
-                        style={styles.icon}
-                        color="black"
-                        name="Safety"
-                        size={20}
-                      />
-                    )}
-                    renderRightIcon={() => (
-                      <AntDesign
-                        style={styles.icon}
-                        color="black"
-                        name="down"
-                        size={16}
-                      />
-                    )}
-                  />
-                </View>
-                {!isBoxCollapsed && (
-                  <TouchableOpacity
-                    style={styles.legendButton}
-                    onPress={() => this.toggleLegend()}
-                  >
-                    <AntDesign 
-                      name="infocirlceo" 
-                      size={14} 
-                      color="#666" 
-                      style={styles.legendIcon}
+                <View style={styles.boxContentInner}>
+                  <Text style={styles.boxDetails}>
+                    {selectedBox.dimensions[0]}L x {selectedBox.dimensions[1]}W x{" "}
+                    {selectedBox.dimensions[2]}H
+                  </Text>
+                  <Text style={styles.text}>{selectedBox.finalBoxType}</Text>
+                  <PriceText carrier={selectedCarrier} priceText={selectedBox.priceText} />
+                  <View style={styles.carrierDropdownContainer}>
+                    <Dropdown
+                      style={styles.input}
+                      data={carriers}
+                      labelField="label"
+                      valueField="value"
+                      placeholder="Select Carrier"
+                      value={selectedCarrier}
+                      onChange={(item) => this.updateVisualsBasedOnCarrier(item.value)}
+                      renderLeftIcon={() => (
+                        <AntDesign
+                          style={styles.icon}
+                          color="black"
+                          name="Safety"
+                          size={20}
+                        />
+                      )}
+                      renderRightIcon={() => (
+                        <AntDesign
+                          style={styles.icon}
+                          color="black"
+                          name="down"
+                          size={16}
+                        />
+                      )}
                     />
-                    <Text style={styles.legendButtonText}>Legend</Text>
-                  </TouchableOpacity>
-                )}
+                  </View>
+                  <View style={styles.legendButtonContainer}>
+                    <TouchableOpacity
+                      style={styles.legendButton}
+                      onPress={() => this.toggleLegend()}
+                    >
+                      <AntDesign 
+                        name="infocirlceo" 
+                        size={14} 
+                        color="#666" 
+                        style={styles.legendIcon}
+                      />
+                      <Text style={styles.legendButtonText}>Legend</Text>
+                    </TouchableOpacity>
+                  </View>
+                </View>
               </Animated.View>
               {isBoxCollapsed && (
                 <TouchableOpacity
@@ -1206,6 +1229,22 @@ export default class Display3D extends Component {
 }
 
 const styles = StyleSheet.create({
+  priceContainer: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginVertical: 2,
+  },
+  tooltipIconContainer: {
+    width: 20,
+    height: 20,
+    marginLeft: 4,
+    paddingTop: 1,
+  },
+  boxOnlyLabel: {
+    fontSize: 13,
+    color: '#8E8E93',
+    fontStyle: 'italic',
+  },
   container: {
     flex: 1,
     backgroundColor: "#fff",
@@ -1317,6 +1356,17 @@ const styles = StyleSheet.create({
   boxContent: {
     overflow: "hidden",
   },
+  boxContentInner: {
+    paddingHorizontal: 15,
+    alignItems: "center",
+  },
+  legendButtonContainer: {
+    width: "100%",
+    alignItems: "center",
+    marginTop: 4,
+    marginBottom: 10,
+    paddingBottom: 5,
+  },
   boxSubtitle: {
     fontSize: 14,
     color: "#555",
@@ -1362,15 +1412,15 @@ const styles = StyleSheet.create({
   legendButton: {
     backgroundColor: '#f8f9fa',
     paddingVertical: 4,
-    paddingHorizontal: 10,
+    paddingHorizontal: 12,
     borderRadius: 16,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
     marginTop: 2,
-    marginBottom: 2,
+    marginBottom: 8,
     alignSelf: 'center',
-    width: 85,
+    minWidth: 95,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 1 },
     shadowOpacity: 0.1,
