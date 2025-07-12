@@ -356,15 +356,19 @@ export default class SavedItemsPage extends Component {
   getFilteredItems = () => {
     const { savedItems, searchQuery } = this.state;
     
-    if (!searchQuery.trim()) {
-      return savedItems;
+    let items = [...savedItems]; // Create a copy to avoid mutating state
+    
+    // Filter items if there's a search query
+    if (searchQuery.trim()) {
+      const query = searchQuery.toLowerCase().trim();
+      items = items.filter(item => {
+        // Check if the item name matches the query
+        return item.name.toLowerCase().includes(query);
+      });
     }
     
-    const query = searchQuery.toLowerCase().trim();
-    return savedItems.filter(item => {
-      // Check if the item name matches the query
-      return item.name.toLowerCase().includes(query);
-    });
+    // Reverse the order to show newest first
+    return items.reverse();
   };
 
   toggleItemSelection = (itemId) => {

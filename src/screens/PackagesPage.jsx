@@ -907,7 +907,7 @@ export default class PackagesPage extends Component {
                 </Text>
               </View>
             ) : (
-              Object.keys(this.state.searchQuery.trim() !== "" ? this.getFilteredPackages() : packages).map(this.renderPackage)
+              Object.keys(this.state.searchQuery.trim() !== "" ? this.getFilteredPackages() : packages).reverse().map(this.renderPackage)
             )}
           </ScrollView>
 
@@ -1787,13 +1787,30 @@ export default class PackagesPage extends Component {
     
     return filteredPackages;
   };
+  
+  // Sort packages by date, newest to oldest
+  getSortedPackageNames = (packagesObj) => {
+    return Object.keys(packagesObj).sort((a, b) => {
+      const packageA = packagesObj[a];
+      const packageB = packagesObj[b];
+      
+      // Extract dates from packages
+      const dateA = packageA && typeof packageA === 'object' && packageA.dateCreated ? 
+        new Date(packageA.dateCreated) : new Date(0);
+      const dateB = packageB && typeof packageB === 'object' && packageB.dateCreated ? 
+        new Date(packageB.dateCreated) : new Date(0);
+      
+      // Sort newest to oldest
+      return dateB - dateA;
+    });
+  };
 }
 
 const styles = StyleSheet.create({
   // Search bar styles
   searchBarContainer: {
-    paddingHorizontal: 16,
     paddingVertical: 12,
+    paddingHorizontal: 16,
     backgroundColor: "#f5f5f5",
     borderBottomWidth: 1,
     borderBottomColor: "#E2E8F0",
@@ -1859,7 +1876,8 @@ const styles = StyleSheet.create({
   },
   scrollView: {
     flex: 1,
-    padding: 10,
+    paddingVertical: 10,
+    paddingHorizontal: 16, // Match searchBarContainer paddingHorizontal
     paddingBottom: 96, // Reduced padding since buttons are side by side
   },
   scrollViewContent: {
@@ -1868,8 +1886,9 @@ const styles = StyleSheet.create({
   packageRow: {
     flexDirection: "row",
     alignItems: "center",
-    padding: 8,
-    marginHorizontal: 4,
+    paddingVertical: 8,
+    paddingHorizontal: 0,
+    marginHorizontal: 0,
   },
   packageContainer: {
     flex: 1,
