@@ -579,23 +579,27 @@ const LookupItemPage = ({ navigation, route }) => {
               
               {/* Save buttons */}
               {result && (
-                <View style={{ flexDirection: fromFormPage ? 'row' : 'column', justifyContent: 'space-between', gap: fromFormPage ? 10 : 0 }}>
+                <View style={{ flexDirection: 'row', justifyContent: 'space-between', gap: 10 }}>
                   <TouchableOpacity
-                    style={[styles.saveButton, fromFormPage && { flex: 1 }]}
+                    style={[styles.saveButton, { flex: 1, alignItems: 'center' }]}
                     onPress={saveItem}
                   >
-                    <Ionicons name="bookmark-outline" size={20} color="#FFFFFF" style={styles.buttonIcon} />
-                    <Text style={styles.buttonText}>Save Item</Text>
+                    <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'center' }}>
+                      <Ionicons name="bookmark-outline" size={20} color="#FFFFFF" style={{ marginRight: 8 }} />
+                      <Text style={[styles.buttonText, { textAlign: 'center' }]}>Save Item</Text>
+                    </View>
                   </TouchableOpacity>
                   
                   {/* Show "Save to Package" button only when dimensions are returned and we came from FormPage */}
                   {showSaveToPackage && (
                     <TouchableOpacity
-                      style={[styles.saveButton, { flex: 1, backgroundColor: '#22C55E' }]}
+                      style={[styles.saveButton, { flex: 1, backgroundColor: '#22C55E', alignItems: 'center' }]}
                       onPress={saveToCurrentPackage}
                     >
-                      <Ionicons name="add-circle-outline" size={20} color="#FFFFFF" style={styles.buttonIcon} />
-                      <Text style={styles.buttonText}>Save to Current Package</Text>
+                      <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'center' }}>
+                        <Ionicons name="add-circle-outline" size={20} color="#FFFFFF" style={{ marginRight: 8 }} />
+                        <Text style={[styles.buttonText, { textAlign: 'center' }]}>Save to Package</Text>
+                      </View>
                     </TouchableOpacity>
                   )}
                 </View>

@@ -19,6 +19,7 @@ import {
   ToastAndroid,
   BackHandler,
   InteractionManager,
+  Image,
 } from 'react-native';
 import { VStack } from "native-base";  
 import AsyncStorage from "@react-native-async-storage/async-storage";
@@ -1770,7 +1771,11 @@ export default class FormPage extends Component {
                             });
                           }}
                         >
-                          <Ionicons name="search" size={22} color="#64748B" />
+                          <Image 
+                            source={require('../assets/ai-technology.png')} 
+                            style={{ width: 22, height: 22, tintColor: '#64748B' }} 
+                            resizeMode="contain" 
+                          />
                         </TouchableOpacity>
                       </View>
                       
