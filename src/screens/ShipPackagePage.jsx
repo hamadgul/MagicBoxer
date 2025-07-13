@@ -312,7 +312,20 @@ export default function ShipPackagePage({ route, navigation }) {
             )}
           </View>
           {!hasError ? (
-            <Text style={styles.price}>${item.price?.toFixed(2)}</Text>
+            <View style={styles.priceContainer}>
+              <Text style={styles.price}>${item.price?.toFixed(2)}</Text>
+              <TouchableOpacity
+                onPress={() => {
+                  Alert.alert(
+                    'Pricing Information',
+                    'These are base prices provided in real-time by the carrier through their API. Actual prices may vary and may not include some in-store fees, fuel surcharges, or special handling charges.',
+                    [{ text: 'Got it', style: 'default' }]
+                  );
+                }}
+              >
+                <Ionicons name="information-circle-outline" size={16} color="#3b82f6" style={styles.priceInfoIcon} />
+              </TouchableOpacity>
+            </View>
           ) : (
             <Text style={styles.unavailableText}>Unavailable</Text>
           )}
@@ -799,10 +812,17 @@ const styles = StyleSheet.create({
     marginLeft: 8,
     fontStyle: 'italic',
   },
+  priceContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
   price: {
     fontSize: 20,
     fontWeight: '700',
     color: '#2563eb',
+  },
+  priceInfoIcon: {
+    marginLeft: 6,
   },
   estimateDetails: {
     marginTop: 4,
