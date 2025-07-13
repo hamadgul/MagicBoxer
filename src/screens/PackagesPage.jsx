@@ -855,14 +855,33 @@ export default class PackagesPage extends Component {
               
               <View style={styles.selectionActionButtons}>
                 <TouchableOpacity
-                  style={[styles.actionButton, styles.cancelSelectionButton]}
+                  style={{
+                    backgroundColor: '#E5E5EA',
+                    paddingVertical: 10,
+                    paddingHorizontal: 20,
+                    borderRadius: 8,
+                    marginLeft: 8,
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    minWidth: 80,
+                  }}
                   onPress={this.cancelSelection}
                 >
                   <Text style={styles.cancelButtonText}>Cancel</Text>
                 </TouchableOpacity>
                 
                 <TouchableOpacity
-                  style={[styles.actionButton, styles.actionDeleteButton]}
+                  style={{
+                    backgroundColor: '#FF3B30',
+                    paddingVertical: 10,
+                    paddingHorizontal: 20,
+                    borderRadius: 8,
+                    marginLeft: 8,
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    minWidth: 80,
+                    opacity: this.state.selectedPackages.length === 0 ? 0.5 : 1
+                  }}
                   onPress={() => {
                     if (this.state.selectedPackages.length > 0) {
                       this.setState({ showDeleteConfirmModal: true });
@@ -2134,25 +2153,27 @@ const styles = StyleSheet.create({
   selectionActionButtons: {
     flexDirection: 'row',
   },
-  actionButton: {
+  cancelButton: {
+    backgroundColor: '#E5E5EA',
     paddingVertical: 10,
-    paddingHorizontal: 16,
-    borderRadius: 10, // iOS button radius
-    marginLeft: 8,
+    paddingHorizontal: 20,
+    borderRadius: 8,
+    marginRight: 8,
     alignItems: 'center',
     justifyContent: 'center',
     minWidth: 80,
   },
-  actionDeleteButton: {
-    backgroundColor: '#FF3B30', // iOS red
+  deleteButton: {
+    backgroundColor: '#FF9F9A',
+    paddingVertical: 10,
     paddingHorizontal: 20,
-  },
-  cancelSelectionButton: {
-    backgroundColor: '#E5E5EA', // iOS light gray
-    paddingHorizontal: 20,
+    borderRadius: 8,
+    alignItems: 'center',
+    justifyContent: 'center',
+    minWidth: 80,
   },
   cancelButtonText: {
-    color: '#007AFF', // iOS blue
+    color: '#8E8E93', // iOS gray
     fontWeight: '600',
     textAlign: 'center',
     fontSize: 17, // iOS button text size

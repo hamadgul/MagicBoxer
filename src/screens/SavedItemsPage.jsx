@@ -1755,13 +1755,13 @@ const styles = StyleSheet.create({
     color: '#007AFF', // iOS blue
     fontWeight: '600',
     textAlign: 'center',
-    fontSize: 17, // iOS button text size
+    fontSize: 18, // Increased to match PackagesPage
   },
   deleteButtonText: {
     color: 'white',
     fontWeight: '600',
     textAlign: 'center',
-    fontSize: 17, // iOS button text size
+    fontSize: 18, // Increased to match PackagesPage
   },
   loadingContainer: {
     alignItems: 'center',
