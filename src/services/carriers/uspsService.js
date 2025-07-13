@@ -9,12 +9,19 @@ const USPS_CONFIG = {
   dimDivisor: 166
 };
 
-// USPS Mail Class Constants
+// USPS mail classes
 const USPS_MAIL_CLASSES = {
-  PRIORITY_MAIL: 'PRIORITY_MAIL',
   PRIORITY_MAIL_EXPRESS: 'PRIORITY_MAIL_EXPRESS',
-  FIRST_CLASS_PACKAGE: 'FIRST_CLASS_PACKAGE_SERVICE', // Fixed hyphen to underscore
-  GROUND_ADVANTAGE: 'USPS_GROUND_ADVANTAGE'
+  PRIORITY_MAIL: 'PRIORITY_MAIL',
+  FIRST_CLASS_PACKAGE: 'FIRST-CLASS_PACKAGE_SERVICE',
+  GROUND_ADVANTAGE: 'USPS_GROUND_ADVANTAGE',
+  PARCEL_SELECT: 'PARCEL_SELECT',
+  LIBRARY_MAIL: 'LIBRARY_MAIL',
+  MEDIA_MAIL: 'MEDIA_MAIL',
+  BOUND_PRINTED_MATTER: 'BOUND_PRINTED_MATTER',
+  USPS_CONNECT_LOCAL: 'USPS_CONNECT_LOCAL',
+  USPS_CONNECT_MAIL: 'USPS_CONNECT_MAIL',
+  USPS_CONNECT_REGIONAL: 'USPS_CONNECT_REGIONAL'
 };
 
 // USPS Container Types
@@ -437,6 +444,41 @@ export const calculateUSPSRates = async (packageDetails, fromZip, toZip) => {
         maxLength: 108,
         maxLengthPlusGirth: 130,
         maxWeight: 70 // pounds
+      },
+      [USPS_MAIL_CLASSES.PARCEL_SELECT]: {
+        maxLength: 108,
+        maxLengthPlusGirth: 130,
+        maxWeight: 70 // pounds
+      },
+      [USPS_MAIL_CLASSES.MEDIA_MAIL]: {
+        maxLength: 108,
+        maxLengthPlusGirth: 130,
+        maxWeight: 70 // pounds
+      },
+      [USPS_MAIL_CLASSES.LIBRARY_MAIL]: {
+        maxLength: 108,
+        maxLengthPlusGirth: 130,
+        maxWeight: 70 // pounds
+      },
+      [USPS_MAIL_CLASSES.BOUND_PRINTED_MATTER]: {
+        maxLength: 108,
+        maxLengthPlusGirth: 130,
+        maxWeight: 15 // pounds
+      },
+      [USPS_MAIL_CLASSES.USPS_CONNECT_LOCAL]: {
+        maxLength: 108,
+        maxLengthPlusGirth: 130,
+        maxWeight: 70 // pounds
+      },
+      [USPS_MAIL_CLASSES.USPS_CONNECT_REGIONAL]: {
+        maxLength: 108,
+        maxLengthPlusGirth: 130,
+        maxWeight: 70 // pounds
+      },
+      [USPS_MAIL_CLASSES.USPS_CONNECT_MAIL]: {
+        maxLength: 108,
+        maxLengthPlusGirth: 130,
+        maxWeight: 70 // pounds
       }
     };
     
@@ -506,7 +548,13 @@ export const calculateUSPSRates = async (packageDetails, fromZip, toZip) => {
       USPS_MAIL_CLASSES.PRIORITY_MAIL_EXPRESS,
       USPS_MAIL_CLASSES.PRIORITY_MAIL,
       USPS_MAIL_CLASSES.FIRST_CLASS_PACKAGE,
-      USPS_MAIL_CLASSES.GROUND_ADVANTAGE
+      USPS_MAIL_CLASSES.GROUND_ADVANTAGE,
+      USPS_MAIL_CLASSES.PARCEL_SELECT,
+      USPS_MAIL_CLASSES.MEDIA_MAIL,
+      USPS_MAIL_CLASSES.LIBRARY_MAIL,
+      USPS_MAIL_CLASSES.BOUND_PRINTED_MATTER,
+      USPS_MAIL_CLASSES.USPS_CONNECT_LOCAL,
+      USPS_MAIL_CLASSES.USPS_CONNECT_REGIONAL
     ];
     
     // Array to store all valid rates
@@ -533,25 +581,37 @@ export const calculateUSPSRates = async (packageDetails, fromZip, toZip) => {
         // Determine container type based on mail class and package dimensions
         let mailClassContainerType = containerType;
         
-        // For Priority Mail, use flat rate boxes when available
-        if (mailClass === USPS_MAIL_CLASSES.PRIORITY_MAIL && 
-            containerType !== CONTAINER_TYPES.VARIABLE) {
-          console.log(`Using ${bestFitBox.name} for Priority Mail`);
-        }
-        
-        // For Priority Mail Express, use flat rate envelopes when available
-        if (mailClass === USPS_MAIL_CLASSES.PRIORITY_MAIL_EXPRESS && 
-            (containerType === CONTAINER_TYPES.FLAT_RATE_ENVELOPE || 
-             containerType === CONTAINER_TYPES.FLAT_RATE_LEGAL_ENVELOPE || 
-             containerType === CONTAINER_TYPES.FLAT_RATE_PADDED_ENVELOPE)) {
-          console.log(`Using ${bestFitBox.name} for Priority Mail Express`);
-        }
-        
-        // For First-Class Package and Ground Advantage, always use variable container
-        if (mailClass === USPS_MAIL_CLASSES.FIRST_CLASS_PACKAGE || 
-            mailClass === USPS_MAIL_CLASSES.GROUND_ADVANTAGE) {
+        // For most mail classes, always use variable container to avoid SKU errors
+        // The "Could not find working sku from SSF ingredients" error occurs when trying to use specific container types
+        if (mailClass === USPS_MAIL_CLASSES.PRIORITY_MAIL || 
+            mailClass === USPS_MAIL_CLASSES.PRIORITY_MAIL_EXPRESS ||
+            mailClass === USPS_MAIL_CLASSES.FIRST_CLASS_PACKAGE || 
+            mailClass === USPS_MAIL_CLASSES.GROUND_ADVANTAGE ||
+            mailClass === USPS_MAIL_CLASSES.PARCEL_SELECT ||
+            mailClass === USPS_MAIL_CLASSES.MEDIA_MAIL ||
+            mailClass === USPS_MAIL_CLASSES.LIBRARY_MAIL ||
+            mailClass === USPS_MAIL_CLASSES.BOUND_PRINTED_MATTER ||
+            mailClass === USPS_MAIL_CLASSES.USPS_CONNECT_LOCAL ||
+            mailClass === USPS_MAIL_CLASSES.USPS_CONNECT_REGIONAL ||
+            mailClass === USPS_MAIL_CLASSES.USPS_CONNECT_MAIL) {
           mailClassContainerType = CONTAINER_TYPES.VARIABLE;
-          console.log(`Using variable container for ${mailClass}`);
+          console.log(`Using variable container for ${mailClass} to avoid SKU errors`);
+        }
+        
+        // For Ground Advantage, check if dimensions exceed cubic volume limits
+        // The cubic volume limit for Ground Advantage is 0.50 cubic feet or 864 cubic inches
+        if (mailClass === USPS_MAIL_CLASSES.GROUND_ADVANTAGE) {
+          const cubicVolume = length * width * height;
+          const maxCubicVolume = 864; // 0.50 cubic feet = 864 cubic inches
+          
+          if (cubicVolume > maxCubicVolume) {
+            console.log(`Package cubic volume (${cubicVolume} in³) exceeds Ground Advantage maximum (${maxCubicVolume} in³)`);
+            errors.push({
+              mailClass,
+              error: "Package dimensions exceed the maximum volume for Ground Advantage"
+            });
+            continue;
+          }
         }
         
         // Determine rate indicator based on mail class and dimensions

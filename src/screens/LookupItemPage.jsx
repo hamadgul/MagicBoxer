@@ -39,6 +39,8 @@ const LookupItemPage = ({ navigation, route }) => {
   const [fromFormPage, setFromFormPage] = useState(route.params?.fromFormPage || false);
   // Reference to the ScrollView for automatic scrolling
   const scrollViewRef = React.useRef(null);
+  // Track if we should show the Save to Package button
+  const [showSaveToPackage, setShowSaveToPackage] = useState(false);
 
   useEffect(() => {
     if (route.params?.searchQuery) {
@@ -95,7 +97,12 @@ const LookupItemPage = ({ navigation, route }) => {
       if (cachedResult) {
         // Use cached result if available
         console.log('Using cached dimensions');
-        setResult(JSON.parse(cachedResult));
+        const parsedResult = JSON.parse(cachedResult);
+        setResult(parsedResult);
+        // Show Save to Package button if we came from FormPage
+        if (fromFormPage) {
+          setShowSaveToPackage(true);
+        }
         setLoading(false);
         return;
       }
@@ -152,15 +159,22 @@ const LookupItemPage = ({ navigation, route }) => {
           throw new Error('Invalid response from OpenAI API');
         }
         
-        // Parse the response
-        const dimensions = parseAIResponse(data.choices[0].message.content);
+        // Parse the response and extract dimensions
+        const parsedResponse = await parseAIResponse(data.choices[0].message.content);
         
-        // Cache the result
-        await AsyncStorage.setItem(`dimension_cache_${cacheKey}`, JSON.stringify(dimensions));
-        
-        // Set the result
-        setResult(dimensions);
-        setLoading(false);
+        if (parsedResponse) {
+          // Cache the result for future use
+          await AsyncStorage.setItem(`dimension_cache_${cacheKey}`, JSON.stringify(parsedResponse));
+          
+          setResult(parsedResponse);
+          // Show Save to Package button if we came from FormPage
+          if (fromFormPage) {
+            setShowSaveToPackage(true);
+          }
+          setLoading(false);
+        } else {
+          throw new Error('Failed to parse AI response');
+        }
         
         // Automatically scroll to results after a short delay
         setTimeout(() => {
@@ -273,6 +287,10 @@ const LookupItemPage = ({ navigation, route }) => {
         }
         
         setResult(mockDimensions);
+        // Show Save to Package button if we came from FormPage
+        if (fromFormPage) {
+          setShowSaveToPackage(true);
+        }
         setLoading(false);
         
         // Automatically scroll to results after a short delay
@@ -401,12 +419,13 @@ const LookupItemPage = ({ navigation, route }) => {
         quantity: 1
       };
       
-      // Clear all inputs after successful addition
+      // Reset state
       setItemName('');
       setItemYear('');
       setItemType('');
       setItemBrand('');
       setResult(null);
+      setShowSaveToPackage(false);
       
       // Navigate back to Create Package with the new item data
       // FormPage will show its own confirmation
@@ -569,8 +588,8 @@ const LookupItemPage = ({ navigation, route }) => {
                     <Text style={styles.buttonText}>Save Item</Text>
                   </TouchableOpacity>
                   
-                  {/* Show "Save to current package" button only when navigating from FormPage */}
-                  {fromFormPage && (
+                  {/* Show "Save to Package" button only when dimensions are returned and we came from FormPage */}
+                  {showSaveToPackage && (
                     <TouchableOpacity
                       style={[styles.saveButton, { flex: 1, backgroundColor: '#22C55E' }]}
                       onPress={saveToCurrentPackage}

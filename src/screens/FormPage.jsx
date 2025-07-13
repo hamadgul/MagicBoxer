@@ -1762,7 +1762,13 @@ export default class FormPage extends Component {
                             justifyContent: 'center',
                             paddingHorizontal: 16,
                           }}
-                          onPress={() => this.setState({ savedItemsSearchQuery: this.state.itemName, showAllSavedItemsModal: true, showRecentItems: false })}
+                          onPress={() => {
+                            // Navigate directly to AI Item Search page with the current name input
+                            this.props.navigation.navigate('AI Item Search', { 
+                              searchQuery: this.state.itemName,
+                              fromFormPage: true // Flag to indicate navigation from FormPage
+                            });
+                          }}
                         >
                           <Ionicons name="search" size={22} color="#64748B" />
                         </TouchableOpacity>
