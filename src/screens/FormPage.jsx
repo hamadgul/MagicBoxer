@@ -1770,12 +1770,22 @@ export default class FormPage extends Component {
                               fromFormPage: true // Flag to indicate navigation from FormPage
                             });
                           }}
+                          activeOpacity={0.6}
                         >
-                          <Image 
-                            source={require('../assets/ai-technology.png')} 
-                            style={{ width: 22, height: 22, tintColor: '#64748B' }} 
-                            resizeMode="contain" 
-                          />
+                          <View style={{
+                            width: 30,
+                            height: 30,
+                            borderRadius: 15,
+                            backgroundColor: '#F0F9FF',
+                            justifyContent: 'center',
+                            alignItems: 'center',
+                          }}>
+                            <Image 
+                              source={require('../assets/ai-technology.png')} 
+                              style={{ width: 20, height: 20, tintColor: '#3B82F6' }} 
+                              resizeMode="contain" 
+                            />
+                          </View>
                         </TouchableOpacity>
                       </View>
                       
