@@ -20,9 +20,12 @@ import {
   BackHandler,
   InteractionManager,
   Image,
+  Animated,
+  Easing,
 } from 'react-native';
 import { VStack } from "native-base";  
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import { LinearGradient } from 'expo-linear-gradient';
 
 import { generateUUID } from "three/src/math/MathUtils";
 import { pack, createDisplay } from "../packing_algo/packing";
@@ -491,6 +494,7 @@ export const ItemDetailsModal = ({
 export default class FormPage extends Component {
   constructor(props) {
     super(props);
+    this.scrollViewRef = React.createRef(); // Initialize ref here
     this.state = {
       savedItemsSearchQuery: '',
       itemName: "",
@@ -513,8 +517,13 @@ export default class FormPage extends Component {
       showRecentItems: true, // Start with recent items visible by default
       showAllSavedItemsModal: false, // For the modal with all items
       flashScrollbar: false,
-      scrollViewRef: React.createRef(),
-      dimensionsFromSavedItem: false // Track if dimensions are from a saved item
+      dimensionsFromSavedItem: false, // Track if dimensions are from a saved item
+      contentScrollable: false, // Whether horizontal content is scrollable
+      currentScrollX: 0, // Current horizontal scroll position
+      contentWidth: 0, // Total width of scrollable content
+      containerWidth: 0, // Width of the container
+      canScrollLeft: false, // Whether we can scroll left
+      canScrollRight: false // Whether we can scroll right
     };
     this.inputRef = React.createRef();
   }
@@ -1508,6 +1517,39 @@ export default class FormPage extends Component {
 
     this.setState({ items: [newItem, ...this.state.items] }, () => {
       this._storeData();
+      
+      // Explicitly update scroll indicators immediately after adding an item
+      this.updateScrollState();
+      
+      // Force scroll indicators to show if we now have 3+ items
+      if (this.state.items.length >= 3) {
+        // Force immediate update
+        this.forceUpdate();
+        
+        // Set direct state to ensure indicators show
+        this.setState({
+          contentScrollable: true,
+          canScrollLeft: true,
+          canScrollRight: true
+        });
+        
+        // Force layout updates at multiple intervals
+        [50, 200, 500].forEach(delay => {
+          setTimeout(() => {
+            if (this.scrollViewRef && this.scrollViewRef.current) {
+              // Force scroll position update
+              this.scrollViewRef.current.scrollTo({ x: 0, animated: false });
+              
+              // Force indicators to show again
+              this.setState({
+                contentScrollable: true,
+                canScrollLeft: true,
+                canScrollRight: true
+              });
+            }
+          }, delay);
+        });
+      }
     });
 
     Alert.alert("Success", `${this.state.itemName} has been added`);
@@ -1618,18 +1660,148 @@ export default class FormPage extends Component {
           </TouchableOpacity>
         </View>
         
-        <ScrollView 
-          horizontal={true}
-          showsHorizontalScrollIndicator={true}
-          contentContainerStyle={[styles.horizontalCarouselContainer, { paddingBottom: 10 * scale }]}
-          decelerationRate="fast"
-          snapToInterval={isIpad() ? 216 * scale : 172 * scale} // Width of the item + margins (200 + 16 for iPad)
-          snapToAlignment="start"
-          showsVerticalScrollIndicator={false}
-          style={{ flex: 1 }}
-        >
-          {items.map((item, index) => this.renderItem(item, index))}
-        </ScrollView>
+        <View style={{ flex: 1, position: 'relative' }} onLayout={(event) => {
+          const containerWidth = event.nativeEvent.layout.width;
+          this.setState({ containerWidth }, this.updateScrollState);
+        }}>
+          {/* Right scroll button - show when there are 3+ items */}
+          {this.state.items.length >= 3 && (
+            <TouchableOpacity 
+              style={{ 
+                position: 'absolute', 
+                top: '50%', 
+                right: -6, 
+                zIndex: 10, 
+                backgroundColor: 'rgba(255,255,255,0.8)', 
+                borderRadius: 15,
+                padding: 3,
+                transform: [{ translateY: -10 }],
+                shadowColor: '#000',
+                shadowOffset: { width: 0, height: 1 },
+                shadowOpacity: 0.2,
+                shadowRadius: 2,
+                elevation: 3,
+              }}
+              onPress={() => {
+                try {
+                  // Fixed scroll amount - width of one item card
+                  const scrollAmount = 160 * scale;
+                  
+                  // Force scroll to the right
+                  if (this.scrollViewRef && this.scrollViewRef.current) {
+                    this.scrollViewRef.current.scrollTo({ 
+                      x: this.state.currentScrollX + scrollAmount,
+                      animated: true 
+                    });
+                  }
+                } catch (error) {
+                  console.log('Error scrolling right:', error);
+                }
+              }}
+              activeOpacity={0.7}
+            >
+              <Ionicons name="chevron-forward" size={16} color="#3B82F6" />
+            </TouchableOpacity>
+          )}
+          
+          {/* Left scroll button - show when there are 3+ items */}
+          {this.state.items.length >= 3 && (
+            <TouchableOpacity 
+              style={{ 
+                position: 'absolute', 
+                top: '50%', 
+                left: -6, 
+                zIndex: 10, 
+                backgroundColor: 'rgba(255,255,255,0.8)', 
+                borderRadius: 15,
+                padding: 3,
+                transform: [{ translateY: -10 }],
+                shadowColor: '#000',
+                shadowOffset: { width: 0, height: 1 },
+                shadowOpacity: 0.2,
+                shadowRadius: 2,
+                elevation: 3,
+              }}
+              onPress={() => {
+                try {
+                  // Fixed scroll amount - width of one item card
+                  const scrollAmount = 160 * scale;
+                  
+                  // Scroll to the left, but don't go past the beginning
+                  if (this.scrollViewRef && this.scrollViewRef.current) {
+                    this.scrollViewRef.current.scrollTo({ 
+                      x: Math.max(0, this.state.currentScrollX - scrollAmount),
+                      animated: true 
+                    });
+                  }
+                } catch (error) {
+                  console.log('Error scrolling left:', error);
+                }
+              }}
+              activeOpacity={0.7}
+            >
+              <Ionicons name="chevron-back" size={16} color="#3B82F6" />
+            </TouchableOpacity>
+          )}
+          
+          {/* Right side gradient fade - show when there are 3+ items */}
+          {this.state.items.length >= 3 && (
+            <LinearGradient
+              colors={['rgba(255,255,255,0)', 'rgba(255,255,255,0.9)']}
+              start={{ x: 0, y: 0 }}
+              end={{ x: 1, y: 0 }}
+              style={{
+                position: 'absolute',
+                right: 0,
+                top: 0,
+                bottom: 0,
+                width: 30,
+                zIndex: 5,
+                pointerEvents: 'none'
+              }}
+            />
+          )}
+          
+          {/* Left side gradient fade - show when there are 3+ items */}
+          {this.state.items.length >= 3 && (
+            <LinearGradient
+              colors={['rgba(255,255,255,0.9)', 'rgba(255,255,255,0)']}
+              start={{ x: 0, y: 0 }}
+              end={{ x: 1, y: 0 }}
+              style={{
+                position: 'absolute',
+                left: 0,
+                top: 0,
+                bottom: 0,
+                width: 30,
+                zIndex: 5,
+                pointerEvents: 'none'
+              }}
+            />
+          )}
+          
+          <ScrollView 
+            ref={this.scrollViewRef}
+            horizontal={true}
+            showsHorizontalScrollIndicator={false}
+            contentContainerStyle={[styles.horizontalCarouselContainer, { paddingBottom: 10 * scale }]}
+            decelerationRate="fast"
+            snapToInterval={isIpad() ? 216 * scale : 172 * scale} // Width of the item + margins (200 + 16 for iPad)
+            snapToAlignment="start"
+            showsVerticalScrollIndicator={false}
+            style={{ flex: 1 }}
+            onContentSizeChange={(contentWidth) => {
+              this.setState({ contentWidth }, this.updateScrollState);
+            }}
+            onScroll={(event) => {
+              const scrollX = event.nativeEvent.contentOffset.x;
+              this.setState({ currentScrollX: scrollX }, this.updateScrollState);
+            }}
+            scrollEventThrottle={16}
+          >
+            {items.map((item, index) => this.renderItem(item, index))}
+          </ScrollView>
+        </View>
       </View>
     );
   }
@@ -2456,9 +2628,62 @@ export default class FormPage extends Component {
     );
   }
 
+  updateScrollState = () => {
+    // Always show indicators when there are 3+ items
+    const hasEnoughItems = this.state.items.length >= 3;
+    
+    // Force update scroll state with a more aggressive approach
+    this.setState({
+      contentScrollable: hasEnoughItems,
+      canScrollLeft: hasEnoughItems,
+      canScrollRight: hasEnoughItems
+    }, () => {
+      // Force a re-render after state update
+      this.forceUpdate();
+      
+      // Schedule multiple updates to ensure indicators appear
+      const checkTimes = [50, 100, 300, 500];
+      checkTimes.forEach(delay => {
+        setTimeout(() => {
+          // Only update if component is still mounted
+          if (this.scrollViewRef && this.scrollViewRef.current) {
+            this.setState({
+              contentScrollable: this.state.items.length >= 3,
+              canScrollLeft: this.state.items.length >= 3,
+              canScrollRight: this.state.items.length >= 3
+            });
+          }
+        }, delay);
+      });
+    });
+    
+    // For debugging
+    console.log('Updated scroll indicators:', { 
+      hasEnoughItems, 
+      itemCount: this.state.items.length,
+      forceShowing: hasEnoughItems
+    });
+  }
+  
   componentDidUpdate(prevProps, prevState) {
+    // Check if items have changed
+    if (prevState.items !== this.state.items) {
+      // Update scroll state immediately when items change
+      this.updateScrollState();
+      
+      // Force a layout update and measurement after a short delay
+      setTimeout(() => {
+        if (this.scrollViewRef && this.scrollViewRef.current) {
+          // Trigger a small scroll to force measurement update
+          this.scrollViewRef.current.scrollTo({ x: 0, animated: false });
+          // Update scroll state again after measurements
+          this.updateScrollState();
+        }
+      }, 100);
+    }
+    
     if (
-      this.state.dropdownOpen &&
+      this.state.dropdownOpen && 
       !prevState.dropdownOpen
     ) {
       // Flash the scrollbar when dropdown opens
