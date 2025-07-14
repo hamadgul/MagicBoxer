@@ -2064,13 +2064,13 @@ export default class FormPage extends Component {
                     
                     
                     <VStack space={2} width="100%">
-                      <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
+                      <View style={{ flexDirection: 'row', alignItems: 'center' }}>
                         <Text style={[styles.label]}>Length</Text>
                         <TouchableOpacity 
                           onPress={() => this.setState({ showDimensionsTooltip: true })}
-                          style={{ padding: 5 }}
+                          style={{ padding: 2, marginLeft: 2, marginBottom: 1 }}
                         >
-                          <Ionicons name="information-circle-outline" size={20} color="#007AFF" />
+                          <Ionicons name="information-circle-outline" size={16} color="#007AFF" />
                         </TouchableOpacity>
                       </View>
                       <View style={[styles.input, styles.condensedInput, { 
