@@ -16,14 +16,17 @@ import {
   Platform,
   KeyboardAvoidingView,
   ActivityIndicator,
+  Image
 } from "react-native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import { Ionicons } from "@expo/vector-icons";
+import { Ionicons, Entypo } from "@expo/vector-icons";
 import { modalStyles } from "../theme/ModalStyles";
 import * as FileSystem from 'expo-file-system';
 import * as Crypto from 'expo-crypto';
 import * as DocumentPicker from 'expo-document-picker';
 import * as Sharing from 'expo-sharing';
+// Import AI icon
+import AIIcon from '../assets/ai-technology.png';
 
 export default class SavedItemsPage extends Component {
   state = {
@@ -51,8 +54,10 @@ export default class SavedItemsPage extends Component {
   fabRotation = new Animated.Value(0);
   addItemFabScale = new Animated.Value(0);
   importFabScale = new Animated.Value(0);
+  findItemFabScale = new Animated.Value(0);
   addItemFabOpacity = new Animated.Value(0);
   importFabOpacity = new Animated.Value(0);
+  findItemFabOpacity = new Animated.Value(0);
 
   constructor(props) {
     super(props);
@@ -81,8 +86,10 @@ export default class SavedItemsPage extends Component {
     // Initialize FAB animations
     this.addItemFabScale.setValue(0);
     this.importFabScale.setValue(0);
+    this.findItemFabScale.setValue(0);
     this.addItemFabOpacity.setValue(0);
     this.importFabOpacity.setValue(0);
+    this.findItemFabOpacity.setValue(0);
     
     this.focusListener = this.props.navigation.addListener(
       "focus",
@@ -438,6 +445,19 @@ export default class SavedItemsPage extends Component {
             useNativeDriver: true,
           }),
         ]),
+        Animated.parallel([
+          Animated.timing(this.findItemFabScale, {
+            toValue: 1,
+            duration: 200,
+            easing: Easing.bezier(0.4, 0.0, 0.2, 1),
+            useNativeDriver: true,
+          }),
+          Animated.timing(this.findItemFabOpacity, {
+            toValue: 1,
+            duration: 200,
+            useNativeDriver: true,
+          }),
+        ]),
       ]).start();
     } else {
       // Closing the menu
@@ -464,6 +484,17 @@ export default class SavedItemsPage extends Component {
           duration: 200,
           useNativeDriver: true,
         }),
+        Animated.timing(this.findItemFabScale, {
+          toValue: 0,
+          duration: 200,
+          easing: Easing.bezier(0.4, 0.0, 0.2, 1),
+          useNativeDriver: true,
+        }),
+        Animated.timing(this.findItemFabOpacity, {
+          toValue: 0,
+          duration: 200,
+          useNativeDriver: true,
+        }),
       ]).start();
     }
   };
@@ -482,6 +513,12 @@ export default class SavedItemsPage extends Component {
   
   handleImportPress = () => {
     this.setState({ showImportModal: true, importPreview: [] });
+    this.toggleFabMenu(); // Close the menu after selecting an option
+  };
+  
+  handleFindItemPress = () => {
+    // Navigate to the AI Search Page (LookupItemPage)
+    this.props.navigation.navigate('AI Item Search');
     this.toggleFabMenu(); // Close the menu after selecting an option
   };
   
@@ -1294,6 +1331,33 @@ export default class SavedItemsPage extends Component {
             </TouchableOpacity>
           </Animated.View>
           
+          {/* Find Item FAB (animated) */}
+          <Animated.View
+            style={{
+              position: 'absolute',
+              right: 20,
+              bottom: 220,
+              opacity: this.findItemFabOpacity,
+              transform: [{ scale: this.findItemFabScale }],
+              zIndex: 2,
+            }}
+          >
+            <TouchableOpacity
+              style={styles.menuButton}
+              onPress={(e) => {
+                e.stopPropagation();
+                this.handleFindItemPress();
+              }}
+            >
+              <View style={[styles.menuButtonIcon, { backgroundColor: '#8B5CF6' }]}>
+                <Image source={AIIcon} style={styles.aiIcon} />
+              </View>
+              <View style={styles.menuButtonTextContainer}>
+                <Text style={styles.menuButtonText}>Find Item</Text>
+              </View>
+            </TouchableOpacity>
+          </Animated.View>
+          
           {/* Selection Mode FAB */}
           {savedItems.length > 0 && (
             <TouchableOpacity
@@ -1669,6 +1733,11 @@ const styles = StyleSheet.create({
     color: '#334155',
     fontWeight: '600',
     fontSize: 14,
+  },
+  aiIcon: {
+    width: 20,
+    height: 20,
+    resizeMode: 'contain',
   },
   modalTitle: {
     fontSize: 18,
