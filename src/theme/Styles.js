@@ -94,11 +94,17 @@ const styles = StyleSheet.create({
     backgroundColor: "#0066FF",
     paddingVertical: 12 * scale,
     paddingHorizontal: 20 * scale,
-    borderRadius: 8 * scale,
+    borderRadius: 10 * scale, // More rounded to match iOS style
     alignItems: "center",
     justifyContent: "center",
     marginVertical: 8 * scale,
-    width: "100%",
+    width: isIpad() ? 200 * scale : "100%", // Match bottom button width on iPad
+    alignSelf: isIpad() ? "center" : undefined, // Center on iPad
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 3,
   },
   visualizeButton: {
     backgroundColor: "#10B981",
@@ -122,9 +128,15 @@ const styles = StyleSheet.create({
     borderRadius: 8 * scale,
     alignItems: "center",
     justifyContent: "center",
+    marginHorizontal: 0, // Remove horizontal margin since we're using gap
+    width: "48%", // Use same percentage width as packButton for consistent sizing
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 3,
     borderWidth: 1,
-    borderColor: "#0066FF",
-    width: "48%",
+    borderColor: "#E2E8F0",
   },
   packButton: {
     backgroundColor: "#0066FF",
@@ -133,8 +145,8 @@ const styles = StyleSheet.create({
     borderRadius: 8 * scale,
     alignItems: "center",
     justifyContent: "center",
-    marginHorizontal: 5 * scale,
-    width: "48%",
+    marginHorizontal: 0,
+    width: "48%", // Use percentage width for responsive sizing
     shadowColor: "#000",
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
@@ -343,6 +355,8 @@ const styles = StyleSheet.create({
     backgroundColor: '#fff',
     marginTop: -12 * scale,
     paddingBottom: 20 * scale,
+    width: "100%",
+    alignSelf: "center",
   },
   modalOverlay: {
     flex: 1,

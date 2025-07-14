@@ -2233,13 +2233,17 @@ export default class FormPage extends Component {
                       </View>
                     </VStack>
                     <TouchableOpacity
+                      activeOpacity={0.7}
                       style={styles.submitButton}
                       onPress={() => {
-                        Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
                         this.handleSubmit();
+                        Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
                       }}
                     >
-                      <Text style={[styles.buttonText, { color: '#FFFFFF' }]}>Add item</Text>
+                      <View style={{flexDirection: 'row', alignItems: 'center', justifyContent: 'center'}}>
+                        <Ionicons name="add" size={20 * scale} color="#FFFFFF" style={{marginRight: 8 * scale}} />
+                        <Text style={[styles.buttonText, { color: '#FFFFFF', fontWeight: '600' }]}>Add item</Text>
+                      </View>
                     </TouchableOpacity>
                   </VStack>
                 </View>
