@@ -2119,16 +2119,16 @@ export default class FormPage extends Component {
                           activeOpacity={0.6}
                         >
                           <View style={{
-                            width: 30,
-                            height: 30,
-                            borderRadius: 15,
+                            width: 34,
+                            height: 34,
+                            borderRadius: 17,
                             backgroundColor: '#F0F9FF',
                             justifyContent: 'center',
                             alignItems: 'center',
                           }}>
                             <Image 
                               source={require('../assets/ai-technology.png')} 
-                              style={{ width: 20, height: 20, tintColor: '#3B82F6' }} 
+                              style={{ width: 24, height: 24, tintColor: '#3B82F6' }} 
                               resizeMode="contain" 
                             />
                           </View>

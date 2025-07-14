@@ -26,7 +26,7 @@ import * as Crypto from 'expo-crypto';
 import * as DocumentPicker from 'expo-document-picker';
 import * as Sharing from 'expo-sharing';
 // Import AI icon
-import AIIcon from '../assets/ai-technology.png';
+import AIIcon from '../assets/AISearch.png';
 
 export default class SavedItemsPage extends Component {
   state = {
