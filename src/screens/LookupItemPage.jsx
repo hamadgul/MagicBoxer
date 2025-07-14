@@ -413,11 +413,14 @@ const LookupItemPage = ({ navigation, route }) => {
       // Create item in the format expected by FormPage
       const newFormItem = {
         itemName: result.officialName || itemName,
-        itemLength: result.length,
-        itemWidth: result.width,
-        itemHeight: result.height,
+        itemLength: result.length || 1,
+        itemWidth: result.width || 1,
+        itemHeight: result.height || 1,
         quantity: 1
       };
+      
+      // Log the item data for debugging
+      console.log('LookupItemPage - Created new item:', newFormItem);
       
       // Reset state
       setItemName('');
@@ -427,12 +430,29 @@ const LookupItemPage = ({ navigation, route }) => {
       setResult(null);
       setShowSaveToPackage(false);
       
-      // Navigate back to Create Package with the new item data
-      // FormPage will show its own confirmation
-      navigation.navigate('Create Package', {
-        newItem: newFormItem,
-        addToCurrentPackage: true
-      });
+      // When coming from FormPage, we need to handle navigation differently
+      if (fromFormPage) {
+        console.log('LookupItemPage - Setting global variable for FormPage');
+        
+        // Store the item data in a global variable that FormPage can access
+        global.newItemFromAISearch = {
+          newItem: newFormItem,
+          addToCurrentPackage: true,
+          clearNameField: true // Flag to indicate that the name field should be cleared
+        };
+        
+        console.log('LookupItemPage - Global variable set, navigating back');
+        
+        // Use navigation.goBack() to return to FormPage
+        // This preserves the navigation stack but we'll handle focus separately
+        navigation.goBack();
+      } else {
+        // Regular navigation to Create Package
+        navigation.navigate('Create Package', {
+          newItem: newFormItem,
+          addToCurrentPackage: true
+        });
+      }
     } catch (error) {
       console.error('Error adding to current package:', error);
       Alert.alert('Error', 'Failed to add item to current package.');

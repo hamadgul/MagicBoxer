@@ -510,6 +510,7 @@ export default class FormPage extends Component {
       filteredProducts: [],
       showSuggestions: false,
       nameInputFocused: false,
+      preventAutoFocus: false, // Flag to prevent auto-focus after returning from AI Search
       hasMatchingRecentItems: true, // Track if there are matching recent items
       productList: [], // Initialize with empty array instead of defaultProductList
       recentSavedItems: [], // Store recently saved items
@@ -751,19 +752,47 @@ export default class FormPage extends Component {
             this.loadPackage(packageToLoad);
           }
           
-          // Check if we need to add a new item from AI Search
-          if (this.props.route.params?.newItem && this.props.route.params?.addToCurrentPackage) {
-            this.addItemFromAISearch(this.props.route.params.newItem);
-            // Clear the params to prevent re-adding on future focus events
-            this.props.navigation.setParams({ newItem: null, addToCurrentPackage: false });
+          // Check if we need to add a new item from AI Search via global variable
+          if (global.newItemFromAISearch) {
+            console.log('FormPage - Processing item from AI Search:', global.newItemFromAISearch);
+            const { newItem, clearNameField } = global.newItemFromAISearch;
+            
+            // Make sure we have a valid item before trying to add it
+            if (newItem && typeof newItem === 'object') {
+              console.log('FormPage - Adding item from AI Search:', newItem);
+              // Pass true to skip resetting the form when adding item from AI Search
+              this.addItemFromAISearch(newItem, true);
+            } else {
+              console.error('FormPage - Invalid item data received from AI Search:', newItem);
+            }
+            
+            // Clear just the name field if requested and prevent auto-focus
+            if (clearNameField) {
+              this.setState({ 
+                itemName: "",
+                preventAutoFocus: true // Prevent auto-focus when returning from AI Search
+              });
+              
+              // Use a timeout to ensure the keyboard is dismissed after the component has fully rendered
+              setTimeout(() => {
+                // Explicitly blur the input field to prevent keyboard from showing
+                if (this.inputRef && this.inputRef.current) {
+                  this.inputRef.current.blur();
+                }
+                
+                // Dismiss keyboard explicitly
+                Keyboard.dismiss();
+              }, 100);
+            }
+            
+            // Clear the global variable to prevent duplicate additions
+            global.newItemFromAISearch = null;
           }
           
           // After all data is loaded on focus, ensure recent items are shown
           this.setState({ showRecentItems: true });
           this.forceUpdate();
         });
-        
-
         
         // Set custom header left button (hamburger menu)
         this.props.navigation.setOptions({
@@ -1393,7 +1422,7 @@ export default class FormPage extends Component {
   };
 
   // Method to add an item received from AI Search page
-  addItemFromAISearch = (newItemData) => {
+  addItemFromAISearch = (newItemData, skipResetForm = false) => {
     if (!newItemData) return;
     
     try {
@@ -1445,8 +1474,10 @@ export default class FormPage extends Component {
       // Show success message
       Alert.alert("Success", `${itemName} has been added to your package`);
       
-      // Clear the form fields after adding the item
-      this.resetForm();
+      // Only reset the form if not coming from global variable (AI Search)
+      if (!skipResetForm) {
+        this.resetForm();
+      }
     } catch (error) {
       console.error('Error adding item from AI Search:', error);
       Alert.alert("Error", "Failed to add item from AI Search");
@@ -1798,6 +1829,42 @@ export default class FormPage extends Component {
               this.setState({ currentScrollX: scrollX }, this.updateScrollState);
             }}
             scrollEventThrottle={16}
+            onFocus={() => {
+              // Check if we need to update the scroll state
+              this.updateScrollState();
+              
+              // Check if we have a new item from AI Search via global variable
+              if (global.newItemFromAISearch) {
+                const { newItem, addToCurrentPackage, clearNameField } = global.newItemFromAISearch;
+                
+                // Add the item to the current package
+                if (newItem) {
+                  this.addItemFromAISearch(newItem, true); // Skip resetting the form
+                }
+                
+                // Clear the name field if requested
+                if (clearNameField) {
+                  this.setState({
+                    itemName: "",
+                    preventAutoFocus: true // Prevent auto-focus when returning from AI Search
+                  });
+                  
+                  // Use a timeout to ensure the keyboard is dismissed after the component has fully rendered
+                  setTimeout(() => {
+                    // Explicitly blur the input field to prevent keyboard from showing
+                    if (this.inputRef && this.inputRef.current) {
+                      this.inputRef.current.blur();
+                    }
+                    
+                    // Dismiss keyboard explicitly
+                    Keyboard.dismiss();
+                  }, 100);
+                }
+                
+                // Clear the global variable to prevent duplicate additions
+                global.newItemFromAISearch = null;
+              }
+            }}
           >
             {items.map((item, index) => this.renderItem(item, index))}
           </ScrollView>
@@ -2686,10 +2753,48 @@ export default class FormPage extends Component {
       }, 100);
     }
     
-    if (
-      this.state.dropdownOpen && 
-      !prevState.dropdownOpen
-    ) {
+    // Check if the route params have changed
+    if (prevProps.route.params !== this.props.route.params) {
+      console.log('FormPage - Route params changed:', this.props.route.params);
+      
+      // Check if we have a new item from AI Search
+      if (this.props.route.params?.newItemFromAISearch) {
+        console.log('FormPage - Processing item from AI Search:', this.props.route.params.newItemFromAISearch);
+        const newItem = this.props.route.params.newItemFromAISearch;
+        
+        // Add the item to the package using the special method
+        this.addItemFromAISearch(newItem, true); // Skip resetting the form
+        
+        // Clear the name field without focusing it
+        this.setState({ itemName: "" });
+        
+        // Dismiss keyboard to ensure it doesn't appear
+        Keyboard.dismiss();
+        
+        // Clear the route params to prevent duplicate additions
+        this.props.navigation.setParams({ 
+          newItemFromAISearch: null, 
+          fromAISearch: null,
+          timestamp: null
+        });
+      }
+      
+      // Handle regular new item addition (not from AI Search)
+      else if (this.props.route.params?.newItem) {
+        const { newItem, addToCurrentPackage } = this.props.route.params;
+        
+        // Regular item addition
+        this.addItemToList(newItem, addToCurrentPackage);
+        
+        // Clear the route params to prevent duplicate additions
+        this.props.navigation.setParams({ 
+          newItem: null, 
+          addToCurrentPackage: null
+        });
+      }
+    }
+    
+    if (this.state.dropdownOpen && !prevState.dropdownOpen) {
       // Flash the scrollbar when dropdown opens
       this.setState({ flashScrollbar: true }, () => {
         if (this.scrollViewRef.current) {

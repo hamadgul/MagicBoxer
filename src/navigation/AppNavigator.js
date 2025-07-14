@@ -129,17 +129,8 @@ function DrawerNavigator() {
         )
       }
     },
-    {
-      name: "AI Item Search",
-      component: LookupItemPage,
-      options: {
-        ...headerWithIcon('search-outline', 'AI Item Search'),
-        drawerLabel: "AI Item Search",
-        drawerIcon: ({ focused, color, size }) => (
-          <Ionicons name="search-outline" size={size} color={color} />
-        )
-      }
-    },
+    // AI Item Search is now handled in the Stack Navigator
+    // to support proper back navigation from FormPage
 
     {
       name: "Help",
@@ -263,6 +254,37 @@ function AppNavigator() {
       component: DrawerNavigator,
       options: {
         headerShown: false
+      }
+    },
+    {
+      name: "AI Item Search",
+      component: LookupItemPage,
+      options: ({ navigation, route }) => {
+        // Create a custom header configuration based on navigation source
+        const fromFormPage = route.params?.fromFormPage;
+        
+        return {
+          headerTitle: () => (
+            <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'center' }}>
+              <Ionicons name="search-outline" size={24} color="#3B82F6" style={{ marginRight: 10 }} />
+              <Text style={{ color: '#64748B', fontSize: 18, fontWeight: '600' }}>AI Item Search</Text>
+            </View>
+          ),
+          // Only show back button if coming from FormPage
+          headerLeft: fromFormPage ? () => (
+            <TouchableOpacity
+              style={{ marginLeft: 10 }}
+              onPress={() => {
+                // Navigate back to the FormPage
+                navigation.goBack();
+              }}
+            >
+              <Ionicons name="arrow-back" size={24} color="#64748B" />
+            </TouchableOpacity>
+          ) : undefined, // Use undefined to get default drawer menu button when not from FormPage
+          headerShown: true,
+          gestureEnabled: true,
+        };
       }
     },
     {
