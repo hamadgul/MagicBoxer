@@ -39,7 +39,98 @@ import * as Haptics from 'expo-haptics';
 const { width, height } = Dimensions.get('window');
 const scale = Math.min(width, height) / 375; // Base scale on iPhone 8 dimensions
 
-
+// Common tooltip modal styles
+const tooltipModalStyles = {
+  overlay: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: 'rgba(0,0,0,0.5)',
+  },
+  container: {
+    backgroundColor: 'white',
+    borderRadius: 15,
+    padding: 20,
+    alignItems: 'center',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.25,
+    shadowRadius: 4,
+    elevation: 5,
+    width: '80%',
+    maxWidth: 350,
+    maxHeight: '80%', // Prevent overflow on smaller screens
+  },
+  title: { 
+    fontSize: 20, 
+    fontWeight: '600', 
+    color: '#000', 
+    marginBottom: 20, 
+    textAlign: 'center' 
+  },
+  contentContainer: { 
+    width: '100%', 
+    marginBottom: 20 
+  },
+  iconContainer: {
+    width: 28, 
+    height: 28, 
+    borderRadius: 14, 
+    backgroundColor: '#007AFF', 
+    justifyContent: 'center', 
+    alignItems: 'center', 
+    marginRight: 12
+  },
+  rowContainer: {
+    flexDirection: 'row', 
+    alignItems: 'flex-start', 
+    marginBottom: 16
+  },
+  textContainer: {
+    flex: 1, // Allow text to wrap properly
+  },
+  tipContainer: {
+    backgroundColor: '#F2F2F7', 
+    padding: 12, 
+    borderRadius: 10, 
+    marginBottom: 20, 
+    width: '100%'
+  },
+  tipText: {
+    fontSize: 14, 
+    color: '#555', 
+    textAlign: 'center', 
+    lineHeight: 20
+  },
+  button: {
+    backgroundColor: '#007AFF',
+    borderRadius: 25,
+    paddingVertical: 12,
+    paddingHorizontal: 24,
+    elevation: 2,
+    minWidth: 120,
+    alignItems: 'center',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.2,
+    shadowRadius: 1.5,
+  },
+  buttonText: {
+    color: 'white', 
+    fontWeight: '600', 
+    fontSize: 16
+  },
+  labelText: {
+    fontSize: 16, 
+    fontWeight: '600', 
+    color: '#000'
+  },
+  descriptionText: {
+    fontSize: 15, 
+    color: '#555', 
+    marginTop: 2
+  },
+};
 
 
 // Make sure ItemDetailsModal is exported correctly
@@ -637,7 +728,11 @@ export default class FormPage extends Component {
         hasMatchingRecentItems: true, // Reset to true when clearing
         dimensionsFromSavedItem: false, // Reset the tracking state
         showAllSavedItemsModal: false,
-        showDimensionsTooltip: false
+        showDimensionsTooltip: false,
+        showLengthTooltip: false,
+        showWidthTooltip: false,
+        showHeightTooltip: false,
+        showNameTooltip: false,
       });
       return;
     }
@@ -715,7 +810,11 @@ export default class FormPage extends Component {
       'recentSavedItems',
       'showRecentItems',
       'savedItemsSearchQuery',
-      'showDimensionsTooltip'
+      'showDimensionsTooltip',
+      'showLengthTooltip',
+      'showWidthTooltip',
+      'showHeightTooltip',
+      'showNameTooltip'
     ];
 
     return relevantStateKeys.some(key => this.state[key] !== nextState[key]);
@@ -1896,7 +1995,15 @@ export default class FormPage extends Component {
               <View style={styles.container}>
                 <View style={styles.formContainer}>
                 <VStack space={2} width="100%">
-                    <Text style={[styles.label]}>Name</Text>
+                    <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                      <Text style={[styles.label]}>Name</Text>
+                      <TouchableOpacity 
+                        onPress={() => this.setState({ showNameTooltip: true })}
+                        style={{ padding: 2, marginLeft: 2, marginBottom: 1 }}
+                      >
+                        <Ionicons name="information-circle-outline" size={16} color="#007AFF" />
+                      </TouchableOpacity>
+                    </View>
                     <View style={{ position: 'relative', zIndex: 1, marginBottom: 8 }}>
                       <View style={{
                         flexDirection: 'row',
@@ -2134,7 +2241,7 @@ export default class FormPage extends Component {
                       <View style={{ flexDirection: 'row', alignItems: 'center' }}>
                         <Text style={[styles.label]}>Length</Text>
                         <TouchableOpacity 
-                          onPress={() => this.setState({ showDimensionsTooltip: true })}
+                          onPress={() => this.setState({ showLengthTooltip: true })}
                           style={{ padding: 2, marginLeft: 2, marginBottom: 1 }}
                         >
                           <Ionicons name="information-circle-outline" size={16} color="#007AFF" />
@@ -2170,6 +2277,12 @@ export default class FormPage extends Component {
                       </View>
                       <View style={{ flexDirection: 'row', alignItems: 'center' }}>
                         <Text style={[styles.label]}>Width</Text>
+                        <TouchableOpacity 
+                          onPress={() => this.setState({ showWidthTooltip: true })}
+                          style={{ padding: 2, marginLeft: 2, marginBottom: 1 }}
+                        >
+                          <Ionicons name="information-circle-outline" size={16} color="#007AFF" />
+                        </TouchableOpacity>
                       </View>
                       <View style={[styles.input, styles.condensedInput, { 
                         flexDirection: 'row',
@@ -2201,6 +2314,12 @@ export default class FormPage extends Component {
                       </View>
                       <View style={{ flexDirection: 'row', alignItems: 'center' }}>
                         <Text style={[styles.label]}>Height</Text>
+                        <TouchableOpacity 
+                          onPress={() => this.setState({ showHeightTooltip: true })}
+                          style={{ padding: 2, marginLeft: 2, marginBottom: 1 }}
+                        >
+                          <Ionicons name="information-circle-outline" size={16} color="#007AFF" />
+                        </TouchableOpacity>
                       </View>
                       <View style={[styles.input, styles.condensedInput, { 
                         flexDirection: 'row',
@@ -2601,6 +2720,184 @@ export default class FormPage extends Component {
                 />
               )}
               
+              {/* Name Tooltip Modal */}
+              <Modal
+                animationType="fade"
+                transparent={true}
+                visible={this.state.showNameTooltip || false}
+                onRequestClose={() => this.setState({ showNameTooltip: false })}
+              >
+                <TouchableWithoutFeedback onPress={() => this.setState({ showNameTooltip: false })}>
+                  <View style={tooltipModalStyles.overlay}>
+                    <TouchableWithoutFeedback>
+                      <View style={tooltipModalStyles.container}>
+                        <Text style={tooltipModalStyles.title}>Item Name</Text>
+                          
+                        <View style={tooltipModalStyles.contentContainer}>
+                          <View style={tooltipModalStyles.rowContainer}>
+                            <View style={tooltipModalStyles.iconContainer}>
+                              <Ionicons name="save-outline" size={18} color="#FFFFFF" />
+                            </View>
+                            <View style={tooltipModalStyles.textContainer}>
+                              <Text style={tooltipModalStyles.descriptionText}>Saved items will appear below the name field for quick selection.</Text>
+                            </View>
+                          </View>
+                          
+                          <View style={tooltipModalStyles.rowContainer}>
+                            <View style={tooltipModalStyles.iconContainer}>
+                              <Image 
+                                source={require('../assets/ai-technology.png')} 
+                                style={{ width: 18, height: 18, tintColor: '#FFFFFF' }} 
+                                resizeMode="contain" 
+                              />
+                            </View>
+                            <View style={tooltipModalStyles.textContainer}>
+                              <Text style={tooltipModalStyles.descriptionText}>Use the AI Search icon to look up dimensions for common items.</Text>
+                            </View>
+                          </View>
+                        </View>
+                        
+                        <TouchableOpacity
+                          style={tooltipModalStyles.button}
+                          onPress={() => this.setState({ showNameTooltip: false })}
+                        >
+                          <Text style={tooltipModalStyles.buttonText}>Got it</Text>
+                        </TouchableOpacity>
+                      </View>
+                    </TouchableWithoutFeedback>
+                  </View>
+                </TouchableWithoutFeedback>
+              </Modal>
+              
+              {/* Length Tooltip Modal */}
+              <Modal
+                animationType="fade"
+                transparent={true}
+                visible={this.state.showLengthTooltip || false}
+                onRequestClose={() => this.setState({ showLengthTooltip: false })}
+              >
+                <TouchableWithoutFeedback onPress={() => this.setState({ showLengthTooltip: false })}>
+                  <View style={tooltipModalStyles.overlay}>
+                    <TouchableWithoutFeedback>
+                      <View style={tooltipModalStyles.container}>
+                        <Text style={tooltipModalStyles.title}>Length</Text>
+                          
+                        <View style={tooltipModalStyles.contentContainer}>
+                          <View style={tooltipModalStyles.rowContainer}>
+                            <View style={tooltipModalStyles.iconContainer}>
+                              <Ionicons name="resize-outline" size={18} color="#FFFFFF" />
+                            </View>
+                            <View style={tooltipModalStyles.textContainer}>
+                              <Text style={tooltipModalStyles.labelText}>Length:</Text>
+                              <Text style={tooltipModalStyles.descriptionText}>The longest side of your item</Text>
+                            </View>
+                          </View>
+                        </View>
+                        
+                        <View style={tooltipModalStyles.tipContainer}>
+                          <Text style={tooltipModalStyles.tipText}>
+                            Measure the longest dimension of your item in its natural orientation for best packing results.
+                          </Text>
+                        </View>
+                        
+                        <TouchableOpacity
+                          style={tooltipModalStyles.button}
+                          onPress={() => this.setState({ showLengthTooltip: false })}
+                        >
+                          <Text style={tooltipModalStyles.buttonText}>Got it</Text>
+                        </TouchableOpacity>
+                      </View>
+                    </TouchableWithoutFeedback>
+                  </View>
+                </TouchableWithoutFeedback>
+              </Modal>
+              
+              {/* Width Tooltip Modal */}
+              <Modal
+                animationType="fade"
+                transparent={true}
+                visible={this.state.showWidthTooltip || false}
+                onRequestClose={() => this.setState({ showWidthTooltip: false })}
+              >
+                <TouchableWithoutFeedback onPress={() => this.setState({ showWidthTooltip: false })}>
+                  <View style={tooltipModalStyles.overlay}>
+                    <TouchableWithoutFeedback>
+                      <View style={tooltipModalStyles.container}>
+                        <Text style={tooltipModalStyles.title}>Width</Text>
+                          
+                        <View style={tooltipModalStyles.contentContainer}>
+                          <View style={tooltipModalStyles.rowContainer}>
+                            <View style={tooltipModalStyles.iconContainer}>
+                              <Ionicons name="resize-outline" size={18} color="#FFFFFF" />
+                            </View>
+                            <View style={tooltipModalStyles.textContainer}>
+                              <Text style={tooltipModalStyles.labelText}>Width:</Text>
+                              <Text style={tooltipModalStyles.descriptionText}>The second longest side of your item</Text>
+                            </View>
+                          </View>
+                        </View>
+                        
+                        <View style={tooltipModalStyles.tipContainer}>
+                          <Text style={tooltipModalStyles.tipText}>
+                            Measure the second longest dimension of your item for accurate box selection.
+                          </Text>
+                        </View>
+                        
+                        <TouchableOpacity
+                          style={tooltipModalStyles.button}
+                          onPress={() => this.setState({ showWidthTooltip: false })}
+                        >
+                          <Text style={tooltipModalStyles.buttonText}>Got it</Text>
+                        </TouchableOpacity>
+                      </View>
+                    </TouchableWithoutFeedback>
+                  </View>
+                </TouchableWithoutFeedback>
+              </Modal>
+              
+              {/* Height Tooltip Modal */}
+              <Modal
+                animationType="fade"
+                transparent={true}
+                visible={this.state.showHeightTooltip || false}
+                onRequestClose={() => this.setState({ showHeightTooltip: false })}
+              >
+                <TouchableWithoutFeedback onPress={() => this.setState({ showHeightTooltip: false })}>
+                  <View style={tooltipModalStyles.overlay}>
+                    <TouchableWithoutFeedback>
+                      <View style={tooltipModalStyles.container}>
+                        <Text style={tooltipModalStyles.title}>Height</Text>
+                          
+                        <View style={tooltipModalStyles.contentContainer}>
+                          <View style={tooltipModalStyles.rowContainer}>
+                            <View style={tooltipModalStyles.iconContainer}>
+                              <Ionicons name="resize-outline" size={18} color="#FFFFFF" />
+                            </View>
+                            <View style={tooltipModalStyles.textContainer}>
+                              <Text style={tooltipModalStyles.labelText}>Height:</Text>
+                              <Text style={tooltipModalStyles.descriptionText}>The shortest side of your item</Text>
+                            </View>
+                          </View>
+                        </View>
+                        
+                        <View style={tooltipModalStyles.tipContainer}>
+                          <Text style={tooltipModalStyles.tipText}>
+                            Measure the shortest dimension of your item for optimal packing efficiency.
+                          </Text>
+                        </View>
+                        
+                        <TouchableOpacity
+                          style={tooltipModalStyles.button}
+                          onPress={() => this.setState({ showHeightTooltip: false })}
+                        >
+                          <Text style={tooltipModalStyles.buttonText}>Got it</Text>
+                        </TouchableOpacity>
+                      </View>
+                    </TouchableWithoutFeedback>
+                  </View>
+                </TouchableWithoutFeedback>
+              </Modal>
+              
               {/* Dimensions Tooltip Modal */}
               <Modal
                 animationType="fade"
@@ -2609,89 +2906,62 @@ export default class FormPage extends Component {
                 onRequestClose={() => this.setState({ showDimensionsTooltip: false })}
               >
                 <TouchableWithoutFeedback onPress={() => this.setState({ showDimensionsTooltip: false })}>
-                  <View style={{
-                    flex: 1,
-                    justifyContent: 'center',
-                    alignItems: 'center',
-                    backgroundColor: 'rgba(0,0,0,0.5)',
-                  }}>
+                  <View style={tooltipModalStyles.overlay}>
                     <TouchableWithoutFeedback>
-                      <View style={{
-                        backgroundColor: 'white',
-                        borderRadius: 15,
-                        padding: 20,
-                        alignItems: 'center',
-                        shadowColor: '#000',
-                        shadowOffset: { width: 0, height: 2 },
-                        shadowOpacity: 0.25,
-                        shadowRadius: 4,
-                        elevation: 5,
-                        width: '80%',
-                        maxWidth: 350,
-                      }}>
-                        <Text style={{ fontSize: 20, fontWeight: '600', color: '#000', marginBottom: 20, textAlign: 'center' }}>How to Measure</Text>
+                      <View style={tooltipModalStyles.container}>
+                        <Text style={tooltipModalStyles.title}>How to Measure</Text>
                           
-                        <View style={{ width: '100%', marginBottom: 20 }}>
-                          <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 16 }}>
-                            <View style={{ width: 28, height: 28, borderRadius: 14, backgroundColor: '#007AFF', justifyContent: 'center', alignItems: 'center', marginRight: 12 }}>
-                              <Ionicons name="resize-outline" size={18} color="#FFFFFF" />
+                        <View style={tooltipModalStyles.contentContainer}>
+                          <View style={tooltipModalStyles.rowContainer}>
+                            <View style={tooltipModalStyles.iconContainer}>
+                              <Ionicons name="swap-horizontal-outline" size={18} color="#FFFFFF" />
                             </View>
-                            <View>
-                              <Text style={{ fontSize: 16, fontWeight: '600', color: '#000' }}>Length:</Text>
-                              <Text style={{ fontSize: 15, color: '#555', marginTop: 2 }}>Longest side</Text>
+                            <View style={tooltipModalStyles.textContainer}>
+                              <Text style={tooltipModalStyles.labelText}>Length:</Text>
+                              <Text style={tooltipModalStyles.descriptionText}>The longest side of your item</Text>
                             </View>
                           </View>
                           
-                          <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 16 }}>
-                            <View style={{ width: 28, height: 28, borderRadius: 14, backgroundColor: '#007AFF', justifyContent: 'center', alignItems: 'center', marginRight: 12 }}>
+                          <View style={tooltipModalStyles.rowContainer}>
+                            <View style={tooltipModalStyles.iconContainer}>
                               <Ionicons name="resize-outline" size={18} color="#FFFFFF" />
                             </View>
-                            <View>
-                              <Text style={{ fontSize: 16, fontWeight: '600', color: '#000' }}>Width:</Text>
-                              <Text style={{ fontSize: 15, color: '#555', marginTop: 2 }}>Second longest side</Text>
+                            <View style={tooltipModalStyles.textContainer}>
+                              <Text style={tooltipModalStyles.labelText}>Width:</Text>
+                              <Text style={tooltipModalStyles.descriptionText}>The second longest side of your item</Text>
                             </View>
                           </View>
                           
-                          <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 16 }}>
-                            <View style={{ width: 28, height: 28, borderRadius: 14, backgroundColor: '#007AFF', justifyContent: 'center', alignItems: 'center', marginRight: 12 }}>
-                              <Ionicons name="resize-outline" size={18} color="#FFFFFF" />
+                          <View style={tooltipModalStyles.rowContainer}>
+                            <View style={tooltipModalStyles.iconContainer}>
+                              <Ionicons name="arrow-up-outline" size={18} color="#FFFFFF" />
                             </View>
-                            <View>
-                              <Text style={{ fontSize: 16, fontWeight: '600', color: '#000' }}>Height:</Text>
-                              <Text style={{ fontSize: 15, color: '#555', marginTop: 2 }}>Shortest side</Text>
+                            <View style={tooltipModalStyles.textContainer}>
+                              <Text style={tooltipModalStyles.labelText}>Height:</Text>
+                              <Text style={tooltipModalStyles.descriptionText}>The shortest side of your item</Text>
                             </View>
                           </View>
                         </View>
                         
-                        <View style={{ backgroundColor: '#F2F2F7', padding: 12, borderRadius: 10, marginBottom: 20, width: '100%' }}>
-                          <Text style={{ fontSize: 14, color: '#555', textAlign: 'center', lineHeight: 20 }}>
-                            For best packing results, measure the item in its natural orientation and enter dimensions from longest to shortest side.
+                        <View style={tooltipModalStyles.tipContainer}>
+                          <Text style={tooltipModalStyles.tipText}>
+                            Measure your item in its natural orientation for optimal packing results.
                           </Text>
                         </View>
                         
                         <TouchableOpacity
-                          style={{
-                            backgroundColor: '#007AFF',
-                            borderRadius: 25,
-                            paddingVertical: 12,
-                            paddingHorizontal: 24,
-                            elevation: 2,
-                            minWidth: 120,
-                            alignItems: 'center',
-                            shadowColor: '#000',
-                            shadowOffset: { width: 0, height: 1 },
-                            shadowOpacity: 0.2,
-                            shadowRadius: 1.5,
-                          }}
+                          style={tooltipModalStyles.button}
                           onPress={() => this.setState({ showDimensionsTooltip: false })}
                         >
-                          <Text style={{ color: 'white', fontWeight: '600', fontSize: 16 }}>Got it</Text>
+                          <Text style={tooltipModalStyles.buttonText}>Got it</Text>
                         </TouchableOpacity>
                       </View>
                     </TouchableWithoutFeedback>
                   </View>
                 </TouchableWithoutFeedback>
               </Modal>
+              
+              {/* ... */}
             </View>
           </TouchableWithoutFeedback>
         </ScrollView>
