@@ -8,7 +8,7 @@ export const modalStyles = StyleSheet.create({
     marginTop: 22
   },
   modalContent: {
-    backgroundColor: 'white',
+    backgroundColor: '#F7FAFF', // Very subtle light blue background
     borderRadius: 20,
     padding: 20,
     width: '90%',
@@ -23,7 +23,7 @@ export const modalStyles = StyleSheet.create({
     elevation: 8,
   },
   modalHeader: {
-    backgroundColor: '#E2E8F0', // Updated to match the item card background color
+    backgroundColor: '#EBF5FF', // Lighter blue that complements the app's color scheme
     borderTopLeftRadius: 20,
     borderTopRightRadius: 20,
     padding: 18,
@@ -31,21 +31,21 @@ export const modalStyles = StyleSheet.create({
     marginHorizontal: -20,
     marginTop: -20,
     borderBottomWidth: 1,
-    borderBottomColor: '#CBD5E1',
+    borderBottomColor: '#BEE3F8',
   },
   modalTitle: {
     fontSize: 22,
     fontWeight: '600',
-    color: '#475569', // Slightly darker for better contrast
+    color: '#2C5282', // Darker blue for better contrast with the light blue background
     textAlign: 'center',
     letterSpacing: 0.3,
   },
   modalHeaderText: {
-    color: '#64748B', // Matches the item name text color
+    color: '#3182CE', // Matches the new blue theme
     fontSize: 16,
   },
   modalHeaderSubtitle: {
-    color: '#64748B', // Matches the item name text color
+    color: '#4299E1', // Lighter blue for the subtitle
     fontSize: 14,
     opacity: 0.9,
   },
@@ -82,13 +82,13 @@ export const modalStyles = StyleSheet.create({
   fieldInput: {
     height: 50,
     borderWidth: 1,
-    borderColor: '#CBD5E1',
+    borderColor: '#BEE3F8', // Updated to match our blue theme
     borderRadius: 10,
     paddingHorizontal: 16,
     fontSize: 16,
     fontWeight: '400',
     color: '#1F2937',
-    backgroundColor: '#F8FAFC',
+    backgroundColor: '#FFFFFF', // Pure white for better contrast with the light blue modal background
     width: '100%',
     alignSelf: 'stretch',
     zIndex: 1,
@@ -131,7 +131,7 @@ export const modalStyles = StyleSheet.create({
     letterSpacing: 0.3,
   },
   editButton: {
-    backgroundColor: '#64748B', // Medium-light gray to match modal header
+    backgroundColor: '#4299E1', // Updated to match our blue theme
   },
   deleteButton: {
     backgroundColor: '#EF4444', // Keep red for delete actions
@@ -153,7 +153,7 @@ export const modalStyles = StyleSheet.create({
   },
   modalSubtitle: {
     fontSize: 16,
-    color: '#64748B',
+    color: '#3182CE', // Updated to match our blue theme
     marginBottom: 28,
     textAlign: 'center',
     paddingHorizontal: 10,
