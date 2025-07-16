@@ -1176,8 +1176,8 @@ export default class FormPage extends Component {
             style: "destructive",
             onPress: () => {
               console.log("FormPage - user chose Discard");
-              // Clear items and continue with navigation
-              this.clearItems();
+              // Clear items without showing another confirmation dialog
+              this.clearItemsWithoutConfirmation();
               // Re-enable drawer gesture
               try {
                 const drawerParent = this.props.navigation.getParent();
