@@ -98,8 +98,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
     marginVertical: 8 * scale,
-    width: isIpad() ? 200 * scale : "100%", // Match bottom button width on iPad
-    alignSelf: isIpad() ? "center" : undefined, // Center on iPad
+    width: "100%", // Use the same width for both iPad and iPhone
     shadowColor: "#000",
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
