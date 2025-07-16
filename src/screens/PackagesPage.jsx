@@ -1140,7 +1140,7 @@ export default class PackagesPage extends Component {
                     <View style={{ height: 16 }} />
 
                     <TouchableOpacity
-                      style={[styles.addItemPlaceholder, { alignSelf: 'center' }]}
+                      style={[styles.addItemPlaceholder]}
                       onPress={() => {
                         console.log('Add from saved items button pressed');
                         this.showSavedItemsSelector();
@@ -1151,7 +1151,7 @@ export default class PackagesPage extends Component {
                       <Text style={styles.addItemText}>Add from saved items</Text>
                     </TouchableOpacity>
                     
-                    <View style={[styles.modalFooter, { width: '100%', alignSelf: 'center' }]}>
+                    <View style={styles.modalFooter}>
 
                       <TouchableOpacity
                         style={[styles.footerButton, styles.packButton]}
@@ -1993,7 +1993,7 @@ const styles = StyleSheet.create({
   modalContent: {
     backgroundColor: "white",
     borderRadius: 14, // iOS modal radius
-    padding: 20,
+    padding: 16,
     width: "90%",
     maxHeight: "80%",
     ...(Platform.OS === 'ios' ? {
@@ -2248,6 +2248,7 @@ const styles = StyleSheet.create({
     paddingTop: 2,
     paddingBottom: 0,
     alignSelf: 'center',
+    gap: 4,
   },
   footerButton: {
     flexDirection: 'row',
@@ -2257,7 +2258,6 @@ const styles = StyleSheet.create({
     paddingHorizontal: 8,
     borderRadius: 8,
     flex: 1,
-    marginHorizontal: 2,
   },
   packButton: {
     backgroundColor: '#3b82f6',
@@ -2362,6 +2362,7 @@ const styles = StyleSheet.create({
     marginBottom: 12,
     marginTop: 4,
     width: '100%',
+    alignSelf: 'stretch',
   },
   addItemText: {
     fontSize: 16,
