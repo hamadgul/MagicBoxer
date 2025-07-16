@@ -582,6 +582,28 @@ export const ItemDetailsModal = ({
   );
 };
 
+// Use the simplest approach with inline tooltips
+const isTablet = Math.max(width, height) >= 768;
+
+// Style for the label row with tooltip
+const tooltipContainerStyle = {
+  flexDirection: 'row',
+  alignItems: 'center',
+  height: 20,
+  marginBottom: 2,
+};
+
+// No fixed width for labels - let them take their natural width
+
+// Simple tooltip icon style - positioned right next to the label
+const tooltipIconStyle = {
+  height: 20,
+  width: 20,
+  justifyContent: 'center',
+  alignItems: 'center',
+  marginLeft: 2, // Small gap between label and icon
+};
+
 export default class FormPage extends Component {
   constructor(props) {
     super(props);
@@ -1995,11 +2017,11 @@ export default class FormPage extends Component {
               <View style={styles.container}>
                 <View style={styles.formContainer}>
                 <VStack space={2} width="100%">
-                    <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-                      <Text style={[styles.label]}>Name</Text>
+                    <View style={tooltipContainerStyle}>
+                      <Text style={styles.label}>Name</Text>
                       <TouchableOpacity 
                         onPress={() => this.setState({ showNameTooltip: true })}
-                        style={{ padding: 2, marginLeft: 2, marginBottom: 1 }}
+                        style={tooltipIconStyle}
                       >
                         <Ionicons name="information-circle-outline" size={16} color="#007AFF" />
                       </TouchableOpacity>
@@ -2238,11 +2260,11 @@ export default class FormPage extends Component {
                     
                     
                     <VStack space={2} width="100%">
-                      <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-                        <Text style={[styles.label]}>Length</Text>
+                      <View style={tooltipContainerStyle}>
+                        <Text style={styles.label}>Length</Text>
                         <TouchableOpacity 
                           onPress={() => this.setState({ showLengthTooltip: true })}
-                          style={{ padding: 2, marginLeft: 2, marginBottom: 1 }}
+                          style={tooltipIconStyle}
                         >
                           <Ionicons name="information-circle-outline" size={16} color="#007AFF" />
                         </TouchableOpacity>
@@ -2275,11 +2297,11 @@ export default class FormPage extends Component {
                           color: this.state.dimensionsFromSavedItem ? '#94A3B8' : '#64748B',
                         }}>inches</Text>
                       </View>
-                      <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-                        <Text style={[styles.label]}>Width</Text>
+                      <View style={tooltipContainerStyle}>
+                        <Text style={styles.label}>Width</Text>
                         <TouchableOpacity 
                           onPress={() => this.setState({ showWidthTooltip: true })}
-                          style={{ padding: 2, marginLeft: 2, marginBottom: 1 }}
+                          style={tooltipIconStyle}
                         >
                           <Ionicons name="information-circle-outline" size={16} color="#007AFF" />
                         </TouchableOpacity>
@@ -2312,11 +2334,11 @@ export default class FormPage extends Component {
                           color: this.state.dimensionsFromSavedItem ? '#94A3B8' : '#64748B',
                         }}>inches</Text>
                       </View>
-                      <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-                        <Text style={[styles.label]}>Height</Text>
+                      <View style={tooltipContainerStyle}>
+                        <Text style={styles.label}>Height</Text>
                         <TouchableOpacity 
                           onPress={() => this.setState({ showHeightTooltip: true })}
-                          style={{ padding: 2, marginLeft: 2, marginBottom: 1 }}
+                          style={tooltipIconStyle}
                         >
                           <Ionicons name="information-circle-outline" size={16} color="#007AFF" />
                         </TouchableOpacity>
