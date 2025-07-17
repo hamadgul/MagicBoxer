@@ -2799,26 +2799,9 @@ export default class FormPage extends Component {
                             borderBottomColor: '#E2E8F0',
                           }}>
                             <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-                              <TouchableOpacity
-                                onPress={this.exitBulkSelectionMode}
-                                style={{
-                                  flexDirection: 'row',
-                                  alignItems: 'center',
-                                  paddingVertical: 8,
-                                  paddingHorizontal: 12,
-                                  backgroundColor: '#EF4444',
-                                  borderRadius: 8,
-                                  marginRight: 12,
-                                }}
-                              >
-                                <Ionicons name="close" size={16} color="white" />
-                                <Text style={{ marginLeft: 6, fontSize: 14, fontWeight: '600', color: 'white' }}>Exit</Text>
-                              </TouchableOpacity>
                               <Text style={{ fontSize: 14, color: '#64748B', marginRight: 12 }}>
                                 {this.state.selectedSavedItems.length} selected
                               </Text>
-                            </View>
-                            <View style={{ flexDirection: 'row', alignItems: 'center' }}>
                               <TouchableOpacity onPress={this.selectAllSavedItems} style={{ paddingVertical: 6, paddingHorizontal: 10, backgroundColor: '#E2E8F0', borderRadius: 6, marginRight: 8 }}>
                                 <Text style={{ fontSize: 12, color: '#64748B', fontWeight: '600' }}>Select All</Text>
                               </TouchableOpacity>
@@ -2826,6 +2809,20 @@ export default class FormPage extends Component {
                                 <Text style={{ fontSize: 12, color: '#64748B', fontWeight: '600' }}>Clear All</Text>
                               </TouchableOpacity>
                             </View>
+                            <TouchableOpacity
+                              onPress={this.exitBulkSelectionMode}
+                              style={{
+                                flexDirection: 'row',
+                                alignItems: 'center',
+                                paddingVertical: 8,
+                                paddingHorizontal: 12,
+                                backgroundColor: '#EF4444',
+                                borderRadius: 8,
+                              }}
+                            >
+                              <Ionicons name="close" size={16} color="white" />
+                              <Text style={{ marginLeft: 6, fontSize: 14, fontWeight: '600', color: 'white' }}>Exit</Text>
+                            </TouchableOpacity>
                           </View>
                         )}
 
@@ -2980,7 +2977,7 @@ export default class FormPage extends Component {
                             <TouchableOpacity
                               style={{
                                 paddingVertical: 14,
-                                backgroundColor: this.state.selectedSavedItems.length > 0 ? '#0066FF' : '#94A3B8',
+                                backgroundColor: this.state.selectedSavedItems.length > 0 ? '#22C55E' : '#94A3B8',
                                 borderRadius: 12,
                                 alignItems: 'center',
                                 justifyContent: 'center',
@@ -3000,7 +2997,7 @@ export default class FormPage extends Component {
                             <TouchableOpacity
                               style={{
                                 paddingVertical: 14,
-                                backgroundColor: '#0066FF',
+                                backgroundColor: '#3B82F6',
                                 borderRadius: 12,
                                 alignItems: 'center',
                                 justifyContent: 'center',

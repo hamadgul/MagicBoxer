@@ -1771,39 +1771,9 @@ export default class PackagesPage extends Component {
                         borderBottomColor: '#E2E8F0',
                       }}>
                         <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-                          <TouchableOpacity
-                            onPress={this.exitBulkSelectionMode}
-                            style={{
-                              flexDirection: 'row',
-                              alignItems: 'center',
-                              paddingVertical: 8,
-                              paddingHorizontal: 12,
-                              backgroundColor: '#EF4444',
-                              borderRadius: 8,
-                              marginRight: 12,
-                            }}
-                          >
-                            <Ionicons 
-                              name="close" 
-                              size={16} 
-                              color="white" 
-                            />
-                            <Text style={{
-                              marginLeft: 6,
-                              fontSize: 14,
-                              fontWeight: '600',
-                              color: 'white'
-                            }}>
-                              Exit
-                            </Text>
-                          </TouchableOpacity>
-                          
                           <Text style={{ fontSize: 14, color: '#64748B', marginRight: 12 }}>
                             {this.state.selectedSavedItems.length} selected
                           </Text>
-                        </View>
-
-                        <View style={{ flexDirection: 'row', alignItems: 'center' }}>
                           <TouchableOpacity
                             onPress={this.selectAllSavedItems}
                             style={{
@@ -1828,6 +1798,32 @@ export default class PackagesPage extends Component {
                             <Text style={{ fontSize: 12, color: '#64748B', fontWeight: '600' }}>Clear All</Text>
                           </TouchableOpacity>
                         </View>
+
+                        <TouchableOpacity
+                          onPress={this.exitBulkSelectionMode}
+                          style={{
+                            flexDirection: 'row',
+                            alignItems: 'center',
+                            paddingVertical: 8,
+                            paddingHorizontal: 12,
+                            backgroundColor: '#EF4444',
+                            borderRadius: 8,
+                          }}
+                        >
+                          <Ionicons 
+                            name="close" 
+                            size={16} 
+                            color="white" 
+                          />
+                          <Text style={{
+                            marginLeft: 6,
+                            fontSize: 14,
+                            fontWeight: '600',
+                            color: 'white'
+                          }}>
+                            Exit
+                          </Text>
+                        </TouchableOpacity>
                       </View>
                     )}
 
