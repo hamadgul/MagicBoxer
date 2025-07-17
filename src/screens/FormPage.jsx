@@ -719,10 +719,10 @@ export default class FormPage extends Component {
   };
   
   // Bulk selection methods for saved items modal
-  enterBulkSelectionMode = (item) => {
+  enterBulkSelectionMode = () => {
     this.setState({
       savedItemsSelectionMode: true,
-      selectedSavedItems: [item]
+      selectedSavedItems: []
     });
   };
 
@@ -2868,7 +2868,8 @@ export default class FormPage extends Component {
                                     }}
                                     onLongPress={() => {
                                       if (canSelect && !this.state.savedItemsSelectionMode) {
-                                        this.enterBulkSelectionMode(item);
+                                        this.enterBulkSelectionMode();
+                                        this.toggleSavedItemSelection(item);
                                       }
                                     }}
                                     disabled={alreadyAdded && !this.state.savedItemsSelectionMode}
@@ -2880,47 +2881,41 @@ export default class FormPage extends Component {
                                       paddingHorizontal: 16,
                                       borderBottomWidth: 1,
                                       borderBottomColor: '#E2E8F0',
-                                      opacity: alreadyAdded ? 0.4 : 1,
+                                      opacity: alreadyAdded && !this.state.savedItemsSelectionMode ? 0.4 : 1,
                                       backgroundColor: isSelected ? '#EBF4FF' : 'transparent',
-                                      borderWidth: isSelected ? 1 : 0,
-                                      borderColor: isSelected ? '#3B82F6' : 'transparent',
-                                      marginHorizontal: isSelected ? 8 : 0,
-                                      borderRadius: isSelected ? 8 : 0,
                                     }}
                                   >
                                     <View style={{ flexDirection: 'row', alignItems: 'center', flex: 1 }}>
-                                      {/* Checkbox for bulk selection mode */}
-                                      {this.state.savedItemsSelectionMode && (
-                                        <View style={{ marginRight: 12 }}>
-                                          {canSelect ? (
-                                            <View style={{
-                                              width: 20,
-                                              height: 20,
-                                              borderRadius: 4,
-                                              borderWidth: 2,
-                                              borderColor: isSelected ? '#3B82F6' : '#CBD5E1',
-                                              backgroundColor: isSelected ? '#3B82F6' : 'transparent',
-                                              alignItems: 'center',
-                                              justifyContent: 'center',
-                                            }}>
-                                              {isSelected && (
-                                                <Ionicons name="checkmark" size={12} color="white" />
-                                              )}
-                                            </View>
-                                          ) : (
-                                            <View style={{
-                                              width: 20,
-                                              height: 20,
-                                              borderRadius: 4,
-                                              backgroundColor: '#F1F5F9',
-                                              alignItems: 'center',
-                                              justifyContent: 'center',
-                                            }}>
-                                              <Ionicons name="checkmark" size={12} color="#22C55E" />
-                                            </View>
-                                          )}
-                                        </View>
-                                      )}
+                                       {/* Checkbox for bulk selection mode - only show for items not already added */}
+                                       {this.state.savedItemsSelectionMode && !alreadyAdded && (
+                                         <TouchableOpacity
+                                           onPress={() => this.toggleSavedItemSelection(item)}
+                                           style={{
+                                             marginRight: 12,
+                                             padding: 4
+                                           }}
+                                         >
+                                           <Ionicons 
+                                             name={isSelected ? "checkbox" : "square-outline"} 
+                                             size={20} 
+                                             color={isSelected ? "#3B82F6" : "#94A3B8"}
+                                           />
+                                         </TouchableOpacity>
+                                       )}
+                                       
+                                       {/* Show disabled indicator for already added items in bulk selection mode */}
+                                       {this.state.savedItemsSelectionMode && alreadyAdded && (
+                                         <View style={{
+                                           marginRight: 12,
+                                           padding: 4
+                                         }}>
+                                           <Ionicons 
+                                             name="checkmark-circle" 
+                                             size={20} 
+                                             color="#94A3B8"
+                                           />
+                                         </View>
+                                       )}
                                       
                                       <View style={{ flex: 1 }}>
                                         <Text style={{ fontSize: 16, color: '#1E293B', fontWeight: '600' }}>

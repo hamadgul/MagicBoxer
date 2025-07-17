@@ -1192,6 +1192,10 @@ export default class PackagesPage extends Component {
           if (isEditMode) {
             this.setState({ isEditMode: false, editingPackage: null });
           }
+          // Close the FAB menu if it's open when tapping outside
+          if (this.state.isFabMenuOpen) {
+            this.toggleFabMenu();
+          }
         }}
       >
         <View style={styles.container}>
