@@ -1269,17 +1269,19 @@ export default class PackagesPage extends Component {
                       }}
                     />
 
-                    <TouchableOpacity
-                      style={[styles.addItemPlaceholder, { marginTop: 12, marginBottom: 12 }]}
-                      onPress={() => {
-                        console.log('Add from saved items button pressed');
-                        this.showSavedItemsSelector();
-                      }}
-                      activeOpacity={0.6}
-                    >
-                      <Ionicons name="add-circle-outline" size={24} color="#3B82F6" />
-                      <Text style={styles.addItemText}>Add from saved items</Text>
-                    </TouchableOpacity>
+                    {!this.state.packageItemsSelectionMode && (
+                      <TouchableOpacity
+                        style={[styles.addItemPlaceholder, { marginTop: 12, marginBottom: 12 }]}
+                        onPress={() => {
+                          console.log('Add from saved items button pressed');
+                          this.showSavedItemsSelector();
+                        }}
+                        activeOpacity={0.6}
+                      >
+                        <Ionicons name="add-circle-outline" size={24} color="#3B82F6" />
+                        <Text style={styles.addItemText}>Add from saved items</Text>
+                      </TouchableOpacity>
+                    )}
                     
                     {/* Footer */}
                     <View style={styles.modalFooter}>

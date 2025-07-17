@@ -2248,16 +2248,21 @@ export default class FormPage extends Component {
                              <TouchableOpacity
                                onPress={this.showAllSavedItemsModal}
                                style={{
-                                 paddingHorizontal: 4,
-                                 paddingVertical: 2,
+                                 paddingHorizontal: 6,
+                                 paddingVertical: 3,
                                  marginRight: 8,
+                                 borderRadius: 6,
+                                 backgroundColor: Platform.OS === 'ios' ? 'rgba(0, 122, 255, 0.08)' : 'rgba(0, 102, 255, 0.08)',
+                                 borderWidth: 1,
+                                 borderColor: Platform.OS === 'ios' ? 'rgba(0, 122, 255, 0.2)' : 'rgba(0, 102, 255, 0.2)',
                                }}
+                               activeOpacity={0.7}
                              >
                                <Text style={{ 
                                  fontSize: 13, 
-                                 fontWeight: '500', 
-                                 color: Platform.OS === 'ios' ? '#007AFF' : '#0066FF', // Make it blue to indicate it's clickable
-                                 letterSpacing: -0.08 // iOS subtle letter spacing
+                                 fontWeight: '600', 
+                                 color: Platform.OS === 'ios' ? '#007AFF' : '#0066FF',
+                                 letterSpacing: -0.08
                                }}>
                                  Saved:
                                </Text>
