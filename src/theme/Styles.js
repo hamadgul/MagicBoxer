@@ -353,7 +353,7 @@ const styles = StyleSheet.create({
     marginHorizontal: 0,
     backgroundColor: '#fff',
     marginTop: -12 * scale,
-    paddingBottom: 20 * scale,
+    paddingBottom: 8 * scale,
     width: "100%",
     alignSelf: "center",
   },
