@@ -1057,14 +1057,21 @@ export default class FormPage extends Component {
       }
     );
     
+    // Initialize navigation dialog flag
+    this.isShowingNavigationDialog = false;
+    
+    // Flag to track internal navigation (AI Search, Test Pack, etc.)
+    this.isInternalNavigation = false;
+    
     // Add a direct hardware back button handler for Android
     this.backHandler = BackHandler.addEventListener(
       'hardwareBackPress',
       () => {
         console.log("FormPage - hardware back button pressed");
-        // If there are items in the container, show confirmation
-        if (this.state.items.length > 0) {
+        // If there are items in the container and no dialog is showing, show confirmation
+        if (this.state.items.length > 0 && !this.isShowingNavigationDialog) {
           console.log("FormPage - showing alert for back button");
+          this.isShowingNavigationDialog = true;
           Alert.alert(
             "Unsaved Changes",
             "You have unsaved items in your package. What would you like to do?",
@@ -1074,6 +1081,7 @@ export default class FormPage extends Component {
                 style: "cancel",
                 onPress: () => {
                   console.log("FormPage - user chose Cancel");
+                  this.isShowingNavigationDialog = false;
                   // User decided to stay on the page
                 }
               },
@@ -1082,8 +1090,9 @@ export default class FormPage extends Component {
                 style: "destructive",
                 onPress: () => {
                   console.log("FormPage - user chose Discard");
-                  // Clear items and continue with navigation
-                  this.clearItems();
+                  this.isShowingNavigationDialog = false;
+                  // Clear items and continue with navigation (no confirmation needed)
+                  this.clearItemsWithoutConfirmation();
                   // Go back
                   this.props.navigation.goBack();
                 }
@@ -1093,6 +1102,7 @@ export default class FormPage extends Component {
                 style: "default",
                 onPress: () => {
                   console.log("FormPage - user chose Save Package");
+                  this.isShowingNavigationDialog = false;
                   // Open the save package modal
                   this.setState({ showSavePackageModal: true });
                 }
@@ -1111,6 +1121,7 @@ export default class FormPage extends Component {
       'beforeRemove',
       (e) => {
         console.log("FormPage - beforeRemove event", e.data.action);
+        console.log("FormPage - action payload:", e.data.action?.payload);
         
         // If there are no items, allow navigation
         if (this.state.items.length === 0) {
@@ -1118,9 +1129,37 @@ export default class FormPage extends Component {
           return;
         }
         
+        // Check if we're navigating within the FormPage stack (AI Search, Test Pack, etc.)
+        // These should not trigger the dialog
+        const action = e.data.action;
+        if (action && action.payload && action.payload.name) {
+          const targetScreen = action.payload.name;
+          const allowedScreens = ['AI Item Search', 'Display3D', 'Shipping Estimate'];
+          
+          if (allowedScreens.includes(targetScreen)) {
+            console.log(`FormPage - allowing navigation to ${targetScreen} (within FormPage stack)`);
+            console.log("FormPage - setting isInternalNavigation = true");
+            this.isInternalNavigation = true;
+            // Reset the flag after a short delay to allow blur event to check it
+            setTimeout(() => {
+              console.log("FormPage - resetting isInternalNavigation = false");
+              this.isInternalNavigation = false;
+            }, 200);
+            return;
+          }
+        }
+        
+        // If dialog is already showing, prevent duplicate
+        if (this.isShowingNavigationDialog) {
+          console.log("FormPage - dialog already showing, preventing duplicate");
+          e.preventDefault();
+          return;
+        }
+        
         // Prevent default navigation
         e.preventDefault();
         console.log("FormPage - prevented navigation");
+        this.isShowingNavigationDialog = true;
         
         // Show confirmation dialog
         Alert.alert(
@@ -1132,6 +1171,7 @@ export default class FormPage extends Component {
               style: "cancel",
               onPress: () => {
                 console.log("FormPage - user chose Cancel");
+                this.isShowingNavigationDialog = false;
                 // User decided to stay on the page
               }
             },
@@ -1140,8 +1180,9 @@ export default class FormPage extends Component {
               style: "destructive",
               onPress: () => {
                 console.log("FormPage - user chose Discard");
-                // Clear items and continue with navigation
-                this.clearItems();
+                this.isShowingNavigationDialog = false;
+                // Clear items and continue with navigation (no confirmation needed)
+                this.clearItemsWithoutConfirmation();
                 // Continue with navigation using proper method
                 setTimeout(() => {
                   this.props.navigation.dispatch(e.data.action);
@@ -1153,6 +1194,7 @@ export default class FormPage extends Component {
               style: "default",
               onPress: () => {
                 console.log("FormPage - user chose Save Package");
+                this.isShowingNavigationDialog = false;
                 // Store the navigation action for after saving
                 this.pendingNavigationAction = e.data.action;
                 // Open the save package modal
@@ -1162,6 +1204,64 @@ export default class FormPage extends Component {
           ],
           { cancelable: false }
         );
+      }
+    );
+    
+
+    // Add a blur listener to catch tab navigation
+    this.blurListener = this.props.navigation.addListener(
+      'blur',
+      () => {
+        console.log("FormPage - blur event (tab navigation)");
+        console.log("FormPage - isInternalNavigation:", this.isInternalNavigation);
+        console.log("FormPage - items.length:", this.state.items.length);
+        console.log("FormPage - isShowingNavigationDialog:", this.isShowingNavigationDialog);
+        
+        // Only show dialog if we have items, no dialog is showing, and this isn't internal navigation
+        // The blur event fires when switching tabs, which is what we want to catch
+        if (this.state.items.length > 0 && !this.isShowingNavigationDialog && !this.isInternalNavigation) {
+          console.log("FormPage - showing dialog for tab navigation");
+          this.isShowingNavigationDialog = true;
+          
+          setTimeout(() => {
+            Alert.alert(
+              "Unsaved Changes",
+              "You have unsaved items in your package. What would you like to do?",
+              [
+                {
+                  text: "Continue",
+                  style: "cancel",
+                  onPress: () => {
+                    console.log("FormPage - user chose Continue");
+                    this.isShowingNavigationDialog = false;
+                  }
+                },
+                {
+                  text: "Discard",
+                  style: "destructive",
+                  onPress: () => {
+                    console.log("FormPage - user chose Discard");
+                    this.isShowingNavigationDialog = false;
+                    this.clearItemsWithoutConfirmation();
+                    // For tab navigation, the user will naturally navigate to their intended tab
+                    // No need to force navigation here
+                  }
+                },
+                {
+                  text: "Save Package",
+                  style: "default",
+                  onPress: () => {
+                    console.log("FormPage - user chose Save Package");
+                    this.isShowingNavigationDialog = false;
+                    // Open save modal immediately, user will navigate after saving
+                    this.setState({ showSavePackageModal: true });
+                  }
+                }
+              ],
+              { cancelable: false }
+            );
+          }, 100);
+        }
       }
     );
     
@@ -1182,6 +1282,10 @@ export default class FormPage extends Component {
     
     if (this.beforeRemoveListener) {
       this.beforeRemoveListener();
+    }
+    
+    if (this.blurListener) {
+      this.blurListener();
     }
     
     // Re-enable drawer gesture when leaving
@@ -1511,7 +1615,13 @@ export default class FormPage extends Component {
   }
 
   handleVisualize = async () => {
+    // Set internal navigation flag for Test Pack navigation
+    console.log("FormPage - handleVisualize: setting isInternalNavigation = true");
+    this.isInternalNavigation = true;
+    
     if (this.state.items.length === 0) {
+      // Reset flag since we're not navigating
+      this.isInternalNavigation = false;
       Alert.alert(
         "No items",
         "Please add at least one item to visualize the packing.",
@@ -1573,11 +1683,18 @@ export default class FormPage extends Component {
               selectedCarrier: "No Carrier",
               items: this.state.items,
             });
+            // Reset flag after navigation
+            setTimeout(() => {
+              console.log("FormPage - handleVisualize: resetting isInternalNavigation = false");
+              this.isInternalNavigation = false;
+            }, 300);
           });
         });
       });
     } catch (error) {
       this.setState({ isLoading: false });
+      // Reset flag in error case
+      this.isInternalNavigation = false;
       console.error(error);
       Alert.alert("Error", "An error occurred while retrieving the item list");
     }
@@ -2882,50 +2999,35 @@ export default class FormPage extends Component {
                               </Text>
                             </TouchableOpacity>
                           ) : (
-                            <View style={{ flexDirection: 'row', gap: 12 }}>
-                              <TouchableOpacity
-                                style={{
-                                  flex: 1,
-                                  paddingVertical: 14,
-                                  backgroundColor: '#FFFFFF',
-                                  borderRadius: 12,
-                                  borderWidth: 1,
-                                  borderColor: '#E2E8F0',
-                                  alignItems: 'center',
-                                  justifyContent: 'center',
-                                }}
-                                onPress={() => {
-                                  this.hideAllSavedItemsModal();
-                                  // Navigate to the form page to add a new item manually
-                                  // Since we're already on FormPage, just close the modal
-                                }}
-                              >
-                                <Text style={{ color: '#64748B', fontWeight: 'bold', fontSize: 16 }}>
-                                  Add Item
-                                </Text>
-                              </TouchableOpacity>
-                              <TouchableOpacity
-                                style={{
-                                  flex: 1,
-                                  paddingVertical: 14,
-                                  backgroundColor: '#0066FF',
-                                  borderRadius: 12,
-                                  alignItems: 'center',
-                                  justifyContent: 'center',
-                                }}
-                                onPress={() => {
-                                  this.hideAllSavedItemsModal();
-                                  this.props.navigation.navigate('AI Item Search', { 
-                                    searchQuery: this.state.savedItemsSearchQuery,
-                                    fromFormPage: true // Flag to indicate navigation from FormPage
-                                  });
-                                }}
-                              >
-                                <Text style={{ color: '#FFFFFF', fontWeight: 'bold', fontSize: 16 }}>
-                                  Find with AI Search
-                                </Text>
-                              </TouchableOpacity>
-                            </View>
+                            <TouchableOpacity
+                              style={{
+                                paddingVertical: 14,
+                                backgroundColor: '#0066FF',
+                                borderRadius: 12,
+                                alignItems: 'center',
+                                justifyContent: 'center',
+                              }}
+                              onPress={() => {
+                                console.log("FormPage - AI Search from modal: setting isInternalNavigation = true");
+                                this.isInternalNavigation = true;
+                
+                                this.hideAllSavedItemsModal();
+                                this.props.navigation.navigate('AI Item Search', { 
+                                  searchQuery: this.state.savedItemsSearchQuery,
+                                  fromFormPage: true // Flag to indicate navigation from FormPage
+                                });
+                
+                                // Reset flag after navigation
+                                setTimeout(() => {
+                                  console.log("FormPage - AI Search from modal: resetting isInternalNavigation = false");
+                                  this.isInternalNavigation = false;
+                                }, 300);
+                              }}
+                            >
+                              <Text style={{ color: '#FFFFFF', fontWeight: 'bold', fontSize: 16 }}>
+                                Find with AI Search
+                              </Text>
+                            </TouchableOpacity>
                           )}
                         </View>
                       </View>
