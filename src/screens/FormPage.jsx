@@ -637,7 +637,11 @@ export default class FormPage extends Component {
       contentWidth: 0, // Total width of scrollable content
       containerWidth: 0, // Width of the container
       canScrollLeft: false, // Whether we can scroll left
-      canScrollRight: false // Whether we can scroll right
+      canScrollRight: false, // Whether we can scroll right
+      // Bulk selection state for saved items modal
+      savedItemsSelectionMode: false,
+      selectedSavedItems: [],
+      isBulkAddInProgress: false
     };
     this.inputRef = React.createRef();
   }
@@ -712,6 +716,135 @@ export default class FormPage extends Component {
   handleSelectSavedItem = (item) => {
     this.selectSavedItem(item);
     this.hideAllSavedItemsModal();
+  };
+  
+  // Bulk selection methods for saved items modal
+  enterBulkSelectionMode = (item) => {
+    this.setState({
+      savedItemsSelectionMode: true,
+      selectedSavedItems: [item]
+    });
+  };
+
+  exitBulkSelectionMode = () => {
+    this.setState({
+      savedItemsSelectionMode: false,
+      selectedSavedItems: []
+    });
+  };
+
+  toggleSavedItemSelection = (item) => {
+    const { selectedSavedItems } = this.state;
+    const isSelected = selectedSavedItems.some(selected => selected.id === item.id);
+    
+    if (isSelected) {
+      this.setState({
+        selectedSavedItems: selectedSavedItems.filter(selected => selected.id !== item.id)
+      });
+    } else {
+      this.setState({
+        selectedSavedItems: [...selectedSavedItems, item]
+      });
+    }
+  };
+
+  selectAllSavedItems = () => {
+    const { allSavedItems, items } = this.state;
+    // Only select items that are not already added to the package
+    const selectableItems = allSavedItems.filter(item => {
+      const itemName = item.itemName || item.name || '';
+      return !items.some(addedItem => (addedItem.itemName || '').toLowerCase() === itemName.toLowerCase());
+    });
+    
+    this.setState({
+      selectedSavedItems: selectableItems
+    });
+  };
+
+  clearAllSavedItemsSelection = () => {
+    this.setState({
+      selectedSavedItems: []
+    });
+  };
+
+  bulkAddSavedItemsToPackage = async () => {
+    const { selectedSavedItems } = this.state;
+    
+    if (selectedSavedItems.length === 0) {
+      return;
+    }
+
+    this.setState({ isBulkAddInProgress: true });
+
+    try {
+      // Create new items from selected saved items
+      const newItems = selectedSavedItems.map(item => {
+        const name = item.name || item.itemName || '';
+        let length = '';
+        let width = '';
+        let height = '';
+
+        // Parse dimensions from saved item
+        if (item.dimensions) {
+          length = parseFloat(item.dimensions.length) || '';
+          width = parseFloat(item.dimensions.width) || '';
+          height = parseFloat(item.dimensions.height) || '';
+        }
+
+        return {
+          id: Date.now() + Math.random(), // Unique ID for each item
+          itemName: name,
+          itemLength: String(length),
+          itemWidth: String(width),
+          itemHeight: String(height),
+          quantity: 1
+        };
+      });
+
+      // Add all new items to the items array
+      const updatedItems = [...this.state.items, ...newItems];
+      
+      this.setState({ items: updatedItems }, async () => {
+        try {
+          // Save items to AsyncStorage
+          const serializedItems = Buffer.from(
+            JSON.stringify(this.state.items)
+          ).toString("base64");
+          await AsyncStorage.setItem("itemList", serializedItems);
+
+          // Show success message
+          Alert.alert(
+            'Success',
+            `${selectedSavedItems.length} item${selectedSavedItems.length > 1 ? 's' : ''} added to package`,
+            [{ text: 'OK' }]
+          );
+
+          // Exit bulk selection mode and close modal
+          this.setState({
+            savedItemsSelectionMode: false,
+            selectedSavedItems: [],
+            showAllSavedItemsModal: false
+          });
+        } catch (error) {
+          console.error('Error saving items:', error);
+          Alert.alert('Error', 'Failed to save items to storage');
+        }
+      });
+    } catch (error) {
+      console.error('Error during bulk add:', error);
+      Alert.alert('Error', 'Failed to add items to package');
+    } finally {
+      this.setState({ isBulkAddInProgress: false });
+    }
+  };
+
+  // Override hideAllSavedItemsModal to reset bulk selection state
+  hideAllSavedItemsModal = () => {
+    this.setState({ 
+      showAllSavedItemsModal: false,
+      savedItemsSelectionMode: false,
+      selectedSavedItems: []
+    });
   };
   
   loadCustomProducts = async () => {
@@ -836,7 +969,10 @@ export default class FormPage extends Component {
       'showLengthTooltip',
       'showWidthTooltip',
       'showHeightTooltip',
-      'showNameTooltip'
+      'showNameTooltip',
+      'savedItemsSelectionMode',
+      'selectedSavedItems',
+      'isBulkAddInProgress'
     ];
 
     return relevantStateKeys.some(key => this.state[key] !== nextState[key]);
@@ -2109,15 +2245,23 @@ export default class FormPage extends Component {
                             shadowRadius: 3,
                             elevation: 2,
                           }}>
-                            <Text style={{ 
-                              fontSize: 13, 
-                              fontWeight: '500', 
-                              color: Platform.OS === 'ios' ? '#8E8E93' : '#475569', // iOS system gray color
-                              marginRight: 8,
-                              letterSpacing: -0.08 // iOS subtle letter spacing
-                            }}>
-                              Saved:
-                            </Text>
+                             <TouchableOpacity
+                               onPress={this.showAllSavedItemsModal}
+                               style={{
+                                 paddingHorizontal: 4,
+                                 paddingVertical: 2,
+                                 marginRight: 8,
+                               }}
+                             >
+                               <Text style={{ 
+                                 fontSize: 13, 
+                                 fontWeight: '500', 
+                                 color: Platform.OS === 'ios' ? '#007AFF' : '#0066FF', // Make it blue to indicate it's clickable
+                                 letterSpacing: -0.08 // iOS subtle letter spacing
+                               }}>
+                                 Saved:
+                               </Text>
+                             </TouchableOpacity>
                             <View style={{ flex: 1 }}>
                               <ScrollView
                                 horizontal
@@ -2156,6 +2300,7 @@ export default class FormPage extends Component {
                                 ))}
                               </ScrollView>
                             </View>
+
                           </View>
                         );
                       })()}
@@ -2516,6 +2661,49 @@ export default class FormPage extends Component {
                           </View>
                         </View>
 
+                        {/* Bulk Selection Controls */}
+                        {this.state.savedItemsSelectionMode && (
+                          <View style={{
+                            flexDirection: 'row',
+                            justifyContent: 'space-between',
+                            alignItems: 'center',
+                            paddingHorizontal: 20,
+                            paddingVertical: 12,
+                            backgroundColor: '#F1F5F9',
+                            borderBottomWidth: 1,
+                            borderBottomColor: '#E2E8F0',
+                          }}>
+                            <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                              <TouchableOpacity
+                                onPress={this.exitBulkSelectionMode}
+                                style={{
+                                  flexDirection: 'row',
+                                  alignItems: 'center',
+                                  paddingVertical: 8,
+                                  paddingHorizontal: 12,
+                                  backgroundColor: '#EF4444',
+                                  borderRadius: 8,
+                                  marginRight: 12,
+                                }}
+                              >
+                                <Ionicons name="close" size={16} color="white" />
+                                <Text style={{ marginLeft: 6, fontSize: 14, fontWeight: '600', color: 'white' }}>Exit</Text>
+                              </TouchableOpacity>
+                              <Text style={{ fontSize: 14, color: '#64748B', marginRight: 12 }}>
+                                {this.state.selectedSavedItems.length} selected
+                              </Text>
+                            </View>
+                            <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                              <TouchableOpacity onPress={this.selectAllSavedItems} style={{ paddingVertical: 6, paddingHorizontal: 10, backgroundColor: '#E2E8F0', borderRadius: 6, marginRight: 8 }}>
+                                <Text style={{ fontSize: 12, color: '#64748B', fontWeight: '600' }}>Select All</Text>
+                              </TouchableOpacity>
+                              <TouchableOpacity onPress={this.clearAllSavedItemsSelection} style={{ paddingVertical: 6, paddingHorizontal: 10, backgroundColor: '#E2E8F0', borderRadius: 6 }}>
+                                <Text style={{ fontSize: 12, color: '#64748B', fontWeight: '600' }}>Clear All</Text>
+                              </TouchableOpacity>
+                            </View>
+                          </View>
+                        )}
+
                         <ScrollView 
                           style={{ paddingHorizontal: 16 }} 
                           contentContainerStyle={{ flexGrow: 1 }} 
@@ -2536,54 +2724,117 @@ export default class FormPage extends Component {
                                   (addedItem.itemName || '').toLowerCase() === itemName.toLowerCase()
                                 );
                                 const dimensions = item.dimensions || {};
+                                const isSelected = this.state.selectedSavedItems.some(selected => selected.id === item.id);
+                                const canSelect = !alreadyAdded; // Only allow selection if not already added
+                                
                                 return (
                                   <TouchableOpacity
                                     key={item.id}
-                                    onPress={() => !alreadyAdded && this.selectSavedItem(item)}
-                                    disabled={alreadyAdded}
+                                    onPress={() => {
+                                      if (this.state.savedItemsSelectionMode) {
+                                        if (canSelect) {
+                                          this.toggleSavedItemSelection(item);
+                                        }
+                                      } else {
+                                        if (!alreadyAdded) {
+                                          this.selectSavedItem(item);
+                                        }
+                                      }
+                                    }}
+                                    onLongPress={() => {
+                                      if (canSelect && !this.state.savedItemsSelectionMode) {
+                                        this.enterBulkSelectionMode(item);
+                                      }
+                                    }}
+                                    disabled={alreadyAdded && !this.state.savedItemsSelectionMode}
                                     style={{
                                       flexDirection: 'row',
                                       justifyContent: 'space-between',
                                       alignItems: 'center',
                                       paddingVertical: 16,
+                                      paddingHorizontal: 16,
                                       borderBottomWidth: 1,
                                       borderBottomColor: '#E2E8F0',
                                       opacity: alreadyAdded ? 0.4 : 1,
+                                      backgroundColor: isSelected ? '#EBF4FF' : 'transparent',
+                                      borderWidth: isSelected ? 1 : 0,
+                                      borderColor: isSelected ? '#3B82F6' : 'transparent',
+                                      marginHorizontal: isSelected ? 8 : 0,
+                                      borderRadius: isSelected ? 8 : 0,
                                     }}
                                   >
-                                    <View>
-                                      <Text style={{ fontSize: 16, color: '#1E293B', fontWeight: '600' }}>
-                                        {itemName}
-                                      </Text>
-                                      <View style={{ flexDirection: 'row', alignItems: 'center', marginTop: 6 }}>
-                                        {dimensions.length && dimensions.width && dimensions.height ? (
-                                          <>
-                                            <View style={{ flexDirection: 'row', alignItems: 'center', backgroundColor: '#E2E8F0', borderRadius: 12, paddingHorizontal: 8, paddingVertical: 4 }}>
-                                              <Text style={{ fontSize: 12, color: '#475569', fontWeight: '600', marginRight: 4 }}>L</Text>
-                                              <Text style={{ fontSize: 12, color: '#475569' }}>{parseFloat(dimensions.length)}</Text>
+                                    <View style={{ flexDirection: 'row', alignItems: 'center', flex: 1 }}>
+                                      {/* Checkbox for bulk selection mode */}
+                                      {this.state.savedItemsSelectionMode && (
+                                        <View style={{ marginRight: 12 }}>
+                                          {canSelect ? (
+                                            <View style={{
+                                              width: 20,
+                                              height: 20,
+                                              borderRadius: 4,
+                                              borderWidth: 2,
+                                              borderColor: isSelected ? '#3B82F6' : '#CBD5E1',
+                                              backgroundColor: isSelected ? '#3B82F6' : 'transparent',
+                                              alignItems: 'center',
+                                              justifyContent: 'center',
+                                            }}>
+                                              {isSelected && (
+                                                <Ionicons name="checkmark" size={12} color="white" />
+                                              )}
                                             </View>
-                                            <Text style={{ marginHorizontal: 4, color: '#94A3B8', fontSize: 12 }}>x</Text>
-                                            <View style={{ flexDirection: 'row', alignItems: 'center', backgroundColor: '#E2E8F0', borderRadius: 12, paddingHorizontal: 8, paddingVertical: 4 }}>
-                                              <Text style={{ fontSize: 12, color: '#475569', fontWeight: '600', marginRight: 4 }}>W</Text>
-                                              <Text style={{ fontSize: 12, color: '#475569' }}>{parseFloat(dimensions.width)}</Text>
+                                          ) : (
+                                            <View style={{
+                                              width: 20,
+                                              height: 20,
+                                              borderRadius: 4,
+                                              backgroundColor: '#F1F5F9',
+                                              alignItems: 'center',
+                                              justifyContent: 'center',
+                                            }}>
+                                              <Ionicons name="checkmark" size={12} color="#22C55E" />
                                             </View>
-                                            <Text style={{ marginHorizontal: 4, color: '#94A3B8', fontSize: 12 }}>x</Text>
-                                            <View style={{ flexDirection: 'row', alignItems: 'center', backgroundColor: '#E2E8F0', borderRadius: 12, paddingHorizontal: 8, paddingVertical: 4 }}>
-                                              <Text style={{ fontSize: 12, color: '#475569', fontWeight: '600', marginRight: 4 }}>H</Text>
-                                              <Text style={{ fontSize: 12, color: '#475569' }}>{parseFloat(dimensions.height)}</Text>
-                                            </View>
-                                          </>
-                                        ) : (
-                                          <Text style={{ fontSize: 13, color: '#94A3B8', fontStyle: 'italic' }}>
-                                            No dimensions
-                                          </Text>
-                                        )}
+                                          )}
+                                        </View>
+                                      )}
+                                      
+                                      <View style={{ flex: 1 }}>
+                                        <Text style={{ fontSize: 16, color: '#1E293B', fontWeight: '600' }}>
+                                          {itemName}
+                                        </Text>
+                                        <View style={{ flexDirection: 'row', alignItems: 'center', marginTop: 6 }}>
+                                          {dimensions.length && dimensions.width && dimensions.height ? (
+                                            <>
+                                              <View style={{ flexDirection: 'row', alignItems: 'center', backgroundColor: '#E2E8F0', borderRadius: 12, paddingHorizontal: 8, paddingVertical: 4 }}>
+                                                <Text style={{ fontSize: 12, color: '#475569', fontWeight: '600', marginRight: 4 }}>L</Text>
+                                                <Text style={{ fontSize: 12, color: '#475569' }}>{parseFloat(dimensions.length)}</Text>
+                                              </View>
+                                              <Text style={{ marginHorizontal: 4, color: '#94A3B8', fontSize: 12 }}>x</Text>
+                                              <View style={{ flexDirection: 'row', alignItems: 'center', backgroundColor: '#E2E8F0', borderRadius: 12, paddingHorizontal: 8, paddingVertical: 4 }}>
+                                                <Text style={{ fontSize: 12, color: '#475569', fontWeight: '600', marginRight: 4 }}>W</Text>
+                                                <Text style={{ fontSize: 12, color: '#475569' }}>{parseFloat(dimensions.width)}</Text>
+                                              </View>
+                                              <Text style={{ marginHorizontal: 4, color: '#94A3B8', fontSize: 12 }}>x</Text>
+                                              <View style={{ flexDirection: 'row', alignItems: 'center', backgroundColor: '#E2E8F0', borderRadius: 12, paddingHorizontal: 8, paddingVertical: 4 }}>
+                                                <Text style={{ fontSize: 12, color: '#475569', fontWeight: '600', marginRight: 4 }}>H</Text>
+                                                <Text style={{ fontSize: 12, color: '#475569' }}>{parseFloat(dimensions.height)}</Text>
+                                              </View>
+                                            </>
+                                          ) : (
+                                            <Text style={{ fontSize: 13, color: '#94A3B8', fontStyle: 'italic' }}>
+                                              No dimensions
+                                            </Text>
+                                          )}
+                                        </View>
                                       </View>
                                     </View>
-                                    {alreadyAdded ? (
-                                      <Ionicons name="checkmark-circle" size={24} color="#22C55E" />
-                                    ) : (
-                                      <Text style={{ color: '#3B82F6', fontSize: 24 }}>↵</Text>
+                                    
+                                    {/* Right side icon */}
+                                    {!this.state.savedItemsSelectionMode && (
+                                      alreadyAdded ? (
+                                        <Ionicons name="checkmark-circle" size={24} color="#22C55E" />
+                                      ) : (
+                                        <Text style={{ color: '#3B82F6', fontSize: 24 }}>↵</Text>
+                                      )
                                     )}
                                   </TouchableOpacity>
                                 );
@@ -2595,7 +2846,7 @@ export default class FormPage extends Component {
                                   <Text style={{ fontSize: 18, fontWeight: '600', color: '#475569', marginTop: 16, textAlign: 'center' }}>
                                     No Saved Items Found
                                   </Text>
-                                  <Text style={{ fontSize: 15, color: '#64748B', marginTop: 8, textAlign: 'center', lineHeight: 22 }}>
+                                  <Text style={{ fontSize: 15, color: '#64748B', marginTop: 8, marginBottom: 24, textAlign: 'center', lineHeight: 22 }}>
                                     Try a different search, or use the button below to find your item with AI Search.
                                   </Text>
                                 </View>
@@ -2604,27 +2855,73 @@ export default class FormPage extends Component {
                           })()}
                         </ScrollView>
 
-                        <View style={{ padding: 16, borderTopWidth: 1, borderTopColor: '#E2E8F0' }}>
-                          <TouchableOpacity
-                            style={{
-                              paddingVertical: 14,
-                              backgroundColor: '#0066FF',
-                              borderRadius: 12,
-                              alignItems: 'center',
-                              justifyContent: 'center',
-                            }}
-                            onPress={() => {
-                              this.hideAllSavedItemsModal();
-                              this.props.navigation.navigate('AI Item Search', { 
-                                searchQuery: this.state.savedItemsSearchQuery,
-                                fromFormPage: true // Flag to indicate navigation from FormPage
-                              });
-                            }}
-                          >
-                            <Text style={{ color: '#FFFFFF', fontWeight: 'bold', fontSize: 16 }}>
-                              Find with AI Search
-                            </Text>
-                          </TouchableOpacity>
+                        <View style={{ paddingVertical: 14, paddingHorizontal: 16, borderTopWidth: 1, borderTopColor: '#E2E8F0' }}>
+                          {this.state.savedItemsSelectionMode ? (
+                            <TouchableOpacity
+                              style={{
+                                paddingVertical: 14,
+                                backgroundColor: this.state.selectedSavedItems.length > 0 ? '#0066FF' : '#94A3B8',
+                                borderRadius: 12,
+                                alignItems: 'center',
+                                justifyContent: 'center',
+                                opacity: this.state.isBulkAddInProgress ? 0.6 : 1,
+                              }}
+                              onPress={this.bulkAddSavedItemsToPackage}
+                              disabled={this.state.selectedSavedItems.length === 0 || this.state.isBulkAddInProgress}
+                            >
+                              <Text style={{ color: '#FFFFFF', fontWeight: 'bold', fontSize: 16 }}>
+                                {this.state.isBulkAddInProgress 
+                                  ? 'Adding Items...' 
+                                  : `Add Items (${this.state.selectedSavedItems.length})`
+                                }
+                              </Text>
+                            </TouchableOpacity>
+                          ) : (
+                            <View style={{ flexDirection: 'row', gap: 12 }}>
+                              <TouchableOpacity
+                                style={{
+                                  flex: 1,
+                                  paddingVertical: 14,
+                                  backgroundColor: '#FFFFFF',
+                                  borderRadius: 12,
+                                  borderWidth: 1,
+                                  borderColor: '#E2E8F0',
+                                  alignItems: 'center',
+                                  justifyContent: 'center',
+                                }}
+                                onPress={() => {
+                                  this.hideAllSavedItemsModal();
+                                  // Navigate to the form page to add a new item manually
+                                  // Since we're already on FormPage, just close the modal
+                                }}
+                              >
+                                <Text style={{ color: '#64748B', fontWeight: 'bold', fontSize: 16 }}>
+                                  Add Item
+                                </Text>
+                              </TouchableOpacity>
+                              <TouchableOpacity
+                                style={{
+                                  flex: 1,
+                                  paddingVertical: 14,
+                                  backgroundColor: '#0066FF',
+                                  borderRadius: 12,
+                                  alignItems: 'center',
+                                  justifyContent: 'center',
+                                }}
+                                onPress={() => {
+                                  this.hideAllSavedItemsModal();
+                                  this.props.navigation.navigate('AI Item Search', { 
+                                    searchQuery: this.state.savedItemsSearchQuery,
+                                    fromFormPage: true // Flag to indicate navigation from FormPage
+                                  });
+                                }}
+                              >
+                                <Text style={{ color: '#FFFFFF', fontWeight: 'bold', fontSize: 16 }}>
+                                  Find with AI Search
+                                </Text>
+                              </TouchableOpacity>
+                            </View>
+                          )}
                         </View>
                       </View>
                 </View>
