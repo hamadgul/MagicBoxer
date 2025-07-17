@@ -2287,43 +2287,53 @@ export default class PackagesPage extends Component {
             animationType="fade"
             onRequestClose={() => this.setState({ showPackageNamingModal: false, importedPackageItems: [], newImportedPackageName: '' })}
           >
-            <TouchableWithoutFeedback onPress={() => this.setState({ showPackageNamingModal: false, importedPackageItems: [], newImportedPackageName: '' })}>
-              <View style={styles.modalOverlay}>
-                <TouchableWithoutFeedback onPress={(e) => e.stopPropagation()}>
-                  <View style={styles.importModalContainer}>
-                    <Text style={styles.importModalTitle}>Name Your Package</Text>
-                    
-                    <Text style={styles.modalSubtitle}>
-                      You've successfully imported {this.state.importedPackageItems.length} items. Please give your package a name to save it.
-                    </Text>
-                    
-                    <TextInput
-                      style={styles.packageNameInput}
-                      placeholder="Enter package name"
-                      value={this.state.newImportedPackageName}
-                      onChangeText={(text) => this.setState({ newImportedPackageName: text })}
-                      autoFocus={true}
-                    />
-                    
-                    <View style={styles.modalButtonsRow}>
-                      <TouchableOpacity
-                        style={[styles.modalButton, styles.cancelButton]}
-                        onPress={() => this.setState({ showPackageNamingModal: false, importedPackageItems: [], newImportedPackageName: '' })}
-                      >
-                        <Text style={styles.modalCancelButtonText}>Cancel</Text>
-                      </TouchableOpacity>
+            <KeyboardAvoidingView 
+              style={{ flex: 1 }}
+              behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+              keyboardVerticalOffset={Platform.OS === 'ios' ? 0 : 20}
+            >
+              <TouchableWithoutFeedback onPress={() => this.setState({ showPackageNamingModal: false, importedPackageItems: [], newImportedPackageName: '' })}>
+                <View style={modalStyles.centeredView}>
+                  <TouchableWithoutFeedback onPress={(e) => e.stopPropagation()}>
+                    <View style={modalStyles.modalContent}>
+                      <View style={modalStyles.modalHeader}>
+                        <Text style={modalStyles.modalTitle}>Name Your Package</Text>
+                      </View>
                       
-                      <TouchableOpacity
-                        style={[styles.modalButton, styles.saveButton]}
-                        onPress={this.handleSaveImportedPackage}
-                      >
-                        <Text style={styles.saveButtonText}>Save Package</Text>
-                      </TouchableOpacity>
+                      <Text style={modalStyles.modalSubtitle}>
+                        You've successfully imported {this.state.importedPackageItems.length} items. Please give your package a name to save it.
+                      </Text>
+                      
+                      <TextInput
+                        style={modalStyles.fieldInput}
+                        placeholder="Enter package name"
+                        value={this.state.newImportedPackageName}
+                        onChangeText={(text) => this.setState({ newImportedPackageName: text })}
+                        autoFocus={true}
+                        returnKeyType="done"
+                        onSubmitEditing={this.handleSaveImportedPackage}
+                      />
+                      
+                      <View style={modalStyles.modalButtonContainer}>
+                        <TouchableOpacity
+                          style={[modalStyles.button, modalStyles.cancelButton]}
+                          onPress={() => this.setState({ showPackageNamingModal: false, importedPackageItems: [], newImportedPackageName: '' })}
+                        >
+                          <Text style={modalStyles.buttonText}>Cancel</Text>
+                        </TouchableOpacity>
+                        
+                        <TouchableOpacity
+                          style={[modalStyles.button, modalStyles.saveButton]}
+                          onPress={this.handleSaveImportedPackage}
+                        >
+                          <Text style={modalStyles.buttonText}>Save Package</Text>
+                        </TouchableOpacity>
+                      </View>
                     </View>
-                  </View>
-                </TouchableWithoutFeedback>
-              </View>
-            </TouchableWithoutFeedback>
+                  </TouchableWithoutFeedback>
+                </View>
+              </TouchableWithoutFeedback>
+            </KeyboardAvoidingView>
           </Modal>
         </View>
       </TouchableWithoutFeedback>
@@ -3343,9 +3353,9 @@ const styles = StyleSheet.create({
     marginRight: 12,
   },
   menuButtonText: {
-    fontSize: 16,
+    fontSize: 14,
     fontWeight: '600',
-    color: '#1F2937',
+    color: '#334155',
   },
   modalOverlay: {
     position: 'absolute',
