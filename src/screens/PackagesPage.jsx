@@ -46,6 +46,10 @@ export default class PackagesPage extends Component {
     selectionMode: false,
     selectedPackages: [],
     showDeleteConfirmModal: false,
+    // Bulk selection for saved items modal
+    savedItemsSelectionMode: false,
+    selectedSavedItems: [],
+    isBulkAddInProgress: false, // Flag to prevent individual alerts during bulk operations
   };
 
   constructor(props) {
@@ -1241,6 +1245,79 @@ export default class PackagesPage extends Component {
                       </TouchableOpacity>
                     </View>
 
+                    {/* Bulk Selection Controls - Only show when in bulk selection mode */}
+                    {this.state.savedItemsSelectionMode && (
+                      <View style={{
+                        flexDirection: 'row',
+                        justifyContent: 'space-between',
+                        alignItems: 'center',
+                        paddingHorizontal: 20,
+                        paddingVertical: 12,
+                        backgroundColor: '#F1F5F9',
+                        borderBottomWidth: 1,
+                        borderBottomColor: '#E2E8F0',
+                      }}>
+                        <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                          <TouchableOpacity
+                            onPress={this.exitBulkSelectionMode}
+                            style={{
+                              flexDirection: 'row',
+                              alignItems: 'center',
+                              paddingVertical: 8,
+                              paddingHorizontal: 12,
+                              backgroundColor: '#EF4444',
+                              borderRadius: 8,
+                              marginRight: 12,
+                            }}
+                          >
+                            <Ionicons 
+                              name="close" 
+                              size={16} 
+                              color="white" 
+                            />
+                            <Text style={{
+                              marginLeft: 6,
+                              fontSize: 14,
+                              fontWeight: '600',
+                              color: 'white'
+                            }}>
+                              Exit
+                            </Text>
+                          </TouchableOpacity>
+                          
+                          <Text style={{ fontSize: 14, color: '#64748B', marginRight: 12 }}>
+                            {this.state.selectedSavedItems.length} selected
+                          </Text>
+                        </View>
+
+                        <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                          <TouchableOpacity
+                            onPress={this.selectAllSavedItems}
+                            style={{
+                              paddingVertical: 6,
+                              paddingHorizontal: 10,
+                              backgroundColor: '#E2E8F0',
+                              borderRadius: 6,
+                              marginRight: 8,
+                            }}
+                          >
+                            <Text style={{ fontSize: 12, color: '#64748B', fontWeight: '600' }}>Select All</Text>
+                          </TouchableOpacity>
+                          <TouchableOpacity
+                            onPress={this.clearAllSavedItemsSelection}
+                            style={{
+                              paddingVertical: 6,
+                              paddingHorizontal: 10,
+                              backgroundColor: '#E2E8F0',
+                              borderRadius: 6,
+                            }}
+                          >
+                            <Text style={{ fontSize: 12, color: '#64748B', fontWeight: '600' }}>Clear All</Text>
+                          </TouchableOpacity>
+                        </View>
+                      </View>
+                    )}
+
                     <View style={{ paddingHorizontal: 20, paddingTop: 15, paddingBottom: 15 }}>
                       <View style={{
                         flexDirection: 'row',
@@ -1299,11 +1376,32 @@ export default class PackagesPage extends Component {
                             } else if (item.dimensions) {
                               dimensions = item.dimensions;
                             }
+                            
+                            const isSelected = this.state.selectedSavedItems.some(selectedItem => selectedItem.id === item.id);
+                            
                             return (
                               <TouchableOpacity
                                 key={item.id}
-                                onPress={() => !alreadyAdded && this.handleAddSavedItemToPackage(item)}
-                                disabled={alreadyAdded}
+                                onPress={() => {
+                                  // Prevent individual adds during bulk operations
+                                  if (this.state.isBulkAddInProgress) {
+                                    console.log('🚫 Individual tap blocked - bulk add in progress');
+                                    return;
+                                  }
+                                  
+                                  if (this.state.savedItemsSelectionMode) {
+                                    this.toggleSavedItemSelection(item);
+                                  } else if (!alreadyAdded) {
+                                    this.handleAddSavedItemToPackage(item);
+                                  }
+                                }}
+                                onLongPress={() => {
+                                  if (!alreadyAdded && !this.state.savedItemsSelectionMode) {
+                                    this.enterBulkSelectionMode();
+                                    this.toggleSavedItemSelection(item);
+                                  }
+                                }}
+                                disabled={alreadyAdded && !this.state.savedItemsSelectionMode}
                                 style={{
                                   flexDirection: 'row',
                                   justifyContent: 'space-between',
@@ -1311,39 +1409,90 @@ export default class PackagesPage extends Component {
                                   paddingVertical: 16,
                                   borderBottomWidth: 1,
                                   borderBottomColor: '#E2E8F0',
-                                  opacity: alreadyAdded ? 0.4 : 1,
+                                  opacity: alreadyAdded && !this.state.savedItemsSelectionMode ? 0.4 : 1,
+                                  backgroundColor: isSelected ? '#EBF4FF' : 'transparent',
                                 }}
                               >
-                                <View>
-                                  <Text style={{ fontSize: 16, color: '#1E293B', fontWeight: '600' }}>
-                                    {itemName}
-                                  </Text>
-                                  <View style={{ flexDirection: 'row', alignItems: 'center', marginTop: 6 }}>
-                                    {dimensions.length && dimensions.width && dimensions.height ? (
-                                      <>
-                                        <View style={{ flexDirection: 'row', alignItems: 'center', backgroundColor: '#E2E8F0', borderRadius: 12, paddingHorizontal: 8, paddingVertical: 4 }}>
-                                          <Text style={{ fontSize: 12, color: '#475569', fontWeight: '600', marginRight: 4 }}>L</Text>
-                                          <Text style={{ fontSize: 12, color: '#475569' }}>{parseFloat(dimensions.length)}</Text>
-                                        </View>
-                                        <Text style={{ marginHorizontal: 4, color: '#94A3B8', fontSize: 12 }}>x</Text>
-                                        <View style={{ flexDirection: 'row', alignItems: 'center', backgroundColor: '#E2E8F0', borderRadius: 12, paddingHorizontal: 8, paddingVertical: 4 }}>
-                                          <Text style={{ fontSize: 12, color: '#475569', fontWeight: '600', marginRight: 4 }}>W</Text>
-                                          <Text style={{ fontSize: 12, color: '#475569' }}>{parseFloat(dimensions.width)}</Text>
-                                        </View>
-                                        <Text style={{ marginHorizontal: 4, color: '#94A3B8', fontSize: 12 }}>x</Text>
-                                        <View style={{ flexDirection: 'row', alignItems: 'center', backgroundColor: '#E2E8F0', borderRadius: 12, paddingHorizontal: 8, paddingVertical: 4 }}>
-                                          <Text style={{ fontSize: 12, color: '#475569', fontWeight: '600', marginRight: 4 }}>H</Text>
-                                          <Text style={{ fontSize: 12, color: '#475569' }}>{parseFloat(dimensions.height)}</Text>
-                                        </View>
-                                      </>
-                                    ) : (
-                                      <Text style={{ fontSize: 13, color: '#94A3B8', fontStyle: 'italic' }}>
-                                        No dimensions
-                                      </Text>
-                                    )}
+                                <View style={{ flexDirection: 'row', alignItems: 'center', flex: 1 }}>
+                                  {/* Checkbox for bulk selection mode - only show for items not already added */}
+                                  {this.state.savedItemsSelectionMode && !alreadyAdded && (
+                                    <TouchableOpacity
+                                      onPress={() => this.toggleSavedItemSelection(item)}
+                                      style={{
+                                        marginRight: 12,
+                                        padding: 4
+                                      }}
+                                    >
+                                      <Ionicons 
+                                        name={isSelected ? "checkbox" : "square-outline"} 
+                                        size={20} 
+                                        color={isSelected ? "#3B82F6" : "#94A3B8"}
+                                      />
+                                    </TouchableOpacity>
+                                  )}
+                                  
+                                  {/* Show disabled indicator for already added items in bulk selection mode */}
+                                  {this.state.savedItemsSelectionMode && alreadyAdded && (
+                                    <View style={{
+                                      marginRight: 12,
+                                      padding: 4
+                                    }}>
+                                      <Ionicons 
+                                        name="checkmark-circle" 
+                                        size={20} 
+                                        color="#94A3B8"
+                                      />
+                                    </View>
+                                  )}
+                                  
+                                  <View style={{ flex: 1 }}>
+                                    <Text style={{ fontSize: 16, color: '#1E293B', fontWeight: '600' }}>
+                                      {itemName}
+                                    </Text>
+                                    <View style={{ flexDirection: 'row', alignItems: 'center', marginTop: 6 }}>
+                                      {dimensions.length && dimensions.width && dimensions.height ? (
+                                        <>
+                                          <View style={{ flexDirection: 'row', alignItems: 'center', backgroundColor: '#E2E8F0', borderRadius: 12, paddingHorizontal: 8, paddingVertical: 4 }}>
+                                            <Text style={{ fontSize: 12, color: '#475569', fontWeight: '600', marginRight: 4 }}>L</Text>
+                                            <Text style={{ fontSize: 12, color: '#475569' }}>{parseFloat(dimensions.length)}</Text>
+                                          </View>
+                                          <Text style={{ marginHorizontal: 4, color: '#94A3B8', fontSize: 12 }}>x</Text>
+                                          <View style={{ flexDirection: 'row', alignItems: 'center', backgroundColor: '#E2E8F0', borderRadius: 12, paddingHorizontal: 8, paddingVertical: 4 }}>
+                                            <Text style={{ fontSize: 12, color: '#475569', fontWeight: '600', marginRight: 4 }}>W</Text>
+                                            <Text style={{ fontSize: 12, color: '#475569' }}>{parseFloat(dimensions.width)}</Text>
+                                          </View>
+                                          <Text style={{ marginHorizontal: 4, color: '#94A3B8', fontSize: 12 }}>x</Text>
+                                          <View style={{ flexDirection: 'row', alignItems: 'center', backgroundColor: '#E2E8F0', borderRadius: 12, paddingHorizontal: 8, paddingVertical: 4 }}>
+                                            <Text style={{ fontSize: 12, color: '#475569', fontWeight: '600', marginRight: 4 }}>H</Text>
+                                            <Text style={{ fontSize: 12, color: '#475569' }}>{parseFloat(dimensions.height)}</Text>
+                                          </View>
+                                        </>
+                                      ) : (
+                                        <Text style={{ fontSize: 13, color: '#94A3B8', fontStyle: 'italic' }}>
+                                          No dimensions
+                                        </Text>
+                                      )}
+                                    </View>
                                   </View>
                                 </View>
-                                {alreadyAdded ? (
+                                {this.state.savedItemsSelectionMode ? (
+                                  alreadyAdded ? (
+                                    <View style={{ padding: 4 }}>
+                                      <Ionicons name="checkmark-circle" size={20} color="#94A3B8" />
+                                    </View>
+                                  ) : (
+                                    <TouchableOpacity
+                                      onPress={() => this.toggleSavedItemSelection(item)}
+                                      style={{ padding: 4 }}
+                                    >
+                                      <Ionicons 
+                                        name={isSelected ? "checkbox" : "square-outline"} 
+                                        size={20} 
+                                        color={isSelected ? "#3B82F6" : "#94A3B8"}
+                                      />
+                                    </TouchableOpacity>
+                                  )
+                                ) : alreadyAdded ? (
                                   <Ionicons name="checkmark-circle" size={24} color="#22C55E" />
                                 ) : (
                                   <Text style={{ color: '#3B82F6', fontSize: 24 }}>↵</Text>
@@ -1370,23 +1519,35 @@ export default class PackagesPage extends Component {
                     <View style={{ padding: 20, borderTopWidth: 1, borderTopColor: '#E2E8F0' }}>
                       <TouchableOpacity
                         style={{
-                          paddingVertical: 14,
-                          backgroundColor: '#0066FF',
+                          backgroundColor: this.state.savedItemsSelectionMode ? '#22C55E' : '#3B82F6',
+                          paddingVertical: 16,
+                          paddingHorizontal: 24,
                           borderRadius: 12,
                           alignItems: 'center',
-                          justifyContent: 'center',
+                          marginTop: 20,
+                          marginHorizontal: 20,
+                          marginBottom: 20,
+                          opacity: this.state.savedItemsSelectionMode && this.state.selectedSavedItems.length === 0 ? 0.5 : 1,
                         }}
                         onPress={() => {
-                          this.setState({ showSavedItemsModal: false });
-                          this.props.navigation.navigate('AI Item Search', { 
-                            searchQuery: this.state.savedItemsSearchQuery,
-                            fromPackagesPage: true, // Flag to indicate navigation from PackagesPage
-                            selectedPackage: this.state.selectedPackage // Pass the selected package name
-                          });
+                          if (this.state.savedItemsSelectionMode) {
+                            this.bulkAddSavedItemsToPackage();
+                          } else {
+                            this.setState({ showSavedItemsModal: false });
+                            this.props.navigation.navigate('AI Item Search', { 
+                              searchQuery: this.state.savedItemsSearchQuery,
+                              fromPackagesPage: true, // Flag to indicate navigation from PackagesPage
+                              selectedPackage: this.state.selectedPackage // Pass the selected package name
+                            });
+                          }
                         }}
+                        disabled={this.state.savedItemsSelectionMode && this.state.selectedSavedItems.length === 0}
                       >
                         <Text style={{ color: '#FFFFFF', fontWeight: 'bold', fontSize: 16 }}>
-                          Find with AI Search
+                          {this.state.savedItemsSelectionMode ? 
+                            `Add Items (${this.state.selectedSavedItems.length})` : 
+                            'Find with AI Search'
+                          }
                         </Text>
                       </TouchableOpacity>
                     </View>
@@ -1671,9 +1832,230 @@ export default class PackagesPage extends Component {
     }
   };
 
-  handleAddSavedItemToPackage = async (savedItem) => {
+  // Bulk selection methods for saved items modal
+  enterBulkSelectionMode = () => {
+    this.setState({
+      savedItemsSelectionMode: true,
+      selectedSavedItems: []
+    });
+  };
+
+  exitBulkSelectionMode = () => {
+    this.setState({
+      savedItemsSelectionMode: false,
+      selectedSavedItems: []
+    });
+  };
+
+  toggleSavedItemSelection = (item) => {
+    // Check if item is already added to package
+    const { selectedPackage, packages } = this.state;
+    const packageItems = packages[selectedPackage]?.items || [];
+    const itemName = item.name || item.itemName || 'Unknown Item';
+    
+    const alreadyAdded = packageItems.some(addedItem => 
+      (addedItem.name || '').toLowerCase() === itemName.toLowerCase() ||
+      (addedItem.itemName || '').toLowerCase() === itemName.toLowerCase()
+    );
+    
+    // Don't allow selection of already added items
+    if (alreadyAdded) {
+      return;
+    }
+    
+    const { selectedSavedItems } = this.state;
+    const isSelected = selectedSavedItems.some(selectedItem => selectedItem.id === item.id);
+    
+    if (isSelected) {
+      this.setState({
+        selectedSavedItems: selectedSavedItems.filter(selectedItem => selectedItem.id !== item.id)
+      });
+    } else {
+      this.setState({
+        selectedSavedItems: [...selectedSavedItems, item]
+      });
+    }
+  };
+
+  selectAllSavedItems = () => {
+    const { selectedPackage, packages } = this.state;
+    const packageItems = packages[selectedPackage]?.items || [];
+    
+    const filteredItems = this.state.allSavedItems.filter(item => {
+      const itemName = item.name || item.itemName || 'Unknown Item';
+      
+      // Check if item matches search query
+      const matchesSearch = itemName.toLowerCase().includes(this.state.savedItemsSearchQuery.toLowerCase());
+      
+      // Check if item is already added to package
+      const alreadyAdded = packageItems.some(addedItem => 
+        (addedItem.name || '').toLowerCase() === itemName.toLowerCase() ||
+        (addedItem.itemName || '').toLowerCase() === itemName.toLowerCase()
+      );
+      
+      return matchesSearch && !alreadyAdded;
+    });
+    
+    this.setState({ selectedSavedItems: [...filteredItems] });
+  };
+
+  clearAllSavedItemsSelection = () => {
+    this.setState({ selectedSavedItems: [] });
+  };
+
+  // Add saved item to package without showing individual alerts (for bulk operations)
+  addSavedItemToPackageQuietly = async (savedItem) => {
     try {
-      console.log('Adding saved item to package:', savedItem);
+      console.log('🔇 QUIET ADD - Starting quiet add for:', savedItem.name);
+      console.log('🔇 QUIET ADD - Call stack:', new Error().stack);
+      const { selectedPackage, packages } = this.state;
+      
+      if (!selectedPackage) {
+        throw new Error("No package selected.");
+      }
+      
+      // Make sure the package exists and has an items array
+      if (!packages[selectedPackage]) {
+        throw new Error("The selected package could not be found.");
+      }
+      
+      // Initialize items array if it doesn't exist
+      if (!packages[selectedPackage].items) {
+        packages[selectedPackage].items = [];
+      }
+      
+      // Check if an item with the same name already exists in the package
+      const existingItem = packages[selectedPackage].items.find(
+        item => item.itemName.toLowerCase() === savedItem.name.toLowerCase()
+      );
+      
+      if (existingItem) {
+        // Skip this item if it already exists
+        return { success: false, reason: 'already_exists', itemName: savedItem.name };
+      }
+      
+      // Extract dimensions based on the nested structure
+      let dimensions = {};
+      if (savedItem.items && savedItem.items.length > 0 && savedItem.items[0].dimensions) {
+        dimensions = savedItem.items[0].dimensions;
+      } else if (savedItem.dimensions) {
+        dimensions = savedItem.dimensions;
+      } else {
+        dimensions = { length: '0', width: '0', height: '0' };
+      }
+      
+      // Convert saved item format to package item format
+      const itemId = await this.generateUUID();
+      const newItem = {
+        id: itemId,
+        itemName: savedItem.name,
+        itemLength: this.parseItemDimension(dimensions.length),
+        itemWidth: this.parseItemDimension(dimensions.width),
+        itemHeight: this.parseItemDimension(dimensions.height),
+        quantity: 1,
+        replicatedNames: [{
+          name: savedItem.name,
+          id: await this.generateUUID(),
+          parentId: itemId
+        }]
+      };
+      
+      // Add the item to the package
+      const updatedPackages = { ...packages };
+      
+      if (!updatedPackages[selectedPackage].items) {
+        updatedPackages[selectedPackage].items = [];
+      }
+      
+      updatedPackages[selectedPackage].items.push(newItem);
+      
+      // Update state without modal manipulation
+      this.setState({ packages: updatedPackages });
+      
+      console.log('🔇 QUIET ADD - Successfully added:', savedItem.name);
+      return { success: true, itemName: savedItem.name };
+    } catch (error) {
+      console.error("🔇 QUIET ADD - Error adding saved item to package quietly:", error);
+      return { success: false, reason: 'error', itemName: savedItem.name, error: error.message };
+    }
+  };
+
+  bulkAddSavedItemsToPackage = async () => {
+    console.log('🔥 BULK ADD - Starting bulk add operation');
+    const { selectedSavedItems, selectedPackage } = this.state;
+    if (selectedSavedItems.length === 0) {
+      Alert.alert("No Items Selected", "Please select items to add to the package.");
+      return;
+    }
+
+    // Set flag to prevent individual alerts
+    this.setState({ isBulkAddInProgress: true });
+
+    try {
+      const results = [];
+      let successCount = 0;
+      let skippedCount = 0;
+      let errorCount = 0;
+      
+      console.log('🔥 BULK ADD - Processing', selectedSavedItems.length, 'items');
+      for (const item of selectedSavedItems) {
+        console.log('🔥 BULK ADD - Processing item:', item.name);
+        const result = await this.addSavedItemToPackageQuietly(item);
+        results.push(result);
+        
+        if (result.success) {
+          successCount++;
+        } else if (result.reason === 'already_exists') {
+          skippedCount++;
+        } else {
+          errorCount++;
+        }
+      }
+      
+      // Save all changes to AsyncStorage at once
+      await AsyncStorage.setItem("packages", JSON.stringify(this.state.packages));
+      
+      // Clear selection, exit bulk mode, close modal, and reset bulk flag
+      this.setState({
+        selectedSavedItems: [],
+        savedItemsSelectionMode: false,
+        showSavedItemsModal: false,
+        isBulkAddInProgress: false
+      }, () => {
+        // Show the package modal again after a short delay
+        setTimeout(() => {
+          this.setState({ showPackageModal: true });
+        }, 300);
+      });
+      
+      // Show a single summary alert
+      let message = '';
+      if (successCount > 0) {
+        message += `Added ${successCount} item${successCount > 1 ? 's' : ''} to ${selectedPackage}.`;
+      }
+      if (skippedCount > 0) {
+        message += `${message ? ' ' : ''}${skippedCount} item${skippedCount > 1 ? 's were' : ' was'} already in the package.`;
+      }
+      if (errorCount > 0) {
+        message += `${message ? ' ' : ''}${errorCount} item${errorCount > 1 ? 's' : ''} failed to add.`;
+      }
+      
+      console.log('🔥 BULK ADD - Showing final summary alert:', message);
+      Alert.alert("Bulk Add Complete", message);
+    } catch (error) {
+      console.error('Error bulk adding items:', error);
+      // Reset bulk flag on error
+      this.setState({ isBulkAddInProgress: false });
+      Alert.alert("Error", "Failed to add items to the package.");
+    }
+  };
+
+  handleAddSavedItemToPackage = async (savedItem, suppressAlert = false) => {
+    try {
+      // Auto-suppress alerts if bulk add is in progress
+      const shouldSuppressAlert = suppressAlert || this.state.isBulkAddInProgress;
+      console.log('🔊 REGULAR ADD - Starting regular add for:', savedItem.name, 'suppressAlert:', suppressAlert, 'isBulkAddInProgress:', this.state.isBulkAddInProgress, 'shouldSuppressAlert:', shouldSuppressAlert);
+      console.log('🔊 REGULAR ADD - Call stack:', new Error().stack);
       const { selectedPackage, packages } = this.state;
       
       if (!selectedPackage) {
@@ -1772,9 +2154,14 @@ export default class PackagesPage extends Component {
         }, 300);
       });
       
-      Alert.alert("Success", `${savedItem.name} added to ${selectedPackage}.`);
+      if (!shouldSuppressAlert) {
+        console.log('🔊 REGULAR ADD - Showing success alert for:', savedItem.name);
+        Alert.alert("Success", `${savedItem.name} added to ${selectedPackage}.`);
+      } else {
+        console.log('🔊 REGULAR ADD - Alert suppressed for:', savedItem.name, '(suppressAlert:', suppressAlert, 'isBulkAddInProgress:', this.state.isBulkAddInProgress, ')');
+      }
     } catch (error) {
-      console.error("Error adding saved item to package:", error);
+      console.error("🔊 REGULAR ADD - Error adding saved item to package:", error);
       Alert.alert("Error", "Failed to add item to package.");
     }
   };
