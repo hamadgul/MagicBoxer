@@ -827,39 +827,41 @@ export default class SavedItemsPage extends Component {
           }
         }}>
         <View style={styles.container}>
-          {/* Search bar */}
-          <View style={styles.searchBarContainer}>
-            <View style={styles.searchInputContainer}>
-              <Ionicons name="search-outline" size={20} color="#94A3B8" style={{ marginRight: 8 }} />
-              <TextInput
-                style={styles.searchInput}
-                placeholder="Search by name..."
-                placeholderTextColor="#94A3B8"
-                value={this.state.searchQuery}
-                onChangeText={(text) => this.setState({ searchQuery: text })}
-                clearButtonMode={Platform.OS === 'ios' ? 'never' : 'while-editing'}
-                returnKeyType="search"
-                autoCapitalize="none"
-                autoCorrect={false}
-              />
-              {this.state.searchQuery ? (
-                <TouchableOpacity 
-                  onPress={() => this.setState({ searchQuery: "" })}
-                  style={styles.clearButton}
-                  hitSlop={{ top: 10, right: 10, bottom: 10, left: 10 }}
-                >
-                  <Ionicons name="close-circle" size={20} color="#94A3B8" />
-                </TouchableOpacity>
-              ) : null}
+          {/* Search bar - only show if there are saved items */}
+          {savedItems.length > 0 && (
+            <View style={styles.searchBarContainer}>
+              <View style={styles.searchInputContainer}>
+                <Ionicons name="search-outline" size={20} color="#94A3B8" style={{ marginRight: 8 }} />
+                <TextInput
+                  style={styles.searchInput}
+                  placeholder="Search by name..."
+                  placeholderTextColor="#94A3B8"
+                  value={this.state.searchQuery}
+                  onChangeText={(text) => this.setState({ searchQuery: text })}
+                  clearButtonMode={Platform.OS === 'ios' ? 'never' : 'while-editing'}
+                  returnKeyType="search"
+                  autoCapitalize="none"
+                  autoCorrect={false}
+                />
+                {this.state.searchQuery ? (
+                  <TouchableOpacity 
+                    onPress={() => this.setState({ searchQuery: "" })}
+                    style={styles.clearButton}
+                    hitSlop={{ top: 10, right: 10, bottom: 10, left: 10 }}
+                  >
+                    <Ionicons name="close-circle" size={20} color="#94A3B8" />
+                  </TouchableOpacity>
+                ) : null}
+              </View>
+              
+              {/* Search results count */}
+              {this.state.searchQuery.trim() !== "" && (
+                <Text style={styles.searchResultsCount}>
+                  {this.getFilteredItems().length} {this.getFilteredItems().length === 1 ? "item" : "items"} found
+                </Text>
+              )}
             </View>
-            
-            {/* Search results count */}
-            {this.state.searchQuery.trim() !== "" && (
-              <Text style={styles.searchResultsCount}>
-                {this.getFilteredItems().length} {this.getFilteredItems().length === 1 ? "item" : "items"} found
-              </Text>
-            )}
-          </View>
+          )}
           
           {/* Selection mode action bar at the top */}
           {this.state.selectionMode && (
@@ -1021,7 +1023,7 @@ export default class SavedItemsPage extends Component {
                         ]}
                         value={itemName}
                         onChangeText={(text) => this.setState({ itemName: text })}
-                        placeholder=""
+                        placeholder="Enter item name"
                         placeholderTextColor="#64748B"
                         maxLength={30}
                       />
@@ -1053,7 +1055,7 @@ export default class SavedItemsPage extends Component {
                           value={itemLength}
                           onChangeText={(text) => this.setState({ itemLength: text })}
                           keyboardType="decimal-pad"
-                          placeholder=""
+                          placeholder="0.0"
                           placeholderTextColor="#64748B"
                           maxLength={5}
                         />
@@ -1090,7 +1092,7 @@ export default class SavedItemsPage extends Component {
                           value={itemWidth}
                           onChangeText={(text) => this.setState({ itemWidth: text })}
                           keyboardType="decimal-pad"
-                          placeholder=""
+                          placeholder="0.0"
                           placeholderTextColor="#64748B"
                           maxLength={5}
                         />
@@ -1127,7 +1129,7 @@ export default class SavedItemsPage extends Component {
                           value={itemHeight}
                           onChangeText={(text) => this.setState({ itemHeight: text })}
                           keyboardType="decimal-pad"
-                          placeholder=""
+                          placeholder="0.0"
                           placeholderTextColor="#64748B"
                           maxLength={5}
                         />
@@ -1417,7 +1419,7 @@ export default class SavedItemsPage extends Component {
                             style={[styles.modalButton, styles.cancelButton]}
                             onPress={() => this.setState({ showImportModal: false, importPreview: [] })}
                           >
-                            <Text style={styles.cancelButtonText}>Cancel</Text>
+                            <Text style={styles.modalCancelButtonText}>Cancel</Text>
                           </TouchableOpacity>
                           
                           <TouchableOpacity
@@ -1581,14 +1583,14 @@ const styles = StyleSheet.create({
     width: '85%',
   },
   createItemButton: {
-    backgroundColor: '#007AFF', // iOS blue
+    backgroundColor: '#E5F2FF', // iOS light blue background
     paddingVertical: 12,
     paddingHorizontal: 24,
     borderRadius: 10, // iOS button radius
     overflow: 'hidden',
   },
   createItemButtonText: {
-    color: '#FFFFFF',
+    color: '#007AFF', // iOS blue
     fontSize: 17, // iOS button text size
     fontWeight: '600', // iOS button text weight
     textAlign: 'center',
@@ -1796,9 +1798,12 @@ const styles = StyleSheet.create({
     fontSize: 17, // iOS text size
     color: '#000000', // iOS text color
     fontWeight: '500',
+    flex: 1, // Allow text to shrink if needed
+    marginRight: 16, // Add margin to separate from buttons
   },
   selectionActionButtons: {
     flexDirection: 'row',
+    flexShrink: 0, // Prevent buttons from shrinking
   },
   actionButton: {
     paddingVertical: 10,
@@ -1923,7 +1928,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#94A3B8',
     opacity: 0.7,
   },
-  cancelButtonText: {
+  modalCancelButtonText: {
     color: '#64748B',
     fontWeight: '600',
     fontSize: 14,
@@ -2026,15 +2031,15 @@ const styles = StyleSheet.create({
   fabContainer: {
     position: 'absolute',
     right: 20,
-    bottom: 30, // More bottom padding for iOS
+    bottom: 20, // Match mainFab positioning
     alignItems: 'center',
     justifyContent: 'center',
   },
   fabButton: {
     backgroundColor: '#007AFF', // iOS blue
-    width: 56,
-    height: 56,
-    borderRadius: 28,
+    width: 60,
+    height: 60,
+    borderRadius: 30,
     alignItems: 'center',
     justifyContent: 'center',
     zIndex: 1,
@@ -2044,7 +2049,7 @@ const styles = StyleSheet.create({
       shadowOpacity: 0.2,
       shadowRadius: 3,
     } : {
-      elevation: 5,
+      elevation: 8,
     }),
   },
   modalCancelButton: {

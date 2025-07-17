@@ -36,7 +36,7 @@ export const modalStyles = StyleSheet.create({
   modalTitle: {
     fontSize: 22,
     fontWeight: '600',
-    color: '#2C5282', // Darker blue for better contrast with the light blue background
+    color: '#1F2937', // Dark gray for better readability
     textAlign: 'center',
     letterSpacing: 0.3,
   },
@@ -82,13 +82,13 @@ export const modalStyles = StyleSheet.create({
   fieldInput: {
     height: 50,
     borderWidth: 1,
-    borderColor: '#BEE3F8', // Updated to match our blue theme
+    borderColor: '#D1D5DB', // Neutral gray border
     borderRadius: 10,
     paddingHorizontal: 16,
     fontSize: 16,
     fontWeight: '400',
     color: '#1F2937',
-    backgroundColor: '#FFFFFF', // Pure white for better contrast with the light blue modal background
+    backgroundColor: '#F9FAFB', // Very light gray background
     width: '100%',
     alignSelf: 'stretch',
     zIndex: 1,
@@ -153,7 +153,7 @@ export const modalStyles = StyleSheet.create({
   },
   modalSubtitle: {
     fontSize: 16,
-    color: '#3182CE', // Updated to match our blue theme
+    color: '#6B7280', // Neutral gray for subtitle
     marginBottom: 28,
     textAlign: 'center',
     paddingHorizontal: 10,

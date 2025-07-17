@@ -915,47 +915,9 @@ export default class FormPage extends Component {
           this.forceUpdate();
         });
         
-        // Set custom header left button (hamburger menu)
-        this.props.navigation.setOptions({
-          headerLeft: () => (
-            <TouchableOpacity
-              style={{ paddingLeft: 16 }}
-              onPress={this.handleMenuPress}
-              testID="custom-menu-button"
-            >
-              <Ionicons name="menu" size={24} color="#64748B" />
-            </TouchableOpacity>
-          )
-        });
+        // Remove custom header left button since we're using bottom tab navigation
         
-        // Disable drawer gesture if there are items
-        if (this.state.items.length > 0) {
-          // Try to disable drawer gesture
-          try {
-            const drawerParent = this.props.navigation.getParent();
-            if (drawerParent && drawerParent.setOptions) {
-              drawerParent.setOptions({
-                swipeEnabled: false
-              });
-              console.log("FormPage - Disabled drawer gesture");
-            }
-          } catch (error) {
-            console.error("FormPage - Error disabling drawer gesture:", error);
-          }
-        } else {
-          // Enable drawer gesture
-          try {
-            const drawerParent = this.props.navigation.getParent();
-            if (drawerParent && drawerParent.setOptions) {
-              drawerParent.setOptions({
-                swipeEnabled: true
-              });
-              console.log("FormPage - Enabled drawer gesture");
-            }
-          } catch (error) {
-            console.error("FormPage - Error enabling drawer gesture:", error);
-          }
-        }
+        // Drawer gesture management removed since we're using bottom tab navigation
       }
     );
     
@@ -1153,68 +1115,7 @@ export default class FormPage extends Component {
   
 
   
-  // Handle menu button press
-  handleMenuPress = () => {
-    console.log("FormPage - handleMenuPress");
-    // If there are items in the package, show alert
-    if (this.state.items.length > 0) {
-      console.log("FormPage - showing alert for menu press");
-      Alert.alert(
-        "Unsaved Changes",
-        "You have unsaved items in your package. What would you like to do?",
-        [
-          {
-            text: "Cancel",
-            style: "cancel",
-            onPress: () => {
-              console.log("FormPage - user chose Cancel");
-              // User decided to stay on the page
-            }
-          },
-          {
-            text: "Discard",
-            style: "destructive",
-            onPress: () => {
-              console.log("FormPage - user chose Discard");
-              // Clear items without showing another confirmation dialog
-              this.clearItemsWithoutConfirmation();
-              // Re-enable drawer gesture
-              try {
-                const drawerParent = this.props.navigation.getParent();
-                if (drawerParent && drawerParent.setOptions) {
-                  drawerParent.setOptions({
-                    swipeEnabled: true
-                  });
-                  console.log("FormPage - Re-enabled drawer gesture after discard");
-                }
-              } catch (error) {
-                console.error("FormPage - Error re-enabling drawer gesture:", error);
-              }
-              // Open drawer
-              this.props.navigation.openDrawer();
-            }
-          },
-          {
-            text: "Save Package",
-            style: "default",
-            onPress: () => {
-              console.log("FormPage - user chose Save Package");
-              // Open the save package modal
-              this.setState({
-                showSavePackageModal: true,
-                pendingNavigationAction: 'openDrawer'
-              });
-            }
-          }
-        ],
-        { cancelable: false }
-      );
-    } else {
-      // Otherwise, open the drawer normally
-      console.log("FormPage - opening drawer");
-      this.props.navigation.openDrawer();
-    }
-  };
+  // handleMenuPress function removed since we're using bottom tab navigation
   
 
   
@@ -2752,8 +2653,6 @@ export default class FormPage extends Component {
                   <View style={tooltipModalStyles.overlay}>
                     <TouchableWithoutFeedback>
                       <View style={tooltipModalStyles.container}>
-                        <Text style={tooltipModalStyles.title}>Item Name</Text>
-                          
                         <View style={tooltipModalStyles.contentContainer}>
                           <View style={tooltipModalStyles.rowContainer}>
                             <View style={tooltipModalStyles.iconContainer}>
@@ -2801,8 +2700,6 @@ export default class FormPage extends Component {
                   <View style={tooltipModalStyles.overlay}>
                     <TouchableWithoutFeedback>
                       <View style={tooltipModalStyles.container}>
-                        <Text style={tooltipModalStyles.title}>Length</Text>
-                          
                         <View style={tooltipModalStyles.contentContainer}>
                           <View style={tooltipModalStyles.rowContainer}>
                             <View style={tooltipModalStyles.iconContainer}>
@@ -2844,8 +2741,6 @@ export default class FormPage extends Component {
                   <View style={tooltipModalStyles.overlay}>
                     <TouchableWithoutFeedback>
                       <View style={tooltipModalStyles.container}>
-                        <Text style={tooltipModalStyles.title}>Width</Text>
-                          
                         <View style={tooltipModalStyles.contentContainer}>
                           <View style={tooltipModalStyles.rowContainer}>
                             <View style={tooltipModalStyles.iconContainer}>
@@ -2887,8 +2782,6 @@ export default class FormPage extends Component {
                   <View style={tooltipModalStyles.overlay}>
                     <TouchableWithoutFeedback>
                       <View style={tooltipModalStyles.container}>
-                        <Text style={tooltipModalStyles.title}>Height</Text>
-                          
                         <View style={tooltipModalStyles.contentContainer}>
                           <View style={tooltipModalStyles.rowContainer}>
                             <View style={tooltipModalStyles.iconContainer}>
@@ -2930,8 +2823,6 @@ export default class FormPage extends Component {
                   <View style={tooltipModalStyles.overlay}>
                     <TouchableWithoutFeedback>
                       <View style={tooltipModalStyles.container}>
-                        <Text style={tooltipModalStyles.title}>How to Measure</Text>
-                          
                         <View style={tooltipModalStyles.contentContainer}>
                           <View style={tooltipModalStyles.rowContainer}>
                             <View style={tooltipModalStyles.iconContainer}>

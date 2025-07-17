@@ -1106,7 +1106,7 @@ export default class PackagesPage extends Component {
             <TouchableWithoutFeedback onPress={this.closePackageModal}>
               <View style={styles.modalOverlay}>
                 <TouchableWithoutFeedback onPress={(e) => e.stopPropagation()}>
-                  <View style={styles.modalContent}>
+                  <View style={modalStyles.modalContent}>
                     {/* Add a proper header with rounded corners */}
                     <View style={modalStyles.modalHeader}>
                       <Text style={modalStyles.modalTitle}>
@@ -1441,12 +1441,15 @@ export default class PackagesPage extends Component {
 
 
           
-          <TouchableOpacity
-            style={[styles.fab, styles.selectFab]}
-            onPress={this.toggleSelectionMode}
-          >
-            <Ionicons name={this.state.selectionMode ? "close" : "list"} size={26} color="white" />
-          </TouchableOpacity>
+          {/* Bulk edit FAB - only show if there are packages */}
+          {Object.keys(packages).length > 0 && (
+            <TouchableOpacity
+              style={[styles.fab, styles.selectFab]}
+              onPress={this.toggleSelectionMode}
+            >
+              <Ionicons name={this.state.selectionMode ? "close" : "list"} size={26} color="white" />
+            </TouchableOpacity>
+          )}
         </View>
       </TouchableWithoutFeedback>
     );
@@ -2088,7 +2091,7 @@ const styles = StyleSheet.create({
   infoFab: {
     position: 'absolute',
     left: 20, // Position on the left side
-    bottom: 20,
+    bottom: 100, // Positioned above bottom tab navigation
     width: 60,
     height: 60,
     borderRadius: 30,
@@ -2106,6 +2109,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#64748B',
     right: 'auto', // Override the right positioning from fab style
     left: 20,     // Position on the left side
+    bottom: 20,   // Match SavedItemsPage positioning
   },
   noPackagesText: {
     fontSize: 16,
@@ -2149,9 +2153,12 @@ const styles = StyleSheet.create({
     fontSize: 17, // iOS text size
     color: '#000000', // iOS text color
     fontWeight: '500',
+    flex: 1, // Allow text to shrink if needed
+    marginRight: 16, // Add margin to separate from buttons
   },
   selectionActionButtons: {
     flexDirection: 'row',
+    flexShrink: 0, // Prevent buttons from shrinking
   },
   cancelButton: {
     backgroundColor: '#E5E5EA',
@@ -2173,16 +2180,16 @@ const styles = StyleSheet.create({
     minWidth: 80,
   },
   cancelButtonText: {
-    color: '#8E8E93', // iOS gray
+    color: '#007AFF', // iOS blue - match SavedItemsPage
     fontWeight: '600',
     textAlign: 'center',
-    fontSize: 17, // iOS button text size
+    fontSize: 18, // Match SavedItemsPage
   },
   deleteButtonText: {
     color: 'white',
     fontWeight: '600',
     textAlign: 'center',
-    fontSize: 17, // iOS button text size
+    fontSize: 18, // Match SavedItemsPage
   },
   selectedPackage: {
     backgroundColor: '#E5F2FF', // iOS selection color
@@ -2302,7 +2309,7 @@ const styles = StyleSheet.create({
   fab: {
     position: 'absolute',
     right: 20,
-    bottom: 30, // More bottom padding for iOS
+    bottom: 20, // Match SavedItemsPage positioning
     width: 60,
     height: 60,
     borderRadius: 30,
@@ -2410,14 +2417,14 @@ const styles = StyleSheet.create({
     width: '85%',
   },
   createPackageButton: {
-    backgroundColor: '#007AFF', // iOS blue
+    backgroundColor: '#E5F2FF', // iOS light blue background
     paddingVertical: 12,
     paddingHorizontal: 24,
     borderRadius: 10, // iOS button radius
     overflow: 'hidden',
   },
   createPackageButtonText: {
-    color: '#FFFFFF',
+    color: '#007AFF', // iOS blue
     fontSize: 17, // iOS button text size
     fontWeight: '600', // iOS button text weight
     textAlign: 'center',

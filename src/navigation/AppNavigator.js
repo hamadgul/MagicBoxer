@@ -1,9 +1,8 @@
 import React from "react";
-import { createDrawerNavigator } from "@react-navigation/drawer";
+import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
 import { createNativeStackNavigator } from "@react-navigation/native-stack";
 import { Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
 import { View, Text, Image, StyleSheet, TouchableOpacity, SafeAreaView } from "react-native";
-import { DrawerContentScrollView, DrawerItemList } from '@react-navigation/drawer';
 import { DEV_BUILD_APP } from "../config/environment";
 
 
@@ -28,45 +27,10 @@ import SavedItemsPage from "../screens/SavedItemsPage";
 import LookupItemPage from "../screens/LookupItemPage";
 
 const Stack = createNativeStackNavigator();
-const Drawer = createDrawerNavigator();
+const Tab = createBottomTabNavigator();
 
-// Custom drawer content component for a more professional look
-function CustomDrawerContent(props) {
-  return (
-    <View style={styles.drawerContainer}>
-      {/* Header with logo and app name */}
-      <View style={styles.drawerHeader}>
-        <View style={styles.safeAreaPadding} />
-        <View style={styles.logoContainer}>
-          <Image source={SmartBoxAIIcon} style={styles.logoImage} />
-          <Text style={styles.logoText}>SmartBox AI</Text>
-        </View>
-        <View style={styles.divider} />
-      </View>
-      
-      {/* Main content with scrolling menu items */}
-      <DrawerContentScrollView 
-        {...props} 
-        contentContainerStyle={styles.drawerScrollContent}
-        showsVerticalScrollIndicator={false}
-      >
-        <View style={styles.menuContainer}>
-          <DrawerItemList {...props} />
-        </View>
-      </DrawerContentScrollView>
-      
-      {/* Footer with version info */}
-      <View style={styles.drawerFooter}>
-        <Text style={styles.versionText}>Version 1.0.0</Text>
-      </View>
-    </View>
-  );
-}
-
-
-
-// Drawer navigator to handle side menu for specific pages
-function DrawerNavigator() {
+// Bottom tab navigator for modern navigation
+function BottomTabNavigator() {
   const headerWithIcon = (iconName, title) => ({
     headerTitle: () => (
       <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'center' }}>
@@ -74,21 +38,11 @@ function DrawerNavigator() {
         <Text style={{ color: '#64748B', fontSize: 18, fontWeight: '600' }}>{title}</Text>
       </View>
     ),
-    headerRight: () => null, // Remove default right button
+    headerRight: () => null,
   });
 
-  const screens = [
-    {
-      name: "Getting Started",
-      component: GettingStartedPage,
-      options: {
-        ...headerWithIcon('rocket-outline', 'Getting Started'),
-        drawerLabel: "Getting Started",
-        drawerIcon: ({ focused, color, size }) => (
-          <Ionicons name="rocket-outline" size={size} color={color} />
-        )
-      }
-    },
+  // Main tab screens - only the most important ones for bottom navigation
+  const mainTabScreens = [
     {
       name: "Create Package",
       component: FormPage,
@@ -100,9 +54,9 @@ function DrawerNavigator() {
           </View>
         ),
         headerRight: () => null,
-        drawerLabel: "Create Package",
+        tabBarLabel: "Create",
         title: "Create Package",
-        drawerIcon: ({ focused, color, size }) => (
+        tabBarIcon: ({ focused, color, size }) => (
           <Ionicons name="cube-outline" size={size} color={color} />
         )
       }
@@ -112,8 +66,8 @@ function DrawerNavigator() {
       component: PackagesPage,
       options: {
         ...headerWithIcon('archive-outline', 'Saved Packages'),
-        drawerLabel: "Saved Packages",
-        drawerIcon: ({ focused, color, size }) => (
+        tabBarLabel: "Packages",
+        tabBarIcon: ({ focused, color, size }) => (
           <Ionicons name="archive-outline" size={size} color={color} />
         )
       }
@@ -123,116 +77,61 @@ function DrawerNavigator() {
       component: SavedItemsPage,
       options: {
         ...headerWithIcon('bookmark-outline', 'My Saved Items'),
-        drawerLabel: "My Saved Items",
-        drawerIcon: ({ focused, color, size }) => (
+        tabBarLabel: "Items",
+        tabBarIcon: ({ focused, color, size }) => (
           <Ionicons name="bookmark-outline" size={size} color={color} />
         )
       }
     },
-    // AI Item Search is now handled in the Stack Navigator
-    // to support proper back navigation from FormPage
-
     {
       name: "Help",
       component: FAQsPage,
       options: {
         ...headerWithIcon('help-circle-outline', 'Help'),
-        drawerLabel: "Help",
-        drawerIcon: ({ focused, color, size }) => (
+        tabBarLabel: "Help",
+        tabBarIcon: ({ focused, color, size }) => (
           <Ionicons name="help-circle-outline" size={size} color={color} />
-        )
-      }
-    },
-    {
-      name: "RequestFormPage",
-      component: RequestFormPage,
-      options: {
-        ...headerWithIcon('mail-outline', 'Contact Us'),
-        drawerLabel: "Contact Us",
-        drawerIcon: ({ focused, color, size }) => (
-          <Ionicons name="mail-outline" size={size} color={color} />
         )
       }
     }
   ];
 
-  // Add test screens only in development
-  if (DEV_BUILD_APP) {
-    screens.push(
-      {
-        name: "Test Boxes",
-        component: TestPage,
-        options: {
-          ...headerWithIcon('construct-outline', 'Test Boxes'),
-          drawerLabel: "Test Boxes",
-          drawerIcon: ({ focused, color, size }) => (
-            <Ionicons name="cube-outline" size={size} color={color} />
-          )
-        }
-      },
-
-      {
-        name: "Test Display3D",
-        component: TestDisplay3D,
-        options: {
-          ...headerWithIcon('cube-outline', 'Test Display3D'),
-          drawerLabel: "Test Display3D",
-          drawerIcon: ({ focused, color, size }) => (
-            <Ionicons name="cube-outline" size={size} color={color} />
-          )
-        }
-      }
-    );
-  }
-
   return (
-    <Drawer.Navigator 
-      drawerPosition="right"
-      drawerContent={(props) => <CustomDrawerContent {...props} />}
+    <Tab.Navigator
       screenOptions={{
-        drawerActiveTintColor: '#64748B', // Changed to match modal header gray
-        drawerInactiveTintColor: '#94A3B8', // Lighter gray for inactive items
-        drawerLabelStyle: {
-          fontSize: 15,
-          fontWeight: '500',
-          marginLeft: -4, // Adjusted to prevent overlap with icons
+        tabBarActiveTintColor: '#3B82F6',
+        tabBarInactiveTintColor: '#94A3B8',
+        tabBarStyle: {
+          backgroundColor: '#FFFFFF',
+          borderTopWidth: 1,
+          borderTopColor: '#E2E8F0',
+          paddingBottom: 20, // Increased bottom padding for safe area
+          paddingTop: 8,
+          height: 85, // Increased height to accommodate safe area
         },
-        drawerItemStyle: {
-          borderRadius: 8,
-          paddingVertical: 2,
-          marginVertical: 2,
+        tabBarLabelStyle: {
+          fontSize: 12,
+          fontWeight: '500',
         },
         headerStyle: {
-          backgroundColor: '#E2E8F0' // Updated to match the item card background color
+          backgroundColor: '#E2E8F0',
         },
         headerTitleStyle: {
-          color: '#64748B' // Updated to match the item name text color
+          color: '#64748B',
         },
-        headerTintColor: '#64748B', // Updated to match the item name text color
+        headerTintColor: '#64748B',
         headerTitleAlign: 'center',
-        drawerStyle: {
-          width: '68%', // Make drawer slightly narrower
-          backgroundColor: '#FFFFFF',
-          borderTopLeftRadius: 15,
-          borderBottomLeftRadius: 15,
-          shadowColor: '#000',
-          shadowOffset: { width: 0, height: 2 },
-          shadowOpacity: 0.25,
-          shadowRadius: 3.84,
-          elevation: 5
-        },
-        swipeEnabled: true
       }}
     >
-      {screens.map((screen) => (
-        <Drawer.Screen
+      {mainTabScreens.map((screen) => (
+        <Tab.Screen
           key={screen.name}
           name={screen.name}
           component={screen.component}
           options={screen.options}
         />
       ))}
-    </Drawer.Navigator>
+    </Tab.Navigator>
   );
 }
 
@@ -251,7 +150,7 @@ function AppNavigator() {
   const screens = [
     {
       name: "Add Items",
-      component: DrawerNavigator,
+      component: BottomTabNavigator,
       options: {
         headerShown: false
       }
@@ -355,6 +254,19 @@ function AppNavigator() {
     }
   ];
 
+  // Add additional screens that are accessible via navigation but not in bottom tabs
+  screens.push(
+    {
+      name: "Getting Started",
+      component: GettingStartedPage,
+      options: {
+        ...headerWithIcon('rocket-outline', 'Getting Started'),
+        headerShown: true,
+        gestureEnabled: true,
+      }
+    }
+  );
+
   // Add test screens only in development
   if (DEV_BUILD_APP) {
     screens.push(
@@ -397,61 +309,6 @@ function AppNavigator() {
   );
 }
 
-// Styles for the custom drawer
-const styles = StyleSheet.create({
-  drawerContainer: {
-    flex: 1,
-    backgroundColor: '#FFFFFF',
-  },
-  drawerHeader: {
-    backgroundColor: '#FFFFFF',
-  },
-  safeAreaPadding: {
-    height: 30, // Adjust based on device
-  },
-  logoContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingHorizontal: 18,
-    paddingVertical: 18, // Increased vertical padding
-  },
-  logoImage: {
-    width: 50, // Increased logo size
-    height: 50, // Increased logo size
-    resizeMode: 'contain',
-  },
-  logoText: {
-    fontSize: 22, // Increased font size
-    fontWeight: '600',
-    marginLeft: 8, // Slightly increased spacing
-    color: '#64748B', // Changed to match the active drawer item color for consistency
-    letterSpacing: 0.3, // Slight letter spacing for a more premium look
-  },
-  divider: {
-    height: 1.5, // Slightly thicker divider
-    backgroundColor: '#E2E8F0',
-    marginBottom: 8, // Slightly increased spacing after divider
-  },
-  drawerScrollContent: {
-    paddingTop: 0,
-  },
-  menuContainer: {
-    paddingHorizontal: 0, // Remove horizontal padding to give more space
-    paddingTop: 4,
-  },
-  drawerFooter: {
-    padding: 12,
-    paddingBottom: 25, // Extra padding at the bottom for iPhone
-    borderTopWidth: 1,
-    borderTopColor: '#E2E8F0',
-    marginTop: 'auto', // Push to bottom of container
-  },
-  versionText: {
-    fontSize: 12,
-    color: '#94A3B8',
-    textAlign: 'center',
-    fontWeight: '500',
-  },
-});
+
 
 export default AppNavigator;
