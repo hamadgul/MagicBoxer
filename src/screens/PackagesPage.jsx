@@ -1106,18 +1106,27 @@ export default class PackagesPage extends Component {
             <TouchableWithoutFeedback onPress={this.closePackageModal}>
               <View style={styles.modalOverlay}>
                 <TouchableWithoutFeedback onPress={(e) => e.stopPropagation()}>
-                  <View style={modalStyles.modalContent}>
-                    {/* Add a proper header with rounded corners */}
+                  <View style={[
+                    modalStyles.modalContent,
+                    {
+                      maxHeight: selectedPackage && this.getItemsArray(selectedPackage).length > 4 ? "75%" : "auto"
+                    }
+                  ]}>
+                    {/* Header */}
                     <View style={modalStyles.modalHeader}>
                       <Text style={modalStyles.modalTitle}>
                         {selectedPackage}
                       </Text>
                     </View>
+                    
+                    {/* Scrollable content */}
                     <FlatList
                       data={selectedPackage ? this.getItemsArray(selectedPackage) : []}
                       style={styles.flatListStyle}
                       contentContainerStyle={styles.flatListContainer}
                       keyExtractor={(item) => item.id}
+                      showsVerticalScrollIndicator={selectedPackage && this.getItemsArray(selectedPackage).length > 4}
+                      scrollEnabled={selectedPackage && this.getItemsArray(selectedPackage).length > 4}
                       renderItem={({ item }) => (
                         <TouchableOpacity
                           style={styles.itemContainer}
@@ -1136,11 +1145,8 @@ export default class PackagesPage extends Component {
                       )}
                     />
 
-                    {/* Add spacing between item list and button */}
-                    <View style={{ height: 16 }} />
-
                     <TouchableOpacity
-                      style={[styles.addItemPlaceholder]}
+                      style={[styles.addItemPlaceholder, { marginTop: 12, marginBottom: 12 }]}
                       onPress={() => {
                         console.log('Add from saved items button pressed');
                         this.showSavedItemsSelector();
@@ -1151,8 +1157,8 @@ export default class PackagesPage extends Component {
                       <Text style={styles.addItemText}>Add from saved items</Text>
                     </TouchableOpacity>
                     
+                    {/* Footer */}
                     <View style={styles.modalFooter}>
-
                       <TouchableOpacity
                         style={[styles.footerButton, styles.packButton]}
                         onPress={this.handlePackItems}
@@ -1991,14 +1997,17 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: "center",
     alignItems: "center",
-    backgroundColor: "transparent",
+    backgroundColor: "rgba(0, 0, 0, 0.5)",
   },
   modalContent: {
     backgroundColor: "white",
     borderRadius: 14, // iOS modal radius
-    padding: 16,
+    paddingTop: 16,
+    paddingHorizontal: 16,
+    paddingBottom: 4,
     width: "90%",
-    maxHeight: "80%",
+    display: "flex",
+    flexDirection: "column",
     ...(Platform.OS === 'ios' ? {
       shadowColor: "#000",
       shadowOffset: {

@@ -18,6 +18,7 @@ import ExpoFont
 import ExpoGL
 import ExpoHaptics
 import ExpoKeepAwake
+import ExpoLinearGradient
 import ExpoLinking
 import ExpoMailComposer
 import ExpoHead
@@ -46,6 +47,7 @@ public class ExpoModulesProvider: ModulesProvider {
       GLViewModule.self,
       HapticsModule.self,
       KeepAwakeModule.self,
+      LinearGradientModule.self,
       ExpoLinkingModule.self,
       MailComposerModule.self,
       ExpoHeadModule.self,
