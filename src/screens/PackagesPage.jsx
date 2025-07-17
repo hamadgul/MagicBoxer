@@ -16,6 +16,7 @@ import {
   Platform,
   BackHandler,
   KeyboardAvoidingView,
+  ActivityIndicator,
 } from "react-native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { Ionicons } from "@expo/vector-icons"; 
@@ -23,6 +24,9 @@ import { ItemDetailsModal } from "./FormPage";
 import { pack, createDisplay } from "../packing_algo/packing";
 import * as Crypto from 'expo-crypto';
 import { modalStyles } from "../theme/ModalStyles"; // Import modalStyles
+import * as DocumentPicker from 'expo-document-picker';
+import * as FileSystem from 'expo-file-system';
+import * as Sharing from 'expo-sharing';
 
 export default class PackagesPage extends Component {
   state = {
@@ -54,11 +58,28 @@ export default class PackagesPage extends Component {
     packageItemsSelectionMode: false,
     selectedPackageItems: [],
     isBulkRemoveInProgress: false, // Flag to prevent individual alerts during bulk remove operations
+    // Import functionality
+    showImportModal: false,
+    importPreview: [],
+    isImporting: false,
+    // FAB menu functionality
+    isFabMenuOpen: false,
+    // Package naming after import
+    showPackageNamingModal: false,
+    importedPackageItems: [],
+    newImportedPackageName: '',
   };
 
   constructor(props) {
     super(props);
     this.shakeAnimation = new Animated.Value(0);
+    
+    // FAB menu animations
+    this.fabRotation = new Animated.Value(0);
+    this.createPackageFabOpacity = new Animated.Value(0);
+    this.createPackageFabScale = new Animated.Value(0);
+    this.importPackageFabOpacity = new Animated.Value(0);
+    this.importPackageFabScale = new Animated.Value(0);
 
     this.props.navigation.setOptions({
       headerTitle: () => (
@@ -255,6 +276,87 @@ export default class PackagesPage extends Component {
       this.setState({ savedItems: [], allSavedItems: [] });
       Alert.alert("Error", "Failed to load saved items.");
     }
+  };
+
+  // FAB menu functionality
+  toggleFabMenu = () => {
+    const { isFabMenuOpen } = this.state;
+    
+    // Toggle the menu state
+    this.setState({ isFabMenuOpen: !isFabMenuOpen });
+    
+    // Animate the main FAB rotation
+    Animated.timing(this.fabRotation, {
+      toValue: isFabMenuOpen ? 0 : 1,
+      duration: 300,
+      easing: Easing.bezier(0.4, 0.0, 0.2, 1),
+      useNativeDriver: true,
+    }).start();
+    
+    // Animate the secondary FABs
+    if (!isFabMenuOpen) {
+      // Opening the menu
+      Animated.parallel([
+        Animated.timing(this.createPackageFabOpacity, {
+          toValue: 1,
+          duration: 200,
+          delay: 50,
+          useNativeDriver: true,
+        }),
+        Animated.timing(this.createPackageFabScale, {
+          toValue: 1,
+          duration: 200,
+          delay: 50,
+          useNativeDriver: true,
+        }),
+        Animated.timing(this.importPackageFabOpacity, {
+          toValue: 1,
+          duration: 200,
+          delay: 100,
+          useNativeDriver: true,
+        }),
+        Animated.timing(this.importPackageFabScale, {
+          toValue: 1,
+          duration: 200,
+          delay: 100,
+          useNativeDriver: true,
+        }),
+      ]).start();
+    } else {
+      // Closing the menu
+      Animated.parallel([
+        Animated.timing(this.createPackageFabOpacity, {
+          toValue: 0,
+          duration: 150,
+          useNativeDriver: true,
+        }),
+        Animated.timing(this.createPackageFabScale, {
+          toValue: 0,
+          duration: 150,
+          useNativeDriver: true,
+        }),
+        Animated.timing(this.importPackageFabOpacity, {
+          toValue: 0,
+          duration: 150,
+          useNativeDriver: true,
+        }),
+        Animated.timing(this.importPackageFabScale, {
+          toValue: 0,
+          duration: 150,
+          useNativeDriver: true,
+        }),
+      ]).start();
+    }
+  };
+
+  handleCreatePackagePress = () => {
+    this.props.navigation.navigate('Create Package');
+    this.toggleFabMenu(); // Close the menu after selecting an option
+  };
+  
+  handleImportPackagePress = () => {
+    this.setState({ showImportModal: true, importPreview: [] });
+    this.toggleFabMenu(); // Close the menu after selecting an option
   };
 
   handleDeletePackage = async (packageName) => {
@@ -802,6 +904,268 @@ export default class PackagesPage extends Component {
       selectedPackage: packageName,
       newPackageName: packageName, // Pre-populate with current name
     });
+  };
+
+  // CSV Import functionality
+  pickCSVFile = async () => {
+    try {
+      const result = await DocumentPicker.getDocumentAsync({
+        type: 'text/csv',
+        copyToCacheDirectory: true
+      });
+      
+      if (result.canceled) {
+        console.log('User cancelled file picking');
+        return;
+      }
+      
+      // Process the CSV file
+      this.setState({ isImporting: true });
+      await this.processCSVFile(result.assets[0].uri);
+      
+    } catch (error) {
+      console.error('Error picking CSV file:', error);
+      Alert.alert('Error', 'Failed to select CSV file. Please try again.');
+      this.setState({ isImporting: false });
+    }
+  };
+  
+  processCSVFile = async (fileUri) => {
+    try {
+      // Read the file content
+      const fileContent = await FileSystem.readAsStringAsync(fileUri);
+      
+      // Parse CSV content
+      const lines = fileContent.split('\n').filter(line => line.trim() !== '');
+      
+      if (lines.length <= 1) {
+        Alert.alert('Error', 'CSV file appears to be empty or invalid.');
+        this.setState({ isImporting: false });
+        return;
+      }
+      
+      // Parse header and data
+      const headers = lines[0].split(',').map(h => h.trim().toLowerCase());
+      const dataLines = lines.slice(1);
+      
+      // Validate required columns
+      const requiredColumns = ['name', 'length', 'width', 'height', 'quantity'];
+      const missingColumns = requiredColumns.filter(col => !headers.includes(col));
+      
+      if (missingColumns.length > 0) {
+        Alert.alert(
+          'Invalid CSV Format',
+          `Missing required columns: ${missingColumns.join(', ')}\n\nRequired columns: ${requiredColumns.join(', ')}`
+        );
+        this.setState({ isImporting: false });
+        return;
+      }
+      
+      // Parse items
+      const items = [];
+      const errors = [];
+      
+      // Process each line and collect item data
+      const itemsToCreate = [];
+      
+      dataLines.forEach((line, index) => {
+        const values = line.split(',').map(v => v.trim());
+        
+        if (values.length !== headers.length) {
+          errors.push(`Row ${index + 2}: Incorrect number of columns`);
+          return;
+        }
+        
+        const item = {};
+        headers.forEach((header, i) => {
+          item[header] = values[i];
+        });
+        
+        // Validate and convert numeric values
+        const length = parseFloat(item.length);
+        const width = parseFloat(item.width);
+        const height = parseFloat(item.height);
+        const quantity = parseInt(item.quantity);
+        
+        if (isNaN(length) || isNaN(width) || isNaN(height) || isNaN(quantity)) {
+          errors.push(`Row ${index + 2}: Invalid numeric values`);
+          return;
+        }
+        
+        if (length <= 0 || width <= 0 || height <= 0 || quantity <= 0) {
+          errors.push(`Row ${index + 2}: Values must be greater than 0`);
+          return;
+        }
+        
+        if (!item.name || item.name.trim() === '') {
+          errors.push(`Row ${index + 2}: Item name cannot be empty`);
+          return;
+        }
+        
+        // Add item data for each quantity
+        for (let i = 0; i < quantity; i++) {
+          itemsToCreate.push({
+            itemName: item.name.trim(),
+            itemLength: length,
+            itemWidth: width,
+            itemHeight: height,
+            weight: 1, // Default weight
+            quantity: 1 // Individual item quantity is always 1
+          });
+        }
+      });
+      
+      // Create items with async UUIDs
+      for (const itemData of itemsToCreate) {
+        const itemId = await Crypto.randomUUID();
+        const replicatedNames = [{
+          name: itemData.itemName,
+          id: await Crypto.randomUUID(),
+          parentId: itemId
+        }];
+        
+        items.push({
+          id: itemId,
+          ...itemData,
+          replicatedNames: replicatedNames
+        });
+      }
+      
+      if (errors.length > 0) {
+        Alert.alert(
+          'Import Errors',
+          `Found ${errors.length} error(s):\n\n${errors.slice(0, 5).join('\n')}${errors.length > 5 ? '\n...and more' : ''}`
+        );
+        this.setState({ isImporting: false });
+        return;
+      }
+      
+      if (items.length === 0) {
+        Alert.alert('Error', 'No valid items found in CSV file.');
+        this.setState({ isImporting: false });
+        return;
+      }
+      
+      // Update preview
+      this.setState({ 
+        importPreview: items,
+        isImporting: false 
+      });
+      
+    } catch (error) {
+      console.error('Error processing CSV file:', error);
+      Alert.alert('Error', 'Failed to process CSV file. Please check the file format.');
+      this.setState({ isImporting: false });
+    }
+  };
+  
+  handleImportPackage = async () => {
+    try {
+      const { importPreview } = this.state;
+      
+      if (importPreview.length === 0) {
+        Alert.alert('Error', 'No items to import.');
+        return;
+      }
+      
+      // Store imported items and show naming modal
+      this.setState({ 
+        importedPackageItems: importPreview,
+        showImportModal: false,
+        showPackageNamingModal: true,
+        newImportedPackageName: '',
+        importPreview: []
+      });
+      
+    } catch (error) {
+      console.error('Error importing package:', error);
+      Alert.alert('Error', 'Failed to import package. Please try again.');
+    }
+  };
+  
+  handleSaveImportedPackage = async () => {
+    try {
+      const { importedPackageItems, newImportedPackageName } = this.state;
+      
+      if (!newImportedPackageName || newImportedPackageName.trim() === '') {
+        Alert.alert('Error', 'Please enter a package name.');
+        return;
+      }
+      
+      const packageName = newImportedPackageName.trim();
+      
+      // Check if package name already exists
+      const existingPackages = await AsyncStorage.getItem('packages');
+      const packages = existingPackages ? JSON.parse(existingPackages) : {};
+      
+      if (packages[packageName]) {
+        Alert.alert('Error', 'A package with this name already exists. Please choose a different name.');
+        return;
+      }
+      
+      // Get current date in MM/DD/YY format to match normal packages
+      const today = new Date();
+      const day = String(today.getDate()).padStart(2, '0');
+      const month = String(today.getMonth() + 1).padStart(2, '0'); // January is 0
+      const year = String(today.getFullYear()).slice(-2);
+      const dateCreated = `${month}/${day}/${year}`;
+      
+      // Create the package
+      const packageData = {
+        items: importedPackageItems,
+        dateCreated: dateCreated
+      };
+      
+      // Save to storage
+      packages[packageName] = packageData;
+      await AsyncStorage.setItem('packages', JSON.stringify(packages));
+      
+      // Update state
+      this.setState({ 
+        packages,
+        showPackageNamingModal: false,
+        importedPackageItems: [],
+        newImportedPackageName: ''
+      });
+      
+      Alert.alert(
+        'Success',
+        `Package "${packageName}" has been created with ${importedPackageItems.length} items.`,
+        [{ text: 'OK' }]
+      );
+      
+    } catch (error) {
+      console.error('Error saving imported package:', error);
+      Alert.alert('Error', 'Failed to save package. Please try again.');
+    }
+  };
+  
+  downloadSampleCSV = async () => {
+    try {
+      const sampleData = [
+        'name,length,width,height,quantity',
+        'Small Box,10,8,6,2',
+        'Medium Box,14,12,10,1',
+        'Large Box,20,16,12,1',
+        'Flat Mailer,12,9,0.5,3',
+        'Tube Mailer,24,4,4,1'
+      ].join('\n');
+      
+      const fileUri = `${FileSystem.documentDirectory}package_import_template.csv`;
+      await FileSystem.writeAsStringAsync(fileUri, sampleData);
+      
+      if (await Sharing.isAvailableAsync()) {
+        await Sharing.shareAsync(fileUri, {
+          mimeType: 'text/csv',
+          dialogTitle: 'Save Package Import Template'
+        });
+      } else {
+        Alert.alert('Success', `Template saved to: ${fileUri}`);
+      }
+    } catch (error) {
+      console.error('Error downloading sample CSV:', error);
+      Alert.alert('Error', 'Failed to download sample template.');
+    }
   };
 
   render() {
@@ -1742,16 +2106,79 @@ export default class PackagesPage extends Component {
             }}
           />
 
+          {/* Main FAB */}
           <TouchableOpacity
-            style={styles.fab}
-            onPress={() => this.props.navigation.navigate("Create Package")}
+            style={[styles.fab, styles.mainFab]}
+            onPress={(e) => {
+              e.stopPropagation();
+              this.toggleFabMenu();
+            }}
           >
-            <Ionicons name="add" size={30} color="white" />
+            <Animated.View
+              style={{
+                transform: [
+                  {
+                    rotate: this.fabRotation.interpolate({
+                      inputRange: [0, 1],
+                      outputRange: ['0deg', '45deg']
+                    })
+                  }
+                ]
+              }}
+            >
+              <Ionicons name="add" size={30} color="white" />
+            </Animated.View>
           </TouchableOpacity>
-
-
-
-
+          
+          {/* Create Package FAB (animated) */}
+          <Animated.View
+            style={{
+              position: 'absolute',
+              right: 20,
+              bottom: 100,
+              opacity: this.createPackageFabOpacity,
+              transform: [{ scale: this.createPackageFabScale }],
+              zIndex: 2,
+            }}
+          >
+            <TouchableOpacity
+              style={styles.menuButton}
+              onPress={(e) => {
+                e.stopPropagation();
+                this.handleCreatePackagePress();
+              }}
+            >
+              <View style={[styles.menuButtonIcon, { backgroundColor: '#3B82F6' }]}>
+                <Ionicons name="cube-outline" size={20} color="white" />
+              </View>
+              <Text style={styles.menuButtonText}>Create Package</Text>
+            </TouchableOpacity>
+          </Animated.View>
+          
+          {/* Import Package FAB (animated) */}
+          <Animated.View
+            style={{
+              position: 'absolute',
+              right: 20,
+              bottom: 160,
+              opacity: this.importPackageFabOpacity,
+              transform: [{ scale: this.importPackageFabScale }],
+              zIndex: 2,
+            }}
+          >
+            <TouchableOpacity
+              style={styles.menuButton}
+              onPress={(e) => {
+                e.stopPropagation();
+                this.handleImportPackagePress();
+              }}
+            >
+              <View style={[styles.menuButtonIcon, { backgroundColor: '#10B981' }]}>
+                <Ionicons name="cloud-upload-outline" size={20} color="white" />
+              </View>
+              <Text style={styles.menuButtonText}>Import Package</Text>
+            </TouchableOpacity>
+          </Animated.View>
           
           {/* Bulk edit FAB - only show if there are packages */}
           {Object.keys(packages).length > 0 && (
@@ -1762,6 +2189,142 @@ export default class PackagesPage extends Component {
               <Ionicons name={this.state.selectionMode ? "close" : "list"} size={26} color="white" />
             </TouchableOpacity>
           )}
+          
+          {/* Import Package Modal */}
+          <Modal
+            visible={this.state.showImportModal}
+            transparent={true}
+            animationType="fade"
+            onRequestClose={() => this.setState({ showImportModal: false, importPreview: [] })}
+          >
+            <TouchableWithoutFeedback onPress={() => this.setState({ showImportModal: false, importPreview: [] })}>
+              <View style={styles.modalOverlay}>
+                <TouchableWithoutFeedback onPress={(e) => e.stopPropagation()}>
+                  <View style={styles.importModalContainer}>
+                    <Text style={styles.importModalTitle}>Import Package</Text>
+                    
+                    {this.state.isImporting ? (
+                      <View style={styles.loadingContainer}>
+                        <ActivityIndicator size="large" color="#3B82F6" />
+                        <Text style={styles.loadingText}>Processing CSV file...</Text>
+                      </View>
+                    ) : (
+                      <>
+                        <Text style={styles.modalSubtitle}>
+                          Import a package from a CSV file. The CSV should contain columns for: name, length, width, height, and quantity.
+                        </Text>
+                        
+                        <Text style={styles.modalSubtitle}>
+                          {this.state.importPreview.length > 0 
+                            ? `Found ${this.state.importPreview.length} items to import.` 
+                            : 'Preview of items to import will appear here.'}
+                        </Text>
+                      
+                        {this.state.importPreview.length > 0 && (
+                          <View style={styles.previewContainer}>
+                            {this.state.importPreview.slice(0, 3).map((item, index) => (
+                              <View key={`${item.itemName}-${index}`} style={styles.previewItem}>
+                                <Text style={styles.previewItemName}>{item.itemName}</Text>
+                                <Text style={styles.previewItemDimensions}>
+                                  {item.itemLength}" × {item.itemWidth}" × {item.itemHeight}"
+                                </Text>
+                              </View>
+                            ))}
+                            {this.state.importPreview.length > 3 && (
+                              <Text style={styles.moreItemsText}>
+                                +{this.state.importPreview.length - 3} more items
+                              </Text>
+                            )}
+                          </View>
+                        )}
+                        
+                        <View style={styles.modalButtonsRow}>
+                          <TouchableOpacity
+                            style={[styles.modalButton, styles.cancelButton]}
+                            onPress={() => this.setState({ showImportModal: false, importPreview: [] })}
+                          >
+                            <Text style={styles.modalCancelButtonText}>Cancel</Text>
+                          </TouchableOpacity>
+                          
+                          <TouchableOpacity
+                            style={[styles.modalButton, styles.importButton, this.state.importPreview.length === 0 && styles.disabledButton]}
+                            onPress={this.handleImportPackage}
+                            disabled={this.state.importPreview.length === 0}
+                          >
+                            <Text style={styles.importButtonText}>Import {this.state.importPreview.length} {this.state.importPreview.length === 1 ? 'Item' : 'Items'}</Text>
+                          </TouchableOpacity>
+                        </View>
+                        
+                        <View style={styles.fileButtonsContainer}>
+                          <TouchableOpacity
+                            style={styles.selectFileButton}
+                            onPress={this.pickCSVFile}
+                          >
+                            <Ionicons name="document-attach-outline" size={20} color="#3B82F6" />
+                            <Text style={styles.selectFileButtonText}>Select CSV File</Text>
+                          </TouchableOpacity>
+                          
+                          <TouchableOpacity
+                            style={styles.downloadSampleButton}
+                            onPress={this.downloadSampleCSV}
+                          >
+                            <Ionicons name="download-outline" size={18} color="#64748B" />
+                            <Text style={styles.downloadSampleText}>Download Sample</Text>
+                          </TouchableOpacity>
+                        </View>
+                      </>
+                    )}
+                  </View>
+                </TouchableWithoutFeedback>
+              </View>
+            </TouchableWithoutFeedback>
+          </Modal>
+          
+          {/* Package Naming Modal */}
+          <Modal
+            visible={this.state.showPackageNamingModal}
+            transparent={true}
+            animationType="fade"
+            onRequestClose={() => this.setState({ showPackageNamingModal: false, importedPackageItems: [], newImportedPackageName: '' })}
+          >
+            <TouchableWithoutFeedback onPress={() => this.setState({ showPackageNamingModal: false, importedPackageItems: [], newImportedPackageName: '' })}>
+              <View style={styles.modalOverlay}>
+                <TouchableWithoutFeedback onPress={(e) => e.stopPropagation()}>
+                  <View style={styles.importModalContainer}>
+                    <Text style={styles.importModalTitle}>Name Your Package</Text>
+                    
+                    <Text style={styles.modalSubtitle}>
+                      You've successfully imported {this.state.importedPackageItems.length} items. Please give your package a name to save it.
+                    </Text>
+                    
+                    <TextInput
+                      style={styles.packageNameInput}
+                      placeholder="Enter package name"
+                      value={this.state.newImportedPackageName}
+                      onChangeText={(text) => this.setState({ newImportedPackageName: text })}
+                      autoFocus={true}
+                    />
+                    
+                    <View style={styles.modalButtonsRow}>
+                      <TouchableOpacity
+                        style={[styles.modalButton, styles.cancelButton]}
+                        onPress={() => this.setState({ showPackageNamingModal: false, importedPackageItems: [], newImportedPackageName: '' })}
+                      >
+                        <Text style={styles.modalCancelButtonText}>Cancel</Text>
+                      </TouchableOpacity>
+                      
+                      <TouchableOpacity
+                        style={[styles.modalButton, styles.saveButton]}
+                        onPress={this.handleSaveImportedPackage}
+                      >
+                        <Text style={styles.saveButtonText}>Save Package</Text>
+                      </TouchableOpacity>
+                    </View>
+                  </View>
+                </TouchableWithoutFeedback>
+              </View>
+            </TouchableWithoutFeedback>
+          </Modal>
         </View>
       </TouchableWithoutFeedback>
     );
@@ -2750,6 +3313,219 @@ const styles = StyleSheet.create({
     right: 'auto', // Override the right positioning from fab style
     left: 20,     // Position on the left side
     bottom: 20,   // Match SavedItemsPage positioning
+  },
+  mainFab: {
+    // Inherits from fab style
+  },
+  menuButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: 'white',
+    paddingVertical: 12,
+    paddingHorizontal: 16,
+    borderRadius: 25,
+    minWidth: 160,
+    ...(Platform.OS === 'ios' ? {
+      shadowColor: '#000',
+      shadowOffset: { width: 0, height: 2 },
+      shadowOpacity: 0.15,
+      shadowRadius: 4,
+    } : {
+      elevation: 6,
+    }),
+  },
+  menuButtonIcon: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: 12,
+  },
+  menuButtonText: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#1F2937',
+  },
+  modalOverlay: {
+    position: 'absolute',
+    top: 0,
+    bottom: 0,
+    left: 0,
+    right: 0,
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  importModalContainer: {
+    width: '85%',
+    maxWidth: 350,
+    backgroundColor: 'white',
+    borderRadius: 16,
+    padding: 20,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 5,
+    elevation: 8,
+    alignSelf: 'center',
+  },
+  importModalTitle: {
+    fontSize: 20,
+    fontWeight: '700',
+    color: '#334155',
+    marginBottom: 12,
+    textAlign: 'center',
+  },
+  modalSubtitle: {
+    fontSize: 16,
+    color: '#64748B',
+    marginBottom: 16,
+    textAlign: 'center',
+  },
+  loadingContainer: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    padding: 20,
+  },
+  loadingText: {
+    marginTop: 10,
+    fontSize: 16,
+    color: '#64748B',
+  },
+  previewContainer: {
+    marginBottom: 20,
+    backgroundColor: '#F1F5F9',
+    borderRadius: 12,
+    overflow: 'hidden',
+    padding: 12,
+    borderWidth: 1,
+    borderColor: '#E2E8F0',
+  },
+  previewItem: {
+    backgroundColor: 'white',
+    padding: 12,
+    borderRadius: 10,
+    marginBottom: 10,
+    borderWidth: 1,
+    borderColor: '#E2E8F0',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.05,
+    shadowRadius: 2,
+    elevation: 1,
+  },
+  previewItemName: {
+    fontSize: 16,
+    fontWeight: '500',
+    color: '#334155',
+  },
+  previewItemDimensions: {
+    fontSize: 15,
+    color: '#8E8E93',
+    marginLeft: 30,
+  },
+  moreItemsText: {
+    fontSize: 14,
+    color: '#64748B',
+    fontStyle: 'italic',
+    textAlign: 'center',
+    padding: 8,
+  },
+  modalButtonsRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    width: '100%',
+    marginBottom: 15,
+  },
+  modalButton: {
+    borderRadius: 8,
+    padding: 10,
+    minWidth: '45%',
+    alignItems: 'center',
+    justifyContent: 'center',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.1,
+    shadowRadius: 2,
+    elevation: 2,
+  },
+  cancelButton: {
+    backgroundColor: '#F1F5F9',
+    borderWidth: 1,
+    borderColor: '#E2E8F0',
+  },
+  importButton: {
+    backgroundColor: '#3B82F6',
+  },
+  disabledButton: {
+    backgroundColor: '#94A3B8',
+    opacity: 0.7,
+  },
+  modalCancelButtonText: {
+    color: '#64748B',
+    fontWeight: '600',
+    fontSize: 14,
+  },
+  importButtonText: {
+    color: 'white',
+    fontWeight: '600',
+    fontSize: 14,
+  },
+  fileButtonsContainer: {
+    width: '100%',
+    marginTop: 15,
+    gap: 12,
+  },
+  selectFileButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    padding: 10,
+    borderWidth: 1,
+    borderColor: '#3B82F6',
+    borderRadius: 8,
+    backgroundColor: '#EFF6FF',
+  },
+  selectFileButtonText: {
+    marginLeft: 8,
+    color: '#3B82F6',
+    fontWeight: '600',
+    fontSize: 14,
+  },
+  downloadSampleButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    padding: 10,
+    borderWidth: 1,
+    borderColor: '#64748B',
+    borderRadius: 8,
+    backgroundColor: '#F1F5F9',
+  },
+  downloadSampleText: {
+    marginLeft: 8,
+    color: '#64748B',
+    fontWeight: '600',
+    fontSize: 14,
+  },
+  packageNameInput: {
+    borderWidth: 1,
+    borderColor: '#E2E8F0',
+    borderRadius: 8,
+    padding: 12,
+    fontSize: 16,
+    backgroundColor: '#F8FAFC',
+    marginBottom: 20,
+    color: '#334155',
+  },
+  saveButton: {
+    backgroundColor: '#10B981',
+  },
+  saveButtonText: {
+    color: 'white',
+    fontWeight: '600',
+    fontSize: 14,
   },
   noPackagesText: {
     fontSize: 16,
