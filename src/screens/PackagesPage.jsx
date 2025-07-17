@@ -50,6 +50,10 @@ export default class PackagesPage extends Component {
     savedItemsSelectionMode: false,
     selectedSavedItems: [],
     isBulkAddInProgress: false, // Flag to prevent individual alerts during bulk operations
+    // Bulk selection for package items modal
+    packageItemsSelectionMode: false,
+    selectedPackageItems: [],
+    isBulkRemoveInProgress: false, // Flag to prevent individual alerts during bulk remove operations
   };
 
   constructor(props) {
@@ -308,7 +312,10 @@ export default class PackagesPage extends Component {
       showDetailsModal: false,
       selectedItem: null,
       showOptionsModal: false,
-      showSavedItemsModal: false
+      showSavedItemsModal: false,
+      // Reset bulk selection state for package items
+      packageItemsSelectionMode: false,
+      selectedPackageItems: []
     });
     
     // Also clear any temporary references
@@ -503,7 +510,7 @@ export default class PackagesPage extends Component {
     }
   };
 
-  handleDeleteItem = (itemToDelete) => {
+  handleDeleteItem = (itemToDelete, suppressAlert = false) => {
     if (!this.mounted) return; // Safety check
     
     try {
@@ -564,29 +571,39 @@ export default class PackagesPage extends Component {
         .then(() => {
           if (this.mounted) { // Safety check
             this.setState({ packages: updatedPackages }, () => {
+              // Auto-suppress alerts if bulk remove is in progress
+              const shouldSuppressAlert = suppressAlert || this.state.isBulkRemoveInProgress;
+              
               if (updatedItems.length === 0) {
-                Alert.alert(
-                  "Success",
-                  `Package "${packageName}" was removed`
-                );
+                if (!shouldSuppressAlert) {
+                  Alert.alert(
+                    "Success",
+                    `Package "${packageName}" was removed`
+                  );
+                }
                 this.closePackageModal();
               } else {
-                Alert.alert("Success", `${itemToDelete.itemName} was removed`, [
-                  {
-                    text: "OK",
-                    onPress: () => {
-                      // Use setTimeout to ensure alert is dismissed before showing modal
-                      setTimeout(() => {
-                        if (this.mounted) { // Safety check
-                          this.setState({ 
-                            showPackageModal: true,
-                            selectedPackage: packageName
-                          });
-                        }
-                      }, 100);
+                if (!shouldSuppressAlert) {
+                  Alert.alert("Success", `${itemToDelete.itemName} was removed`, [
+                    {
+                      text: "OK",
+                      onPress: () => {
+                        // Use setTimeout to ensure alert is dismissed before showing modal
+                        setTimeout(() => {
+                          if (this.mounted) { // Safety check
+                            this.setState({ 
+                              showPackageModal: true,
+                              selectedPackage: packageName
+                            });
+                          }
+                        }, 100);
+                      }
                     }
-                  }
-                ]);
+                  ]);
+                } else {
+                  // For bulk operations, don't show modal again
+                  // The bulk operation will handle the final state
+                }
               }
             });
           }
@@ -1123,6 +1140,65 @@ export default class PackagesPage extends Component {
                       </Text>
                     </View>
                     
+                    {/* Bulk Selection Controls - Minimal inline approach */}
+                    {this.state.packageItemsSelectionMode && (
+                      <View style={{
+                        flexDirection: 'row',
+                        alignItems: 'center',
+                        justifyContent: 'space-between',
+                        paddingHorizontal: 20,
+                        paddingVertical: 8,
+                        backgroundColor: '#F8FAFC',
+                        borderBottomWidth: 1,
+                        borderBottomColor: '#E2E8F0',
+                      }}>
+                        <Text style={{
+                          fontSize: 14,
+                          color: '#64748B',
+                          fontWeight: '500'
+                        }}>
+                          {this.state.selectedPackageItems.length} selected
+                        </Text>
+                        
+                        <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                          <TouchableOpacity
+                            onPress={this.selectAllPackageItems}
+                            style={{ marginRight: 16 }}
+                          >
+                            <Text style={{ fontSize: 14, color: '#3B82F6', fontWeight: '600' }}>All</Text>
+                          </TouchableOpacity>
+                          <TouchableOpacity 
+                            onPress={this.clearAllPackageItemsSelection}
+                            style={{ marginRight: 16 }}
+                          >
+                            <Text style={{ fontSize: 14, color: '#3B82F6', fontWeight: '600' }}>None</Text>
+                          </TouchableOpacity>
+                          
+                          <TouchableOpacity
+                            onPress={this.exitPackageItemsBulkSelectionMode}
+                            style={{
+                              flexDirection: 'row',
+                              alignItems: 'center',
+                              paddingVertical: 6,
+                              paddingHorizontal: 12,
+                              backgroundColor: '#EF4444',
+                              borderRadius: 6,
+                            }}
+                          >
+                            <Ionicons name="close" size={16} color="white" />
+                            <Text style={{
+                              marginLeft: 4,
+                              fontSize: 14,
+                              fontWeight: '600',
+                              color: 'white'
+                            }}>
+                              Cancel
+                            </Text>
+                          </TouchableOpacity>
+                        </View>
+                      </View>
+                    )}
+                    
                     {/* Scrollable content */}
                     <FlatList
                       data={selectedPackage ? this.getItemsArray(selectedPackage) : []}
@@ -1131,22 +1207,66 @@ export default class PackagesPage extends Component {
                       keyExtractor={(item) => item.id}
                       showsVerticalScrollIndicator={selectedPackage && this.getItemsArray(selectedPackage).length > 4}
                       scrollEnabled={selectedPackage && this.getItemsArray(selectedPackage).length > 4}
-                      renderItem={({ item }) => (
-                        <TouchableOpacity
-                          style={styles.itemContainer}
-                          onPress={() => this.handleEditItem(item)}
-                        >
-                          <View style={{ width: "100%" }}>
-                            <Text style={styles.itemText}>{item.itemName}</Text>
-                            <Text style={styles.itemDimensions}>
-                              Quantity: {item.quantity}
-                            </Text>
-                            <Text style={styles.itemDimensions}>
-                              {item.itemLength}L x {item.itemWidth}W x {item.itemHeight}H
-                            </Text>
-                          </View>
-                        </TouchableOpacity>
-                      )}
+                      renderItem={({ item }) => {
+                        const isSelected = this.state.selectedPackageItems.some(selected => selected.id === item.id);
+                        const isInBulkMode = this.state.packageItemsSelectionMode;
+                        
+                        return (
+                          <TouchableOpacity
+                            style={[
+                              styles.itemContainer,
+                              isSelected && {
+                                backgroundColor: '#EBF4FF',
+                                borderColor: '#3B82F6',
+                                borderWidth: 1,
+                              }
+                            ]}
+                            onPress={() => {
+                              if (isInBulkMode) {
+                                this.togglePackageItemSelection(item);
+                              } else {
+                                this.handleEditItem(item);
+                              }
+                            }}
+                            onLongPress={() => {
+                              if (!isInBulkMode) {
+                                this.enterPackageItemsBulkSelectionMode(item);
+                              }
+                            }}
+                          >
+                            <View style={{ flexDirection: 'row', alignItems: 'center', width: '100%' }}>
+                              {/* Checkbox for bulk selection mode */}
+                              {isInBulkMode && (
+                                <View style={{
+                                  width: 24,
+                                  height: 24,
+                                  borderRadius: 4,
+                                  borderWidth: 2,
+                                  borderColor: isSelected ? '#3B82F6' : '#D1D5DB',
+                                  backgroundColor: isSelected ? '#3B82F6' : 'transparent',
+                                  alignItems: 'center',
+                                  justifyContent: 'center',
+                                  marginRight: 12,
+                                }}>
+                                  {isSelected && (
+                                    <Ionicons name="checkmark" size={16} color="white" />
+                                  )}
+                                </View>
+                              )}
+                              
+                              <View style={{ flex: 1 }}>
+                                <Text style={styles.itemText}>{item.itemName}</Text>
+                                <Text style={styles.itemDimensions}>
+                                  Quantity: {item.quantity}
+                                </Text>
+                                <Text style={styles.itemDimensions}>
+                                  {item.itemLength}L x {item.itemWidth}W x {item.itemHeight}H
+                                </Text>
+                              </View>
+                            </View>
+                          </TouchableOpacity>
+                        );
+                      }}
                     />
 
                     <TouchableOpacity
@@ -1163,26 +1283,49 @@ export default class PackagesPage extends Component {
                     
                     {/* Footer */}
                     <View style={styles.modalFooter}>
-                      <TouchableOpacity
-                        style={[styles.footerButton, styles.packButton]}
-                        onPress={this.handlePackItems}
-                      >
-                        <Ionicons name="cube" size={20} color="#fff" />
-                        <Text style={styles.footerButtonText}>Pack Items</Text>
-                      </TouchableOpacity>
+                      {this.state.packageItemsSelectionMode ? (
+                        // Bulk selection mode footer
+                        <TouchableOpacity
+                          style={[
+                            styles.footerButton,
+                            {
+                              backgroundColor: '#EF4444',
+                              flex: 1,
+                            }
+                          ]}
+                          onPress={this.bulkRemovePackageItems}
+                          disabled={this.state.selectedPackageItems.length === 0}
+                        >
+                          <Ionicons name="trash" size={20} color="#fff" />
+                          <Text style={styles.footerButtonText}>
+                            Remove Items ({this.state.selectedPackageItems.length})
+                          </Text>
+                        </TouchableOpacity>
+                      ) : (
+                        // Normal mode footer
+                        <>
+                          <TouchableOpacity
+                            style={[styles.footerButton, styles.packButton]}
+                            onPress={this.handlePackItems}
+                          >
+                            <Ionicons name="cube" size={20} color="#fff" />
+                            <Text style={styles.footerButtonText}>Pack Items</Text>
+                          </TouchableOpacity>
 
-                      <TouchableOpacity
-                        style={[styles.footerButton, styles.shipButton]}
-                        onPress={() => this.handleShipPackage({ name: selectedPackage, items: this.getItemsArray(selectedPackage) })}
-                      >
-                        <View style={styles.buttonInnerContainer}>
-                          <Ionicons name="airplane" size={20} color="#fff" />
-                          <View style={styles.buttonTextContainer}>
-                            <Text style={styles.buttonTextLine}>Shipping</Text>
-                            <Text style={styles.buttonTextLine}>Estimate</Text>
-                          </View>
-                        </View>
-                      </TouchableOpacity>
+                          <TouchableOpacity
+                            style={[styles.footerButton, styles.shipButton]}
+                            onPress={() => this.handleShipPackage({ name: selectedPackage, items: this.getItemsArray(selectedPackage) })}
+                          >
+                            <View style={styles.buttonInnerContainer}>
+                              <Ionicons name="airplane" size={20} color="#fff" />
+                              <View style={styles.buttonTextContainer}>
+                                <Text style={styles.buttonTextLine}>Shipping</Text>
+                                <Text style={styles.buttonTextLine}>Estimate</Text>
+                              </View>
+                            </View>
+                          </TouchableOpacity>
+                        </>
+                      )}
                     </View>
                   </View>
                 </TouchableWithoutFeedback>
@@ -2047,6 +2190,105 @@ export default class PackagesPage extends Component {
       // Reset bulk flag on error
       this.setState({ isBulkAddInProgress: false });
       Alert.alert("Error", "Failed to add items to the package.");
+    }
+  };
+
+  // Bulk selection methods for package items
+  enterPackageItemsBulkSelectionMode = (item) => {
+    this.setState({
+      packageItemsSelectionMode: true,
+      selectedPackageItems: [item]
+    });
+  };
+
+  exitPackageItemsBulkSelectionMode = () => {
+    this.setState({
+      packageItemsSelectionMode: false,
+      selectedPackageItems: []
+    });
+  };
+
+  togglePackageItemSelection = (item) => {
+    const { selectedPackageItems } = this.state;
+    const isSelected = selectedPackageItems.some(selected => selected.id === item.id);
+    
+    if (isSelected) {
+      // Remove from selection
+      this.setState({
+        selectedPackageItems: selectedPackageItems.filter(selected => selected.id !== item.id)
+      });
+    } else {
+      // Add to selection
+      this.setState({
+        selectedPackageItems: [...selectedPackageItems, item]
+      });
+    }
+  };
+
+  selectAllPackageItems = () => {
+    const { selectedPackage, packages } = this.state;
+    if (selectedPackage && packages[selectedPackage] && packages[selectedPackage].items) {
+      this.setState({
+        selectedPackageItems: [...packages[selectedPackage].items]
+      });
+    }
+  };
+
+  clearAllPackageItemsSelection = () => {
+    this.setState({ selectedPackageItems: [] });
+  };
+
+  bulkRemovePackageItems = async () => {
+    console.log('🗑️ BULK REMOVE - Starting bulk remove operation');
+    const { selectedPackageItems, selectedPackage } = this.state;
+    
+    if (selectedPackageItems.length === 0) {
+      Alert.alert("No Items Selected", "Please select at least one item to remove.");
+      return;
+    }
+
+    // Set bulk remove flag to suppress individual alerts
+    this.setState({ isBulkRemoveInProgress: true });
+
+    try {
+      const itemCount = selectedPackageItems.length;
+      let packageDeleted = false;
+      
+      // Remove each selected item using the existing handleDeleteItem method
+      for (const item of selectedPackageItems) {
+        await new Promise((resolve) => {
+          // Use handleDeleteItem with suppressAlert=true to avoid individual alerts
+          this.handleDeleteItem(item, true);
+          // Small delay to ensure state updates are processed
+          setTimeout(resolve, 50);
+        });
+      }
+      
+      // Check if package still exists after all deletions
+      const { packages } = this.state;
+      packageDeleted = !packages[selectedPackage];
+      
+      // Reset bulk selection state
+      this.setState({
+        packageItemsSelectionMode: false,
+        selectedPackageItems: [],
+        isBulkRemoveInProgress: false,
+        selectedPackage: packageDeleted ? null : selectedPackage,
+        showPackageModal: !packageDeleted
+      });
+      
+      // Show consolidated success message
+      if (packageDeleted) {
+        Alert.alert("Success", `${itemCount} item(s) removed. Package was empty and has been deleted.`);
+      } else {
+        Alert.alert("Success", `${itemCount} item(s) removed from ${selectedPackage}.`);
+      }
+      
+    } catch (error) {
+      console.error('Error bulk removing items:', error);
+      // Reset bulk flag on error
+      this.setState({ isBulkRemoveInProgress: false });
+      Alert.alert("Error", "Failed to remove items from the package.");
     }
   };
 
