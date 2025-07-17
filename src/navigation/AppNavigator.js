@@ -1,8 +1,9 @@
-import React from "react";
+import React, { useState, useEffect } from "react";
 import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
 import { createNativeStackNavigator } from "@react-navigation/native-stack";
 import { Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
 import { View, Text, Image, StyleSheet, TouchableOpacity, SafeAreaView } from "react-native";
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { DEV_BUILD_APP } from "../config/environment";
 
 
@@ -137,6 +138,42 @@ function BottomTabNavigator() {
 
 // Stack navigator to handle overall navigation, including Display3D
 function AppNavigator() {
+  const [isFirstTime, setIsFirstTime] = useState(null); // null = loading, true = first time, false = not first time
+
+  useEffect(() => {
+    checkFirstTimeUser();
+  }, []);
+
+  const checkFirstTimeUser = async () => {
+    try {
+      const hasOpenedBefore = await AsyncStorage.getItem('hasOpenedBefore');
+      if (hasOpenedBefore === null) {
+        // First time user
+        setIsFirstTime(true);
+      } else {
+        // Returning user
+        setIsFirstTime(false);
+      }
+    } catch (error) {
+      console.error('Error checking first time user:', error);
+      // Default to not first time on error
+      setIsFirstTime(false);
+    }
+  };
+
+  const markAsNotFirstTime = async () => {
+    try {
+      await AsyncStorage.setItem('hasOpenedBefore', 'true');
+      setIsFirstTime(false);
+    } catch (error) {
+      console.error('Error marking as not first time:', error);
+    }
+  };
+
+  // Show loading or nothing while checking
+  if (isFirstTime === null) {
+    return null; // or a loading screen
+  }
   const headerWithIcon = (iconName, title) => ({
     headerTitle: () => (
       <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'center' }}>
@@ -147,7 +184,30 @@ function AppNavigator() {
     headerRight: () => null, // Remove default right button
   });
 
-  const screens = [
+  const screens = [];
+
+  // Add GettingStartedPage as first screen for first-time users
+  if (isFirstTime) {
+    screens.push({
+      name: "Getting Started",
+      component: GettingStartedPage,
+      initialParams: { onComplete: markAsNotFirstTime },
+      options: {
+        headerTitle: () => (
+          <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'center' }}>
+            <Ionicons name="rocket-outline" size={24} color="#3B82F6" style={{ marginRight: 10 }} />
+            <Text style={{ color: '#64748B', fontSize: 18, fontWeight: '600' }}>Getting Started</Text>
+          </View>
+        ),
+        headerRight: () => null,
+        headerShown: true,
+        gestureEnabled: false, // Prevent swipe back on first screen
+      }
+    });
+  }
+
+  // Add main app screens
+  screens.push(
     {
       name: "Add Items",
       component: BottomTabNavigator,
@@ -250,19 +310,6 @@ function AppNavigator() {
         headerShown: true,
         gestureEnabled: true,
         headerBackTitle: "Help",
-      }
-    }
-  ];
-
-  // Add additional screens that are accessible via navigation but not in bottom tabs
-  screens.push(
-    {
-      name: "Getting Started",
-      component: GettingStartedPage,
-      options: {
-        ...headerWithIcon('rocket-outline', 'Getting Started'),
-        headerShown: true,
-        gestureEnabled: true,
       }
     }
   );

@@ -16,7 +16,8 @@ import {
 } from "@expo/vector-icons";
 import AppLink from "react-native-app-link";
 
-const GettingStartedPage = ({ navigation }) => {
+const GettingStartedPage = ({ navigation, route }) => {
+  const { onComplete } = route.params || {};
   // Function to handle opening the Measure app directly for iOS
   const openMeasureApp = () => {
     const measureAppUrl = "measure://"; // Replace with the correct deep link if known
@@ -184,7 +185,12 @@ const GettingStartedPage = ({ navigation }) => {
       <View style={styles.centeredButtonContainer}>
         <Button
           style={styles.proceedButton}
-          onPress={() => navigation.navigate("Create Package")}
+          onPress={() => {
+            if (onComplete) {
+              onComplete();
+            }
+            navigation.navigate("Add Items");
+          }}
         >
           <Text style={styles.proceedButtonText}>Let's Get Started</Text>
         </Button>

@@ -908,7 +908,7 @@ export default class PackagesPage extends Component {
                 </View>
                 <Text style={styles.emptyTitle}>No Saved Packages</Text>
                 <Text style={styles.emptyText}>
-                  Create and save packages to access them here for future shipments.
+                  Save packages to view shipping costs and 3D packing in optimal boxes.
                 </Text>
                 <TouchableOpacity 
                   style={styles.createPackageButton}
