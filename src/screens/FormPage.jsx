@@ -1253,8 +1253,11 @@ export default class FormPage extends Component {
                   onPress: () => {
                     console.log("FormPage - user chose Save Package");
                     this.isShowingNavigationDialog = false;
-                    // Open save modal immediately, user will navigate after saving
-                    this.setState({ showSavePackageModal: true });
+                    // Navigate back to FormPage and open save modal
+                    this.props.navigation.navigate('Create Package');
+                    setTimeout(() => {
+                      this.setState({ showSavePackageModal: true });
+                    }, 100);
                   }
                 }
               ],
