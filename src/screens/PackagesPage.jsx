@@ -1650,7 +1650,7 @@ export default class PackagesPage extends Component {
                               <Text style={{ fontSize: 18, fontWeight: '600', color: '#475569', marginTop: 16, textAlign: 'center' }}>
                                 No Saved Items Found
                               </Text>
-                              <Text style={{ fontSize: 15, color: '#64748B', marginTop: 8, textAlign: 'center', lineHeight: 22 }}>
+                              <Text style={{ fontSize: 15, color: '#64748B', marginTop: 8, marginBottom: 24, textAlign: 'center', lineHeight: 22 }}>
                                 Try a different search, or use the button below to find your item with AI Search.
                               </Text>
                             </View>
@@ -1659,17 +1659,17 @@ export default class PackagesPage extends Component {
                       })()}
                     </ScrollView>
 
-                    <View style={{ padding: 20, borderTopWidth: 1, borderTopColor: '#E2E8F0' }}>
+                    <View style={{ padding: 16, borderTopWidth: 1, borderTopColor: '#E2E8F0' }}>
                       <TouchableOpacity
                         style={{
                           backgroundColor: this.state.savedItemsSelectionMode ? '#22C55E' : '#3B82F6',
-                          paddingVertical: 16,
+                          paddingVertical: 14,
                           paddingHorizontal: 24,
                           borderRadius: 12,
                           alignItems: 'center',
-                          marginTop: 20,
-                          marginHorizontal: 20,
-                          marginBottom: 20,
+                          marginTop: 8,
+                          marginHorizontal: 0,
+                          marginBottom: 8,
                           opacity: this.state.savedItemsSelectionMode && this.state.selectedSavedItems.length === 0 ? 0.5 : 1,
                         }}
                         onPress={() => {
