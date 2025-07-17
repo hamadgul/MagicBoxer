@@ -1006,8 +1006,10 @@ export default class FormPage extends Component {
                 console.log("FormPage - user chose Discard");
                 // Clear items and continue with navigation
                 this.clearItems();
-                // Continue with navigation
-                this.props.navigation.dispatch(e.data.action);
+                // Continue with navigation using proper method
+                setTimeout(() => {
+                  this.props.navigation.dispatch(e.data.action);
+                }, 100);
               }
             },
             {
@@ -1210,8 +1212,10 @@ export default class FormPage extends Component {
         this.props.navigation.openDrawer();
       } else if (this.pendingNavigationAction) {
         console.log("FormPage - dispatching navigation action");
-        this.props.navigation.dispatch(this.pendingNavigationAction);
-        this.pendingNavigationAction = null;
+        setTimeout(() => {
+          this.props.navigation.dispatch(this.pendingNavigationAction);
+          this.pendingNavigationAction = null;
+        }, 100);
       }
       
       // Reset pending navigation
