@@ -1,10 +1,7 @@
 import axios from 'axios';
+import { CARRIER_CONFIG } from '../../config/environment.js';
 
-const UPS_CONFIG = {
-  clientId: 'reUV3PzybRlMT0iX9GQPnwlTKweX9Wytfzk3q5ZxiQQeWrLv',
-  clientSecret: 'hJmxM48BOykCR8xtXjffYQUKQIRqdxExG6o2vV0FlkD8GkuuFHjl7QIdaGHyAkYg',
-  baseURL: 'https://onlinetools.ups.com/api',
-};
+const UPS_CONFIG = CARRIER_CONFIG.UPS;
 
 export const getUPSAccessToken = async () => {
   try {
@@ -14,11 +11,11 @@ export const getUPSAccessToken = async () => {
       {
         headers: {
           'Content-Type': 'application/x-www-form-urlencoded',
-          'x-merchant-id': UPS_CONFIG.clientId,
+          'x-merchant-id': UPS_CONFIG.CLIENT_ID,
         },
         auth: {
-          username: UPS_CONFIG.clientId,
-          password: UPS_CONFIG.clientSecret,
+          username: UPS_CONFIG.CLIENT_ID,
+          password: UPS_CONFIG.CLIENT_SECRET,
         },
       }
     );
@@ -248,7 +245,7 @@ export const getUPSRates = async (packageDetails, fromZip, toZip) => {
       console.log(`UPS Request for ${service.Description} with ${isCarrierBox ? 'UPS Box' : 'Customer Box'} (PackagingType: ${actualPackagingType}):`, JSON.stringify(payload, null, 2));
 
       return axios.post(
-        `${UPS_CONFIG.baseURL}/rating/v1/rate`,
+        `${UPS_CONFIG.BASE_URL}/rating/v1/rate`,
         payload,
         {
           headers: {

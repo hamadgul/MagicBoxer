@@ -777,27 +777,44 @@ export default class FormPage extends Component {
     this.setState({ isBulkAddInProgress: true });
 
     try {
-      // Create new items from selected saved items
+      // Create new items from selected saved items with proper structure
       const newItems = selectedSavedItems.map(item => {
         const name = item.name || item.itemName || '';
         let length = '';
         let width = '';
         let height = '';
 
-        // Parse dimensions from saved item
+        // Parse dimensions from saved item - check multiple possible structures
         if (item.dimensions) {
           length = parseFloat(item.dimensions.length) || '';
           width = parseFloat(item.dimensions.width) || '';
           height = parseFloat(item.dimensions.height) || '';
+        } else if (item.itemLength && item.itemWidth && item.itemHeight) {
+          // Direct properties
+          length = parseFloat(item.itemLength) || '';
+          width = parseFloat(item.itemWidth) || '';
+          height = parseFloat(item.itemHeight) || '';
         }
 
+        const itemId = generateUUID();
+        const quantity = 1;
+        
+        // Create replicatedNames array (required for Test Pack functionality)
+        const replicatedNames = Array.from({ length: quantity }, (_, i) => ({
+          name: name,
+          id: generateUUID(),
+          parentId: itemId
+        }));
+
         return {
-          id: Date.now() + Math.random(), // Unique ID for each item
+          id: itemId,
           itemName: name,
-          itemLength: String(length),
-          itemWidth: String(width),
-          itemHeight: String(height),
-          quantity: 1
+          itemLength: length,  // Keep as number for packing algorithm
+          itemWidth: width,    // Keep as number for packing algorithm
+          itemHeight: height,  // Keep as number for packing algorithm
+          selectedCarrier: 'No Carrier',
+          quantity: quantity,
+          replicatedNames: replicatedNames, // This is crucial for Test Pack to work
         };
       });
 

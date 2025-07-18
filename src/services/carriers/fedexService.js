@@ -1,20 +1,17 @@
 import axios from 'axios';
+import { CARRIER_CONFIG } from '../../config/environment.js';
 
-const FEDEX_CONFIG = {
-  apiKey: 'l79b1b174bc2334477a883a08cdfdbdcae',
-  secretKey: 'a2b2e19da8f64c958cd858ff296185f9',
-  baseURL: 'https://apis-sandbox.fedex.com',
-};
+const FEDEX_CONFIG = CARRIER_CONFIG.FEDEX;
 
 export const getFedExAccessToken = async () => {
   try {
     const formData = new URLSearchParams();
     formData.append('grant_type', 'client_credentials');
-    formData.append('client_id', FEDEX_CONFIG.apiKey);
-    formData.append('client_secret', FEDEX_CONFIG.secretKey);
+    formData.append('client_id', FEDEX_CONFIG.API_KEY);
+    formData.append('client_secret', FEDEX_CONFIG.SECRET_KEY);
 
     const response = await axios.post(
-      `${FEDEX_CONFIG.baseURL}/oauth/token`,
+      `${FEDEX_CONFIG.BASE_URL}/oauth/token`,
       formData.toString(),
       {
         headers: {
@@ -112,7 +109,7 @@ export const calculateFedExRates = async (packageDetails, fromZip, toZip) => {
     // Create base request payload
     const createPayload = (packagingType, boxType = null) => ({
       accountNumber: {
-        value: "740561073"
+        value: FEDEX_CONFIG.ACCOUNT_NUMBER
       },
       requestedShipment: {
         shipper: {
@@ -178,7 +175,7 @@ export const calculateFedExRates = async (packageDetails, fromZip, toZip) => {
         console.log(`Making FedEx request for ${isCarrierBox ? 'carrier' : 'customer'} packaging...`);
         
         const response = await axios.post(
-          `${FEDEX_CONFIG.baseURL}/rate/v1/rates/quotes`,
+          `${FEDEX_CONFIG.BASE_URL}/rate/v1/rates/quotes`,
           payload,
           {
             headers: {

@@ -1,13 +1,7 @@
 import axios from 'axios';
+import { CARRIER_CONFIG } from '../../config/environment.js';
 
-const USPS_CONFIG = {
-  clientId: 's48Bvc4Ky0di0O5la1LHF8dcgdcBNqLV',
-  clientSecret: 'IupGg3UhoQt37R9A',
-  apiBaseUrl: 'https://apis.usps.com',
-  tokenEndpoint: '/oauth2/v3/token',
-  ratesEndpoint: '/prices/v3/base-rates/search',
-  dimDivisor: 166
-};
+const USPS_CONFIG = CARRIER_CONFIG.USPS;
 
 // USPS mail classes
 const USPS_MAIL_CLASSES = {
@@ -70,10 +64,10 @@ export const getUSPSAccessToken = async () => {
   try {
     console.log('Getting USPS access token...');
     const response = await axios.post(
-      `${USPS_CONFIG.apiBaseUrl}/oauth2/v3/token`,
+      `${USPS_CONFIG.API_BASE_URL}${USPS_CONFIG.TOKEN_ENDPOINT}`,
       {
-        client_id: USPS_CONFIG.clientId,
-        client_secret: USPS_CONFIG.clientSecret,
+        client_id: USPS_CONFIG.CLIENT_ID,
+        client_secret: USPS_CONFIG.CLIENT_SECRET,
         grant_type: 'client_credentials'
       },
       {
@@ -678,7 +672,7 @@ export const calculateUSPSRates = async (packageDetails, fromZip, toZip) => {
         try {
           // Make API call to get rates
           const response = await axios.post(
-            `${USPS_CONFIG.apiBaseUrl}${USPS_CONFIG.ratesEndpoint}`,
+            `${USPS_CONFIG.API_BASE_URL}${USPS_CONFIG.RATES_ENDPOINT}`,
             mailClassPayload,
             {
               headers: {
@@ -796,7 +790,7 @@ export const calculateUSPSRates = async (packageDetails, fromZip, toZip) => {
                 
                 // Make retry API call
                 const retryResponse = await axios.post(
-                  `${USPS_CONFIG.apiBaseUrl}${USPS_CONFIG.ratesEndpoint}`,
+                  `${USPS_CONFIG.API_BASE_URL}${USPS_CONFIG.RATES_ENDPOINT}`,
                   retryPayload,
                   {
                     headers: {
