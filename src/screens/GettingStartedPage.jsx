@@ -18,6 +18,15 @@ import AppLink from "react-native-app-link";
 
 const GettingStartedPage = ({ navigation, route }) => {
   const { onComplete } = route.params || {};
+  
+  const handleGetStarted = () => {
+    // Mark as not first time user
+    if (onComplete) {
+      onComplete();
+    }
+    // Navigate to main app
+    navigation.replace('Add Items');
+  };
   // Function to handle opening the Measure app directly for iOS
   const openMeasureApp = () => {
     const measureAppUrl = "measure://"; // Replace with the correct deep link if known
@@ -185,12 +194,7 @@ const GettingStartedPage = ({ navigation, route }) => {
       <View style={styles.centeredButtonContainer}>
         <Button
           style={styles.proceedButton}
-          onPress={() => {
-            if (onComplete) {
-              onComplete();
-            }
-            navigation.navigate("Add Items");
-          }}
+          onPress={handleGetStarted}
         >
           <Text style={styles.proceedButtonText}>Let's Get Started</Text>
         </Button>

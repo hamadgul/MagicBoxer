@@ -202,6 +202,7 @@ function AppNavigator() {
         headerRight: () => null,
         headerShown: true,
         gestureEnabled: false, // Prevent swipe back on first screen
+        headerLeft: () => null, // Remove back button completely
       }
     });
   }
@@ -212,7 +213,9 @@ function AppNavigator() {
       name: "Add Items",
       component: BottomTabNavigator,
       options: {
-        headerShown: false
+        headerShown: false,
+        gestureEnabled: false, // Prevent swipe back to GettingStartedPage
+        headerLeft: () => null, // Remove back button completely
       }
     },
     {
