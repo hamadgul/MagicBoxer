@@ -617,7 +617,10 @@ export default function ShipPackagePage({ route, navigation }) {
 
           <TouchableOpacity 
             style={styles.calculateButton}
-            onPress={handleGetEstimates}
+            onPress={() => {
+              Keyboard.dismiss();
+              handleGetEstimates();
+            }}
           >
             <Ionicons name="calculator-outline" size={20} color="#fff" style={styles.buttonIcon} />
             <Text style={styles.calculateButtonText}>

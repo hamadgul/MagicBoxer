@@ -703,8 +703,29 @@ export const calculateUSPSRates = async (packageDetails, fromZip, toZip) => {
                 case USPS_MAIL_CLASSES.GROUND_ADVANTAGE:
                   serviceName = 'USPS Ground Advantage';
                   break;
+                case USPS_MAIL_CLASSES.USPS_CONNECT_LOCAL:
+                  serviceName = 'USPS Connect Local';
+                  break;
+                case USPS_MAIL_CLASSES.USPS_CONNECT_REGIONAL:
+                  serviceName = 'USPS Connect Regional';
+                  break;
+                case USPS_MAIL_CLASSES.PARCEL_SELECT:
+                  serviceName = 'USPS Parcel Select';
+                  break;
+                case USPS_MAIL_CLASSES.MEDIA_MAIL:
+                  serviceName = 'USPS Media Mail';
+                  break;
+                case USPS_MAIL_CLASSES.LIBRARY_MAIL:
+                  serviceName = 'USPS Library Mail';
+                  break;
+                case USPS_MAIL_CLASSES.BOUND_PRINTED_MATTER:
+                  serviceName = 'USPS Bound Printed Matter';
+                  break;
                 default:
-                  serviceName = `USPS ${mailClass.replace(/_/g, ' ')}`;
+                  // For any other mail class, convert to sentence case
+                  const mailClassWords = mailClass.replace(/_/g, ' ').toLowerCase().split(' ');
+                  const formattedWords = mailClassWords.map(word => word.charAt(0).toUpperCase() + word.slice(1));
+                  serviceName = `USPS ${formattedWords.join(' ')}`;
               }
               
               // Determine estimated delivery days based on mail class
@@ -821,8 +842,29 @@ export const calculateUSPSRates = async (packageDetails, fromZip, toZip) => {
                       case USPS_MAIL_CLASSES.GROUND_ADVANTAGE:
                         serviceName = 'USPS Ground Advantage';
                         break;
+                      case USPS_MAIL_CLASSES.USPS_CONNECT_LOCAL:
+                        serviceName = 'USPS Connect Local';
+                        break;
+                      case USPS_MAIL_CLASSES.USPS_CONNECT_REGIONAL:
+                        serviceName = 'USPS Connect Regional';
+                        break;
+                      case USPS_MAIL_CLASSES.PARCEL_SELECT:
+                        serviceName = 'USPS Parcel Select';
+                        break;
+                      case USPS_MAIL_CLASSES.MEDIA_MAIL:
+                        serviceName = 'USPS Media Mail';
+                        break;
+                      case USPS_MAIL_CLASSES.LIBRARY_MAIL:
+                        serviceName = 'USPS Library Mail';
+                        break;
+                      case USPS_MAIL_CLASSES.BOUND_PRINTED_MATTER:
+                        serviceName = 'USPS Bound Printed Matter';
+                        break;
                       default:
-                        serviceName = `USPS ${mailClass.replace(/_/g, ' ')}`;
+                        // For any other mail class, convert to sentence case
+                        const mailClassWords = mailClass.replace(/_/g, ' ').toLowerCase().split(' ');
+                        const formattedWords = mailClassWords.map(word => word.charAt(0).toUpperCase() + word.slice(1));
+                        serviceName = `USPS ${formattedWords.join(' ')}`;
                     }
                     
                     // Use the same estimated days mapping as above
