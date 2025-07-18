@@ -963,6 +963,110 @@ export default class FormPage extends Component {
     });
   }
 
+  // Memoized calculation for input border styles to improve render performance
+  getInputBorderStyles = () => {
+    const { recentSavedItems, items, showRecentItems, itemName } = this.state;
+    
+    // Calculate available items (not already in container) - single calculation instead of 3 identical ones
+    const availableItems = recentSavedItems.filter(item => {
+      const name = item.itemName || item.name || '';
+      return !items.some(addedItem => (addedItem.itemName || '').toLowerCase() === name.toLowerCase());
+    });
+    
+    let shouldConnect = false;
+    
+    if (itemName.trim().length > 0) {
+      const searchText = itemName.toLowerCase().trim();
+      const hasMatchingItems = availableItems.some(item => {
+        const name = (item.itemName || item.name || '').toLowerCase();
+        return name.includes(searchText);
+      });
+      shouldConnect = showRecentItems && hasMatchingItems;
+    } else {
+      shouldConnect = showRecentItems && availableItems.length > 0;
+    }
+    
+    return {
+      borderBottomWidth: shouldConnect ? 0 : 1,
+      borderBottomLeftRadius: shouldConnect ? 0 : 8,
+      borderBottomRightRadius: shouldConnect ? 0 : 8
+    };
+  }
+
+  // Bound methods to replace inline functions and improve performance
+  handleDismissKeyboard = () => {
+    Keyboard.dismiss();
+    this.setState({ 
+      showSuggestions: false,
+      showRecentItems: false
+    });
+  }
+
+  handleShowNameTooltip = () => {
+    this.setState({ showNameTooltip: true });
+  }
+
+  handleHideNameTooltip = () => {
+    this.setState({ showNameTooltip: false });
+  }
+
+  handleShowLengthTooltip = () => {
+    this.setState({ showLengthTooltip: true });
+  }
+
+  handleHideLengthTooltip = () => {
+    this.setState({ showLengthTooltip: false });
+  }
+
+  handleShowWidthTooltip = () => {
+    this.setState({ showWidthTooltip: true });
+  }
+
+  handleHideWidthTooltip = () => {
+    this.setState({ showWidthTooltip: false });
+  }
+
+  handleShowHeightTooltip = () => {
+    this.setState({ showHeightTooltip: true });
+  }
+
+  handleHideHeightTooltip = () => {
+    this.setState({ showHeightTooltip: false });
+  }
+
+  handleShowDimensionsTooltip = () => {
+    this.setState({ showDimensionsTooltip: true });
+  }
+
+  handleHideDimensionsTooltip = () => {
+    this.setState({ showDimensionsTooltip: false });
+  }
+
+  handleNameInputFocus = () => {
+    if (!this.state.itemName.trim()) {
+      this.setState({ 
+        showRecentItems: true,
+        showSuggestions: false
+      });
+    }
+  }
+
+  handleNavigateToAISearch = () => {
+    console.log("FormPage - AI Search: setting isInternalNavigation = true");
+    this.isInternalNavigation = true;
+    
+    this.props.navigation.navigate('AI Item Search', { 
+      searchQuery: this.state.itemName,
+      fromFormPage: true
+    });
+    
+    // Reset flag after navigation
+    setTimeout(() => {
+      console.log("FormPage - AI Search: resetting isInternalNavigation = false");
+      this.isInternalNavigation = false;
+    }, 300);
+  }
+
   shouldComponentUpdate(nextProps, nextState) {
     // Only update if these state values change
     const relevantStateKeys = [
@@ -2175,6 +2279,9 @@ export default class FormPage extends Component {
 
   
   render() {
+    // Pre-calculate styles to improve performance
+    const inputBorderStyles = this.getInputBorderStyles();
+    
     return (
       <KeyboardAvoidingView
         behavior={Platform.OS === "ios" ? "padding" : "height"}
@@ -2185,20 +2292,14 @@ export default class FormPage extends Component {
             contentContainerStyle={{ flexGrow: 1 }}
             keyboardShouldPersistTaps="handled"
           >
-            <TouchableWithoutFeedback onPress={() => {
-              Keyboard.dismiss();
-              this.setState({ 
-                showSuggestions: false,
-                showRecentItems: false
-              });
-            }}>
+            <TouchableWithoutFeedback onPress={this.handleDismissKeyboard}>
               <View style={styles.container}>
                 <View style={styles.formContainer}>
                 <VStack space={2} width="100%">
                     <View style={tooltipContainerStyle}>
                       <Text style={styles.label}>Name</Text>
                       <TouchableOpacity 
-                        onPress={() => this.setState({ showNameTooltip: true })}
+                        onPress={this.handleShowNameTooltip}
                         style={tooltipIconStyle}
                       >
                         <Ionicons name="information-circle-outline" size={16} color="#007AFF" />
@@ -2216,85 +2317,13 @@ export default class FormPage extends Component {
                             flex: 1, 
                             paddingRight: 45, // Space for the icon
                             paddingVertical: 8, // Adjusted vertical padding
-                            borderBottomWidth: (() => {
-                              const { recentSavedItems, items, showRecentItems, itemName } = this.state;
-                              // First check if there are any available items (not already in container)
-                              let availableItems = recentSavedItems.filter(item => {
-                                const name = item.itemName || item.name || '';
-                                return !items.some(addedItem => (addedItem.itemName || '').toLowerCase() === name.toLowerCase());
-                              });
-                              
-                              // Then check if any of those match the current search text
-                              if (itemName.trim().length > 0) {
-                                const searchText = itemName.toLowerCase().trim();
-                                const hasMatchingItems = availableItems.some(item => {
-                                  const name = (item.itemName || item.name || '').toLowerCase();
-                                  return name.includes(searchText);
-                                });
-                                // Only connect if we have actual matching items
-                                return showRecentItems && hasMatchingItems ? 0 : 1;
-                              }
-                              
-                              // If no search text, connect if we have any available items
-                              return showRecentItems && availableItems.length > 0 ? 0 : 1;
-                            })(),
-                            borderBottomLeftRadius: (() => {
-                              const { recentSavedItems, items, showRecentItems, itemName } = this.state;
-                              // First check if there are any available items (not already in container)
-                              let availableItems = recentSavedItems.filter(item => {
-                                const name = item.itemName || item.name || '';
-                                return !items.some(addedItem => (addedItem.itemName || '').toLowerCase() === name.toLowerCase());
-                              });
-                              
-                              // Then check if any of those match the current search text
-                              if (itemName.trim().length > 0) {
-                                const searchText = itemName.toLowerCase().trim();
-                                const hasMatchingItems = availableItems.some(item => {
-                                  const name = (item.itemName || item.name || '').toLowerCase();
-                                  return name.includes(searchText);
-                                });
-                                // Only connect if we have actual matching items
-                                return showRecentItems && hasMatchingItems ? 0 : 8;
-                              }
-                              
-                              // If no search text, connect if we have any available items
-                              return showRecentItems && availableItems.length > 0 ? 0 : 8;
-                            })(),
-                            borderBottomRightRadius: (() => {
-                              const { recentSavedItems, items, showRecentItems, itemName } = this.state;
-                              // First check if there are any available items (not already in container)
-                              let availableItems = recentSavedItems.filter(item => {
-                                const name = item.itemName || item.name || '';
-                                return !items.some(addedItem => (addedItem.itemName || '').toLowerCase() === name.toLowerCase());
-                              });
-                              
-                              // Then check if any of those match the current search text
-                              if (itemName.trim().length > 0) {
-                                const searchText = itemName.toLowerCase().trim();
-                                const hasMatchingItems = availableItems.some(item => {
-                                  const name = (item.itemName || item.name || '').toLowerCase();
-                                  return name.includes(searchText);
-                                });
-                                // Only connect if we have actual matching items
-                                return showRecentItems && hasMatchingItems ? 0 : 8;
-                              }
-                              
-                              // If no search text, connect if we have any available items
-                              return showRecentItems && availableItems.length > 0 ? 0 : 8;
-                            })(),
+                            ...inputBorderStyles, // Use pre-calculated styles
                             borderBottomColor: '#E2E8F0',
                             marginBottom: 0
                           }]}
                           value={this.state.itemName}
                           onChangeText={this.handleChange}
-                          onFocus={() => {
-                            if (!this.state.itemName.trim()) {
-                              this.setState({ 
-                                showRecentItems: true,
-                                showSuggestions: false
-                              });
-                            }
-                          }}
+                          onFocus={this.handleNameInputFocus}
                           maxLength={50}
                           placeholder=""
                           placeholderTextColor={"#94A3B8"}
@@ -2309,13 +2338,7 @@ export default class FormPage extends Component {
                             justifyContent: 'center',
                             paddingHorizontal: 16,
                           }}
-                          onPress={() => {
-                            // Navigate directly to AI Item Search page with the current name input
-                            this.props.navigation.navigate('AI Item Search', { 
-                              searchQuery: this.state.itemName,
-                              fromFormPage: true // Flag to indicate navigation from FormPage
-                            });
-                          }}
+                          onPress={this.handleNavigateToAISearch}
                           activeOpacity={0.6}
                         >
                           <View style={{
