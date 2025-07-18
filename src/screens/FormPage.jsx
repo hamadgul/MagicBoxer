@@ -1067,6 +1067,41 @@ export default class FormPage extends Component {
     }, 300);
   }
 
+  handleQuantityDecrease = () => {
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    const currentQuantity = parseInt(this.state.quantity) || 0;
+    if (currentQuantity > 1) {
+      this.setState({ quantity: currentQuantity - 1 });
+    }
+  }
+
+  handleQuantityIncrease = () => {
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    const currentQuantity = parseInt(this.state.quantity) || 0;
+    this.setState({ quantity: currentQuantity + 1 });
+  }
+
+  handleClearItems = () => {
+    this.setState({ items: [] });
+  }
+
+  handleSavePackage = () => {
+    this.setState({ showSavePackageModal: true });
+  }
+
+  handleShowAllSavedItems = () => {
+    this.showAllSavedItemsModal();
+  }
+
+  handleSubmitWithHaptics = () => {
+    this.handleSubmit();
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+  }
+
+  handleTestPack = () => {
+    this.handleVisualize();
+  }
+
   shouldComponentUpdate(nextProps, nextState) {
     // Only update if these state values change
     const relevantStateKeys = [
@@ -2474,7 +2509,7 @@ export default class FormPage extends Component {
                       <View style={tooltipContainerStyle}>
                         <Text style={styles.label}>Length</Text>
                         <TouchableOpacity 
-                          onPress={() => this.setState({ showLengthTooltip: true })}
+                          onPress={this.handleShowLengthTooltip}
                           style={tooltipIconStyle}
                         >
                           <Ionicons name="information-circle-outline" size={16} color="#007AFF" />
@@ -2511,7 +2546,7 @@ export default class FormPage extends Component {
                       <View style={tooltipContainerStyle}>
                         <Text style={styles.label}>Width</Text>
                         <TouchableOpacity 
-                          onPress={() => this.setState({ showWidthTooltip: true })}
+                          onPress={this.handleShowWidthTooltip}
                           style={tooltipIconStyle}
                         >
                           <Ionicons name="information-circle-outline" size={16} color="#007AFF" />
@@ -2548,7 +2583,7 @@ export default class FormPage extends Component {
                       <View style={tooltipContainerStyle}>
                         <Text style={styles.label}>Height</Text>
                         <TouchableOpacity 
-                          onPress={() => this.setState({ showHeightTooltip: true })}
+                          onPress={this.handleShowHeightTooltip}
                           style={tooltipIconStyle}
                         >
                           <Ionicons name="information-circle-outline" size={16} color="#007AFF" />
@@ -2599,13 +2634,7 @@ export default class FormPage extends Component {
                             alignItems: 'center',
                             marginRight: 8,
                           }}
-                          onPress={() => {
-                            Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-                            const currentQuantity = parseInt(this.state.quantity) || 0;
-                            if (currentQuantity > 1) {
-                              this.setState({ quantity: currentQuantity - 1 });
-                            }
-                          }}
+                          onPress={this.handleQuantityDecrease}
                         >
                           <Text style={{ fontSize: 20, color: '#64748B', fontWeight: '500' }}>−</Text>
                         </TouchableOpacity>
@@ -2641,11 +2670,7 @@ export default class FormPage extends Component {
                             alignItems: 'center',
                             marginLeft: 8,
                           }}
-                          onPress={() => {
-                            Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-                            const currentQuantity = parseInt(this.state.quantity) || 0;
-                            this.setState({ quantity: currentQuantity + 1 });
-                          }}
+                          onPress={this.handleQuantityIncrease}
                         >
                           <Text style={{ fontSize: 20, color: '#64748B', fontWeight: '500' }}>+</Text>
                         </TouchableOpacity>
@@ -2654,10 +2679,7 @@ export default class FormPage extends Component {
                     <TouchableOpacity
                       activeOpacity={0.7}
                       style={styles.submitButton}
-                      onPress={() => {
-                        this.handleSubmit();
-                        Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
-                      }}
+                      onPress={this.handleSubmitWithHaptics}
                     >
                       <View style={{flexDirection: 'row', alignItems: 'center', justifyContent: 'center'}}>
                         <Text style={[styles.buttonText, { color: '#FFFFFF', fontWeight: '600' }]}>Add item</Text>
@@ -3088,7 +3110,7 @@ export default class FormPage extends Component {
                 visible={this.state.showNameTooltip || false}
                 onRequestClose={() => this.setState({ showNameTooltip: false })}
               >
-                <TouchableWithoutFeedback onPress={() => this.setState({ showNameTooltip: false })}>
+                <TouchableWithoutFeedback onPress={this.handleHideNameTooltip}>
                   <View style={tooltipModalStyles.overlay}>
                     <TouchableWithoutFeedback>
                       <View style={tooltipModalStyles.container}>
@@ -3118,7 +3140,7 @@ export default class FormPage extends Component {
                         
                         <TouchableOpacity
                           style={tooltipModalStyles.button}
-                          onPress={() => this.setState({ showNameTooltip: false })}
+                          onPress={this.handleHideNameTooltip}
                         >
                           <Text style={tooltipModalStyles.buttonText}>Got it</Text>
                         </TouchableOpacity>
@@ -3135,7 +3157,7 @@ export default class FormPage extends Component {
                 visible={this.state.showLengthTooltip || false}
                 onRequestClose={() => this.setState({ showLengthTooltip: false })}
               >
-                <TouchableWithoutFeedback onPress={() => this.setState({ showLengthTooltip: false })}>
+                <TouchableWithoutFeedback onPress={this.handleHideLengthTooltip}>
                   <View style={tooltipModalStyles.overlay}>
                     <TouchableWithoutFeedback>
                       <View style={tooltipModalStyles.container}>
@@ -3159,7 +3181,7 @@ export default class FormPage extends Component {
                         
                         <TouchableOpacity
                           style={tooltipModalStyles.button}
-                          onPress={() => this.setState({ showLengthTooltip: false })}
+                          onPress={this.handleHideLengthTooltip}
                         >
                           <Text style={tooltipModalStyles.buttonText}>Got it</Text>
                         </TouchableOpacity>
