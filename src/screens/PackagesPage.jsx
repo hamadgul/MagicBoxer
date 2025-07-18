@@ -232,6 +232,69 @@ export default class PackagesPage extends Component {
     this.tempPackageName = null;
   }
 
+  // Bound methods for performance optimization
+  handleTouchablePress = () => {
+    if (this.state.isEditMode) {
+      this.setState({ isEditMode: false, editingPackage: null });
+    }
+    // Close the FAB menu if it's open when tapping outside
+    if (this.state.isFabMenuOpen) {
+      this.toggleFabMenu();
+    }
+  };
+
+  handleSearchQueryChange = (text) => {
+    this.setState({ searchQuery: text });
+  };
+
+  handleClearSearch = () => {
+    this.setState({ searchQuery: "" });
+  };
+
+  handleNavigateToCreatePackage = () => {
+    this.props.navigation.navigate('Create Package');
+  };
+
+  handleCloseOptionsModal = () => {
+    this.setState({ showOptionsModal: false });
+  };
+
+  handleShowRenameModal = () => {
+    this.setState({
+      showOptionsModal: false,
+      renamePackageModal: true,
+    });
+  };
+
+  handleShowDeleteConfirmModal = () => {
+    if (this.state.selectedPackages.length > 0) {
+      this.setState({ showDeleteConfirmModal: true });
+    } else {
+      Alert.alert("No Packages Selected", "Please select at least one package to delete.");
+    }
+  };
+
+  // Memoized method to get filtered packages and avoid repeated calculations
+  getFilteredPackagesData = () => {
+    const { searchQuery, packages } = this.state;
+    const trimmedQuery = searchQuery.trim();
+    
+    if (trimmedQuery === "") {
+      return {
+        filteredPackages: packages,
+        packageCount: Object.keys(packages).length,
+        hasSearchQuery: false
+      };
+    }
+    
+    const filteredPackages = this.getFilteredPackages();
+    return {
+      filteredPackages,
+      packageCount: Object.keys(filteredPackages).length,
+      hasSearchQuery: true
+    };
+  };
+
   fetchPackages = async () => {
     try {
       const packagesString = await AsyncStorage.getItem("packages");
@@ -1186,18 +1249,11 @@ export default class PackagesPage extends Component {
       savedItemsSearchQuery
     } = this.state;
 
+    // Pre-calculate filtered packages data to avoid repeated calculations
+    const filteredPackagesData = this.getFilteredPackagesData();
+
     return (
-      <TouchableWithoutFeedback 
-        onPress={() => {
-          if (isEditMode) {
-            this.setState({ isEditMode: false, editingPackage: null });
-          }
-          // Close the FAB menu if it's open when tapping outside
-          if (this.state.isFabMenuOpen) {
-            this.toggleFabMenu();
-          }
-        }}
-      >
+      <TouchableWithoutFeedback onPress={this.handleTouchablePress}>
         <View style={styles.container}>
           {/* Search bar */}
           {Object.keys(packages).length > 0 && (
@@ -1209,7 +1265,7 @@ export default class PackagesPage extends Component {
                   placeholder="Search packages by name..."
                   placeholderTextColor="#94A3B8"
                   value={this.state.searchQuery}
-                  onChangeText={(text) => this.setState({ searchQuery: text })}
+                  onChangeText={this.handleSearchQueryChange}
                   clearButtonMode={Platform.OS === 'ios' ? 'never' : 'while-editing'}
                   returnKeyType="search"
                   autoCapitalize="none"
@@ -1217,7 +1273,7 @@ export default class PackagesPage extends Component {
                 />
                 {this.state.searchQuery ? (
                   <TouchableOpacity 
-                    onPress={() => this.setState({ searchQuery: "" })}
+                    onPress={this.handleClearSearch}
                     style={styles.clearButton}
                     hitSlop={{ top: 10, right: 10, bottom: 10, left: 10 }}
                   >
@@ -1227,9 +1283,9 @@ export default class PackagesPage extends Component {
               </View>
               
               {/* Search results count */}
-              {this.state.searchQuery.trim() !== "" && (
+              {filteredPackagesData.hasSearchQuery && (
                 <Text style={styles.searchResultsCount}>
-                  {Object.keys(this.getFilteredPackages()).length} {Object.keys(this.getFilteredPackages()).length === 1 ? "package" : "packages"} found
+                  {filteredPackagesData.packageCount} {filteredPackagesData.packageCount === 1 ? "package" : "packages"} found
                 </Text>
               )}
             </View>
@@ -1271,13 +1327,7 @@ export default class PackagesPage extends Component {
                     minWidth: 80,
                     opacity: this.state.selectedPackages.length === 0 ? 0.5 : 1
                   }}
-                  onPress={() => {
-                    if (this.state.selectedPackages.length > 0) {
-                      this.setState({ showDeleteConfirmModal: true });
-                    } else {
-                      Alert.alert("No Packages Selected", "Please select at least one package to delete.");
-                    }
-                  }}
+                  onPress={this.handleShowDeleteConfirmModal}
                   disabled={this.state.selectedPackages.length === 0}
                 >
                   <Text style={styles.deleteButtonText}>Delete</Text>
@@ -1301,12 +1351,12 @@ export default class PackagesPage extends Component {
                 </Text>
                 <TouchableOpacity 
                   style={styles.createPackageButton}
-                  onPress={() => this.props.navigation.navigate('Create Package')}
+                  onPress={this.handleNavigateToCreatePackage}
                 >
                   <Text style={styles.createPackageButtonText}>Create Package</Text>
                 </TouchableOpacity>
               </View>
-            ) : this.state.searchQuery.trim() !== "" && Object.keys(this.getFilteredPackages()).length === 0 ? (
+            ) : filteredPackagesData.hasSearchQuery && filteredPackagesData.packageCount === 0 ? (
               <View style={styles.emptySearchContainer}>
                 <Ionicons name="search" size={50} color="#CBD5E1" />
                 <Text style={styles.emptySearchTitle}>No Matching Packages</Text>
@@ -1315,7 +1365,7 @@ export default class PackagesPage extends Component {
                 </Text>
               </View>
             ) : (
-              Object.keys(this.state.searchQuery.trim() !== "" ? this.getFilteredPackages() : packages).reverse().map(this.renderPackage)
+              Object.keys(filteredPackagesData.filteredPackages).reverse().map(this.renderPackage)
             )}
           </ScrollView>
 
@@ -1324,23 +1374,18 @@ export default class PackagesPage extends Component {
             visible={showOptionsModal}
             transparent={true}
             animationType="fade"
-            onRequestClose={() => this.setState({ showOptionsModal: false })}
+            onRequestClose={this.handleCloseOptionsModal}
           >
             {/* Touchable outside the modal content to close it */}
             <TouchableOpacity
               style={styles.modalOverlay}
               activeOpacity={1}
-              onPress={() => this.setState({ showOptionsModal: false })}
+              onPress={this.handleCloseOptionsModal}
             >
               <View style={styles.modalContent}>
                 <TouchableOpacity
                   style={styles.optionButton}
-                  onPress={() =>
-                    this.setState({
-                      showOptionsModal: false,
-                      renamePackageModal: true,
-                    })
-                  }
+                  onPress={this.handleShowRenameModal}
                 >
                   <Text style={styles.optionText}>Rename Package</Text>
                 </TouchableOpacity>
