@@ -3444,7 +3444,7 @@ const styles = StyleSheet.create({
   menuButtonIcon: {
     width: 32,
     height: 32,
-    borderRadius: 16,
+    borderRadius: 20,
     justifyContent: 'center',
     alignItems: 'center',
     marginRight: 8,
