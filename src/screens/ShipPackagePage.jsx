@@ -226,10 +226,17 @@ export default function ShipPackagePage({ route, navigation }) {
     let boxTypeLabel = 'Customer Box';
     
     // Check if this estimate has both packaging options available
-    const hasBothOptions = item.bothPackagingOptions === true;
+    // For USPS Priority Mail and Priority Mail Express, always show both packaging options
+    let hasBothOptions = item.bothPackagingOptions === true;
+    
+    // Special handling for USPS Priority Mail and Priority Mail Express
+    if (item.carrier === 'USPS' && 
+        (item.service === 'USPS Priority Mail' || item.service === 'USPS Priority Mail Express')) {
+      hasBothOptions = true;
+    }
     
     // Debug log to check if bothPackagingOptions is being set correctly
-    if (item.bothPackagingOptions) {
+    if (hasBothOptions) {
       console.log(`Found item with both packaging options: ${item.carrier} ${item.service}`);
     }
 
@@ -279,24 +286,32 @@ export default function ShipPackagePage({ route, navigation }) {
     }
 
     // For consolidated estimates with both options, get the carrier box type
-    if (hasBothOptions && item.carrierBoxType) {
+    if (hasBothOptions) {
       // Format carrier box type for display
-      let carrierBoxTypeDisplay = item.carrierBoxType;
+      let carrierBoxTypeDisplay;
       
-      if (item.carrier === 'FedEx') {
+      if (item.carrier === 'FedEx' && item.carrierBoxType) {
         if (item.carrierBoxType === 'FEDEX_SMALL_BOX') carrierBoxTypeDisplay = 'FedEx Small Box';
         else if (item.carrierBoxType === 'FEDEX_MEDIUM_BOX') carrierBoxTypeDisplay = 'FedEx Medium Box';
         else if (item.carrierBoxType === 'FEDEX_LARGE_BOX') carrierBoxTypeDisplay = 'FedEx Large Box';
         else if (item.carrierBoxType === 'FEDEX_EXTRA_LARGE_BOX') carrierBoxTypeDisplay = 'FedEx Extra Large Box';
-      } else if (item.carrier === 'UPS') {
+        else carrierBoxTypeDisplay = item.carrierBoxType;
+      } else if (item.carrier === 'UPS' && item.carrierBoxType) {
         if (item.carrierBoxType === '21') carrierBoxTypeDisplay = 'UPS Express Box - Small';
         else if (item.carrierBoxType === '22') carrierBoxTypeDisplay = 'UPS Express Box - Medium';
         else if (item.carrierBoxType === '23') carrierBoxTypeDisplay = 'UPS Express Box - Large';
         else if (item.carrierBoxType === '24') carrierBoxTypeDisplay = 'UPS Express Box';
         else if (item.carrierBoxType === '25') carrierBoxTypeDisplay = 'UPS Express Tube';
+        else carrierBoxTypeDisplay = item.carrierBoxType;
+      } else if (item.carrier === 'USPS') {
+        // For USPS Priority Mail and Priority Mail Express, show USPS Box option
+        carrierBoxTypeDisplay = 'USPS Box';
       }
       
-      boxTypeLabel = `Options: Your box or ${carrierBoxTypeDisplay}`;
+      // Only set the options label if we have a carrier box type to display
+      if (carrierBoxTypeDisplay) {
+        boxTypeLabel = `Options: Your box or ${carrierBoxTypeDisplay}`;
+      }
     }
 
     return (
@@ -358,43 +373,9 @@ export default function ShipPackagePage({ route, navigation }) {
             <Text style={[styles.boxTypeText, hasBothOptions && styles.bothOptionsText]}>{boxTypeLabel}</Text>
           </View>
           
-          {/* Show savings information for all estimates with both packaging options */}
-          {item.bothPackagingOptions && (
-            <TouchableOpacity 
-              style={styles.savingsTag}
-              onPress={() => {
-                Alert.alert(
-                  'Packaging Options Comparison',
-                  `Using carrier-provided packaging typically saves 10-15% compared to your own packaging. Carrier boxes are pre-approved for their services and may qualify for special rates. Actual savings may vary by service and destination.`,
-                  [{ text: 'Got it', style: 'default' }]
-                );
-              }}
-            >
-              <Text style={styles.savingsText}>
-                Save $3-$5
-              </Text>
-              <Ionicons name="information-circle" size={12} color="white" style={{marginLeft: 2}} />
-            </TouchableOpacity>
-          )}
+          {/* Savings label removed as requested */}
           
-          {/* Show traditional savings message for non-consolidated carrier box estimates */}
-          {!hasBothOptions && isCarrierBox && (
-            <TouchableOpacity 
-              style={styles.savingsTag}
-              onPress={() => {
-                Alert.alert(
-                  'Carrier Box Savings',
-                  'Using carrier-provided packaging typically saves 10-15% compared to your own packaging. Carrier boxes are pre-approved for their services and may qualify for special rates. Actual savings may vary by service and destination.',
-                  [{ text: 'Got it', style: 'default' }]
-                );
-              }}
-            >
-              <Text style={styles.savingsText}>
-                Save ${Math.round(item.price * 0.10)}-${Math.round(item.price * 0.15)}
-              </Text>
-              <Ionicons name="information-circle" size={12} color="white" style={{marginLeft: 2}} />
-            </TouchableOpacity>
-          )}
+          {/* Traditional savings message removed as requested */}
           
           <View style={styles.boxInfoItem}>
             <Ionicons name="cube-outline" size={16} color="#64748B" />
