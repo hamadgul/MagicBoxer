@@ -773,6 +773,15 @@ export default class SavedItemsPage extends Component {
           <TouchableOpacity
             style={[styles.item, isSelected && selectionMode && styles.selectedItem]}
             onPress={() => selectionMode ? this.toggleItemSelection(item.id) : this.openEditModal(item)}
+            onLongPress={() => {
+              if (!selectionMode) {
+                // Enter bulk selection mode and select this item
+                this.setState({
+                  selectionMode: true,
+                  selectedItems: [item.id]
+                });
+              }
+            }}
           >
             <View style={styles.itemLeftContent}>
               {selectionMode ? (
