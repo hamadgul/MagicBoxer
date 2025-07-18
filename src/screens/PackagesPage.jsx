@@ -1984,27 +1984,13 @@ export default class PackagesPage extends Component {
                                     </View>
                                   </View>
                                 </View>
-                                {this.state.savedItemsSelectionMode ? (
+                                {/* Right-side indicator - only show when NOT in bulk selection mode */}
+                                {!this.state.savedItemsSelectionMode && (
                                   alreadyAdded ? (
-                                    <View style={{ padding: 4 }}>
-                                      <Ionicons name="checkmark-circle" size={20} color="#94A3B8" />
-                                    </View>
+                                    <Ionicons name="checkmark-circle" size={24} color="#22C55E" />
                                   ) : (
-                                    <TouchableOpacity
-                                      onPress={() => this.toggleSavedItemSelection(item)}
-                                      style={{ padding: 4 }}
-                                    >
-                                      <Ionicons 
-                                        name={isSelected ? "checkbox" : "square-outline"} 
-                                        size={20} 
-                                        color={isSelected ? "#3B82F6" : "#94A3B8"}
-                                      />
-                                    </TouchableOpacity>
+                                    <Text style={{ color: '#3B82F6', fontSize: 24 }}>↵</Text>
                                   )
-                                ) : alreadyAdded ? (
-                                  <Ionicons name="checkmark-circle" size={24} color="#22C55E" />
-                                ) : (
-                                  <Text style={{ color: '#3B82F6', fontSize: 24 }}>↵</Text>
                                 )}
                               </TouchableOpacity>
                             );
