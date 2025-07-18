@@ -2151,7 +2151,7 @@ export default class PackagesPage extends Component {
               <View style={[styles.menuButtonIcon, { backgroundColor: '#3B82F6' }]}>
                 <Ionicons name="cube-outline" size={20} color="white" />
               </View>
-              <Text style={styles.menuButtonText}>Create Package</Text>
+              <Text style={styles.menuButtonText}>Create</Text>
             </TouchableOpacity>
           </Animated.View>
           
@@ -2176,7 +2176,7 @@ export default class PackagesPage extends Component {
               <View style={[styles.menuButtonIcon, { backgroundColor: '#10B981' }]}>
                 <Ionicons name="cloud-upload-outline" size={20} color="white" />
               </View>
-              <Text style={styles.menuButtonText}>Import Package</Text>
+              <Text style={styles.menuButtonText}>Import CSV</Text>
             </TouchableOpacity>
           </Animated.View>
           
@@ -2210,9 +2210,7 @@ export default class PackagesPage extends Component {
                       </View>
                     ) : (
                       <>
-                        <Text style={styles.modalSubtitle}>
-                          Import a package from a CSV file. The CSV should contain columns for: name, length, width, height, and quantity.
-                        </Text>
+
                         
                         <Text style={styles.modalSubtitle}>
                           {this.state.importPreview.length > 0 
@@ -2307,6 +2305,7 @@ export default class PackagesPage extends Component {
                       <TextInput
                         style={modalStyles.fieldInput}
                         placeholder="Enter package name"
+                        placeholderTextColor="#9CA3AF"
                         value={this.state.newImportedPackageName}
                         onChangeText={(text) => this.setState({ newImportedPackageName: text })}
                         autoFocus={true}
@@ -3332,9 +3331,9 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     backgroundColor: 'white',
     paddingVertical: 12,
-    paddingHorizontal: 16,
+    paddingHorizontal: 12,
     borderRadius: 25,
-    minWidth: 160,
+    width: 140,
     ...(Platform.OS === 'ios' ? {
       shadowColor: '#000',
       shadowOffset: { width: 0, height: 2 },
@@ -3350,7 +3349,7 @@ const styles = StyleSheet.create({
     borderRadius: 16,
     justifyContent: 'center',
     alignItems: 'center',
-    marginRight: 12,
+    marginRight: 8,
   },
   menuButtonText: {
     fontSize: 14,
@@ -3473,14 +3472,14 @@ const styles = StyleSheet.create({
     opacity: 0.7,
   },
   modalCancelButtonText: {
-    color: '#64748B',
+    color: '#007AFF',
     fontWeight: '600',
-    fontSize: 14,
+    fontSize: 17,
   },
   importButtonText: {
     color: 'white',
     fontWeight: '600',
-    fontSize: 14,
+    fontSize: 17,
   },
   fileButtonsContainer: {
     width: '100%',

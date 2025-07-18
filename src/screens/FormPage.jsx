@@ -2365,28 +2365,24 @@ export default class FormPage extends Component {
                             shadowRadius: 3,
                             elevation: 2,
                           }}>
-                             <TouchableOpacity
-                               onPress={this.showAllSavedItemsModal}
-                               style={{
-                                 paddingHorizontal: 6,
-                                 paddingVertical: 3,
-                                 marginRight: 8,
-                                 borderRadius: 6,
-                                 backgroundColor: Platform.OS === 'ios' ? 'rgba(0, 122, 255, 0.08)' : 'rgba(0, 102, 255, 0.08)',
-                                 borderWidth: 1,
-                                 borderColor: Platform.OS === 'ios' ? 'rgba(0, 122, 255, 0.2)' : 'rgba(0, 102, 255, 0.2)',
-                               }}
-                               activeOpacity={0.7}
-                             >
-                               <Text style={{ 
-                                 fontSize: 13, 
-                                 fontWeight: '600', 
-                                 color: Platform.OS === 'ios' ? '#007AFF' : '#0066FF',
-                                 letterSpacing: -0.08
-                               }}>
-                                 Saved:
-                               </Text>
-                             </TouchableOpacity>
+                              <TouchableOpacity
+                                onPress={() => this.showAllSavedItemsModal()}
+                                style={{
+                                  paddingHorizontal: 4,
+                                  paddingVertical: 6,
+                                  marginRight: 8,
+                                }}
+                                activeOpacity={0.6}
+                              >
+                                <Text style={{ 
+                                  fontSize: 13, 
+                                  fontWeight: '500', 
+                                  color: Platform.OS === 'ios' ? '#007AFF' : '#0066FF',
+                                  letterSpacing: -0.08
+                                }}>
+                                  Saved:
+                                </Text>
+                              </TouchableOpacity>
                             <View style={{ flex: 1 }}>
                               <ScrollView
                                 horizontal
