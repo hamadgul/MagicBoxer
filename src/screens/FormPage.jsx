@@ -1086,7 +1086,8 @@ export default class FormPage extends Component {
   }
 
   handleSavePackage = () => {
-    this.setState({ showSavePackageModal: true });
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+    this.toggleSavePackageModal();
   }
 
   handleShowAllSavedItems = () => {
@@ -1099,6 +1100,7 @@ export default class FormPage extends Component {
   }
 
   handleTestPack = () => {
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
     this.handleVisualize();
   }
 
@@ -2700,19 +2702,13 @@ export default class FormPage extends Component {
                 <View style={styles.bottomButtonContainer}>
                   <TouchableOpacity
                     style={styles.savePackageButton}
-                    onPress={() => {
-                      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
-                      this.toggleSavePackageModal();
-                    }}
+                    onPress={this.handleSavePackage}
                   >
                     <Text style={styles.savePackageButtonText}>Save Package</Text>
                   </TouchableOpacity>
                   <TouchableOpacity
                     style={styles.packButton}
-                    onPress={() => {
-                      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
-                      this.handleVisualize();
-                    }}
+                    onPress={this.handleTestPack}
                     disabled={this.state.isLoading}
                   >
                     {this.state.isLoading ? (
