@@ -463,6 +463,43 @@ export default class PackagesPage extends Component {
       Alert.alert("Error", "Package name cannot be empty.");
       return;
     }
+
+    try {
+      // Create a copy of the packages object
+      const updatedPackages = { ...packages };
+      
+      // Get the package data
+      const packageData = updatedPackages[selectedPackage];
+      
+      if (!packageData) {
+        Alert.alert("Error", "Package not found.");
+        return;
+      }
+      
+      // Delete the old package key
+      delete updatedPackages[selectedPackage];
+      
+      // Add the package with the new name
+      updatedPackages[newPackageName] = packageData;
+      
+      // Update state
+      this.setState({
+        packages: updatedPackages,
+        selectedPackage: newPackageName,
+        renamePackageModal: false,
+        newPackageName: ""
+      });
+      
+      // Update AsyncStorage
+      await AsyncStorage.setItem("packages", JSON.stringify(updatedPackages));
+      
+      // Show success message
+      Alert.alert("Success", `Package renamed to "${newPackageName}" successfully.`);
+      
+    } catch (error) {
+      console.error("Error renaming package:", error);
+      Alert.alert("Error", "Failed to rename package. Please try again.");
+    }
   };
 
   openPackageDetails = (packageName) => {
