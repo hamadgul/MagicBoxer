@@ -2464,7 +2464,7 @@ export default class FormPage extends Component {
                                   color: Platform.OS === 'ios' ? '#007AFF' : '#0066FF',
                                   letterSpacing: -0.08
                                 }}>
-                                  Saved:
+                                  Saved⁝
                                 </Text>
                               </TouchableOpacity>
                             <View style={{ flex: 1 }}>
