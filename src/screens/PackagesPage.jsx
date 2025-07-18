@@ -1721,7 +1721,7 @@ export default class PackagesPage extends Component {
 
                     {!this.state.packageItemsSelectionMode && (
                       <TouchableOpacity
-                        style={[styles.addItemPlaceholder, { marginTop: 12, marginBottom: 12 }]}
+                        style={[styles.addItemPlaceholder, { marginTop: 24, marginBottom: 12 }]}
                         onPress={() => {
                           console.log('Add from saved items button pressed');
                           this.showSavedItemsSelector();
@@ -1743,6 +1743,7 @@ export default class PackagesPage extends Component {
                             {
                               backgroundColor: '#EF4444',
                               flex: 1,
+                              marginTop: 30, // Add extra spacing only for the Remove Items button
                             }
                           ]}
                           onPress={this.bulkRemovePackageItems}
