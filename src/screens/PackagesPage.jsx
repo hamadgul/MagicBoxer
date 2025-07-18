@@ -2800,7 +2800,7 @@ export default class PackagesPage extends Component {
 
   bulkRemovePackageItems = async () => {
     console.log('🗑️ BULK REMOVE - Starting bulk remove operation');
-    const { selectedPackageItems, selectedPackage } = this.state;
+    const { selectedPackageItems, selectedPackage, packages } = this.state;
     
     if (selectedPackageItems.length === 0) {
       Alert.alert("No Items Selected", "Please select at least one item to remove.");
@@ -2812,24 +2812,52 @@ export default class PackagesPage extends Component {
 
     try {
       const itemCount = selectedPackageItems.length;
-      let packageDeleted = false;
+      const packageName = selectedPackage;
       
-      // Remove each selected item using the existing handleDeleteItem method
-      for (const item of selectedPackageItems) {
-        await new Promise((resolve) => {
-          // Use handleDeleteItem with suppressAlert=true to avoid individual alerts
-          this.handleDeleteItem(item, true);
-          // Small delay to ensure state updates are processed
-          setTimeout(resolve, 50);
-        });
+      if (!packageName || !packages[packageName]) {
+        Alert.alert("Error", "Could not find the package to update.");
+        this.setState({ isBulkRemoveInProgress: false });
+        return;
       }
       
-      // Check if package still exists after all deletions
-      const { packages } = this.state;
-      packageDeleted = !packages[selectedPackage];
+      const packageData = packages[packageName];
       
-      // Reset bulk selection state
+      if (!packageData.items || !Array.isArray(packageData.items)) {
+        Alert.alert("Error", "The package data is corrupted. Please try reloading the app.");
+        this.setState({ isBulkRemoveInProgress: false });
+        return;
+      }
+      
+      // Create set of selected item IDs for efficient lookup
+      const selectedItemIds = new Set(selectedPackageItems.map(item => item.id));
+      
+      // Filter out all selected items at once
+      const updatedItems = packageData.items.filter(
+        (item) => !selectedItemIds.has(item.id)
+      );
+      
+      // Create updated packages object
+      const updatedPackages = { ...packages };
+      let packageDeleted = false;
+      
+      // If no items remain, delete the entire package
+      if (updatedItems.length === 0) {
+        delete updatedPackages[packageName];
+        packageDeleted = true;
+      } else {
+        // Otherwise, update the package with remaining items
+        updatedPackages[packageName] = {
+          ...packageData,
+          items: updatedItems
+        };
+      }
+      
+      // Update AsyncStorage and state in one operation
+      await AsyncStorage.setItem("packages", JSON.stringify(updatedPackages));
+      
+      // Update state all at once - this removes all items visually at the same time
       this.setState({
+        packages: updatedPackages,
         packageItemsSelectionMode: false,
         selectedPackageItems: [],
         isBulkRemoveInProgress: false,
@@ -2846,6 +2874,7 @@ export default class PackagesPage extends Component {
       
     } catch (error) {
       console.error('Error bulk removing items:', error);
+      Alert.alert("Error", "Failed to remove items. Please try again.");
       // Reset bulk flag on error
       this.setState({ isBulkRemoveInProgress: false });
       Alert.alert("Error", "Failed to remove items from the package.");
