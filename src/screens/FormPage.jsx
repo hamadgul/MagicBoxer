@@ -986,11 +986,19 @@ export default class FormPage extends Component {
       shouldConnect = showRecentItems && availableItems.length > 0;
     }
     
-    return {
-      borderBottomWidth: shouldConnect ? 0 : 1,
-      borderBottomLeftRadius: shouldConnect ? 0 : 8,
-      borderBottomRightRadius: shouldConnect ? 0 : 8
-    };
+    // When not connecting to dropdown, return empty object to use default input styling
+    // When connecting, return styles to remove bottom border and radius
+    if (shouldConnect) {
+      return {
+        borderBottomWidth: 0,
+        borderBottomLeftRadius: 0,
+        borderBottomRightRadius: 0,
+        borderBottomColor: 'transparent'
+      };
+    } else {
+      // Return empty object to let default styles.input handle the border
+      return {};
+    }
   }
 
   // Bound methods to replace inline functions and improve performance
@@ -2354,9 +2362,8 @@ export default class FormPage extends Component {
                             flex: 1, 
                             paddingRight: 45, // Space for the icon
                             paddingVertical: 8, // Adjusted vertical padding
-                            ...inputBorderStyles, // Use pre-calculated styles
-                            borderBottomColor: '#E2E8F0',
-                            marginBottom: 0
+                            marginBottom: 0,
+                            ...inputBorderStyles // Use pre-calculated styles (includes borderBottomColor)
                           }]}
                           value={this.state.itemName}
                           onChangeText={this.handleChange}

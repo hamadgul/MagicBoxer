@@ -141,34 +141,110 @@ function AppNavigator() {
   const [isFirstTime, setIsFirstTime] = useState(null); // null = loading, true = first time, false = not first time
 
   useEffect(() => {
-    checkFirstTimeUser();
+    // Add a small delay to ensure AsyncStorage is ready
+    const initializeApp = async () => {
+      try {
+        // Test AsyncStorage availability first
+        await AsyncStorage.setItem('test_key', 'test_value');
+        await AsyncStorage.removeItem('test_key');
+        console.log('AppNavigator: AsyncStorage is working properly');
+      } catch (error) {
+        console.error('AppNavigator: AsyncStorage test failed:', error);
+      }
+      
+      // Now check first time user
+      await checkFirstTimeUser();
+    };
+    
+    // Small delay to ensure everything is initialized
+    setTimeout(initializeApp, 100);
   }, []);
 
   const checkFirstTimeUser = async () => {
     try {
-      const hasOpenedBefore = await AsyncStorage.getItem('hasOpenedBefore');
-      if (hasOpenedBefore === null) {
-        // First time user
-        setIsFirstTime(true);
-      } else {
-        // Returning user
+      console.log('AppNavigator: Checking first time user status...');
+      
+      // Check multiple storage keys for redundancy
+      const [hasOpenedBefore, onboardingCompleted, firstLaunchCompleted] = await Promise.all([
+        AsyncStorage.getItem('smartbox_has_opened_before'),
+        AsyncStorage.getItem('smartbox_onboarding_completed'),
+        AsyncStorage.getItem('app_first_launch_completed')
+      ]);
+      
+      console.log('AppNavigator: Storage values:', {
+        hasOpenedBefore,
+        onboardingCompleted,
+        firstLaunchCompleted
+      });
+      
+      // User is NOT first time if ANY of these keys exist
+      const isReturningUser = hasOpenedBefore || onboardingCompleted || firstLaunchCompleted;
+      
+      if (isReturningUser) {
+        console.log('AppNavigator: Returning user detected');
         setIsFirstTime(false);
+      } else {
+        console.log('AppNavigator: First time user detected');
+        setIsFirstTime(true);
       }
     } catch (error) {
-      console.error('Error checking first time user:', error);
-      // Default to not first time on error
-      setIsFirstTime(false);
+      console.error('AppNavigator: Error checking first time user:', error);
+      // Default to first time on error to be safe
+      setIsFirstTime(true);
     }
   };
 
   const markAsNotFirstTime = async () => {
     try {
-      await AsyncStorage.setItem('hasOpenedBefore', 'true');
+      console.log('AppNavigator: Marking user as not first time...');
+      const timestamp = new Date().toISOString();
+      
+      // Use multiple storage keys for redundancy
+      await Promise.all([
+        AsyncStorage.setItem('smartbox_has_opened_before', 'completed'),
+        AsyncStorage.setItem('smartbox_onboarding_completed', timestamp),
+        AsyncStorage.setItem('app_first_launch_completed', 'true')
+      ]);
+      
+      console.log('AppNavigator: Successfully marked as not first time with timestamp:', timestamp);
       setIsFirstTime(false);
+      
+      // Verify the storage worked
+      const verification = await AsyncStorage.getItem('smartbox_has_opened_before');
+      console.log('AppNavigator: Verification check:', verification);
+      
     } catch (error) {
-      console.error('Error marking as not first time:', error);
+      console.error('AppNavigator: Error marking as not first time:', error);
+      // Still set state to false even if storage fails
+      setIsFirstTime(false);
     }
   };
+
+  // Debug function to check all storage keys (useful for troubleshooting)
+  const debugStorageState = async () => {
+    try {
+      const allKeys = await AsyncStorage.getAllKeys();
+      const relevantKeys = allKeys.filter(key => 
+        key.includes('smartbox') || key.includes('app_first') || key.includes('onboarding')
+      );
+      
+      console.log('AppNavigator: All relevant storage keys:', relevantKeys);
+      
+      for (const key of relevantKeys) {
+        const value = await AsyncStorage.getItem(key);
+        console.log(`AppNavigator: ${key} = ${value}`);
+      }
+    } catch (error) {
+      console.error('AppNavigator: Error debugging storage state:', error);
+    }
+  };
+
+  // Call debug function in development
+  useEffect(() => {
+    if (__DEV__) {
+      setTimeout(debugStorageState, 2000); // Debug after 2 seconds
+    }
+  }, []);
 
   // Show loading or nothing while checking
   if (isFirstTime === null) {
