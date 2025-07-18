@@ -1085,7 +1085,7 @@ export default class FormPage extends Component {
     this.setState({ items: [] });
   }
 
-  handleSavePackage = () => {
+  handleShowSavePackageModal = () => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
     this.toggleSavePackageModal();
   }
@@ -2702,7 +2702,7 @@ export default class FormPage extends Component {
                 <View style={styles.bottomButtonContainer}>
                   <TouchableOpacity
                     style={styles.savePackageButton}
-                    onPress={this.handleSavePackage}
+                    onPress={this.handleShowSavePackageModal}
                   >
                     <Text style={styles.savePackageButtonText}>Save Package</Text>
                   </TouchableOpacity>
