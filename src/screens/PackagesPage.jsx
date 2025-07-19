@@ -1330,45 +1330,58 @@ export default class PackagesPage extends Component {
           
           {/* Selection mode action bar */}
           {this.state.selectionMode && (
-            <View style={styles.selectionActionBar}>
-              <Text style={styles.selectedCountText}>
-                {this.state.selectedPackages.length} package(s) selected
-              </Text>
-              
-              <View style={styles.selectionActionButtons}>
-                <TouchableOpacity
-                  style={{
-                    backgroundColor: '#E5E5EA',
-                    paddingVertical: 10,
-                    paddingHorizontal: 20,
-                    borderRadius: 8,
-                    marginLeft: 8,
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    minWidth: 80,
-                  }}
-                  onPress={this.cancelSelection}
-                >
-                  <Text style={styles.cancelButtonText}>Cancel</Text>
-                </TouchableOpacity>
+            <View style={[styles.selectionActionBar, { backgroundColor: '#F2F2F7', paddingVertical: 8, paddingHorizontal: 16 }]}>
+              <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', width: '100%' }}>
+                <Text style={{ fontSize: 13, fontWeight: '600', color: '#374151', paddingLeft: 12 }}>
+                  {this.state.selectedPackages.length} selected
+                </Text>
                 
-                <TouchableOpacity
-                  style={{
-                    backgroundColor: '#FF3B30',
-                    paddingVertical: 10,
-                    paddingHorizontal: 20,
-                    borderRadius: 8,
-                    marginLeft: 8,
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    minWidth: 80,
-                    opacity: this.state.selectedPackages.length === 0 ? 0.5 : 1
-                  }}
-                  onPress={this.handleShowDeleteConfirmModal}
-                  disabled={this.state.selectedPackages.length === 0}
-                >
-                  <Text style={styles.deleteButtonText}>Delete</Text>
-                </TouchableOpacity>
+                <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                  <TouchableOpacity 
+                    onPress={this.selectAllPackages} 
+                    style={{ 
+                      paddingVertical: 6, 
+                      paddingHorizontal: 12, 
+                      backgroundColor: '#F3F4F6', 
+                      borderRadius: 5, 
+                      marginRight: 8, 
+                      borderWidth: 1, 
+                      borderColor: '#D1D5DB' 
+                    }}
+                  >
+                    <Text style={{ fontSize: 12, color: '#374151', fontWeight: '600' }}>All</Text>
+                  </TouchableOpacity>
+                  <TouchableOpacity 
+                    onPress={this.clearAllPackagesSelection} 
+                    style={{ 
+                      paddingVertical: 6, 
+                      paddingHorizontal: 12, 
+                      backgroundColor: '#F3F4F6', 
+                      borderRadius: 5, 
+                      marginRight: 8, 
+                      borderWidth: 1, 
+                      borderColor: '#D1D5DB' 
+                    }}
+                  >
+                    <Text style={{ fontSize: 12, color: '#374151', fontWeight: '600' }}>None</Text>
+                  </TouchableOpacity>
+                  <TouchableOpacity
+                    style={{
+                      backgroundColor: '#EF4444',
+                      paddingVertical: 6,
+                      paddingHorizontal: 12,
+                      borderRadius: 5,
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      marginRight: 12,
+                      opacity: this.state.selectedPackages.length === 0 ? 0.5 : 1
+                    }}
+                    onPress={this.handleShowDeleteConfirmModal}
+                    disabled={this.state.selectedPackages.length === 0}
+                  >
+                    <Text style={{ fontSize: 12, fontWeight: '600', color: 'white' }}>Delete</Text>
+                  </TouchableOpacity>
+                </View>
               </View>
             </View>
           )}
@@ -2508,6 +2521,21 @@ export default class PackagesPage extends Component {
       return {
         selectedPackages: updatedSelection
       };
+    });
+  };
+
+  // Select all packages
+  selectAllPackages = () => {
+    const allPackageNames = Object.keys(this.state.packages);
+    this.setState({
+      selectedPackages: allPackageNames
+    });
+  };
+
+  // Clear all package selections
+  clearAllPackagesSelection = () => {
+    this.setState({
+      selectedPackages: []
     });
   };
 
