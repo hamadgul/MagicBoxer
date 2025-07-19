@@ -95,6 +95,17 @@ export default class SavedItemsPage extends Component {
       "focus",
       this.fetchSavedItems
     );
+    
+    // Set up blur listener to exit bulk edit mode when leaving the screen
+    this.blurListener = this.props.navigation.addListener('blur', () => {
+      console.log('SavedItemsPage blurred, exiting bulk edit mode if active...');
+      if (this.state.selectionMode) {
+        this.setState({
+          selectionMode: false,
+          selectedItems: []
+        });
+      }
+    });
   }
 
   componentWillUnmount() {
@@ -102,6 +113,10 @@ export default class SavedItemsPage extends Component {
     
     if (this.focusListener) {
       this.focusListener();
+    }
+    
+    if (this.blurListener) {
+      this.blurListener();
     }
   }
 
@@ -413,9 +428,46 @@ export default class SavedItemsPage extends Component {
 
   // Clear all item selections
   clearAllItemsSelection = () => {
-    this.setState({
-      selectedItems: []
-    });
+    this.setState({ selectedItems: [] });
+  };
+
+  handleShowDeleteConfirmModal = () => {
+    if (this.state.selectedItems.length === 0) {
+      Alert.alert("No Items Selected", "Please select at least one item to delete.");
+      return;
+    }
+    this.setState({ showDeleteConfirmModal: true });
+  };
+
+  deleteSelectedItems = async () => {
+    try {
+      const updatedItems = this.state.savedItems.filter(item => !this.state.selectedItems.includes(item.id));
+      
+      this.setState({ 
+        savedItems: updatedItems,
+        showAddItemModal: false, // Close the modal
+        showOptionsModal: false,
+        isEditing: false,
+        selectedItem: null,
+        itemName: "",
+        itemLength: "",
+        itemWidth: "",
+        itemHeight: "",
+        selectedItems: [],
+        showDeleteConfirmModal: false
+      }, async () => {
+        // Save to AsyncStorage
+        await AsyncStorage.setItem("savedItems", JSON.stringify(updatedItems));
+        
+        // Update custom products data
+        await this.updateProductsData(updatedItems);
+        
+        Alert.alert("Success", "Items deleted successfully.");
+      });
+    } catch (error) {
+      console.error("Error deleting items:", error);
+      Alert.alert("Error", "Failed to delete items.");
+    }
   };
 
   // CSV Import functionality

@@ -110,6 +110,17 @@ export default class PackagesPage extends Component {
       this.loadSavedItems();
     });
     
+    // Set up blur listener to exit bulk edit mode when leaving the screen
+    this.blurListener = this.props.navigation.addListener('blur', () => {
+      console.log('PackagesPage blurred, exiting bulk edit mode if active...');
+      if (this.state.selectionMode) {
+        this.setState({
+          selectionMode: false,
+          selectedPackages: []
+        });
+      }
+    });
+    
     // Reset any stuck state when the component mounts
     this.setState({
       showPackageModal: false,
@@ -208,6 +219,10 @@ export default class PackagesPage extends Component {
     // Clean up listeners
     if (this.focusListener) {
       this.focusListener();
+    }
+    
+    if (this.blurListener) {
+      this.blurListener();
     }
     
     if (this.navigationBackHandler) {
