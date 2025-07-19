@@ -1196,7 +1196,7 @@ export default class SavedItemsPage extends Component {
                           }}
                           value={itemLength}
                           onChangeText={(text) => this.setState({ itemLength: text })}
-                          keyboardType="decimal-pad"
+                          keyboardType="numeric"
                           placeholder="0.0"
                           placeholderTextColor="#64748B"
                           maxLength={5}
@@ -1236,7 +1236,7 @@ export default class SavedItemsPage extends Component {
                           }}
                           value={itemWidth}
                           onChangeText={(text) => this.setState({ itemWidth: text })}
-                          keyboardType="decimal-pad"
+                          keyboardType="numeric"
                           placeholder="0.0"
                           placeholderTextColor="#64748B"
                           maxLength={5}
@@ -1276,7 +1276,7 @@ export default class SavedItemsPage extends Component {
                           }}
                           value={itemHeight}
                           onChangeText={(text) => this.setState({ itemHeight: text })}
-                          keyboardType="decimal-pad"
+                          keyboardType="numeric"
                           placeholder="0.0"
                           placeholderTextColor="#64748B"
                           maxLength={5}
