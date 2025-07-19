@@ -862,6 +862,15 @@ export default class SavedItemsPage extends Component {
       <TouchableWithoutFeedback 
         onPress={() => {
           Keyboard.dismiss();
+          
+          // Exit bulk selection mode if active
+          if (this.state.selectionMode) {
+            this.setState({
+              selectionMode: false,
+              selectedItems: []
+            });
+          }
+          
           // Close the FAB menu if it's open when tapping outside
           if (this.state.isFabMenuOpen) {
             this.toggleFabMenu();

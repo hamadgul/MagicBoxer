@@ -234,9 +234,19 @@ export default class PackagesPage extends Component {
 
   // Bound methods for performance optimization
   handleTouchablePress = () => {
+    // Exit edit mode if active
     if (this.state.isEditMode) {
       this.setState({ isEditMode: false, editingPackage: null });
     }
+    
+    // Exit bulk selection mode if active
+    if (this.state.selectionMode) {
+      this.setState({ 
+        selectionMode: false,
+        selectedPackages: []
+      });
+    }
+    
     // Close the FAB menu if it's open when tapping outside
     if (this.state.isFabMenuOpen) {
       this.toggleFabMenu();
