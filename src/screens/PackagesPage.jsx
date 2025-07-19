@@ -2526,7 +2526,10 @@ export default class PackagesPage extends Component {
 
   // Select all packages
   selectAllPackages = () => {
-    const allPackageNames = Object.keys(this.state.packages);
+    // Get filtered packages based on current search query
+    const filteredPackagesData = this.getFilteredPackagesData();
+    const allPackageNames = Object.keys(filteredPackagesData.filteredPackages);
+    
     this.setState({
       selectedPackages: allPackageNames
     });
@@ -2558,7 +2561,7 @@ export default class PackagesPage extends Component {
 
   // Delete selected packages
   deleteSelectedPackages = async () => {
-    const { selectedPackages, packages } = this.state;
+    const { selectedPackages, packages, searchQuery } = this.state;
     
     if (selectedPackages.length === 0) {
       Alert.alert("No Packages Selected", "Please select at least one package to delete.");
@@ -2566,9 +2569,25 @@ export default class PackagesPage extends Component {
     }
     
     try {
+      // Get filtered packages if there's a search query
+      const filteredPackagesData = this.getFilteredPackagesData();
+      const packagesToConsider = filteredPackagesData.hasSearchQuery ? 
+        Object.keys(filteredPackagesData.filteredPackages) : 
+        Object.keys(packages);
+      
+      // Only delete packages that are both selected AND match the current search filter (if any)
+      const packagesToDelete = selectedPackages.filter(packageName => 
+        packagesToConsider.includes(packageName)
+      );
+      
+      if (packagesToDelete.length === 0) {
+        Alert.alert("No Visible Packages Selected", "Please select at least one visible package to delete.");
+        return;
+      }
+      
       // Create a copy of packages without the selected ones
       const updatedPackages = { ...packages };
-      selectedPackages.forEach(packageName => {
+      packagesToDelete.forEach(packageName => {
         delete updatedPackages[packageName];
       });
       
@@ -2578,15 +2597,15 @@ export default class PackagesPage extends Component {
       // Update state
       this.setState({
         packages: updatedPackages,
-        selectedPackages: [],
-        selectionMode: false,
+        selectedPackages: selectedPackages.filter(packageName => !packagesToDelete.includes(packageName)), // Keep selections that weren't deleted
+        selectionMode: selectedPackages.length > packagesToDelete.length, // Stay in selection mode if there are still selected packages
         showDeleteConfirmModal: false
       });
       
       // Show success message
       Alert.alert(
         "Success",
-        `${selectedPackages.length} package(s) deleted successfully.`
+        `${packagesToDelete.length} package(s) deleted successfully.`
       );
     } catch (error) {
       console.error('Error deleting packages:', error);

@@ -749,9 +749,15 @@ export default class FormPage extends Component {
   };
 
   selectAllSavedItems = () => {
-    const { allSavedItems, items } = this.state;
-    // Only select items that are not already added to the package
-    const selectableItems = allSavedItems.filter(item => {
+    const { allSavedItems, items, savedItemsSearchQuery } = this.state;
+    // Filter items by search query first
+    const searchFiltered = allSavedItems.filter(item => {
+      const itemName = (item.itemName || item.name || '').toLowerCase();
+      return itemName.includes(savedItemsSearchQuery.toLowerCase());
+    });
+    
+    // Then filter out items already added to the package
+    const selectableItems = searchFiltered.filter(item => {
       const itemName = item.itemName || item.name || '';
       return !items.some(addedItem => (addedItem.itemName || '').toLowerCase() === itemName.toLowerCase());
     });
@@ -2860,7 +2866,7 @@ export default class FormPage extends Component {
                             borderBottomColor: '#E2E8F0',
                           }}>
                             <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-                              <Text style={{ fontSize: 14, color: '#64748B', marginRight: 12 }}>
+                              <Text style={{ fontSize: 14, color: '#64748B', marginRight: 12, paddingLeft: 12 }}>
                                 {this.state.selectedSavedItems.length} selected
                               </Text>
                               <TouchableOpacity onPress={this.selectAllSavedItems} style={{ paddingVertical: 6, paddingHorizontal: 10, backgroundColor: '#E2E8F0', borderRadius: 6, marginRight: 8 }}>

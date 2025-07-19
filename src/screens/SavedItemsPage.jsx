@@ -402,9 +402,12 @@ export default class SavedItemsPage extends Component {
 
   // Select all items
   selectAllItems = () => {
-    const allItemIds = this.state.savedItems.map(item => item.id);
+    // Get filtered items based on current search query
+    const filteredItems = this.getFilteredItems();
+    const filteredItemIds = filteredItems.map(item => item.id);
+    
     this.setState({
-      selectedItems: allItemIds
+      selectedItems: filteredItemIds
     });
   };
 
@@ -746,11 +749,25 @@ export default class SavedItemsPage extends Component {
   };
   
   deleteSelectedItems = async () => {
-    const { savedItems, selectedItems } = this.state;
+    const { savedItems, selectedItems, searchQuery } = this.state;
     
     try {
+      // Get filtered items if there's a search query
+      const filteredItems = this.getFilteredItems();
+      const itemIdsToConsider = filteredItems.map(item => item.id);
+      
+      // Only delete items that are both selected AND match the current search filter (if any)
+      const itemIdsToDelete = selectedItems.filter(itemId => 
+        searchQuery.trim() === "" || itemIdsToConsider.includes(itemId)
+      );
+      
+      if (itemIdsToDelete.length === 0) {
+        Alert.alert("No Visible Items Selected", "Please select at least one visible item to delete.");
+        return;
+      }
+      
       // Filter out the selected items
-      const updatedItems = savedItems.filter(item => !selectedItems.includes(item.id));
+      const updatedItems = savedItems.filter(item => !itemIdsToDelete.includes(item.id));
       
       // Save to AsyncStorage
       await AsyncStorage.setItem("savedItems", JSON.stringify(updatedItems));
@@ -758,12 +775,12 @@ export default class SavedItemsPage extends Component {
       // Update state
       this.setState({
         savedItems: updatedItems,
-        selectionMode: false,
-        selectedItems: [],
+        selectionMode: selectedItems.length > itemIdsToDelete.length, // Stay in selection mode if there are still selected items
+        selectedItems: selectedItems.filter(itemId => !itemIdsToDelete.includes(itemId)), // Keep selections that weren't deleted
         showDeleteConfirmModal: false
       });
       
-      Alert.alert("Success", `${selectedItems.length} item(s) deleted successfully.`);
+      Alert.alert("Success", `${itemIdsToDelete.length} item(s) deleted successfully.`);
     } catch (error) {
       console.error("Error deleting items:", error);
       Alert.alert("Error", "Failed to delete items.");
