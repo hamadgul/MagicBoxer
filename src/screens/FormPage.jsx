@@ -153,6 +153,13 @@ export const ItemDetailsModal = ({
   });
   const [isLoaded, setIsLoaded] = React.useState(false);
   
+  // Refs for keyboard navigation
+  const nameInputRef = React.useRef(null);
+  const lengthInputRef = React.useRef(null);
+  const widthInputRef = React.useRef(null);
+  const heightInputRef = React.useRef(null);
+  const quantityInputRef = React.useRef(null);
+  
   // Log when modal becomes visible for debugging
   React.useEffect(() => {
     if (visible) {
@@ -238,6 +245,35 @@ export const ItemDetailsModal = ({
     } else {
       closeModal();
     }
+  };
+
+  // Keyboard navigation methods
+  const focusLengthInput = () => {
+    if (lengthInputRef.current) {
+      lengthInputRef.current.focus();
+    }
+  };
+
+  const focusWidthInput = () => {
+    if (widthInputRef.current) {
+      widthInputRef.current.focus();
+    }
+  };
+
+  const focusHeightInput = () => {
+    if (heightInputRef.current) {
+      heightInputRef.current.focus();
+    }
+  };
+
+  const focusQuantityInput = () => {
+    if (quantityInputRef.current) {
+      quantityInputRef.current.focus();
+    }
+  };
+
+  const dismissKeyboard = () => {
+    Keyboard.dismiss();
   };
 
   // Safety check for production builds
@@ -335,6 +371,7 @@ export const ItemDetailsModal = ({
                     <View style={modalStyles.fieldRow}>
                       <Text style={modalStyles.fieldLabel}>Name:</Text>
                       <TextInput
+                        ref={nameInputRef}
                         style={[
                           modalStyles.fieldValue,
                           {
@@ -354,6 +391,8 @@ export const ItemDetailsModal = ({
                           setEditedItem({ ...editedItem, itemName: text })
                         }
                         maxLength={20}
+                        returnKeyType="next"
+                        onSubmitEditing={focusLengthInput}
                       />
                     </View>
                   ) : null}
@@ -376,6 +415,7 @@ export const ItemDetailsModal = ({
                         }
                       ]}>
                         <TextInput
+                          ref={lengthInputRef}
                           style={{
                             flex: 1,
                             fontSize: 15,
@@ -388,6 +428,8 @@ export const ItemDetailsModal = ({
                           }}
                           keyboardType="numeric"
                           maxLength={3}
+                          returnKeyType="next"
+                          onSubmitEditing={focusWidthInput}
                         />
                         <Text style={{ 
                           fontSize: 15,
@@ -417,6 +459,7 @@ export const ItemDetailsModal = ({
                         }
                       ]}>
                         <TextInput
+                          ref={widthInputRef}
                           style={{
                             flex: 1,
                             fontSize: 15,
@@ -429,6 +472,8 @@ export const ItemDetailsModal = ({
                           }}
                           keyboardType="numeric"
                           maxLength={3}
+                          returnKeyType="next"
+                          onSubmitEditing={focusHeightInput}
                         />
                         <Text style={{ 
                           fontSize: 15,
@@ -458,6 +503,7 @@ export const ItemDetailsModal = ({
                         }
                       ]}>
                         <TextInput
+                          ref={heightInputRef}
                           style={{
                             flex: 1,
                             fontSize: 15,
@@ -470,6 +516,8 @@ export const ItemDetailsModal = ({
                           }}
                           keyboardType="numeric"
                           maxLength={3}
+                          returnKeyType="next"
+                          onSubmitEditing={focusQuantityInput}
                         />
                         <Text style={{ 
                           fontSize: 15,
@@ -508,6 +556,7 @@ export const ItemDetailsModal = ({
                           <Text style={{ fontSize: 20, color: '#334155' }}>-</Text>
                         </TouchableOpacity>
                         <TextInput
+                          ref={quantityInputRef}
                           style={{
                             flex: 1,
                             fontSize: 15,
@@ -521,6 +570,8 @@ export const ItemDetailsModal = ({
                             setEditedItem({ ...editedItem, quantity: newQuantity });
                           }}
                           keyboardType="numeric"
+                          returnKeyType="done"
+                          onSubmitEditing={dismissKeyboard}
                         />
                         <TouchableOpacity
                           onPress={() => handleQuantityChange('increase')}
@@ -625,13 +676,11 @@ export default class FormPage extends Component {
       nameInputFocused: false,
       preventAutoFocus: false, // Flag to prevent auto-focus after returning from AI Search
       hasMatchingRecentItems: true, // Track if there are matching recent items
-      productList: [], // Initialize with empty array instead of defaultProductList
-      recentSavedItems: [], // Store recently saved items
-      allSavedItems: [], // Store all saved items
-      showRecentItems: true, // Start with recent items visible by default
-      showAllSavedItemsModal: false, // For the modal with all items
-      flashScrollbar: false,
-      dimensionsFromSavedItem: false, // Track if dimensions are from a saved item
+      showRecentItems: false, // Control visibility of recent items
+      recentSavedItems: [], // Store recent saved items
+      allSavedItems: [], // Store all saved items for modal
+      showAllSavedItemsModal: false, // Control modal visibility
+      dimensionsFromSavedItem: false, // Track if dimensions came from saved item
       contentScrollable: false, // Whether horizontal content is scrollable
       currentScrollX: 0, // Current horizontal scroll position
       contentWidth: 0, // Total width of scrollable content
@@ -644,6 +693,9 @@ export default class FormPage extends Component {
       isBulkAddInProgress: false
     };
     this.inputRef = React.createRef();
+    this.lengthInputRef = React.createRef();
+    this.widthInputRef = React.createRef();
+    this.heightInputRef = React.createRef();
   }
 
   // Load saved items from SavedItems page for suggestions
@@ -1116,6 +1168,29 @@ export default class FormPage extends Component {
   handleTestPack = () => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
     this.handleVisualize();
+  }
+
+  // Keyboard navigation methods
+  focusLengthInput = () => {
+    if (this.lengthInputRef.current) {
+      this.lengthInputRef.current.focus();
+    }
+  }
+
+  focusWidthInput = () => {
+    if (this.widthInputRef.current) {
+      this.widthInputRef.current.focus();
+    }
+  }
+
+  focusHeightInput = () => {
+    if (this.heightInputRef.current) {
+      this.heightInputRef.current.focus();
+    }
+  }
+
+  dismissKeyboard = () => {
+    Keyboard.dismiss();
   }
 
   shouldComponentUpdate(nextProps, nextState) {
@@ -2379,6 +2454,8 @@ export default class FormPage extends Component {
                           placeholderTextColor={"#94A3B8"}
                           autoCorrect={false}
                           spellCheck={false}
+                          returnKeyType="next"
+                          onSubmitEditing={this.focusLengthInput}
                         />
                         <TouchableOpacity 
                           style={{
@@ -2538,6 +2615,7 @@ export default class FormPage extends Component {
                         backgroundColor: this.state.dimensionsFromSavedItem ? '#F8FAFC' : 'white',
                       }]}>
                         <TextInput
+                          ref={this.lengthInputRef}
                           style={{
                             flex: 1,
                             height: '100%',
@@ -2551,6 +2629,8 @@ export default class FormPage extends Component {
                           keyboardType="numeric"
                           maxLength={3}
                           editable={!this.state.dimensionsFromSavedItem}
+                          returnKeyType="next"
+                          onSubmitEditing={this.focusWidthInput}
                         />
                         <Text style={{ 
                           paddingRight: 14,
@@ -2575,6 +2655,7 @@ export default class FormPage extends Component {
                         backgroundColor: this.state.dimensionsFromSavedItem ? '#F8FAFC' : 'white',
                       }]}>
                         <TextInput
+                          ref={this.widthInputRef}
                           style={{
                             flex: 1,
                             height: '100%',
@@ -2588,6 +2669,8 @@ export default class FormPage extends Component {
                           keyboardType="numeric"
                           maxLength={3}
                           editable={!this.state.dimensionsFromSavedItem}
+                          returnKeyType="next"
+                          onSubmitEditing={this.focusHeightInput}
                         />
                         <Text style={{ 
                           paddingRight: 14,
@@ -2612,6 +2695,7 @@ export default class FormPage extends Component {
                         backgroundColor: this.state.dimensionsFromSavedItem ? '#F8FAFC' : 'white',
                       }]}>
                         <TextInput
+                          ref={this.heightInputRef}
                           style={{
                             flex: 1,
                             height: '100%',
@@ -2625,6 +2709,8 @@ export default class FormPage extends Component {
                           keyboardType="numeric"
                           maxLength={3}
                           editable={!this.state.dimensionsFromSavedItem}
+                          returnKeyType="done"
+                          onSubmitEditing={this.dismissKeyboard}
                         />
                         <Text style={{ 
                           paddingRight: 14,

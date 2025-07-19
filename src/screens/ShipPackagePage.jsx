@@ -19,6 +19,10 @@ import { pack } from '../packing_algo/packing';
 export default function ShipPackagePage({ route, navigation }) {
   const scrollViewRef = useRef(null);
   const estimatesSectionRef = useRef(null);
+  const weightInputRef = useRef(null);
+  const fromZipInputRef = useRef(null);
+  const toZipInputRef = useRef(null);
+  const insuranceInputRef = useRef(null);
   const [selectedPackage, setSelectedPackage] = useState(null);
   const [shippingEstimates, setShippingEstimates] = useState([]);
   const [errors, setErrors] = useState([]);
@@ -89,6 +93,31 @@ export default function ShipPackagePage({ route, navigation }) {
 
   const validateZipCode = (zip) => {
     return /^\d{5}$/.test(zip);
+  };
+
+  // Keyboard navigation methods
+  const focusFromZipInput = () => {
+    if (fromZipInputRef.current) {
+      fromZipInputRef.current.focus();
+    }
+  };
+
+  const focusToZipInput = () => {
+    if (toZipInputRef.current) {
+      toZipInputRef.current.focus();
+    }
+  };
+
+  const focusInsuranceInput = () => {
+    if (showAdvancedOptions && insuranceInputRef.current) {
+      insuranceInputRef.current.focus();
+    } else {
+      Keyboard.dismiss();
+    }
+  };
+
+  const dismissKeyboard = () => {
+    Keyboard.dismiss();
   };
 
   const handleGetEstimates = async () => {
@@ -456,6 +485,7 @@ export default function ShipPackagePage({ route, navigation }) {
               <View style={styles.weightInput}>
                 <Text style={styles.label}>Weight (lbs) *</Text>
                 <TextInput
+                  ref={weightInputRef}
                   style={styles.input}
                   onChangeText={(text) => 
                     setPackageDetails(prev => ({ ...prev, weight: text }))
@@ -464,6 +494,7 @@ export default function ShipPackagePage({ route, navigation }) {
                   placeholder="Enter package weight"
                   placeholderTextColor="#64748b"
                   returnKeyType="next"
+                  onSubmitEditing={focusFromZipInput}
                 />
               </View>
             </View>
@@ -475,6 +506,7 @@ export default function ShipPackagePage({ route, navigation }) {
               <View style={styles.zipInput}>
                 <Text style={styles.label}>From ZIP Code *</Text>
                 <TextInput
+                  ref={fromZipInputRef}
                   style={styles.input}
                   value={fromZip}
                   onChangeText={setFromZip}
@@ -483,11 +515,13 @@ export default function ShipPackagePage({ route, navigation }) {
                   keyboardType="numeric"
                   maxLength={5}
                   returnKeyType="next"
+                  onSubmitEditing={focusToZipInput}
                 />
               </View>
               <View style={styles.zipInput}>
                 <Text style={styles.label}>To ZIP Code *</Text>
                 <TextInput
+                  ref={toZipInputRef}
                   style={styles.input}
                   value={toZip}
                   onChangeText={setToZip}
@@ -495,7 +529,8 @@ export default function ShipPackagePage({ route, navigation }) {
                   placeholderTextColor="#64748b"
                   keyboardType="numeric"
                   maxLength={5}
-                  returnKeyType="done"
+                  returnKeyType="next"
+                  onSubmitEditing={focusInsuranceInput}
                 />
               </View>
             </View>
@@ -569,12 +604,15 @@ export default function ShipPackagePage({ route, navigation }) {
                 <View style={styles.advancedOption}>
                   <Text style={styles.label}>Declared Value/Insurance ($)</Text>
                   <TextInput
+                    ref={insuranceInputRef}
                     style={styles.input}
                     value={insuranceValue}
                     onChangeText={setInsuranceValue}
                     placeholder="0.00"
                     placeholderTextColor="#64748b"
                     keyboardType="decimal-pad"
+                    returnKeyType="done"
+                    onSubmitEditing={dismissKeyboard}
                   />
                 </View>
                 

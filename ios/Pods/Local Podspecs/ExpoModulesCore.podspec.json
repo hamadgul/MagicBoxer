@@ -1,6 +1,6 @@
 {
   "name": "ExpoModulesCore",
-  "version": "2.4.2",
+  "version": "2.5.0",
   "summary": "The core of Expo Modules architecture",
   "description": "The core of Expo Modules architecture",
   "license": "MIT",
@@ -24,7 +24,7 @@
     "SWIFT_COMPILATION_MODE": "wholemodule",
     "OTHER_SWIFT_FLAGS": "$(inherited) -DRCT_NEW_ARCH_ENABLED",
     "HEADER_SEARCH_PATHS": "\"${PODS_CONFIGURATION_BUILD_DIR}/React-jsinspector/jsinspector_modern.framework/Headers\" \"$(PODS_ROOT)/boost\" \"$(PODS_ROOT)/Headers/Private/Yoga\"",
-    "GCC_PREPROCESSOR_DEFINITIONS": "$(inherited) EXPO_MODULES_CORE_VERSION=2.4.2",
+    "GCC_PREPROCESSOR_DEFINITIONS": "$(inherited) EXPO_MODULES_CORE_VERSION=2.5.0",
     "OTHER_CPLUSPLUSFLAGS": "$(inherited) -DRCT_NEW_ARCH_ENABLED=1 -DFOLLY_NO_CONFIG -DFOLLY_MOBILE=1 -DFOLLY_USE_LIBCPP=1 -DFOLLY_CFG_NO_COROUTINES=1 -DFOLLY_HAVE_CLOCK_GETTIME=1 -Wno-comma -Wno-shorten-64-to-32"
   },
   "user_target_xcconfig": {

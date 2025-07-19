@@ -62,6 +62,12 @@ export default class SavedItemsPage extends Component {
   constructor(props) {
     super(props);
     
+    // Refs for keyboard navigation in Add Item Modal
+    this.nameInputRef = React.createRef();
+    this.lengthInputRef = React.createRef();
+    this.widthInputRef = React.createRef();
+    this.heightInputRef = React.createRef();
+    
     this.props.navigation.setOptions({
       headerTitle: () => (
         <View style={styles.headerContainer}>
@@ -325,6 +331,29 @@ export default class SavedItemsPage extends Component {
       ],
       { cancelable: true }
     );
+  };
+
+  // Keyboard navigation methods for Add Item Modal
+  focusLengthInput = () => {
+    if (this.lengthInputRef.current) {
+      this.lengthInputRef.current.focus();
+    }
+  };
+
+  focusWidthInput = () => {
+    if (this.widthInputRef.current) {
+      this.widthInputRef.current.focus();
+    }
+  };
+
+  focusHeightInput = () => {
+    if (this.heightInputRef.current) {
+      this.heightInputRef.current.focus();
+    }
+  };
+
+  dismissKeyboard = () => {
+    Keyboard.dismiss();
   };
 
   openEditModal = (item) => {
@@ -1116,6 +1145,7 @@ export default class SavedItemsPage extends Component {
                     <View style={modalStyles.fieldRow}>
                       <Text style={modalStyles.fieldLabel}>Name:</Text>
                       <TextInput
+                        ref={this.nameInputRef}
                         style={[
                           modalStyles.fieldValue,
                           {
@@ -1135,6 +1165,8 @@ export default class SavedItemsPage extends Component {
                         placeholder="Enter item name"
                         placeholderTextColor="#64748B"
                         maxLength={30}
+                        returnKeyType="next"
+                        onSubmitEditing={this.focusLengthInput}
                       />
                     </View>
                     
@@ -1155,6 +1187,7 @@ export default class SavedItemsPage extends Component {
                         }
                       ]}>
                         <TextInput
+                          ref={this.lengthInputRef}
                           style={{
                             flex: 1,
                             fontSize: 15,
@@ -1167,6 +1200,8 @@ export default class SavedItemsPage extends Component {
                           placeholder="0.0"
                           placeholderTextColor="#64748B"
                           maxLength={5}
+                          returnKeyType="next"
+                          onSubmitEditing={this.focusWidthInput}
                         />
                         <Text style={{ 
                           fontSize: 15,
@@ -1192,6 +1227,7 @@ export default class SavedItemsPage extends Component {
                         }
                       ]}>
                         <TextInput
+                          ref={this.widthInputRef}
                           style={{
                             flex: 1,
                             fontSize: 15,
@@ -1204,6 +1240,8 @@ export default class SavedItemsPage extends Component {
                           placeholder="0.0"
                           placeholderTextColor="#64748B"
                           maxLength={5}
+                          returnKeyType="next"
+                          onSubmitEditing={this.focusHeightInput}
                         />
                         <Text style={{ 
                           fontSize: 15,
@@ -1229,6 +1267,7 @@ export default class SavedItemsPage extends Component {
                         }
                       ]}>
                         <TextInput
+                          ref={this.heightInputRef}
                           style={{
                             flex: 1,
                             fontSize: 15,
@@ -1241,6 +1280,8 @@ export default class SavedItemsPage extends Component {
                           placeholder="0.0"
                           placeholderTextColor="#64748B"
                           maxLength={5}
+                          returnKeyType="done"
+                          onSubmitEditing={this.dismissKeyboard}
                         />
                         <Text style={{ 
                           fontSize: 15,
